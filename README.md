@@ -6,51 +6,45 @@
 ![Go Version](https://img.shields.io/badge/go-1.21-cyan.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 
-Yeast is a project-based local VM orchestrator for Linux. It is built for developers who want real virtual machines locally without the weight and sprawl of older VM workflows.
+Yeast is a project-based VM tool for Linux. You describe one or more machines in `yeast.yaml`, pull a trusted base image, run `yeast up`, and Yeast handles the local QEMU/KVM lifecycle for you.
 
-Yeast gives you:
-- project-local VM definitions in `yeast.yaml`
-- trusted base image pulls with pinned SHA256 verification
-- cloud-init bootstrapping
-- fast copy-on-write overlays instead of full image copies
-- simple lifecycle commands: `up`, `status`, `ssh`, `halt`, `down`, `restart`, `destroy`
-- JSON output for automation
+It is built for people who want:
+- real VMs, not containers
+- a simpler local workflow than older VM tooling
+- cloud-init based guest setup
+- repeatable terminal-friendly automation
 
-## Why Yeast
+## At A Glance
 
-Yeast is opinionated and intentionally small.
+| Area | What Yeast gives you |
+|---|---|
+| VM model | Project-local VMs defined in `yeast.yaml` |
+| Base images | Shared cache in `~/.yeast/cache/` |
+| Provisioning | Cloud-init |
+| Runtime | QEMU + KVM |
+| Automation | `--json` on major commands |
+| Networking | `user`, `private`, `bridge` |
+| SSH access | Automatic host port forwarding to guest port `22` |
 
-It is designed for:
-- Linux development environments
-- reproducible local VM workflows
-- simple KVM/QEMU usage without a large plugin ecosystem
-- command-line automation
+## Quick Install
 
-It is not trying to be:
-- a GUI hypervisor manager
-- a whole-machine VM inventory system
-- a multi-host orchestrator
-- a full cloud platform
+## One command
 
-## Installation
-
-## One-command installer
-
-If the repo is reachable over HTTPS, the installer can be run directly:
+If the repository is reachable over HTTPS:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/dev/install.sh | bash
 ```
 
-If you already cloned the repo locally:
+If you already cloned the repo:
 
 ```bash
 bash install.sh
 ```
 
-What `install.sh` does:
+What the installer does:
 - detects the Linux package manager
-- installs Yeast host dependencies
+- installs Yeast dependencies
 - installs Go for the source-build path
 - clones and builds Yeast
 - installs `yeast` into `/usr/local/bin`
@@ -58,14 +52,14 @@ What `install.sh` does:
 - generates an SSH key if needed
 - adds the user to the `kvm` group when possible
 
-Optional installer overrides:
+Optional overrides:
 
 ```bash
 YEAST_REPO_URL=https://github.com/Twarga/yeast.git YEAST_REF=dev bash install.sh
 ```
 
 Important:
-- if the repo is private, the curl installer only works for users who already have access
+- if the repo is private, direct install only works for users who already have access
 - if the installer adds you to the `kvm` group, log out and back in before your first `yeast up`
 
 ## Build from source
@@ -77,7 +71,7 @@ go build -o yeast ./cmd/yeast
 sudo mv yeast /usr/local/bin/
 ```
 
-## Prerequisites
+## Requirements
 
 Yeast currently supports:
 - Linux only
@@ -108,7 +102,7 @@ If needed, add your user to the `kvm` group:
 sudo usermod -aG kvm $USER
 ```
 
-## Quick Start
+## 5-Minute Quick Start
 
 ### 1. Check the host
 
@@ -137,7 +131,7 @@ instances:
     sudo: none
 ```
 
-You can also shape the starter config immediately:
+You can also generate the starter config with your own values:
 
 ```bash
 yeast init \
@@ -151,7 +145,7 @@ yeast init \
 
 ### 3. Discover and pull an image
 
-List supported trusted images:
+List supported images:
 
 ```bash
 yeast pull --list
@@ -167,7 +161,7 @@ Current built-in trusted images:
 - `ubuntu-22.04`
 - `ubuntu-24.04`
 
-### 4. Start the VMs
+### 4. Start the environment
 
 ```bash
 yeast up
@@ -192,25 +186,25 @@ For scripts:
 yeast status --json
 ```
 
-### 6. Connect over SSH
+### 6. Connect
 
 ```bash
 yeast ssh web
 ```
 
-If you initialized the instance with a different user:
+If your bootstrap user is different:
 
 ```bash
 yeast ssh web --user operator
 ```
 
-### 7. Stop the environment
+### 7. Stop everything
 
 ```bash
 yeast down
 ```
 
-## Example `yeast.yaml`
+## Example Config
 
 ```yaml
 version: 1
@@ -236,18 +230,20 @@ Supported fields today:
 - `env`
 - `user_data`
 
-Important config behavior:
-- `user_data`, if provided, replaces Yeast's generated bootstrap cloud-init
-- custom `user_data` does not automatically merge in your SSH key, user, sudo policy, or env values
+Important behavior:
+- `user_data`, if provided, replaces Yeast's generated cloud-init
+- custom `user_data` does not automatically merge your SSH key, user, sudo policy, or env values
 - configurable disk size is not supported yet
 
 ## Networking
 
 Yeast supports 3 network modes on `up` and `restart`:
 
-- `user`: default QEMU user-mode NAT with SSH port forwarding
-- `private`: user-mode NAT with `restrict=on`
-- `bridge`: host bridge attachment plus a restricted management NIC for SSH
+| Mode | What it does |
+|---|---|
+| `user` | Default QEMU user-mode NAT with SSH port forwarding |
+| `private` | User-mode NAT with `restrict=on` |
+| `bridge` | Host bridge attachment plus a restricted management NIC for SSH |
 
 Examples:
 
@@ -261,18 +257,39 @@ yeast restart web --network-mode bridge --bridge br0
 Current networking limits:
 - only SSH port forwarding is built in
 - no custom `8080:80` style forwards yet
-- network mode is chosen at command time
+- network mode is selected at command time
 - network mode is not stored in `yeast.yaml`
 
-## Project Model
+## Command Cheat Sheet
 
-Yeast is project-local.
+| Command | What it does |
+|---|---|
+| `yeast doctor` | Check whether the host is ready |
+| `yeast init` | Create a starter `yeast.yaml` |
+| `yeast pull` | List and pull trusted images |
+| `yeast up` | Start all VMs in the current project |
+| `yeast status` | Show tracked VM state |
+| `yeast ssh <name>` | Connect to a running VM |
+| `yeast halt [name...]` | Stop selected tracked VMs |
+| `yeast down` | Stop all tracked VMs |
+| `yeast restart [name...]` | Restart configured VMs |
+| `yeast destroy [name...]` | Stop and remove local instance data |
 
-Project directory files:
+Most major commands support:
+
+```bash
+yeast <command> --json
+```
+
+`yeast ssh` is interactive and does not support JSON output.
+
+## How Yeast Stores Data
+
+Project directory:
 - `yeast.yaml`: desired VM definitions
 - `yeast.state`: runtime state for the current project
 
-Home directory paths:
+Home directory:
 - `~/.yeast/cache/`: shared base images
 - `~/.yeast/instances/<name>/`: per-instance runtime files
 
@@ -283,29 +300,9 @@ Each instance directory typically contains:
 - `meta-data`
 - `vm.log`
 
-## Command Surface
-
-Main commands:
-- `yeast doctor`
-- `yeast init`
-- `yeast pull`
-- `yeast up`
-- `yeast status`
-- `yeast ssh`
-- `yeast halt`
-- `yeast down`
-- `yeast restart`
-- `yeast destroy`
-
-Most major commands support:
-
-```bash
-yeast <command> --json
-```
-
-`yeast ssh` is interactive and does not support JSON output.
-
 ## Current Limits
+
+Yeast is intentionally small right now.
 
 Current non-goals or missing features:
 - Linux only
@@ -317,7 +314,7 @@ Current non-goals or missing features:
 - no per-instance `yeast up <name>`
 - no guest IP discovery in bridge mode
 
-## Docs
+## Read More
 
 For the full user guide, see [docs.md](docs.md).
 
