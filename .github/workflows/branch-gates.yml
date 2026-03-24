@@ -1,0 +1,84 @@
+name: Branch Gates
+
+on:
+  pull_request:
+    branches: [main, master]
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: branch-gates-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  policy-checks:
+    name: Policy Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Evaluate PR branch gates
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_DRAFT: ${{ github.event.pull_request.draft }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p artifacts
+          report="artifacts/branch-gates.txt"
+          touch "$report"
+
+          errors=0
+
+          echo "Branch gate report" | tee -a "$report"
+          echo "base_ref=${BASE_REF}" | tee -a "$report"
+          echo "head_ref=${HEAD_REF}" | tee -a "$report"
+          echo "draft=${PR_DRAFT}" | tee -a "$report"
+          echo "title=${PR_TITLE}" | tee -a "$report"
+          echo "" | tee -a "$report"
+
+          if [[ "${PR_DRAFT}" == "true" ]]; then
+            echo "ERROR: Draft PRs cannot merge into protected branches." | tee -a "$report"
+            errors=1
+          fi
+
+          if [[ ! "${BASE_REF}" =~ ^(main|master)$ ]]; then
+            echo "ERROR: PR must target main or master." | tee -a "$report"
+            errors=1
+          fi
+
+          if [[ "${HEAD_REF}" =~ ^(main|master)$ ]]; then
+            echo "ERROR: Open PRs from a feature branch, not from main/master." | tee -a "$report"
+            errors=1
+          fi
+
+          if [[ "${HEAD_REF}" =~ ^(dependabot|renovate)/ ]]; then
+            echo "Bot branch detected (${HEAD_REF}); skipping human naming policy." | tee -a "$report"
+          elif [[ ! "${HEAD_REF}" =~ ^(feature|fix|hotfix|chore|docs|refactor|test|perf|ci)/[a-z0-9._-]+$ ]]; then
+            {
+              echo "ERROR: Branch name must match:"
+              echo "  <type>/<slug>"
+              echo "Allowed <type>: feature|fix|hotfix|chore|docs|refactor|test|perf|ci"
+              echo "Example: feature/add-json-status"
+            } | tee -a "$report"
+            errors=1
+          fi
+
+          if [[ "${errors}" -ne 0 ]]; then
+            echo "" | tee -a "$report"
+            echo "One or more branch gates failed." | tee -a "$report"
+            exit 1
+          fi
+
+          echo "All branch gates passed." | tee -a "$report"
+
+      - name: Upload branch gate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: branch-gates-${{ github.run_number }}
+          retention-days: 14
+          path: artifacts/branch-gates.txt

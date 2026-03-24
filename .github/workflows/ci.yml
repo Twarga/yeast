@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qa-build-test:
+    name: Test, Vet, Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go (with module cache)
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Prepare artifact directories
+        run: |
+          mkdir -p artifacts dist
+
+      - name: Download modules
+        run: |
+          go mod download
+
+      - name: Install static analysis tools
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+          go install github.com/securego/gosec/v2/cmd/gosec@v2.22.1
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Run static analysis (vet, golangci-lint, gosec)
+        run: |
+          set -o pipefail
+          ./scripts/static-analysis.sh artifacts
+
+      - name: Run tests
+        run: |
+          set -o pipefail
+          go test ./... -count=1 -v 2>&1 | tee artifacts/go-test.log
+
+      - name: Build CLI binary
+        run: |
+          set -o pipefail
+          go build -o dist/yeast ./cmd/yeast 2>&1 | tee artifacts/go-build.log
+
+      - name: Smoke check CLI
+        run: |
+          ./dist/yeast --help > artifacts/yeast-help.txt
+
+      - name: Upload test/build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-artifacts-${{ github.run_number }}
+          retention-days: 14
+          path: |
+            artifacts/**
+            dist/yeast
