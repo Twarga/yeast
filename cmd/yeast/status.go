@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"text/tabwriter"
 	"yeast/pkg/state"
 
 	"github.com/spf13/cobra"
@@ -47,12 +45,26 @@ var statusCmd = &cobra.Command{
 			})
 		}
 
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		fmt.Fprintln(w, "NAME\tSTATUS\tPID\tIP\tSSH PORT")
-		for _, inst := range instances {
-			fmt.Fprintf(w, "%s\t%s\t%d\t%s\t%d\n", inst.Name, inst.Status, inst.PID, inst.IP, inst.SSHPort)
+		if len(instances) == 0 {
+			humanWarnf("No tracked instances found")
+			humanKeyValue("State", stateFilePath)
+			return nil
 		}
-		w.Flush()
+
+		humanSection("Instance Status")
+		humanKeyValue("Count", fmt.Sprintf("%d", len(instances)))
+		humanKeyValue("State", stateFilePath)
+		fmt.Println()
+		for i, inst := range instances {
+			humanInfof("%s", humanAccent(inst.Name))
+			humanKeyValue("Status", humanStatusLabel(inst.Status))
+			humanKeyValue("PID", fmt.Sprintf("%d", inst.PID))
+			humanKeyValue("IP", inst.IP)
+			humanKeyValue("SSH", fmt.Sprintf("%d", inst.SSHPort))
+			if i < len(instances)-1 {
+				fmt.Println()
+			}
+		}
 		return nil
 	},
 }

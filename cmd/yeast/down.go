@@ -32,8 +32,13 @@ var downCmd = &cobra.Command{
 			if outputJSON {
 				return jsonCommandSuccess("down", resultData)
 			}
-			fmt.Println("No instances to stop.")
+			humanWarnf("No instances to stop")
 			return nil
+		}
+		if !outputJSON {
+			humanSection("Stopping Instances")
+			humanKeyValue("Count", fmt.Sprintf("%d", len(targets)))
+			fmt.Println()
 		}
 
 		for _, name := range targets {
@@ -47,7 +52,7 @@ var downCmd = &cobra.Command{
 					Message: err.Error(),
 				})
 				if !outputJSON {
-					fmt.Printf("Failed to stop %s cleanly: %v\n", name, err)
+					humanErrorf("Failed to stop %s cleanly: %v", humanAccent(name), err)
 				}
 				continue
 			}
@@ -60,7 +65,7 @@ var downCmd = &cobra.Command{
 					Message: "instance is already absent from state",
 				})
 				if !outputJSON {
-					fmt.Printf("Instance %s is already absent from state.\n", name)
+					humanWarnf("%s is already absent from state", humanAccent(name))
 				}
 				continue
 			}
@@ -72,7 +77,8 @@ var downCmd = &cobra.Command{
 					PID:    before.PID,
 				})
 				if !outputJSON {
-					fmt.Printf("Stopped %s (PID %d).\n", name, before.PID)
+					humanSuccessf("Stopped %s", humanAccent(name))
+					humanKeyValue("PID", fmt.Sprintf("%d", before.PID))
 				}
 				continue
 			}
@@ -83,7 +89,7 @@ var downCmd = &cobra.Command{
 				Message: "instance is already stopped",
 			})
 			if !outputJSON {
-				fmt.Printf("Instance %s is already stopped.\n", name)
+				humanWarnf("%s is already stopped", humanAccent(name))
 			}
 		}
 
@@ -98,7 +104,8 @@ var downCmd = &cobra.Command{
 		if outputJSON {
 			return jsonCommandSuccess("down", resultData)
 		}
-		fmt.Println("All requested instances are stopped.")
+		fmt.Println()
+		humanSuccessf("Stop completed")
 		return nil
 	},
 }

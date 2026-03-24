@@ -38,6 +38,15 @@ var upCmd = &cobra.Command{
 			Schema:  "yeast.up.v1",
 			Results: make([]lifecycleResult, 0, len(cfg.Instances)),
 		}
+		if !outputJSON {
+			humanSection("Starting Instances")
+			humanKeyValue("Count", fmt.Sprintf("%d", len(cfg.Instances)))
+			humanKeyValue("Network", network.Mode)
+			if network.Bridge != "" {
+				humanKeyValue("Bridge", network.Bridge)
+			}
+			fmt.Println()
+		}
 		for _, instanceCfg := range cfg.Instances {
 			// Check if already running
 			if inst, exists := s.Instances[instanceCfg.Name]; exists && inst.Status == "running" {
@@ -50,13 +59,13 @@ var upCmd = &cobra.Command{
 					Message: "instance is already running",
 				})
 				if !outputJSON {
-					fmt.Printf("Instance %s is already running (PID %d)\n", instanceCfg.Name, inst.PID)
+					humanWarnf("%s is already running (PID %d)", humanAccent(instanceCfg.Name), inst.PID)
 				}
 				continue
 			}
 
 			if !outputJSON {
-				fmt.Printf("Starting %s...\n", instanceCfg.Name)
+				humanInfof("Starting %s", humanAccent(instanceCfg.Name))
 			}
 			inst, err := startInstanceFromConfig(instanceCfg, network)
 			if err != nil {
@@ -67,7 +76,7 @@ var upCmd = &cobra.Command{
 					Message: err.Error(),
 				})
 				if !outputJSON {
-					fmt.Printf("  Failed to start instance: %v\n", err)
+					humanErrorf("Failed to start %s: %v", humanAccent(instanceCfg.Name), err)
 				}
 				continue
 			}
@@ -79,7 +88,9 @@ var upCmd = &cobra.Command{
 				SSHPort: inst.SSHPort,
 			})
 			if !outputJSON {
-				fmt.Printf("  Started! (PID %d, SSH Port %d)\n", inst.PID, inst.SSHPort)
+				humanSuccessf("%s started", humanAccent(instanceCfg.Name))
+				humanKeyValue("PID", fmt.Sprintf("%d", inst.PID))
+				humanKeyValue("SSH", fmt.Sprintf("%s:%d", inst.IP, inst.SSHPort))
 			}
 			s.Instances[instanceCfg.Name] = inst
 		}
@@ -92,6 +103,10 @@ var upCmd = &cobra.Command{
 		}
 		if outputJSON {
 			return jsonCommandSuccess("up", resultData)
+		}
+		if resultData.Started > 0 {
+			fmt.Println()
+			humanSuccessf("Started %d instance(s)", resultData.Started)
 		}
 		return nil
 	},

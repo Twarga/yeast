@@ -24,7 +24,7 @@ func Execute() {
 		if errors.As(err, &reported) {
 			os.Exit(1)
 		}
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintf(os.Stderr, "%s %s\n", humanStyle("[fail]", ansiRed), err)
 		os.Exit(1)
 	}
 }

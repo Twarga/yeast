@@ -70,29 +70,40 @@ var pullCmd = &cobra.Command{
 					if outputJSON {
 						return jsonCommandSuccess("pull", data)
 					}
-					fmt.Printf("Image %s already exists and checksum is valid: %s\n", imageName, destPath)
+					humanSection("Trusted Image")
+					humanSuccessf("%s is already present and verified", humanAccent(imageName))
+					humanKeyValue("Path", destPath)
 					return nil
 				}
 				return jsonCommandErrorWithData("pull", "checksum_mismatch", fmt.Errorf("image %s already exists but checksum does not match manifest; rerun with --force to replace it", destPath), data)
 			}
 			data.Action = "replaced"
 			if !outputJSON {
-				fmt.Printf("Replacing existing image at %s (--force)\n", destPath)
+				humanWarnf("Replacing existing image at %s (--force)", destPath)
 			}
 		}
 
+		var progress *pullProgressPrinter
 		if !outputJSON {
-			fmt.Printf("Downloading trusted image %s\n", imageName)
-			fmt.Printf("Source URL: %s\n", spec.URL)
-			fmt.Printf("Expected SHA256: %s\n", spec.SHA256)
+			humanSection("Pulling Trusted Image")
+			humanKeyValue("Image", humanAccent(imageName))
+			humanKeyValue("Source", spec.URL)
+			humanKeyValue("SHA256", spec.SHA256)
+			humanKeyValue("Destination", destPath)
+			fmt.Println()
+			progress = newPullProgressPrinter(imageName)
 		}
 
 		opts := images.DownloadOptions{
-			Retries: pullRetries,
-			Timeout: pullTimeout,
+			Retries:  pullRetries,
+			Timeout:  pullTimeout,
+			Progress: progress,
 		}
 
 		if err := images.DownloadAndVerify(spec, destPath, opts); err != nil {
+			if progress != nil {
+				progress.FinishWithError(err)
+			}
 			return jsonCommandErrorWithData("pull", "download_or_verify_failed", fmt.Errorf("pull failed: %w", err), data)
 		}
 
@@ -100,7 +111,12 @@ var pullCmd = &cobra.Command{
 			return jsonCommandSuccess("pull", data)
 		}
 
-		fmt.Printf("Image saved and verified: %s\n", destPath)
+		if progress != nil {
+			progress.FinishSuccess()
+		}
+		humanSuccessf("Image saved and verified")
+		humanKeyValue("Image", humanAccent(imageName))
+		humanKeyValue("Path", destPath)
 		return nil
 	},
 }
@@ -130,11 +146,16 @@ func runPullList() error {
 		return jsonCommandSuccess("pull", data)
 	}
 
-	fmt.Println("Supported trusted images:")
-	for _, item := range items {
-		fmt.Printf("- %s\n", item.Name)
-		fmt.Printf("  URL: %s\n", item.SourceURL)
-		fmt.Printf("  SHA256: %s\n", item.SHA256)
+	humanSection("Supported Trusted Images")
+	humanKeyValue("Count", fmt.Sprintf("%d", len(items)))
+	fmt.Println()
+	for i, item := range items {
+		humanInfof("%s", humanAccent(item.Name))
+		humanKeyValue("URL", item.SourceURL)
+		humanKeyValue("SHA256", item.SHA256)
+		if i < len(items)-1 {
+			fmt.Println()
+		}
 	}
 	return nil
 }

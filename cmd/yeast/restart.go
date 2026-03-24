@@ -40,7 +40,7 @@ var restartCmd = &cobra.Command{
 					Results: []lifecycleResult{},
 				})
 			}
-			fmt.Println("No instances to restart.")
+			humanWarnf("No instances to restart")
 			return nil
 		}
 
@@ -60,6 +60,15 @@ var restartCmd = &cobra.Command{
 			Schema:  "yeast.restart.v1",
 			Results: make([]lifecycleResult, 0, len(targets)),
 		}
+		if !outputJSON {
+			humanSection("Restarting Instances")
+			humanKeyValue("Count", fmt.Sprintf("%d", len(targets)))
+			humanKeyValue("Network", network.Mode)
+			if network.Bridge != "" {
+				humanKeyValue("Bridge", network.Bridge)
+			}
+			fmt.Println()
+		}
 		for _, name := range targets {
 			instanceCfg, ok := cfgByName[name]
 			if !ok {
@@ -71,7 +80,7 @@ var restartCmd = &cobra.Command{
 					Message: "instance is not defined in yeast.yaml",
 				})
 				if !outputJSON {
-					fmt.Printf("Instance %s is not defined in yeast.yaml\n", name)
+					humanWarnf("%s is not defined in yeast.yaml", humanAccent(name))
 				}
 				continue
 			}
@@ -86,17 +95,18 @@ var restartCmd = &cobra.Command{
 					Message: fmt.Sprintf("failed to stop before restart: %v", err),
 				})
 				if !outputJSON {
-					fmt.Printf("Failed to stop %s before restart: %v\n", name, err)
+					humanErrorf("Failed to stop %s before restart: %v", humanAccent(name), err)
 				}
 				continue
 			}
 
 			if !outputJSON && outcome.Exists && exists && before.Status == "running" && outcome.WasRunning {
-				fmt.Printf("Stopped %s (PID %d) for restart.\n", name, before.PID)
+				humanInfof("Stopped %s for restart", humanAccent(name))
+				humanKeyValue("PID", fmt.Sprintf("%d", before.PID))
 			}
 
 			if !outputJSON {
-				fmt.Printf("Starting %s...\n", name)
+				humanInfof("Starting %s", humanAccent(name))
 			}
 			inst, err := startInstanceFromConfig(instanceCfg, network)
 			if err != nil {
@@ -107,7 +117,7 @@ var restartCmd = &cobra.Command{
 					Message: fmt.Sprintf("failed to start after stop: %v", err),
 				})
 				if !outputJSON {
-					fmt.Printf("  Failed to restart %s: %v\n", name, err)
+					humanErrorf("Failed to restart %s: %v", humanAccent(name), err)
 				}
 				continue
 			}
@@ -121,7 +131,9 @@ var restartCmd = &cobra.Command{
 				SSHPort: inst.SSHPort,
 			})
 			if !outputJSON {
-				fmt.Printf("  Restarted %s (PID %d, SSH Port %d)\n", name, inst.PID, inst.SSHPort)
+				humanSuccessf("%s restarted", humanAccent(name))
+				humanKeyValue("PID", fmt.Sprintf("%d", inst.PID))
+				humanKeyValue("SSH", fmt.Sprintf("%s:%d", inst.IP, inst.SSHPort))
 			}
 		}
 
@@ -134,7 +146,8 @@ var restartCmd = &cobra.Command{
 		if outputJSON {
 			return jsonCommandSuccess("restart", resultData)
 		}
-		fmt.Println("Restart completed.")
+		fmt.Println()
+		humanSuccessf("Restart completed")
 		return nil
 	},
 }

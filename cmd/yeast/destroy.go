@@ -37,8 +37,13 @@ var destroyCmd = &cobra.Command{
 			if outputJSON {
 				return jsonCommandSuccess("destroy", resultData)
 			}
-			fmt.Println("No instances to destroy.")
+			humanWarnf("No instances to destroy")
 			return nil
+		}
+		if !outputJSON {
+			humanSection("Destroying Instances")
+			humanKeyValue("Count", fmt.Sprintf("%d", len(targets)))
+			fmt.Println()
 		}
 
 		for _, name := range targets {
@@ -52,12 +57,13 @@ var destroyCmd = &cobra.Command{
 					Message: fmt.Sprintf("failed to stop before destroy: %v", err),
 				})
 				if !outputJSON {
-					fmt.Printf("Failed to stop %s before destroy: %v\n", name, err)
+					humanErrorf("Failed to stop %s before destroy: %v", humanAccent(name), err)
 				}
 				continue
 			}
 			if !outputJSON && outcome.Exists && exists && before.Status == "running" && outcome.WasRunning {
-				fmt.Printf("Stopped %s (PID %d) before destroy.\n", name, before.PID)
+				humanInfof("Stopped %s before destroy", humanAccent(name))
+				humanKeyValue("PID", fmt.Sprintf("%d", before.PID))
 			}
 
 			dir, err := instanceDir(name)
@@ -69,7 +75,7 @@ var destroyCmd = &cobra.Command{
 					Message: fmt.Sprintf("failed to resolve instance directory: %v", err),
 				})
 				if !outputJSON {
-					fmt.Printf("Failed to resolve instance directory for %s: %v\n", name, err)
+					humanErrorf("Failed to resolve instance directory for %s: %v", humanAccent(name), err)
 				}
 				continue
 			}
@@ -85,7 +91,7 @@ var destroyCmd = &cobra.Command{
 					Message: fmt.Sprintf("failed to remove instance directory: %v", err),
 				})
 				if !outputJSON {
-					fmt.Printf("Failed to remove instance directory for %s: %v\n", name, err)
+					humanErrorf("Failed to remove instance directory for %s: %v", humanAccent(name), err)
 				}
 				continue
 			}
@@ -101,7 +107,8 @@ var destroyCmd = &cobra.Command{
 					Message: fmt.Sprintf("instance directory still exists at %s", dir),
 				})
 				if !outputJSON {
-					fmt.Printf("Instance directory for %s still exists at %s\n", name, dir)
+					humanErrorf("Instance directory for %s still exists", humanAccent(name))
+					humanKeyValue("Path", dir)
 				}
 				continue
 			}
@@ -113,7 +120,7 @@ var destroyCmd = &cobra.Command{
 					Message: fmt.Sprintf("failed to verify instance directory removal: %v", statErr),
 				})
 				if !outputJSON {
-					fmt.Printf("Failed to verify instance directory removal for %s: %v\n", name, statErr)
+					humanErrorf("Failed to verify instance directory removal for %s: %v", humanAccent(name), statErr)
 				}
 				continue
 			}
@@ -126,7 +133,7 @@ var destroyCmd = &cobra.Command{
 					Message: "instance is already absent",
 				})
 				if !outputJSON {
-					fmt.Printf("Instance %s is already absent.\n", name)
+					humanWarnf("%s is already absent", humanAccent(name))
 				}
 				continue
 			}
@@ -137,7 +144,7 @@ var destroyCmd = &cobra.Command{
 				Action: "destroyed",
 			})
 			if !outputJSON {
-				fmt.Printf("Destroyed %s.\n", name)
+				humanSuccessf("Destroyed %s", humanAccent(name))
 			}
 		}
 
@@ -150,7 +157,8 @@ var destroyCmd = &cobra.Command{
 		if outputJSON {
 			return jsonCommandSuccess("destroy", resultData)
 		}
-		fmt.Println("Destroy completed.")
+		fmt.Println()
+		humanSuccessf("Destroy completed")
 		return nil
 	},
 }

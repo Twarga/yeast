@@ -27,19 +27,6 @@ type doctorResult struct {
 	Fixes   []string
 }
 
-func (l doctorLevel) prefix() string {
-	switch l {
-	case levelOK:
-		return "[OK]"
-	case levelWarning:
-		return "[WARN]"
-	case levelBlocker:
-		return "[BLOCKER]"
-	default:
-		return "[UNKNOWN]"
-	}
-}
-
 func (l doctorLevel) value() string {
 	switch l {
 	case levelOK:
@@ -59,7 +46,7 @@ var doctorCmd = &cobra.Command{
 	Long:  "Checks host prerequisites needed by Yeast and prints remediation steps.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if !outputJSON {
-			fmt.Println("Running Yeast preflight checks...")
+			humanSection("Running Preflight Checks")
 			fmt.Println()
 		}
 
@@ -80,9 +67,18 @@ var doctorCmd = &cobra.Command{
 		jsonChecks := make([]doctorCheckOutput, 0, len(results))
 		for _, r := range results {
 			if !outputJSON {
-				fmt.Printf("%s %s: %s\n", r.Level.prefix(), r.Name, r.Message)
+				switch r.Level {
+				case levelOK:
+					humanSuccessf("%s: %s", r.Name, r.Message)
+				case levelWarning:
+					humanWarnf("%s: %s", r.Name, r.Message)
+				case levelBlocker:
+					humanErrorf("%s: %s", r.Name, r.Message)
+				default:
+					humanInfof("%s: %s", r.Name, r.Message)
+				}
 				for _, fix := range r.Fixes {
-					fmt.Printf("   fix: %s\n", fix)
+					humanKeyValue("Fix", fix)
 				}
 			}
 			jsonChecks = append(jsonChecks, doctorCheckOutput{
@@ -116,17 +112,22 @@ var doctorCmd = &cobra.Command{
 		}
 
 		fmt.Println()
-		fmt.Printf("Summary: %d checks, %d blocker(s), %d warning(s)\n", len(results), blockers, warnings)
+		humanSection("Preflight Summary")
+		humanKeyValue("Checks", fmt.Sprintf("%d", len(results)))
+		humanKeyValue("Blockers", fmt.Sprintf("%d", blockers))
+		humanKeyValue("Warnings", fmt.Sprintf("%d", warnings))
 		if blockers > 0 {
 			return fmt.Errorf("preflight failed with %d blocker(s)", blockers)
 		}
 
 		if warnings > 0 {
-			fmt.Println("Preflight passed with warnings.")
+			fmt.Println()
+			humanWarnf("Preflight passed with warnings")
 			return nil
 		}
 
-		fmt.Println("Preflight passed. Environment looks good.")
+		fmt.Println()
+		humanSuccessf("Preflight passed. Environment looks good")
 		return nil
 	},
 }

@@ -25,13 +25,13 @@ var sshCmd = &cobra.Command{
 		}
 
 		name := args[0]
-		lock, err := state.AcquireFileLock("yeast.state", state.DefaultLockOptions())
+		lock, err := state.AcquireFileLock(stateFilePath, state.DefaultLockOptions())
 		if err != nil {
 			return fmt.Errorf("error acquiring state lock: %w", err)
 		}
 		defer releaseStateLock(lock)
 
-		s, err := state.Load("yeast.state")
+		s, err := state.Load(stateFilePath)
 		if err != nil {
 			return fmt.Errorf("error loading state: %w", err)
 		}
@@ -60,7 +60,16 @@ var sshCmd = &cobra.Command{
 		}
 		sshArgs = append(sshArgs, fmt.Sprintf("%s@%s", sshUser, inst.IP))
 
-		fmt.Printf("Connecting to %s on port %d...\n", name, inst.SSHPort)
+		humanSection("SSH Session")
+		humanKeyValue("Instance", humanAccent(name))
+		humanKeyValue("User", sshUser)
+		humanKeyValue("Host", inst.IP)
+		humanKeyValue("Port", fmt.Sprintf("%d", inst.SSHPort))
+		if sshInsecure {
+			humanWarnf("Host key verification is disabled for this connection")
+		}
+		fmt.Println()
+		humanInfof("Opening SSH session")
 
 		// #nosec G204 -- executes trusted ssh binary with explicit args for user-requested interactive session.
 		if err := syscall.Exec(sshPath, sshArgs, os.Environ()); err != nil {
