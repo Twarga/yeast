@@ -1,69 +1,74 @@
-# Yeast 🍞
+# Yeast
 
-> **Local Virtual Machines for the Cloud Native Era.**
+> Fast local VMs for Linux with KVM, QEMU, and cloud-init.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Go Version](https://img.shields.io/badge/go-1.21-cyan.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 
-**Yeast** is a modern, lightweight local VM orchestrator. It is designed to be a faster, simpler alternative to Vagrant for Linux users.
+Yeast is a project-based local VM orchestrator for Linux. It is built for developers who want real virtual machines locally without the weight and sprawl of older VM workflows.
 
-Built on top of **KVM** and **QEMU**, Yeast provides:
-- 🚀 **Instant Boot:** Uses Copy-on-Write (CoW) disks for milliseconds creation time.
-- 📦 **Zero Bloat:** No 2GB box downloads per project. Base images are shared globally.
-- 🔧 **Cloud-Init:** Native support for modern cloud configuration (user-data).
-- 🧬 **Declarative Config:** Simple `yeast.yaml` defines your environment.
-- 🐹 **Single Binary:** Written in Go, no Ruby/Python dependencies.
+Yeast gives you:
+- project-local VM definitions in `yeast.yaml`
+- trusted base image pulls with pinned SHA256 verification
+- cloud-init bootstrapping
+- fast copy-on-write overlays instead of full image copies
+- simple lifecycle commands: `up`, `status`, `ssh`, `halt`, `down`, `restart`, `destroy`
+- JSON output for automation
 
-## 📋 Prerequisites
+## Why Yeast
 
-Yeast runs on **Linux** and requires hardware virtualization.
+Yeast is opinionated and intentionally small.
 
-1.  **KVM & QEMU:**
-    ```bash
-    # Ubuntu/Debian
-    sudo apt install qemu-system-x86 qemu-utils genisoimage
+It is designed for:
+- Linux development environments
+- reproducible local VM workflows
+- simple KVM/QEMU usage without a large plugin ecosystem
+- command-line automation
 
-    # Fedora/RHEL
-    sudo dnf install qemu-system-x86 qemu-img genisoimage
+It is not trying to be:
+- a GUI hypervisor manager
+- a whole-machine VM inventory system
+- a multi-host orchestrator
+- a full cloud platform
 
-    # Arch Linux
-    sudo pacman -S qemu-base cdrtools
-    ```
+## Installation
 
-2.  **User Permissions:**
-    Ensure your user is in the `kvm` group (to run VMs without sudo):
-    ```bash
-    sudo usermod -aG kvm $USER
-    # You may need to log out and log back in.
-    ```
+## One-command installer
 
-## 🚀 Installation
+If the repo is reachable over HTTPS, the installer can be run directly:
 
-### One-command installer
+```bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/dev/install.sh | bash
+```
 
-If you already have the repository locally, run:
+If you already cloned the repo locally:
 
 ```bash
 bash install.sh
 ```
 
-The installer:
+What `install.sh` does:
 - detects the Linux package manager
-- installs Yeast dependencies
+- installs Yeast host dependencies
 - installs Go for the source-build path
-- builds and installs `yeast` to `/usr/local/bin`
+- clones and builds Yeast
+- installs `yeast` into `/usr/local/bin`
 - creates `~/.yeast/cache/`
 - generates an SSH key if needed
 - adds the user to the `kvm` group when possible
 
-You can override the source repo and branch:
+Optional installer overrides:
 
 ```bash
 YEAST_REPO_URL=https://github.com/Twarga/yeast.git YEAST_REF=dev bash install.sh
 ```
 
-### From Source
+Important:
+- if the repo is private, the curl installer only works for users who already have access
+- if the installer adds you to the `kvm` group, log out and back in before your first `yeast up`
+
+## Build from source
 
 ```bash
 git clone https://github.com/Twarga/yeast.git
@@ -72,19 +77,46 @@ go build -o yeast ./cmd/yeast
 sudo mv yeast /usr/local/bin/
 ```
 
-## 🏁 Quick Start
+## Prerequisites
 
-### 1. Run Environment Checks
-Before creating VMs, verify host prerequisites:
+Yeast currently supports:
+- Linux only
+
+Yeast needs:
+- KVM support on the host
+- `qemu-system-x86_64`
+- `qemu-img`
+- `genisoimage`
+- an SSH public key in `~/.ssh/id_ed25519.pub` or `~/.ssh/id_rsa.pub`
+
+Typical package installs:
+
+```bash
+# Ubuntu / Debian
+sudo apt install qemu-system-x86 qemu-utils genisoimage
+
+# Fedora / RHEL
+sudo dnf install qemu-system-x86 qemu-img genisoimage
+
+# Arch Linux
+sudo pacman -S qemu-base cdrtools
+```
+
+If needed, add your user to the `kvm` group:
+
+```bash
+sudo usermod -aG kvm $USER
+```
+
+## Quick Start
+
+### 1. Check the host
 
 ```bash
 yeast doctor
 ```
 
-If blockers are found, follow the printed `fix:` steps and re-run the command.
-
-### 2. Initialize a Project
-Create a new directory and initialize a Yeast project.
+### 2. Create a project
 
 ```bash
 mkdir my-project
@@ -92,7 +124,8 @@ cd my-project
 yeast init
 ```
 
-This creates a `yeast.yaml` file:
+Default starter config:
+
 ```yaml
 version: 1
 instances:
@@ -104,7 +137,7 @@ instances:
     sudo: none
 ```
 
-You can also generate a starter config with your preferred values:
+You can also shape the starter config immediately:
 
 ```bash
 yeast init \
@@ -116,97 +149,105 @@ yeast init \
   --sudo password
 ```
 
-### 3. Download Trusted Base Image
-List supported images first:
+### 3. Discover and pull an image
+
+List supported trusted images:
 
 ```bash
 yeast pull --list
 ```
 
-Then use Yeast's trusted manifest downloader (URL + pinned SHA256 verification):
+Pull one:
 
 ```bash
 yeast pull ubuntu-22.04
 ```
 
-Supported images:
+Current built-in trusted images:
 - `ubuntu-22.04`
 - `ubuntu-24.04`
 
 ### 4. Start the VMs
+
 ```bash
 yeast up
 ```
-You will see output indicating the disk creation, cloud-init generation, and QEMU startup.
 
-### 5. Check Status
+### 5. Check status
+
 ```bash
 yeast status
 ```
-Output:
+
+Example output:
+
 ```text
 NAME    STATUS    PID     IP           SSH PORT
 web     running   12345   127.0.0.1    45678
 ```
 
-Machine-readable mode:
+For scripts:
 
 ```bash
 yeast status --json
 ```
 
-### 6. SSH Connect
+### 6. Connect over SSH
+
 ```bash
 yeast ssh web
 ```
-You are now inside the VM!
 
-### 7. Stop Everything
+If you initialized the instance with a different user:
+
+```bash
+yeast ssh web --user operator
+```
+
+### 7. Stop the environment
+
 ```bash
 yeast down
 ```
 
-## ⚙️ Configuration (`yeast.yaml`)
+## Example `yeast.yaml`
 
 ```yaml
 version: 1
 instances:
-  - name: db-server
-    image: ubuntu-22.04   # Matches filename in ~/.yeast/cache/[image].img
-    memory: 2048          # RAM in MB
-    cpus: 2               # vCPU cores
-    user: yeast           # Optional, default: yeast
-    sudo: none            # Optional: none | password | nopasswd (default: none)
-    
-    # Optional: User Data for Cloud-Init
-    user_data: |
-      #cloud-config
-      packages:
-        - nginx
-        - git
-      runcmd:
-        - systemctl enable --now nginx
+  - name: web
+    image: ubuntu-22.04
+    memory: 2048
+    cpus: 2
+    user: yeast
+    sudo: password
+    env:
+      APP_ENV: development
+      LOG_LEVEL: debug
 ```
 
-Starter-config shortcuts:
-- `yeast init --name api --image ubuntu-24.04 --memory 2048 --cpus 2`
-- `yeast init --user operator --sudo password`
+Supported fields today:
+- `name`
+- `image`
+- `memory`
+- `cpus`
+- `user`
+- `sudo`
+- `env`
+- `user_data`
 
-Current config limitation:
-- configurable disk size is not yet supported in `yeast.yaml`
+Important config behavior:
+- `user_data`, if provided, replaces Yeast's generated bootstrap cloud-init
+- custom `user_data` does not automatically merge in your SSH key, user, sudo policy, or env values
+- configurable disk size is not supported yet
 
-Security defaults:
-- `sudo: none` is the default for least privilege.
-- Use `sudo: password` to require password-protected sudo.
-- Use `sudo: nopasswd` only when you explicitly accept that risk.
+## Networking
 
-## 🌐 Networking Modes
+Yeast supports 3 network modes on `up` and `restart`:
 
-Yeast supports explicit networking modes for `up` and `restart`:
-
-- `user` (default): user-mode NAT with SSH host port forwarding
-- `private`: restricted user-mode network (`restrict=on`) with SSH host port forwarding
-- `bridge`: host bridge attachment plus a restricted management NIC for SSH forwarding
+- `user`: default QEMU user-mode NAT with SSH port forwarding
+- `private`: user-mode NAT with `restrict=on`
+- `bridge`: host bridge attachment plus a restricted management NIC for SSH
 
 Examples:
 
@@ -217,100 +258,70 @@ yeast up --network-mode bridge --bridge br0
 yeast restart web --network-mode bridge --bridge br0
 ```
 
-Design tradeoffs and safety notes:
-- `docs/NETWORKING_MODES.md`
+Current networking limits:
+- only SSH port forwarding is built in
+- no custom `8080:80` style forwards yet
+- network mode is chosen at command time
+- network mode is not stored in `yeast.yaml`
 
-## 🧾 JSON Output Contracts
+## Project Model
 
-For automation and scripting, major commands support `--json` while keeping default human-readable output unchanged.
+Yeast is project-local.
 
-Examples:
+Project directory files:
+- `yeast.yaml`: desired VM definitions
+- `yeast.state`: runtime state for the current project
+
+Home directory paths:
+- `~/.yeast/cache/`: shared base images
+- `~/.yeast/instances/<name>/`: per-instance runtime files
+
+Each instance directory typically contains:
+- `disk.qcow2`
+- `seed.iso`
+- `user-data`
+- `meta-data`
+- `vm.log`
+
+## Command Surface
+
+Main commands:
+- `yeast doctor`
+- `yeast init`
+- `yeast pull`
+- `yeast up`
+- `yeast status`
+- `yeast ssh`
+- `yeast halt`
+- `yeast down`
+- `yeast restart`
+- `yeast destroy`
+
+Most major commands support:
 
 ```bash
-yeast up --json
-yeast status --json
-yeast down --json
-yeast halt web --json
-yeast restart web --json
-yeast destroy web --json
+yeast <command> --json
 ```
 
-Contract details and schema versions:
-- `docs/OUTPUT_CONTRACTS.md`
+`yeast ssh` is interactive and does not support JSON output.
 
-## 📈 Performance Benchmarks
+## Current Limits
 
-Repeatable benchmark harness:
+Current non-goals or missing features:
+- Linux only
+- no GUI
+- no global VM inventory command
+- no arbitrary port-forward configuration
+- no configurable disk size
+- no snapshots or suspend/resume
+- no per-instance `yeast up <name>`
+- no guest IP discovery in bridge mode
 
-```bash
-scripts/benchmark.sh --iterations 7 --output benchmarks/latest.json
-```
+## Docs
 
-Methodology:
-- `docs/PERFORMANCE_BENCHMARKS.md`
-- Cold-start iteration loop (`up` -> collect metrics -> `down`)
-- Deterministic `fake-tools` mode (CI-friendly)
+For the full user guide, see [docs.md](docs.md).
 
-Baseline (fake-tools mode, 7 iterations, captured 2026-03-05):
-
-| Metric | Min | P50 | P95 | Avg | Max |
-|---|---:|---:|---:|---:|---:|
-| Startup latency (ms) | 518 | 523 | 524 | 522.00 | 524 |
-| VM process RSS (KB) | 8728 | 8796 | 10872 | 9668.57 | 10872 |
-| Overlay disk bytes | 10 | 10 | 10 | 10.00 | 10 |
-| Instance dir bytes | 300 | 300 | 300 | 300.00 | 300 |
-
-Baseline artifact:
-- `benchmarks/latest.json`
-
-## 📂 Architecture
-
-Yeast uses a standard layout:
-- `~/.yeast/cache/`: Stores read-only base images.
-- `~/.yeast/instances/[name]/`: Stores the VM state (CoW disk, logs, seed ISO).
-- `yeast.state`: Local JSON file in your project directory tracking PIDs.
-
-## 🪵 Logging and Troubleshooting
-
-VM runtime logs:
-- Active log: `~/.yeast/instances/<name>/vm.log`
-- Rotated history: `~/.yeast/instances/<name>/vm.<timestamp>.<unixnano>.log`
-- Archive retention: default `5` per instance (configure with `YEAST_VM_LOG_RETENTION`)
-
-Docs:
-- `docs/LOGGING.md` (format, levels, fields, file naming, retention policy)
-- `docs/RUNBOOK_VM_FAILURES.md` (step-by-step debug runbook)
-
-## 🔒 Image Trust Model
-
-Yeast ships a built-in trusted image manifest. Each supported image contains:
-- A fixed source URL
-- A pinned SHA256 checksum
-
-When you run `yeast pull <image>`:
-1. Yeast downloads to a temporary file in `~/.yeast/cache/`
-2. It computes SHA256 while downloading
-3. It verifies checksum against the trusted manifest
-4. It only moves the file into place if verification succeeds
-
-If checksum verification fails, Yeast fails closed and removes the partial file.
-
-Manifest source of truth:
-- Ubuntu official cloud image releases
-- Corresponding `SHA256SUMS` from `cloud-images.ubuntu.com`
-
-## 🤝 Contributing
-
-Contributions are welcome.
-
-See:
-- `CONTRIBUTING.md` for contribution flow, coding/testing standards, release notes format, and versioning policy.
-- `CHANGELOG.md` for the release note structure and current `Unreleased` entries.
-- `docs/SECURITY_STATIC_ANALYSIS.md` for Go lint/security tooling, severity policy, and suppression standards.
-
-## 📄 License
-
-Distributed under the **MIT License**. See `LICENSE` for more information.
-
----
-*Built with ❤️ and Go.*
+Also useful:
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [CHANGELOG.md](CHANGELOG.md)
+- [LICENSE](LICENSE)
