@@ -9,19 +9,21 @@ type TrustedImage struct {
 	SHA256 string
 }
 
-// trustedManifest is intentionally pinned to specific URLs + checksums.
-// Source: https://cloud-images.ubuntu.com/releases/*/release/SHA256SUMS
-// Updated: 2026-03-05
+// trustedManifest is intentionally pinned to immutable release URLs + checksums.
+// Source:
+// - https://cloud-images.ubuntu.com/releases/jammy/release-20260320/SHA256SUMS
+// - https://cloud-images.ubuntu.com/releases/noble/release-20260321/SHA256SUMS
+// Updated: 2026-03-25
 var trustedManifest = map[string]TrustedImage{
 	"ubuntu-22.04": {
 		Name:   "ubuntu-22.04",
-		URL:    "https://cloud-images.ubuntu.com/releases/jammy/release/ubuntu-22.04-server-cloudimg-amd64.img",
-		SHA256: "e66ef756881b5e682c496112201382abd76291797a7395bf81fd1bd0888f5b6f",
+		URL:    "https://cloud-images.ubuntu.com/releases/jammy/release-20260320/ubuntu-22.04-server-cloudimg-amd64.img",
+		SHA256: "ea85b16f81b3f6aa53a1260912d3f991fc33e0e0fc1d73f0b8c9c96247e42fdb",
 	},
 	"ubuntu-24.04": {
 		Name:   "ubuntu-24.04",
-		URL:    "https://cloud-images.ubuntu.com/releases/noble/release/ubuntu-24.04-server-cloudimg-amd64.img",
-		SHA256: "7aa6d9f5e8a3a55c7445b138d31a73d1187871211b2b7da9da2e1a6cbf169b21",
+		URL:    "https://cloud-images.ubuntu.com/releases/noble/release-20260321/ubuntu-24.04-server-cloudimg-amd64.img",
+		SHA256: "5c3ddb00f60bc455dac0862fabe9d8bacec46c33ac1751143c5c3683404b110d",
 	},
 }
 
