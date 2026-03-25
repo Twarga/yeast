@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"yeast/pkg/util"
 
 	"gopkg.in/yaml.v3"
 )
@@ -66,6 +67,11 @@ func validate(cfg *Config) error {
 		if vm.CPUs < 1 && vm.CPUs != 0 {
 			return fmt.Errorf("instance %s has invalid cpu count (min 1)", vm.Name)
 		}
+		if strings.TrimSpace(vm.DiskSize) != "" {
+			if _, err := util.NormalizeByteSize(vm.DiskSize); err != nil {
+				return fmt.Errorf("instance %s has invalid disk_size: %w", vm.Name, err)
+			}
+		}
 		if strings.TrimSpace(vm.User) != "" && !linuxUserPattern.MatchString(vm.User) {
 			return fmt.Errorf("instance %s has invalid user %q (allowed: lowercase linux username pattern)", vm.Name, vm.User)
 		}
@@ -98,6 +104,11 @@ func applyDefaults(cfg *Config) {
 		}
 		if cfg.Instances[i].CPUs == 0 {
 			cfg.Instances[i].CPUs = 1
+		}
+		if strings.TrimSpace(cfg.Instances[i].DiskSize) != "" {
+			if normalized, err := util.NormalizeByteSize(cfg.Instances[i].DiskSize); err == nil {
+				cfg.Instances[i].DiskSize = normalized
+			}
 		}
 		if strings.TrimSpace(cfg.Instances[i].User) == "" {
 			cfg.Instances[i].User = "yeast"

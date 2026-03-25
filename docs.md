@@ -422,6 +422,25 @@ Example:
 cpus: 2
 ```
 
+#### `disk_size`
+
+Optional.
+
+Requested virtual disk size for the instance overlay disk.
+
+Examples:
+
+```yaml
+disk_size: 20G
+disk_size: 25600M
+```
+
+Behavior:
+- if omitted, Yeast uses the base image's default virtual size
+- if set on first boot, Yeast creates the overlay disk with that size
+- if increased later, Yeast grows the existing overlay disk on the next `yeast up` or `yeast restart`
+- Yeast does not shrink disks automatically
+
 #### `user`
 
 Optional.
@@ -564,6 +583,7 @@ Current rules include:
 - `image` cannot be empty
 - `memory` must be `0` or at least `128`
 - `cpus` must be `0` or at least `1`
+- `disk_size`, if provided, must use a supported size like `20G`, `10240M`, or raw bytes
 - `user`, if provided, must be a lowercase Linux-style username
 - `sudo`, if provided, must be `none`, `password`, or `nopasswd`
 - env keys must be valid shell variable names
@@ -614,7 +634,7 @@ Usage:
 ```bash
 yeast init
 yeast init --json
-yeast init --name api --image ubuntu-24.04 --memory 2048 --cpus 2
+yeast init --name api --image ubuntu-24.04 --memory 2048 --cpus 2 --disk-size 25G
 ```
 
 Behavior:
@@ -627,6 +647,7 @@ Useful flags:
 - `--image`
 - `--memory`
 - `--cpus`
+- `--disk-size`
 - `--user`
 - `--sudo`
 
@@ -638,12 +659,10 @@ yeast init \
   --image ubuntu-24.04 \
   --memory 2048 \
   --cpus 2 \
+  --disk-size 25G \
   --user operator \
   --sudo password
 ```
-
-Current limitation:
-- Yeast does not support configurable disk size in the runtime config yet, so there is no `--disk-size` flag today
 
 ### `yeast pull`
 
@@ -1185,7 +1204,6 @@ It does **not** currently provide:
 - a GUI or web control panel
 - a VM marketplace or template store
 - arbitrary custom port forwarding
-- configurable disk size in `yeast.yaml`
 - per-instance network settings in `yeast.yaml`
 - snapshots
 - suspend/resume
@@ -1193,6 +1211,7 @@ It does **not** currently provide:
 - single-instance `yeast up <name>`
 - guest IP discovery in bridge mode
 - automatic merge between custom `user_data` and generated bootstrap config
+- reusable cloud-init setup templates or provisioning presets
 
 ## Important Scope Notes
 

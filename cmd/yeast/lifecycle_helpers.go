@@ -58,6 +58,7 @@ func startInstanceFromConfig(instanceCfg config.Instance, network vm.NetworkOpti
 		instanceCfg.Image,
 		instanceCfg.Memory,
 		instanceCfg.CPUs,
+		instanceCfg.DiskSize,
 		instanceCfg.UserData,
 		instanceCfg.Env,
 		instanceCfg.User,

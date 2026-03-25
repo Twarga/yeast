@@ -10,6 +10,7 @@ type Instance struct {
 	Image    string            `yaml:"image"`
 	Memory   int               `yaml:"memory"`
 	CPUs     int               `yaml:"cpus"`
+	DiskSize string            `yaml:"disk_size"`
 	User     string            `yaml:"user"`
 	Sudo     string            `yaml:"sudo"` // none, password, nopasswd
 	UserData string            `yaml:"user_data"`

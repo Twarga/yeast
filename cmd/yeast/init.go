@@ -9,12 +9,13 @@ import (
 )
 
 var (
-	initName   string
-	initImage  string
-	initMemory int
-	initCPUs   int
-	initUser   string
-	initSudo   string
+	initName     string
+	initImage    string
+	initMemory   int
+	initCPUs     int
+	initDiskSize string
+	initUser     string
+	initSudo     string
 )
 
 var initCmd = &cobra.Command{
@@ -73,36 +74,56 @@ var initCmd = &cobra.Command{
 				Created:    true,
 			})
 		}
-		fmt.Printf("Created yeast.yaml for instance %s (%s, %dMB RAM, %d CPU).\n", initName, initImage, initMemory, initCPUs)
-		fmt.Printf("Next steps: run 'yeast pull %s' and then 'yeast up'.\n", initImage)
+		humanSection("Project Initialized")
+		humanSuccessf("Created %s", humanAccent("yeast.yaml"))
+		humanKeyValue("Instance", humanAccent(initName))
+		humanKeyValue("Image", initImage)
+		humanKeyValue("Memory", fmt.Sprintf("%d MB", initMemory))
+		humanKeyValue("CPUs", fmt.Sprintf("%d", initCPUs))
+		if initDiskSize != "" {
+			humanKeyValue("Disk", initDiskSize)
+		}
+		humanKeyValue("User", initUser)
+		humanKeyValue("Sudo", initSudo)
+		fmt.Println()
+		humanInfof("Next: run %s", humanAccent(fmt.Sprintf("yeast pull %s", initImage)))
+		humanInfof("Then: run %s", humanAccent("yeast up"))
 		return nil
 	},
 }
 
 func renderInitConfig() string {
 	return renderInitInstanceConfig(config.Instance{
-		Name:   initName,
-		Image:  initImage,
-		Memory: initMemory,
-		CPUs:   initCPUs,
-		User:   initUser,
-		Sudo:   initSudo,
+		Name:     initName,
+		Image:    initImage,
+		Memory:   initMemory,
+		CPUs:     initCPUs,
+		DiskSize: initDiskSize,
+		User:     initUser,
+		Sudo:     initSudo,
 	})
 }
 
 func renderInitInstanceConfig(instance config.Instance) string {
+	diskLine := ""
+	if instance.DiskSize != "" {
+		diskLine = fmt.Sprintf("    disk_size: %s\n", instance.DiskSize)
+	}
+
 	return fmt.Sprintf("version: 1\n"+
 		"instances:\n"+
 		"  - name: %s\n"+
 		"    image: %s\n"+
 		"    memory: %d\n"+
 		"    cpus: %d\n"+
+		"%s"+
 		"    user: %s\n"+
 		"    sudo: %s\n",
 		instance.Name,
 		instance.Image,
 		instance.Memory,
 		instance.CPUs,
+		diskLine,
 		instance.User,
 		instance.Sudo,
 	)
@@ -113,6 +134,7 @@ func init() {
 	initCmd.Flags().StringVar(&initImage, "image", "ubuntu-22.04", "Initial instance image key")
 	initCmd.Flags().IntVar(&initMemory, "memory", 1024, "Initial instance memory in MB")
 	initCmd.Flags().IntVar(&initCPUs, "cpus", 1, "Initial instance CPU count")
+	initCmd.Flags().StringVar(&initDiskSize, "disk-size", "", "Initial instance disk size (examples: 20G, 10240M)")
 	initCmd.Flags().StringVar(&initUser, "user", "yeast", "Initial bootstrap username")
 	initCmd.Flags().StringVar(&initSudo, "sudo", "none", "Initial sudo policy: none | password | nopasswd")
 	rootCmd.AddCommand(initCmd)

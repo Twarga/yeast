@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"syscall"
 	"time"
 	"yeast/pkg/cloudinit"
+	"yeast/pkg/util"
 )
 
 const (
@@ -35,6 +37,7 @@ type Machine struct {
 	Image    string
 	Memory   int
 	CPUs     int
+	DiskSize string
 	Dir      string
 	SSHPort  int
 	User     string
@@ -44,7 +47,7 @@ type Machine struct {
 	Network  NetworkOptions
 }
 
-func New(name, image string, memory, cpus int, userData string, env map[string]string, user, sudo string, network NetworkOptions) *Machine {
+func New(name, image string, memory, cpus int, diskSize, userData string, env map[string]string, user, sudo string, network NetworkOptions) *Machine {
 	home, _ := os.UserHomeDir()
 	dir := filepath.Join(home, ".yeast", "instances", name)
 	return &Machine{
@@ -52,6 +55,7 @@ func New(name, image string, memory, cpus int, userData string, env map[string]s
 		Image:    image,
 		Memory:   memory,
 		CPUs:     cpus,
+		DiskSize: strings.TrimSpace(diskSize),
 		Dir:      dir,
 		User:     user,
 		Sudo:     sudo,
@@ -64,7 +68,7 @@ func New(name, image string, memory, cpus int, userData string, env map[string]s
 func (m *Machine) CreateDisk() error {
 	overlayPath := filepath.Join(m.Dir, "disk.qcow2")
 	if _, err := os.Stat(overlayPath); err == nil {
-		return nil
+		return m.ensureDiskSize(overlayPath)
 	}
 
 	if err := os.MkdirAll(m.Dir, 0755); err != nil {
@@ -82,18 +86,76 @@ func (m *Machine) CreateDisk() error {
 	}
 
 	// #nosec G204 -- command and argument structure are fixed; variable paths are local instance/image files.
-	cmd := exec.Command("qemu-img", "create",
+	args := []string{"create",
 		"-f", "qcow2",
 		"-F", "qcow2",
 		"-b", baseImage,
 		overlayPath,
-	)
+	}
+	if strings.TrimSpace(m.DiskSize) != "" {
+		normalized, err := util.NormalizeByteSize(m.DiskSize)
+		if err != nil {
+			return fmt.Errorf("invalid disk size %q: %w", m.DiskSize, err)
+		}
+		args = append(args, normalized)
+	}
+	cmd := exec.Command("qemu-img", args...)
 
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("failed to create disk: %s: %s", err, string(output))
 	}
 
 	return nil
+}
+
+func (m *Machine) ensureDiskSize(diskPath string) error {
+	if strings.TrimSpace(m.DiskSize) == "" {
+		return nil
+	}
+
+	desiredSize, err := util.ParseByteSize(m.DiskSize)
+	if err != nil {
+		return fmt.Errorf("invalid disk size %q: %w", m.DiskSize, err)
+	}
+	currentSize, err := diskVirtualSizeBytes(diskPath)
+	if err != nil {
+		return fmt.Errorf("failed to inspect disk size for %s: %w", diskPath, err)
+	}
+	if desiredSize <= currentSize {
+		return nil
+	}
+
+	normalized, err := util.NormalizeByteSize(m.DiskSize)
+	if err != nil {
+		return fmt.Errorf("invalid disk size %q: %w", m.DiskSize, err)
+	}
+
+	// #nosec G204 -- qemu-img is invoked with explicit subcommand and validated local disk path/size.
+	cmd := exec.Command("qemu-img", "resize", diskPath, normalized)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to resize disk: %s: %s", err, string(output))
+	}
+	return nil
+}
+
+func diskVirtualSizeBytes(path string) (int64, error) {
+	// #nosec G204 -- qemu-img info is invoked with an explicit local disk path.
+	cmd := exec.Command("qemu-img", "info", "--output", "json", path)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return 0, fmt.Errorf("qemu-img info failed: %s: %s", err, string(output))
+	}
+
+	var info struct {
+		VirtualSize int64 `json:"virtual-size"`
+	}
+	if err := json.Unmarshal(output, &info); err != nil {
+		return 0, fmt.Errorf("failed to parse qemu-img info output: %w", err)
+	}
+	if info.VirtualSize <= 0 {
+		return 0, fmt.Errorf("qemu-img info returned invalid virtual size for %s", path)
+	}
+	return info.VirtualSize, nil
 }
 
 func (m *Machine) PrepareConfig() error {
