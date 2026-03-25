@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 const (
@@ -103,4 +104,16 @@ func humanStatusLabel(status string) string {
 	default:
 		return status
 	}
+}
+
+func formatHumanDuration(d time.Duration) string {
+	if d < time.Second {
+		return fmt.Sprintf("%d ms", d.Milliseconds())
+	}
+	if d < time.Minute {
+		return fmt.Sprintf("%.1fs", d.Seconds())
+	}
+	minutes := int(d / time.Minute)
+	seconds := d % time.Minute
+	return fmt.Sprintf("%dm%02ds", minutes, int(seconds/time.Second))
 }

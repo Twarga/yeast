@@ -54,6 +54,7 @@ var doctorCmd = &cobra.Command{
 			checkBinary("qemu-system-x86_64", "QEMU system emulator"),
 			checkBinary("qemu-img", "QEMU image tooling"),
 			checkBinary("genisoimage", "Cloud-init ISO builder"),
+			checkSSHClientBinary(),
 		}
 
 		kvmResult, kvmAccessOK := checkKVMDevice()
@@ -150,6 +151,28 @@ func checkBinary(bin, description string) doctorResult {
 			"Ubuntu/Debian: sudo apt install qemu-system-x86 qemu-utils genisoimage",
 			"Fedora/RHEL: sudo dnf install qemu-system-x86 qemu-img genisoimage",
 			"Arch: sudo pacman -S qemu-base cdrtools",
+		},
+	}
+}
+
+func checkSSHClientBinary() doctorResult {
+	path, err := exec.LookPath("ssh")
+	if err == nil {
+		return doctorResult{
+			Name:    "SSH client",
+			Level:   levelOK,
+			Message: fmt.Sprintf("found at %s", path),
+		}
+	}
+
+	return doctorResult{
+		Name:    "SSH client",
+		Level:   levelBlocker,
+		Message: "ssh was not found in PATH",
+		Fixes: []string{
+			"Ubuntu/Debian: sudo apt install openssh-client",
+			"Fedora/RHEL: sudo dnf install openssh-clients",
+			"Arch: sudo pacman -S openssh",
 		},
 	}
 }

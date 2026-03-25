@@ -88,7 +88,7 @@ func startInstanceFromConfig(instanceCfg config.Instance, network vm.NetworkOpti
 			continue
 		}
 
-		if err := waitForSSHFn(port, 45*time.Second); err != nil {
+		if err := waitForSSHFn(m.User, port, 45*time.Second); err != nil {
 			lastErr = fmt.Errorf("vm not reachable on SSH port %d: %w", port, err)
 			_ = terminateProcessFn(pid, 5*time.Second)
 			continue

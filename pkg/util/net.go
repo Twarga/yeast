@@ -1,8 +1,11 @@
 package util
 
 import (
+	"context"
 	"fmt"
 	"net"
+	"os/exec"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -28,16 +31,50 @@ func GetFreePort() (int, error) {
 	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
-// WaitForSSH waits until a port is open
-func WaitForSSH(port int, timeout time.Duration) error {
+// WaitForSSH waits until the SSH service is reachable and accepts a real client login probe.
+func WaitForSSH(user string, port int, timeout time.Duration) error {
+	if user == "" {
+		user = "yeast"
+	}
+
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		conn, err := net.DialTimeout("tcp", fmt.Sprintf("localhost:%d", port), 500*time.Millisecond)
 		if err == nil {
 			conn.Close()
+			break
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	sshPath, err := exec.LookPath("ssh")
+	if err != nil {
+		return fmt.Errorf("ssh client not found in PATH: %w", err)
+	}
+
+	for time.Now().Before(deadline) {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		// #nosec G204 -- invokes the trusted local ssh client with explicit readiness-probe arguments.
+		cmd := exec.CommandContext(ctx, sshPath,
+			"-p", strconv.Itoa(port),
+			"-o", "BatchMode=yes",
+			"-o", "ConnectTimeout=2",
+			"-o", "LogLevel=ERROR",
+			"-o", "StrictHostKeyChecking=no",
+			"-o", "UserKnownHostsFile=/dev/null",
+			"-o", "PasswordAuthentication=no",
+			"-o", "KbdInteractiveAuthentication=no",
+			"-o", "NumberOfPasswordPrompts=0",
+			fmt.Sprintf("%s@127.0.0.1", user),
+			"true",
+		)
+		err := cmd.Run()
+		cancel()
+		if err == nil {
 			return nil
 		}
 		time.Sleep(500 * time.Millisecond)
 	}
-	return fmt.Errorf("timed out waiting for port %d", port)
+
+	return fmt.Errorf("timed out waiting for SSH login on port %d for user %s", port, user)
 }

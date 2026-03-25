@@ -38,7 +38,7 @@ At a high level:
 4. Yeast creates a copy-on-write overlay disk for each VM
 5. Yeast generates a cloud-init ISO
 6. Yeast starts QEMU with KVM acceleration
-7. Yeast waits for SSH to become reachable
+7. Yeast waits for SSH login readiness
 8. Yeast stores runtime state in `yeast.state`
 
 Yeast stores data in two places:
@@ -69,6 +69,7 @@ You need:
 - `qemu-system-x86_64`
 - `qemu-img`
 - `genisoimage`
+- `ssh`
 - an SSH public key in one of:
   - `~/.ssh/id_ed25519.pub`
   - `~/.ssh/id_rsa.pub`
@@ -693,7 +694,7 @@ Behavior:
 - generates cloud-init artifacts
 - allocates SSH host ports automatically
 - starts QEMU in the background
-- waits for the SSH port to become reachable
+- waits until SSH login is actually ready
 - stores runtime state in `yeast.state`
 
 Current scope:

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 	"yeast/pkg/config"
 	"yeast/pkg/state"
 
@@ -12,6 +13,7 @@ var upCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Start all VMs defined in yeast.yaml",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		commandStartedAt := time.Now()
 		network, err := networkOptionsFromFlags()
 		if err != nil {
 			return jsonCommandError("up", "invalid_network_flags", err)
@@ -67,7 +69,16 @@ var upCmd = &cobra.Command{
 			if !outputJSON {
 				humanInfof("Starting %s", humanAccent(instanceCfg.Name))
 			}
+			progress := newInstanceBootProgress(instanceCfg.Name)
+			if !outputJSON {
+				progress.Start()
+			}
+			startedAt := time.Now()
 			inst, err := startInstanceFromConfig(instanceCfg, network)
+			elapsed := time.Since(startedAt)
+			if !outputJSON {
+				progress.Finish()
+			}
 			if err != nil {
 				resultData.Failed++
 				resultData.Results = append(resultData.Results, lifecycleResult{
@@ -77,6 +88,7 @@ var upCmd = &cobra.Command{
 				})
 				if !outputJSON {
 					humanErrorf("Failed to start %s: %v", humanAccent(instanceCfg.Name), err)
+					humanKeyValue("Elapsed", formatHumanDuration(elapsed))
 				}
 				continue
 			}
@@ -88,7 +100,8 @@ var upCmd = &cobra.Command{
 				SSHPort: inst.SSHPort,
 			})
 			if !outputJSON {
-				humanSuccessf("%s started", humanAccent(instanceCfg.Name))
+				humanSuccessf("%s is ready for SSH", humanAccent(instanceCfg.Name))
+				humanKeyValue("Time", humanAccent(formatHumanDuration(elapsed)))
 				humanKeyValue("PID", fmt.Sprintf("%d", inst.PID))
 				humanKeyValue("SSH", fmt.Sprintf("%s:%d", inst.IP, inst.SSHPort))
 			}
@@ -106,7 +119,8 @@ var upCmd = &cobra.Command{
 		}
 		if resultData.Started > 0 {
 			fmt.Println()
-			humanSuccessf("Started %d instance(s)", resultData.Started)
+			humanSuccessf("Started %d instance(s) in %s", resultData.Started, humanAccent(formatHumanDuration(time.Since(commandStartedAt))))
+			humanInfof("All started instances are ready for SSH")
 		}
 		return nil
 	},

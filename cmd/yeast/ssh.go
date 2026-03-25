@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
+	"strings"
 	"syscall"
 	"yeast/pkg/state"
 
@@ -18,13 +20,12 @@ var (
 var sshCmd = &cobra.Command{
 	Use:   "ssh [name]",
 	Short: "Connect to an instance via SSH",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if outputJSON {
 			return jsonCommandError("ssh", "json_not_supported", fmt.Errorf("json output is not supported for interactive ssh sessions"))
 		}
 
-		name := args[0]
 		lock, err := state.AcquireFileLock(stateFilePath, state.DefaultLockOptions())
 		if err != nil {
 			return fmt.Errorf("error acquiring state lock: %w", err)
@@ -37,9 +38,13 @@ var sshCmd = &cobra.Command{
 		}
 		s.Reconcile()
 
-		inst, ok := s.Instances[name]
-		if !ok || inst.Status != "running" {
-			return fmt.Errorf("instance %s is not running", name)
+		name, inst, implicit, err := resolveSSHTarget(args, s)
+		if err != nil {
+			return err
+		}
+		if implicit {
+			humanInfof("No instance specified; using %s", humanAccent(name))
+			fmt.Println()
 		}
 
 		sshPath, err := exec.LookPath("ssh")
@@ -83,4 +88,33 @@ func init() {
 	sshCmd.Flags().BoolVar(&sshInsecure, "insecure", false, "Disable SSH host key verification")
 	sshCmd.Flags().StringVar(&sshUser, "user", "yeast", "SSH username")
 	rootCmd.AddCommand(sshCmd)
+}
+
+func resolveSSHTarget(args []string, s *state.State) (string, state.Instance, bool, error) {
+	if len(args) > 0 {
+		name := args[0]
+		inst, ok := s.Instances[name]
+		if !ok || inst.Status != "running" {
+			return "", state.Instance{}, false, fmt.Errorf("instance %s is not running", name)
+		}
+		return name, inst, false, nil
+	}
+
+	runningNames := make([]string, 0, len(s.Instances))
+	for name, inst := range s.Instances {
+		if inst.Status == "running" {
+			runningNames = append(runningNames, name)
+		}
+	}
+	sort.Strings(runningNames)
+
+	switch len(runningNames) {
+	case 0:
+		return "", state.Instance{}, false, fmt.Errorf("no running instances found; run `yeast up` first or pass an instance name")
+	case 1:
+		name := runningNames[0]
+		return name, s.Instances[name], true, nil
+	default:
+		return "", state.Instance{}, false, fmt.Errorf("multiple running instances found; choose one: %s", strings.Join(runningNames, ", "))
+	}
 }

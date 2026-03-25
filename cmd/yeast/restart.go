@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 	"yeast/pkg/config"
 	"yeast/pkg/state"
 
@@ -12,6 +13,7 @@ var restartCmd = &cobra.Command{
 	Use:   "restart [instance...]",
 	Short: "Restart specific instances (or all configured instances when omitted)",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		commandStartedAt := time.Now()
 		network, err := networkOptionsFromFlags()
 		if err != nil {
 			return jsonCommandError("restart", "invalid_network_flags", err)
@@ -108,7 +110,16 @@ var restartCmd = &cobra.Command{
 			if !outputJSON {
 				humanInfof("Starting %s", humanAccent(name))
 			}
+			progress := newInstanceBootProgress(name)
+			if !outputJSON {
+				progress.Start()
+			}
+			startedAt := time.Now()
 			inst, err := startInstanceFromConfig(instanceCfg, network)
+			elapsed := time.Since(startedAt)
+			if !outputJSON {
+				progress.Finish()
+			}
 			if err != nil {
 				resultData.Failed++
 				resultData.Results = append(resultData.Results, lifecycleResult{
@@ -118,6 +129,7 @@ var restartCmd = &cobra.Command{
 				})
 				if !outputJSON {
 					humanErrorf("Failed to restart %s: %v", humanAccent(name), err)
+					humanKeyValue("Elapsed", formatHumanDuration(elapsed))
 				}
 				continue
 			}
@@ -131,7 +143,8 @@ var restartCmd = &cobra.Command{
 				SSHPort: inst.SSHPort,
 			})
 			if !outputJSON {
-				humanSuccessf("%s restarted", humanAccent(name))
+				humanSuccessf("%s is ready for SSH", humanAccent(name))
+				humanKeyValue("Time", humanAccent(formatHumanDuration(elapsed)))
 				humanKeyValue("PID", fmt.Sprintf("%d", inst.PID))
 				humanKeyValue("SSH", fmt.Sprintf("%s:%d", inst.IP, inst.SSHPort))
 			}
@@ -147,7 +160,7 @@ var restartCmd = &cobra.Command{
 			return jsonCommandSuccess("restart", resultData)
 		}
 		fmt.Println()
-		humanSuccessf("Restart completed")
+		humanSuccessf("Restart completed in %s", humanAccent(formatHumanDuration(time.Since(commandStartedAt))))
 		return nil
 	},
 }
