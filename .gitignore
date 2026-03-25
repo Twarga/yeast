@@ -1,4 +1,4 @@
-yeast
+/yeast
 artifacts/
 *.state
 *.state.lock
