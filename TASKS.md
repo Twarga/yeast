@@ -495,7 +495,7 @@ Completion notes:
 
 ### M1-T3: Implement project metadata create/load
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -525,6 +525,14 @@ Required tests:
 Definition of done:
 
 - stable project identity works
+
+Completion notes:
+
+- Added `.yeast/project.json` path handling through `MetadataPath`.
+- Added `EnsureMetadata` to create metadata once and load the same identity on later calls.
+- Added `LoadMetadata`, `SaveMetadata`, and `ValidateMetadata`.
+- Added explicit `ErrMetadataNotFound` for missing metadata.
+- Added tests for create, second-load stability, corrupt JSON, missing metadata, and invalid metadata.
 
 ### M1-T4: Implement runtime path resolver
 
