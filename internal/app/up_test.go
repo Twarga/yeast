@@ -1,0 +1,156 @@
+package app
+
+import (
+	"context"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+	"yeast/internal/guest"
+	"yeast/internal/provision/cloudinit"
+	rtm "yeast/internal/runtime"
+)
+
+func TestUpStartsInstanceAndSavesState(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.discoverSSHKey = func() (string, error) { return "ssh-ed25519 AAAATEST", nil }
+
+	var userDataCalls int
+	service.renderUserData = func(input cloudinit.UserDataInput) (string, error) {
+		userDataCalls++
+		if input.Hostname != "web" {
+			t.Fatalf("unexpected hostname: %q", input.Hostname)
+		}
+		return "#cloud-config\nhostname: web\n", nil
+	}
+	service.renderMetaData = func(input cloudinit.MetaDataInput) (string, error) {
+		return "instance-id: web\nlocal-hostname: web\n", nil
+	}
+	service.createSeedISO = func(ctx context.Context, input cloudinit.SeedInput) (cloudinit.SeedResult, error) {
+		if input.InstanceName != "web" {
+			t.Fatalf("unexpected instance for seed iso: %q", input.InstanceName)
+		}
+		return cloudinit.SeedResult{
+			UserDataPath: filepath.Join(input.RuntimeDir, "user-data"),
+			MetaDataPath: filepath.Join(input.RuntimeDir, "meta-data"),
+			ISOPath:      filepath.Join(input.RuntimeDir, "seed.iso"),
+			Builder:      "genisoimage",
+		}, nil
+	}
+
+	fakeRuntime := &fakeRuntime{}
+	service.runtime = fakeRuntime
+	service.waitForTCP = func(ctx context.Context, options guest.ReadinessOptions) error {
+		if options.Address != "127.0.0.1:2222" {
+			t.Fatalf("unexpected readiness address: %q", options.Address)
+		}
+		return nil
+	}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root, Now: time.Date(2026, 5, 16, 12, 0, 0, 0, time.UTC)}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+
+	imagePath := filepath.Join(yeastHome, "cache", "images", "ubuntu-24.04", "image.qcow2")
+	if err := os.MkdirAll(filepath.Dir(imagePath), 0755); err != nil {
+		t.Fatalf("create image cache dir: %v", err)
+	}
+	if err := os.WriteFile(imagePath, []byte("image"), 0644); err != nil {
+		t.Fatalf("write cached image: %v", err)
+	}
+
+	result, err := service.Up(context.Background(), UpOptions{
+		ProjectRoot:      root,
+		ReadinessTimeout: 5 * time.Second,
+	})
+	if err != nil {
+		t.Fatalf("Up returned error: %v", err)
+	}
+
+	if len(result.Instances) != 1 {
+		t.Fatalf("expected 1 instance result, got %d", len(result.Instances))
+	}
+	if result.Instances[0].SSHAddress != "127.0.0.1:2222" {
+		t.Fatalf("unexpected ssh address: %q", result.Instances[0].SSHAddress)
+	}
+	if userDataCalls != 1 {
+		t.Fatalf("expected one user-data render call, got %d", userDataCalls)
+	}
+	if fakeRuntime.preparePlan.Name != "web" {
+		t.Fatalf("unexpected runtime prepare plan name: %q", fakeRuntime.preparePlan.Name)
+	}
+	if fakeRuntime.startPlan.Disk.BaseImagePath != imagePath {
+		t.Fatalf("unexpected base image path: %q", fakeRuntime.startPlan.Disk.BaseImagePath)
+	}
+
+	statePath := filepath.Join(yeastHome, "projects", result.ProjectID, "state.json")
+	raw, err := os.ReadFile(statePath)
+	if err != nil {
+		t.Fatalf("read state file: %v", err)
+	}
+	content := string(raw)
+	for _, want := range []string{`"status": "running"`, `"ssh_port": 2222`, `"runtime_dir": "`} {
+		if !strings.Contains(content, want) {
+			t.Fatalf("expected state content %q, got:\n%s", want, content)
+		}
+	}
+}
+
+func TestUpFailsClearlyWhenCachedImageMissing(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "run `yeast pull ubuntu-24.04`") {
+		t.Fatalf("expected pull guidance, got %q", err)
+	}
+}
+
+type fakeRuntime struct {
+	preparePlan rtm.MachinePlan
+	startPlan   rtm.MachinePlan
+}
+
+func (f *fakeRuntime) PrepareDisk(ctx context.Context, plan rtm.MachinePlan) (rtm.DiskPlan, error) {
+	f.preparePlan = plan
+	return plan.Disk, nil
+}
+
+func (f *fakeRuntime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.RuntimeInstance, error) {
+	f.startPlan = plan
+	return rtm.RuntimeInstance{
+		Name:              plan.Name,
+		RuntimeDir:        plan.RuntimeDir,
+		LogPath:           plan.LogPath,
+		PID:               4242,
+		ManagementNetwork: plan.ManagementNetwork,
+		StartedAt:         time.Now().UTC(),
+	}, nil
+}
+
+func (f *fakeRuntime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeout time.Duration) error {
+	return nil
+}
+
+func (f *fakeRuntime) Inspect(ctx context.Context, instance rtm.RuntimeInstance) (rtm.ProcessInfo, error) {
+	return rtm.ProcessInfo{PID: instance.PID, State: rtm.ProcessStateRunning}, nil
+}
+
+func (f *fakeRuntime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) error {
+	return nil
+}

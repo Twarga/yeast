@@ -1531,7 +1531,7 @@ Completion notes:
 
 ### M7-T3: Implement `yeast up`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1552,6 +1552,14 @@ Flow:
 Definition of done:
 
 - one Ubuntu VM starts and becomes SSH-ready
+
+Completion notes:
+
+- Added `service.Up` to run the v0.1 startup workflow: resolve project, load config, lock/load/reconcile state, require cached image, render cloud-init, prepare disk, start runtime, wait for SSH, and save state.
+- Added `yeast up` CLI wiring.
+- Running instances are reused from state when already marked healthy, and new instances get deterministic management SSH ports starting at `2222`.
+- The current v0.1 implementation requires the image to already be in cache and points the user to `yeast pull <image>` when it is missing.
+- Added app-level tests for the happy path and missing-image guidance.
 
 ### M7-T4: Implement `yeast status`
 
