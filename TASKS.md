@@ -237,7 +237,7 @@ Read current files, summarize. Do not refactor.
 
 ### M0-T3: Create clean v2 skeleton folders
 
-Status: [ ]
+Status: [x]
 
 Purpose:
 
@@ -284,6 +284,13 @@ Definition of done:
 - v2 folder skeleton exists
 - empty folders are either represented by starter files or created when needed
 - task marked done
+
+Completion notes:
+
+- Created v2 `internal/*` skeleton packages from `YEAST_TECHNICAL_ARCHITECTURE.md`.
+- Added package-level `doc.go` placeholders only; no behavior was implemented.
+- Added `examples/.gitkeep` so the examples folder is tracked.
+- Kept the existing prototype source files in place for reference.
 
 AI instruction:
 
