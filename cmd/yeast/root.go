@@ -20,6 +20,7 @@ func newRootCmd(service *app.Service) *cobra.Command {
 	}
 
 	cmd.PersistentFlags().BoolVar(&outputJSON, "json", false, "Output machine-readable JSON")
+	cmd.AddCommand(newDownCmd(service))
 	cmd.AddCommand(newInitCmd(service))
 	cmd.AddCommand(newDoctorCmd(service))
 	cmd.AddCommand(newPullCmd(service))

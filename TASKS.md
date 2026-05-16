@@ -1605,7 +1605,7 @@ Completion notes:
 
 ### M7-T6: Implement `yeast down`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1617,6 +1617,13 @@ Definition of done:
 - stops running VMs
 - marks stopped
 - handles already stopped
+
+Completion notes:
+
+- Added `service.Down` to stop all tracked running instances for the current project and persist stopped state.
+- Added `yeast down` CLI wiring.
+- Running instances are stopped through the runtime interface; already stopped instances are reported without error.
+- Added app-level tests for stopping running instances and handling already-stopped state.
 
 ### M7-T7: Implement `yeast destroy`
 
