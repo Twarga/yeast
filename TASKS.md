@@ -1751,7 +1751,7 @@ Prove v0.1 works.
 
 ### M9-T1: Fast unit test suite
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1769,6 +1769,7 @@ Required:
 Definition of done:
 
 - fast tests pass
+- fast test entrypoint exists at `scripts/test-fast.sh`
 
 ### M9-T2: Application workflow fake-runtime tests
 
