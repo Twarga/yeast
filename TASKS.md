@@ -711,7 +711,7 @@ Completion notes:
 
 ### M2-T3: Implement config validation
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -742,6 +742,12 @@ Tests:
 Definition of done:
 
 - invalid config never reaches runtime
+
+Completion notes:
+
+- Added `config.Validate`.
+- Added validation for supported version, non-empty instances, unique/path-safe names, required image, memory minimum, CPU minimum, disk size format, Linux username format, sudo policy, env key format, and env newline rejection.
+- Added focused tests for each validation rule and one valid-config test.
 
 ### M2-T4: Implement defaults and normalization
 
