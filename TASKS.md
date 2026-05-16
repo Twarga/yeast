@@ -1563,7 +1563,7 @@ Completion notes:
 
 ### M7-T4: Implement `yeast status`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1574,6 +1574,13 @@ Definition of done:
 
 - status reconciles dead processes
 - output sorted by name
+
+Completion notes:
+
+- Added `service.Status` to resolve the project, lock/load state, reconcile dead processes through runtime inspection, and save corrected state when needed.
+- Added `yeast status` CLI wiring.
+- Status results are sorted by instance name.
+- Added app-level tests for sorted output ordering and dead-process reconciliation persistence.
 
 ### M7-T5: Implement `yeast ssh`
 
