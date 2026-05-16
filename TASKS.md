@@ -422,7 +422,7 @@ Definition of done:
 
 ### M1-T1: Define project metadata model
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -443,6 +443,12 @@ Model should include:
 Required tests:
 
 - metadata struct serialization
+
+Completion notes:
+
+- Added `project.Metadata` with `schema`, `id`, and `created_at` JSON fields.
+- Added `project.NewMetadata` to enforce `yeast.project.v1` and UTC timestamps.
+- Added serialization, deserialization, and UTC normalization tests.
 - schema value is correct
 
 Definition of done:
