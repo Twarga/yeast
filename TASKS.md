@@ -181,7 +181,7 @@ Do not modify source files in this task unless explicitly requested.
 
 ### M0-T2: Inventory prototype code before removal
 
-Status: [ ]
+Status: [x]
 
 Purpose:
 
@@ -223,6 +223,13 @@ Definition of done:
 - prototype knowledge captured
 - list of reusable ideas exists
 - list of avoid-copying areas exists
+
+Completion notes:
+
+- Created `docs/prototype-inventory.md`.
+- Captured existing command set, package responsibilities, config/state/runtime/cloud-init/image/output behavior, tests worth porting, reusable ideas, and code shapes that should not be copied directly.
+- Confirmed old implementation remains in place for reference.
+- No source implementation files were changed.
 
 AI instruction:
 
