@@ -1723,7 +1723,7 @@ Completion notes:
 
 ### M8-T4: Add JSON tests for core commands
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1732,6 +1732,12 @@ Dependencies:
 Definition of done:
 
 - JSON contract tests pass
+
+Completion notes:
+
+- Added CLI-level JSON contract tests around the shared render path for the core command result types.
+- Added error rendering tests to verify stable `ok=false` envelopes with `error.code` and `error.message`.
+- These tests validate the actual `--json` command surface without duplicating each command workflow.
 
 ---
 
