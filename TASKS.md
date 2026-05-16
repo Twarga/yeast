@@ -1012,7 +1012,7 @@ Completion notes:
 
 ### M4-T2: Implement cache path resolution
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1038,6 +1038,13 @@ Tests:
 Definition of done:
 
 - cache layout is stable
+
+Completion notes:
+
+- Added `images.ResolveCachePaths`.
+- Added `CachePaths` with per-image directory, image file path, and manifest metadata path.
+- Added image-name safety checks before path creation.
+- Added tests for cache-root scoping and invalid image names.
 
 ### M4-T3: Implement checksum verification
 
