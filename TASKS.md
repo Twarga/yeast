@@ -676,7 +676,7 @@ Completion notes:
 
 ### M2-T2: Implement config loader
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -702,6 +702,12 @@ Tests:
 Definition of done:
 
 - loader works independently
+
+Completion notes:
+
+- Added `config.Load(path)` to read and parse `yeast.yaml`.
+- Added clear wrapped errors for read failures and YAML parse failures.
+- Added tests for missing file, invalid YAML, and valid YAML parsing into the typed config model.
 
 ### M2-T3: Implement config validation
 
