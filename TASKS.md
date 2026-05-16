@@ -1277,7 +1277,7 @@ Completion notes:
 
 ### M5-T4: Implement QEMU process start/stop
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1304,6 +1304,13 @@ Tests:
 Definition of done:
 
 - QEMU runtime can start/stop through interface
+
+Completion notes:
+
+- Added `qemu.Runtime` implementing the shared runtime interface.
+- Added QEMU start with `vm.log` wiring and safe process-handle release after spawn.
+- Added PID-based inspect and stop behavior with graceful SIGTERM, timeout polling, and SIGKILL fallback.
+- Added unit tests for start logging, graceful stop, forced kill after timeout, and inspect state.
 
 ---
 
