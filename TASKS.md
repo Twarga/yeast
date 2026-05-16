@@ -1433,7 +1433,7 @@ Completion notes:
 
 ### M6-T4: Implement SSH readiness
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1460,6 +1460,13 @@ Tests:
 Definition of done:
 
 - app can know when VM is reachable
+
+Completion notes:
+
+- Added `guest.WaitForTCP` for TCP-based SSH readiness checks with retry and timeout behavior.
+- Added retry handling for connection-refused and timeout-style dial failures.
+- Added `guest.SSHAddress` helper for consistent host/port formatting.
+- Added tests for real-listener success, timeout behavior, and retry-before-success flow.
 
 ---
 
