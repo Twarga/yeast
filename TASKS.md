@@ -1398,7 +1398,7 @@ Completion notes:
 
 ### M6-T3: Create seed ISO
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1423,6 +1423,13 @@ Tests:
 Definition of done:
 
 - runtime can attach generated seed ISO
+
+Completion notes:
+
+- Added `CreateSeedISO` to write `user-data`, `meta-data`, and build `seed.iso`.
+- Added ISO builder discovery with `genisoimage` first and `mkisofs` fallback.
+- Added a clear `ErrNoISOBuilder` path with install guidance when no supported tool exists.
+- Added tests for file writing, deterministic ISO command args, and missing-builder behavior.
 
 ### M6-T4: Implement SSH readiness
 
