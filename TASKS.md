@@ -1895,7 +1895,7 @@ Definition of done:
 
 ### M10-T3A: Harden one-script Linux installer
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1947,6 +1947,11 @@ Definition of done:
 - script has a shell syntax check
 - install docs match script behavior
 - release plan treats one-script install as part of v0.1.0
+- Go 1.25+ fallback behavior is implemented for old distro Go packages
+- installer now detects `amd64` and `arm64`
+- installer creates `~/.yeast/cache/images`
+- installer checks KVM access after group setup
+- installer next steps match real v0.1 commands
 
 ### M10-T4: Build release artifact
 
