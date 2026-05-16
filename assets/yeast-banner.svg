@@ -1,0 +1,43 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="640" fill="#0F0E0C"/>
+  <rect x="64" y="64" width="1152" height="512" rx="28" fill="#151311" stroke="#2E2A24" stroke-width="2"/>
+
+  <rect x="104" y="104" width="1072" height="64" rx="16" fill="#191613"/>
+  <circle cx="136" cy="136" r="8" fill="#BA7517"/>
+  <circle cx="164" cy="136" r="8" fill="#6B6457"/>
+  <circle cx="192" cy="136" r="8" fill="#3B342C"/>
+  <text x="232" y="143" fill="#8C7355" font-family="Inter, Arial, sans-serif" font-size="20">yeast / local vm engine</text>
+
+  <text x="104" y="260" fill="#F5F0E8" font-family="Inter, Arial, sans-serif" font-size="92" font-weight="700">Yeast</text>
+  <text x="104" y="320" fill="#BA7517" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="600">Linux-first local VM orchestration for QEMU/KVM</text>
+  <text x="104" y="372" fill="#B7AA98" font-family="Inter, Arial, sans-serif" font-size="30">Project-based virtual machines with cloud-init, trusted images,</text>
+  <text x="104" y="414" fill="#B7AA98" font-family="Inter, Arial, sans-serif" font-size="30">SSH access, clean JSON output, and a path toward LabsBackery.</text>
+
+  <rect x="104" y="464" width="156" height="44" rx="12" fill="#BA7517"/>
+  <text x="182" y="492" text-anchor="middle" fill="#0F0E0C" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="700">v0.1 core</text>
+
+  <rect x="276" y="464" width="178" height="44" rx="12" fill="#1E1A16" stroke="#3B342C" stroke-width="2"/>
+  <text x="365" y="492" text-anchor="middle" fill="#F5F0E8" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="600">QEMU + KVM</text>
+
+  <rect x="470" y="464" width="186" height="44" rx="12" fill="#1E1A16" stroke="#3B342C" stroke-width="2"/>
+  <text x="563" y="492" text-anchor="middle" fill="#F5F0E8" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="600">cloud-init</text>
+
+  <rect x="672" y="464" width="172" height="44" rx="12" fill="#1E1A16" stroke="#3B342C" stroke-width="2"/>
+  <text x="758" y="492" text-anchor="middle" fill="#F5F0E8" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="600">JSON-ready</text>
+
+  <g>
+    <rect x="842" y="218" width="284" height="228" rx="24" fill="#120F0D" stroke="#2B251F" stroke-width="2"/>
+    <text x="874" y="262" fill="#8C7355" font-family="JetBrains Mono, Consolas, monospace" font-size="18">$ yeast up</text>
+    <text x="874" y="314" fill="#F5F0E8" font-family="JetBrains Mono, Consolas, monospace" font-size="20">Started web</text>
+    <text x="874" y="344" fill="#F5F0E8" font-family="JetBrains Mono, Consolas, monospace" font-size="20">(127.0.0.1:2222)</text>
+
+    <rect x="874" y="376" width="220" height="22" rx="11" fill="#231D17"/>
+    <rect x="874" y="376" width="164" height="22" rx="11" fill="#BA7517"/>
+    <text x="874" y="424" fill="#8C7355" font-family="JetBrains Mono, Consolas, monospace" font-size="16">bootstrapping vm</text>
+  </g>
+
+  <g opacity="0.95">
+    <path d="M1117 132C1091 114 1055 111 1023 124C998 134 976 153 954 169C933 184 909 198 883 201C856 205 827 194 817 169C809 149 816 126 830 110C862 72 928 70 972 87C1010 102 1042 131 1075 152C1087 160 1102 169 1117 167C1132 166 1145 155 1153 143C1141 140 1129 137 1117 132Z" fill="#BA7517"/>
+    <path d="M1058 126C1046 95 1012 75 975 73C937 71 900 86 873 111C851 131 837 162 841 193C861 178 882 162 906 152C928 142 952 138 975 139C1008 140 1042 151 1070 170C1076 155 1074 139 1058 126Z" fill="#F0B358" fill-opacity="0.9"/>
+  </g>
+</svg>

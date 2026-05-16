@@ -2,6 +2,11 @@
 
 <div align="center">
 
+<img src="assets/yeast-banner.svg" alt="Yeast banner" width="100%" />
+
+<br />
+<br />
+
 **Linux-first local VM orchestration for QEMU/KVM**
 
 Fast project-based virtual machines with cloud-init, trusted base images, SSH access, and clean JSON output.
