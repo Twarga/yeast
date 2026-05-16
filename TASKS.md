@@ -103,7 +103,7 @@ M0-T1: Create v2 working branch / cleanup strategy
 | M7 | Core Commands v0.1 | init/doctor/pull/up/status/ssh/down/destroy | [ ] |
 | M8 | Human And JSON Output | Stable output for humans and tools | [ ] |
 | M9 | Tests And Examples | Prove v0.1 works | [ ] |
-| M10 | Docs And v0.1 Release Prep | Prepare first public release | [ ] |
+| M10 | Docs And v0.1 Release Prep | Prepare first public release | [x] |
 | C1 | Charm CLI Experience | Polished terminal UX without breaking JSON | [x] |
 | M11 | Provisioning | Packages/files/shell after v0.1 | [-] |
 | M12 | Snapshots And Reset | Lab reset capability | [-] |
@@ -1971,7 +1971,7 @@ Definition of done:
 
 ### M10-T5: Tag and publish v0.1.0
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1984,6 +1984,22 @@ Definition of done:
 - soft announcement ready
 - published as a GitHub prerelease because the manual host-dependent checklist is still pending
 - `docs/soft-announcement-v0.1.0.md` added
+
+### M10-T6: Create GitHub Pages landing page
+
+Status: [x]
+
+Dependencies:
+
+- M10-T5
+
+Definition of done:
+
+- static landing page exists under `docs/`
+- site uses the approved Yeast banner
+- install, features, docs, roadmap, and release links are visible
+- GitHub Pages deployment workflow exists
+- local preview instructions are documented
 
 ---
 
