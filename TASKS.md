@@ -1811,7 +1811,7 @@ Definition of done:
 
 ### M9-T4: Create ubuntu-basic example
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1825,6 +1825,7 @@ Files:
 Definition of done:
 
 - example works with v0.1 commands
+- `examples/ubuntu-basic` added with honest single-VM scope
 
 ---
 
