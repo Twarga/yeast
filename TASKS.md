@@ -1839,7 +1839,7 @@ Prepare first public release.
 
 ### M10-T1: Rewrite README for v2/v0.1
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1848,6 +1848,7 @@ Dependencies:
 Definition of done:
 
 - README explains current working scope honestly
+- README rewritten around actual v0.1 commands, limits, examples, and architecture
 
 ### M10-T2: Create required v0.1 docs
 
