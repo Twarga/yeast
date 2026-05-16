@@ -346,7 +346,7 @@ Only build CLI skeleton. Do not implement real commands yet.
 
 ### M0-T5: Controlled prototype cleanup
 
-Status: [ ]
+Status: [x]
 
 Purpose:
 
@@ -385,6 +385,14 @@ Definition of done:
 - active tree represents v2 skeleton
 - old code no longer confuses build
 - prototype knowledge remains in docs/git history
+
+Completion notes:
+
+- Used Option A: removed old MVP implementation files from the active tree.
+- Kept prototype knowledge in `docs/prototype-inventory.md` and git history.
+- Removed old prototype command files from `cmd/yeast`, keeping only `main.go` and the minimal v2 `root.go`.
+- Removed old `pkg/*` implementation packages so they cannot be accidentally built or extended during v2.
+- Planning docs and v2 skeleton packages remain in place.
 
 AI instruction:
 
