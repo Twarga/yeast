@@ -1480,7 +1480,7 @@ Complete the first usable Yeast lifecycle.
 
 ### M7-T1: Implement `yeast init`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1492,6 +1492,13 @@ Definition of done:
 - creates `yeast.yaml`
 - creates `.yeast/project.json`
 - refuses overwrite
+
+Completion notes:
+
+- `cmd/yeast/init.go` is wired to the app layer through `service.Init`.
+- `internal/app.Init` creates the starter `yeast.yaml` and `.yeast/project.json`.
+- Repeated init attempts fail with `ErrProjectAlreadyInitialized`.
+- App-level tests cover file creation, starter config contents, and overwrite refusal.
 
 ### M7-T2: Implement `yeast doctor`
 
