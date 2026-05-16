@@ -1082,7 +1082,7 @@ Completion notes:
 
 ### M4-T4: Implement downloader
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1111,6 +1111,12 @@ Tests:
 Definition of done:
 
 - image pull can be trusted
+
+Completion notes:
+
+- Added `images.Download`.
+- Downloader now uses a temp file, timeout-backed request context, checksum verification before final move, and cleanup on failure.
+- Added `httptest` coverage for success, HTTP failure, checksum failure, and partial-download cleanup.
 
 ### M4-T5: Implement `yeast pull`
 
