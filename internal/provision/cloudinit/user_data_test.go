@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"yeast/internal/config"
 )
 
 func TestDiscoverAuthorizedKeyPrefersEd25519(t *testing.T) {
@@ -87,5 +88,91 @@ func TestDiscoverAuthorizedKeyRejectsEmptyKey(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "is empty") {
 		t.Fatalf("expected empty-key error, got %q", err)
+	}
+}
+
+func TestRenderUserDataContainsExpectedFields(t *testing.T) {
+	t.Parallel()
+
+	instance := config.Instance{
+		User: "yeast",
+		Sudo: "nopasswd",
+		Env: map[string]string{
+			"APP_ENV": "dev",
+		},
+	}
+
+	got, err := RenderUserData(UserDataInput{
+		Hostname:      "web",
+		Instance:      instance,
+		AuthorizedKey: "ssh-ed25519 AAAATEST",
+	})
+	if err != nil {
+		t.Fatalf("RenderUserData returned error: %v", err)
+	}
+
+	wantContains := []string{
+		"#cloud-config",
+		"hostname: web",
+		"name: yeast",
+		"sudo: ALL=(ALL) NOPASSWD:ALL",
+		"ssh_authorized_keys:",
+		"- ssh-ed25519 AAAATEST",
+		"path: /etc/profile.d/yeast-env.sh",
+		"export APP_ENV='dev'",
+	}
+	for _, want := range wantContains {
+		if !strings.Contains(got, want) {
+			t.Fatalf("expected user-data to contain %q, got:\n%s", want, got)
+		}
+	}
+}
+
+func TestRenderUserDataQuotesEnvSafely(t *testing.T) {
+	t.Parallel()
+
+	instance := config.Instance{
+		User: "yeast",
+		Env: map[string]string{
+			"QUOTE": "hello 'quoted' world",
+		},
+	}
+
+	got, err := RenderUserData(UserDataInput{
+		Hostname:      "web",
+		Instance:      instance,
+		AuthorizedKey: "ssh-ed25519 AAAATEST",
+	})
+	if err != nil {
+		t.Fatalf("RenderUserData returned error: %v", err)
+	}
+
+	if !strings.Contains(got, "export QUOTE='hello '\\''quoted'\\'' world'") {
+		t.Fatalf("expected safely quoted env value, got:\n%s", got)
+	}
+}
+
+func TestRenderUserDataSupportsCustomMode(t *testing.T) {
+	t.Parallel()
+
+	instance := config.Instance{
+		User:     "yeast",
+		UserData: "users:\n  - name: custom\n",
+	}
+
+	got, err := RenderUserData(UserDataInput{
+		Hostname:      "web",
+		Instance:      instance,
+		AuthorizedKey: "ssh-ed25519 AAAATEST",
+	})
+	if err != nil {
+		t.Fatalf("RenderUserData returned error: %v", err)
+	}
+
+	if !strings.HasPrefix(got, "#cloud-config\n") {
+		t.Fatalf("expected custom user-data to be normalized with #cloud-config, got:\n%s", got)
+	}
+	if !strings.Contains(got, "name: custom") {
+		t.Fatalf("expected custom user-data content, got:\n%s", got)
 	}
 }

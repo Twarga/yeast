@@ -1359,7 +1359,7 @@ Completion notes:
 
 ### M6-T2: Generate cloud-init user-data/meta-data
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1388,6 +1388,13 @@ Tests:
 Definition of done:
 
 - cloud-init generation tested
+
+Completion notes:
+
+- Added typed cloud-init renderers for `user-data` and `meta-data`.
+- Normal `user-data` now includes hostname, user, sudo policy, SSH authorized key, and optional env script injection.
+- Added raw `user_data` passthrough as a controlled escape hatch with automatic `#cloud-config` normalization.
+- Added tests for expected fields, safe env quoting, custom user-data mode, and stable meta-data output.
 
 ### M6-T3: Create seed ISO
 
