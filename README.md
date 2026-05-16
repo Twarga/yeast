@@ -71,6 +71,14 @@ go build -o yeast ./cmd/yeast
 sudo mv yeast /usr/local/bin/
 ```
 
+## Test
+
+Run the fast unit suite:
+
+```bash
+bash scripts/test-fast.sh
+```
+
 ## Requirements
 
 Yeast currently supports:

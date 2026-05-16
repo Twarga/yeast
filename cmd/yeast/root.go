@@ -1,34 +1,56 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
+	"yeast/internal/app"
 
 	"github.com/spf13/cobra"
 )
 
 var outputJSON bool
 
-var rootCmd = &cobra.Command{
-	Use:           "yeast",
-	Short:         "A local VM orchestrator",
-	Long:          `Yeast is a tool for managing local virtual machines using KVM/QEMU.`,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+func newRootCmd(service *app.Service) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:           "yeast",
+		Short:         "Linux-first local VM orchestration",
+		Long:          "Yeast is the TwargaOps local VM engine for repeatable QEMU/KVM environments.",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
+
+	cmd.PersistentFlags().BoolVar(&outputJSON, "json", false, "Output machine-readable JSON")
+	cmd.AddCommand(newDownCmd(service))
+	cmd.AddCommand(newDestroyCmd(service))
+	cmd.AddCommand(newInitCmd(service))
+	cmd.AddCommand(newDoctorCmd(service))
+	cmd.AddCommand(newPullCmd(service))
+	cmd.AddCommand(newSSHCmd(service))
+	cmd.AddCommand(newStatusCmd(service))
+	cmd.AddCommand(newUpCmd(service))
+	cmd.AddCommand(newVersionCmd(service))
+	return cmd
 }
 
 func Execute() {
+	rootCmd := newRootCmd(app.NewService())
 	if err := rootCmd.Execute(); err != nil {
-		var reported *reportedJSONError
-		if errors.As(err, &reported) {
-			os.Exit(1)
+		if outputJSON {
+			if renderErr := renderCommandError(os.Stdout, err); renderErr == nil {
+				os.Exit(1)
+			}
 		}
-		fmt.Fprintf(os.Stderr, "%s %s\n", humanStyle("[fail]", ansiRed), err)
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func init() {
-	rootCmd.PersistentFlags().BoolVar(&outputJSON, "json", false, "Output machine-readable JSON")
+func newVersionCmd(service *app.Service) *cobra.Command {
+	return &cobra.Command{
+		Use:   "version",
+		Short: "Print Yeast version",
+		Run: func(cmd *cobra.Command, args []string) {
+			_ = renderCommandOutput(cmd.OutOrStdout(), "version", service.Version())
+		},
+	}
 }

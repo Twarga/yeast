@@ -1,168 +1,22 @@
 package main
 
 import (
-	"errors"
-	"fmt"
-	"os"
-	"yeast/pkg/state"
+	"context"
+	"yeast/internal/app"
 
 	"github.com/spf13/cobra"
 )
 
-var destroyCmd = &cobra.Command{
-	Use:   "destroy [instance...]",
-	Short: "Stop and delete local instance data",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		lock, err := state.AcquireFileLock(stateFilePath, state.DefaultLockOptions())
-		if err != nil {
-			return jsonCommandError("destroy", "state_lock_failed", fmt.Errorf("error acquiring state lock: %w", err))
-		}
-		defer releaseStateLock(lock)
-
-		s, err := state.Load(stateFilePath)
-		if err != nil {
-			return jsonCommandError("destroy", "state_load_failed", fmt.Errorf("error loading state: %w", err))
-		}
-		s.Reconcile()
-
-		targets := uniqueNames(args)
-		if len(targets) == 0 {
-			targets = stateInstanceNames(s)
-		}
-		resultData := destroyCommandData{
-			Schema:  "yeast.destroy.v1",
-			Results: make([]lifecycleResult, 0, len(targets)),
-		}
-		if len(targets) == 0 {
-			if outputJSON {
-				return jsonCommandSuccess("destroy", resultData)
-			}
-			humanWarnf("No instances to destroy")
-			return nil
-		}
-		if !outputJSON {
-			humanSection("Destroying Instances")
-			humanKeyValue("Count", fmt.Sprintf("%d", len(targets)))
-			fmt.Println()
-		}
-
-		for _, name := range targets {
-			before, exists := s.Instances[name]
-			outcome, err := stopInstanceInState(s, name, stopGraceTimeout)
+func newDestroyCmd(service *app.Service) *cobra.Command {
+	return &cobra.Command{
+		Use:   "destroy",
+		Short: "Remove tracked VM runtime files for the current project",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			result, err := service.Destroy(context.Background(), app.DestroyOptions{})
 			if err != nil {
-				resultData.Failed++
-				resultData.Results = append(resultData.Results, lifecycleResult{
-					Name:    name,
-					Action:  "failed",
-					Message: fmt.Sprintf("failed to stop before destroy: %v", err),
-				})
-				if !outputJSON {
-					humanErrorf("Failed to stop %s before destroy: %v", humanAccent(name), err)
-				}
-				continue
+				return err
 			}
-			if !outputJSON && outcome.Exists && exists && before.Status == "running" && outcome.WasRunning {
-				humanInfof("Stopped %s before destroy", humanAccent(name))
-				humanKeyValue("PID", fmt.Sprintf("%d", before.PID))
-			}
-
-			dir, err := instanceDir(name)
-			if err != nil {
-				resultData.Failed++
-				resultData.Results = append(resultData.Results, lifecycleResult{
-					Name:    name,
-					Action:  "failed",
-					Message: fmt.Sprintf("failed to resolve instance directory: %v", err),
-				})
-				if !outputJSON {
-					humanErrorf("Failed to resolve instance directory for %s: %v", humanAccent(name), err)
-				}
-				continue
-			}
-
-			_, statBeforeErr := os.Stat(dir)
-			dirExisted := statBeforeErr == nil
-
-			if err := os.RemoveAll(dir); err != nil {
-				resultData.Failed++
-				resultData.Results = append(resultData.Results, lifecycleResult{
-					Name:    name,
-					Action:  "failed",
-					Message: fmt.Sprintf("failed to remove instance directory: %v", err),
-				})
-				if !outputJSON {
-					humanErrorf("Failed to remove instance directory for %s: %v", humanAccent(name), err)
-				}
-				continue
-			}
-
-			delete(s.Instances, name)
-
-			_, statErr := os.Stat(dir)
-			if statErr == nil {
-				resultData.Failed++
-				resultData.Results = append(resultData.Results, lifecycleResult{
-					Name:    name,
-					Action:  "failed",
-					Message: fmt.Sprintf("instance directory still exists at %s", dir),
-				})
-				if !outputJSON {
-					humanErrorf("Instance directory for %s still exists", humanAccent(name))
-					humanKeyValue("Path", dir)
-				}
-				continue
-			}
-			if !errors.Is(statErr, os.ErrNotExist) {
-				resultData.Failed++
-				resultData.Results = append(resultData.Results, lifecycleResult{
-					Name:    name,
-					Action:  "failed",
-					Message: fmt.Sprintf("failed to verify instance directory removal: %v", statErr),
-				})
-				if !outputJSON {
-					humanErrorf("Failed to verify instance directory removal for %s: %v", humanAccent(name), statErr)
-				}
-				continue
-			}
-
-			if !outcome.Exists && !dirExisted {
-				resultData.Absent++
-				resultData.Results = append(resultData.Results, lifecycleResult{
-					Name:    name,
-					Action:  "absent",
-					Message: "instance is already absent",
-				})
-				if !outputJSON {
-					humanWarnf("%s is already absent", humanAccent(name))
-				}
-				continue
-			}
-
-			resultData.Destroyed++
-			resultData.Results = append(resultData.Results, lifecycleResult{
-				Name:   name,
-				Action: "destroyed",
-			})
-			if !outputJSON {
-				humanSuccessf("Destroyed %s", humanAccent(name))
-			}
-		}
-
-		if err := s.Save(stateFilePath); err != nil {
-			return jsonCommandErrorWithData("destroy", "state_save_failed", fmt.Errorf("error saving state: %w", err), resultData)
-		}
-		if resultData.Failed > 0 {
-			return jsonCommandErrorWithData("destroy", "instance_destroy_failed", fmt.Errorf("%d instance(s) failed to destroy", resultData.Failed), resultData)
-		}
-		if outputJSON {
-			return jsonCommandSuccess("destroy", resultData)
-		}
-		fmt.Println()
-		humanSuccessf("Destroy completed")
-		return nil
-	},
-}
-
-func init() {
-	rootCmd.AddCommand(destroyCmd)
+			return renderCommandOutput(cmd.OutOrStdout(), "destroy", result)
+		},
+	}
 }
