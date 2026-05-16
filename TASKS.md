@@ -633,7 +633,7 @@ Definition of done:
 
 ### M2-T1: Define v2 config structs
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -666,6 +666,13 @@ Definition of done:
 
 - model compiles
 - no validation yet required
+
+Completion notes:
+
+- Added `config.Config` with `version`, `instances`, reserved `networks`, and reserved `provision`.
+- Added `config.Instance` with the required v0.1 fields: `name`, `image`, `memory`, `cpus`, `disk_size`, `user`, `sudo`, `env`, and `user_data`.
+- Added reserved `Instance.Networks` and `Instance.Provision` for later milestones.
+- Added `Network`, `ProvisionConfig`, and `FileProvision` model types so later loader/validation work has stable targets.
 
 ### M2-T2: Implement config loader
 
