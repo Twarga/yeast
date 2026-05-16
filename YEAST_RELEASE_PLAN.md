@@ -193,23 +193,36 @@ Future build automation:
 
 v0.1 install options:
 
-1. Build from source.
-2. Download binary from GitHub release.
-3. Install script after binary releases are stable.
+1. One installation script.
+2. Build from source manually.
+3. Download binary from GitHub release after artifacts exist.
 
-Recommended early order:
+Required v0.1 install promise:
 
 ```text
-source build first
-manual binary release second
-install script third
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
 ```
 
-Reason:
+The script should prepare common Linux hosts smartly. It should detect the package manager, install required host dependencies, build Yeast, install the binary, create Yeast directories, generate an SSH key if needed, handle KVM group membership when possible, and run `yeast doctor`.
 
-Do not overbuild installer before release shape is stable.
+Supported package managers for v0.1:
 
-Eventually:
+- `apt`
+- `dnf`
+- `yum`
+- `pacman`
+- `zypper`
+- `apk`
+
+Required installer qualities:
+
+- readable output
+- clear logs on failure
+- non-interactive package installation where possible
+- safe overrides for repo URL, ref, install directory, verbosity, and log retention
+- honest warning when logout/login is required for KVM group changes
+
+Manual source build remains documented, but the primary user path should be one script.
 
 ```text
 curl -fsSL https://.../install.sh | bash
@@ -229,6 +242,7 @@ Before any public release:
 - README quickstart tested
 - known limitations written
 - release notes written
+- one-script installer verified or explicitly blocked
 - binary builds successfully
 - checksum generated
 - Git tag created

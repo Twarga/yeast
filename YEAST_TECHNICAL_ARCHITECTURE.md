@@ -575,12 +575,15 @@ Responsibilities:
 - render JSON output
 - standardize error shape
 - version schemas
+- keep terminal styling isolated from application workflows
 
 Output should be driven by events and results from application workflows.
 
 Important rule:
 
 Human output and JSON output must not require separate workflow logic.
+
+Charm libraries belong in this layer or a future `internal/ui` layer. Lip Gloss can style human output. Glamour can render Markdown docs. Bubble Tea and Bubbles can render live progress after Yeast has lifecycle events. These libraries must not leak ANSI styling into JSON output.
 
 ## 6. Project Storage Architecture
 

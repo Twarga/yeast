@@ -104,6 +104,7 @@ M0-T1: Create v2 working branch / cleanup strategy
 | M8 | Human And JSON Output | Stable output for humans and tools | [ ] |
 | M9 | Tests And Examples | Prove v0.1 works | [ ] |
 | M10 | Docs And v0.1 Release Prep | Prepare first public release | [ ] |
+| C1 | Charm CLI Experience | Polished terminal UX without breaking JSON | [x] |
 | M11 | Provisioning | Packages/files/shell after v0.1 | [-] |
 | M12 | Snapshots And Reset | Lab reset capability | [-] |
 | M13 | Private Networking | Multi-VM lab networking | [-] |
@@ -1852,7 +1853,7 @@ Definition of done:
 
 ### M10-T2: Create required v0.1 docs
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1870,6 +1871,12 @@ Docs:
 Definition of done:
 
 - docs match actual commands
+- created `docs/quickstart.md`
+- created `docs/installation.md`
+- created `docs/config-reference.md`
+- created `docs/troubleshooting.md`
+- created `docs/known-limitations.md`
+- created `docs/architecture-overview.md`
 
 ### M10-T3: Prepare changelog and release notes
 
@@ -1884,13 +1891,68 @@ Definition of done:
 
 - v0.1.0 release notes ready
 
+### M10-T3A: Harden one-script Linux installer
+
+Status: [ ]
+
+Dependencies:
+
+- M10-T2
+
+Goal:
+
+Make the v0.1.0 install path feel serious: one script that smartly prepares common Linux hosts and installs Yeast with clear diagnostics.
+
+Required:
+
+- support common Linux package managers:
+  - `apt`
+  - `dnf`
+  - `yum`
+  - `pacman`
+  - `zypper`
+  - `apk`
+- install or verify:
+  - `qemu-system-x86_64`
+  - `qemu-img`
+  - `genisoimage` or compatible `mkisofs`
+  - `ssh`
+  - `ssh-keygen`
+  - `git`
+  - Go 1.25+ or a fallback source-build strategy
+- create required Yeast directories:
+  - `~/.yeast`
+  - `~/.yeast/cache`
+  - `~/.yeast/cache/images`
+- generate an SSH key if neither supported public key exists
+- detect KVM availability and permissions
+- add user to KVM group when available
+- explain when logout/login is required
+- keep logs for failed install steps
+- support non-interactive install where possible
+- support overrides:
+  - `YEAST_REPO_URL`
+  - `YEAST_REF`
+  - `YEAST_INSTALL_DIR`
+  - `YEAST_INSTALL_VERBOSE`
+  - `YEAST_KEEP_LOGS`
+- run post-install `yeast doctor`
+- document install script behavior in `docs/installation.md`
+
+Definition of done:
+
+- `install.sh` is reviewed and hardened for v0.1.0
+- script has a shell syntax check
+- install docs match script behavior
+- release plan treats one-script install as part of v0.1.0
+
 ### M10-T4: Build release artifact
 
 Status: [ ]
 
 Dependencies:
 
-- M9 complete
+- M10-T3A
 - M10-T3
 
 Definition of done:
@@ -1911,6 +1973,69 @@ Definition of done:
 - Git tag exists
 - GitHub release published
 - soft announcement ready
+
+---
+
+# C1: Charm CLI Experience
+
+Goal:
+
+Make Yeast feel like a polished flagship CLI while keeping machine output stable.
+
+## C1 Tasks
+
+### C1-T1: Add Charm CLI technical plan
+
+Status: [x]
+
+Definition of done:
+
+- `docs/charm-cli-plan.md` explains which Charm libraries Yeast should use and when
+
+### C1-T2: Add Lip Gloss human renderer
+
+Status: [x]
+
+Definition of done:
+
+- current human command output uses Lip Gloss styling
+- JSON output remains unchanged
+
+### C1-T3: Add Glamour terminal docs
+
+Status: [-]
+
+Dependencies:
+
+- M10-T2 docs exist
+
+Definition of done:
+
+- markdown docs can be rendered from Yeast in terminal
+
+### C1-T4: Add Huh interactive init
+
+Status: [-]
+
+Dependencies:
+
+- v0.1 init/config is stable
+
+Definition of done:
+
+- `yeast init --interactive` creates a config through terminal prompts
+
+### C1-T5: Add Bubble Tea lifecycle progress
+
+Status: [-]
+
+Dependencies:
+
+- lifecycle event model exists
+
+Definition of done:
+
+- `yeast up` and `yeast pull` can show live progress in human TTY mode
 
 ---
 
