@@ -1773,7 +1773,7 @@ Definition of done:
 
 ### M9-T2: Application workflow fake-runtime tests
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1782,6 +1782,7 @@ Dependencies:
 Definition of done:
 
 - up/status/down/destroy workflows tested without QEMU
+- end-to-end fake-runtime workflow test added in `internal/app/workflow_test.go`
 
 ### M9-T3: Manual host-dependent v0.1 checklist
 
