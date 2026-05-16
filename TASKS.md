@@ -1702,7 +1702,7 @@ Completion notes:
 
 ### M8-T3: Implement JSON renderer
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1713,6 +1713,13 @@ Definition of done:
 - parseable JSON
 - no ANSI/spinners
 - stable command/error fields
+
+Completion notes:
+
+- Added `internal/output/json.go` for shared success/error JSON rendering.
+- Added `cmd/yeast/render.go` so commands switch between human and JSON output through one path.
+- `--json` now emits structured envelopes for successful command results and for command errors.
+- The JSON path is encoder-based, contains no ANSI formatting, and uses stable `ok`, `command`, `data`, and `error` fields.
 
 ### M8-T4: Add JSON tests for core commands
 

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"yeast/internal/app"
-	"yeast/internal/output"
 
 	"github.com/spf13/cobra"
 )
@@ -17,7 +16,7 @@ func newDoctorCmd(service *app.Service) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err := output.RenderHuman(cmd.OutOrStdout(), "doctor", result); err != nil {
+			if err := renderCommandOutput(cmd.OutOrStdout(), "doctor", result); err != nil {
 				return err
 			}
 

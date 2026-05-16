@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"yeast/internal/app"
-	"yeast/internal/output"
 
 	"github.com/spf13/cobra"
 )
@@ -40,7 +39,7 @@ func newPullCmd(service *app.Service) *cobra.Command {
 				}
 				return err
 			}
-			return output.RenderHuman(cmd.OutOrStdout(), "pull", result)
+			return renderCommandOutput(cmd.OutOrStdout(), "pull", result)
 		},
 	}
 

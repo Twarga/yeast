@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"yeast/internal/app"
-	"yeast/internal/output"
 
 	"github.com/spf13/cobra"
 )
@@ -36,6 +35,11 @@ func newRootCmd(service *app.Service) *cobra.Command {
 func Execute() {
 	rootCmd := newRootCmd(app.NewService())
 	if err := rootCmd.Execute(); err != nil {
+		if outputJSON {
+			if renderErr := renderCommandError(os.Stdout, err); renderErr == nil {
+				os.Exit(1)
+			}
+		}
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
@@ -46,7 +50,7 @@ func newVersionCmd(service *app.Service) *cobra.Command {
 		Use:   "version",
 		Short: "Print Yeast version",
 		Run: func(cmd *cobra.Command, args []string) {
-			_ = output.RenderHuman(cmd.OutOrStdout(), "version", service.Version())
+			_ = renderCommandOutput(cmd.OutOrStdout(), "version", service.Version())
 		},
 	}
 }

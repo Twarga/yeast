@@ -2,7 +2,6 @@ package main
 
 import (
 	"yeast/internal/app"
-	"yeast/internal/output"
 
 	"github.com/spf13/cobra"
 )
@@ -16,7 +15,7 @@ func newInitCmd(service *app.Service) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return output.RenderHuman(cmd.OutOrStdout(), "init", result)
+			return renderCommandOutput(cmd.OutOrStdout(), "init", result)
 		},
 	}
 }
