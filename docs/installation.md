@@ -108,3 +108,48 @@ curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
 The installer attempts to install host packages, build Yeast, install the binary, create cache directories, and generate an SSH key if needed.
 
 If the installer adds your user to a group, log out and back in before running `yeast up`.
+
+## Install Script Requirements For v0.1.0
+
+The v0.1.0 release treats the installer as a release-critical path.
+
+The script should support:
+
+- `apt`
+- `dnf`
+- `yum`
+- `pacman`
+- `zypper`
+- `apk`
+
+The script should install or verify:
+
+- QEMU system runtime
+- `qemu-img`
+- `genisoimage` or compatible `mkisofs`
+- `ssh`
+- `ssh-keygen`
+- `git`
+- Go 1.25+ for source builds
+
+The script should also:
+
+- create `~/.yeast`
+- create `~/.yeast/cache`
+- create `~/.yeast/cache/images`
+- generate an SSH key if none exists
+- detect KVM permissions
+- add the target user to the `kvm` group when that group exists
+- explain when logout/login is required
+- keep logs when install steps fail
+- run `yeast doctor` after installing
+
+Supported overrides:
+
+```bash
+YEAST_REPO_URL=https://github.com/Twarga/yeast.git
+YEAST_REF=main
+YEAST_INSTALL_DIR=/usr/local/bin
+YEAST_INSTALL_VERBOSE=1
+YEAST_KEEP_LOGS=1
+```

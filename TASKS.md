@@ -1891,13 +1891,68 @@ Definition of done:
 
 - v0.1.0 release notes ready
 
+### M10-T3A: Harden one-script Linux installer
+
+Status: [ ]
+
+Dependencies:
+
+- M10-T2
+
+Goal:
+
+Make the v0.1.0 install path feel serious: one script that smartly prepares common Linux hosts and installs Yeast with clear diagnostics.
+
+Required:
+
+- support common Linux package managers:
+  - `apt`
+  - `dnf`
+  - `yum`
+  - `pacman`
+  - `zypper`
+  - `apk`
+- install or verify:
+  - `qemu-system-x86_64`
+  - `qemu-img`
+  - `genisoimage` or compatible `mkisofs`
+  - `ssh`
+  - `ssh-keygen`
+  - `git`
+  - Go 1.25+ or a fallback source-build strategy
+- create required Yeast directories:
+  - `~/.yeast`
+  - `~/.yeast/cache`
+  - `~/.yeast/cache/images`
+- generate an SSH key if neither supported public key exists
+- detect KVM availability and permissions
+- add user to KVM group when available
+- explain when logout/login is required
+- keep logs for failed install steps
+- support non-interactive install where possible
+- support overrides:
+  - `YEAST_REPO_URL`
+  - `YEAST_REF`
+  - `YEAST_INSTALL_DIR`
+  - `YEAST_INSTALL_VERBOSE`
+  - `YEAST_KEEP_LOGS`
+- run post-install `yeast doctor`
+- document install script behavior in `docs/installation.md`
+
+Definition of done:
+
+- `install.sh` is reviewed and hardened for v0.1.0
+- script has a shell syntax check
+- install docs match script behavior
+- release plan treats one-script install as part of v0.1.0
+
 ### M10-T4: Build release artifact
 
 Status: [ ]
 
 Dependencies:
 
-- M9 complete
+- M10-T3A
 - M10-T3
 
 Definition of done:
