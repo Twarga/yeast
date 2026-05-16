@@ -1239,7 +1239,7 @@ Completion notes:
 
 ### M5-T3: Implement QEMU command builder
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1267,6 +1267,13 @@ Tests:
 Definition of done:
 
 - QEMU args are deterministic and testable
+
+Completion notes:
+
+- Added deterministic QEMU/KVM command argument construction in `internal/runtime/qemu/command.go`.
+- Included KVM, memory, CPUs, qcow2 disk, seed ISO, nographic mode, and management SSH port forwarding.
+- Kept the output as structured argv slices with no shell string construction.
+- Added tests for expected arguments, selected binary, and required-field validation.
 
 ### M5-T4: Implement QEMU process start/stop
 
