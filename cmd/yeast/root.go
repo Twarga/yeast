@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"yeast/internal/app"
+	"yeast/internal/output"
 
 	"github.com/spf13/cobra"
 )
@@ -45,7 +46,7 @@ func newVersionCmd(service *app.Service) *cobra.Command {
 		Use:   "version",
 		Short: "Print Yeast version",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Fprintln(cmd.OutOrStdout(), service.Version())
+			_ = output.RenderHuman(cmd.OutOrStdout(), "version", service.Version())
 		},
 	}
 }

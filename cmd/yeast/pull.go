@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"yeast/internal/app"
+	"yeast/internal/output"
 
 	"github.com/spf13/cobra"
 )
@@ -39,18 +40,7 @@ func newPullCmd(service *app.Service) *cobra.Command {
 				}
 				return err
 			}
-
-			out := cmd.OutOrStdout()
-			if result.List {
-				for _, image := range result.Images {
-					fmt.Fprintln(out, image)
-				}
-				return nil
-			}
-
-			fmt.Fprintf(out, "Pulled %s\n", result.ImageName)
-			fmt.Fprintf(out, "Saved %s\n", result.ImagePath)
-			return nil
+			return output.RenderHuman(cmd.OutOrStdout(), "pull", result)
 		},
 	}
 

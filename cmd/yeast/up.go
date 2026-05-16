@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"yeast/internal/app"
+	"yeast/internal/output"
 
 	"github.com/spf13/cobra"
 )
@@ -17,12 +17,7 @@ func newUpCmd(service *app.Service) *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			out := cmd.OutOrStdout()
-			for _, instance := range result.Instances {
-				fmt.Fprintf(out, "Started %s (%s)\n", instance.Name, instance.SSHAddress)
-			}
-			return nil
+			return output.RenderHuman(cmd.OutOrStdout(), "up", result)
 		},
 	}
 }

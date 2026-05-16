@@ -1683,7 +1683,7 @@ Completion notes:
 
 ### M8-T2: Implement human renderer
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1693,6 +1693,12 @@ Definition of done:
 
 - readable terminal output
 - no JSON leakage
+
+Completion notes:
+
+- Added `internal/output/human.go` to centralize human-readable command rendering.
+- Rewired the current CLI commands to render through one shared human-output layer instead of inline per-command formatting.
+- The human renderer only emits terminal-friendly text and does not reuse JSON envelopes or machine-oriented fields directly.
 
 ### M8-T3: Implement JSON renderer
 

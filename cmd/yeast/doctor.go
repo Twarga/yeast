@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"yeast/internal/app"
+	"yeast/internal/output"
 
 	"github.com/spf13/cobra"
 )
@@ -16,13 +17,9 @@ func newDoctorCmd(service *app.Service) *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			out := cmd.OutOrStdout()
-			for _, check := range result.Checks {
-				fmt.Fprintf(out, "[%s] %s: %s\n", check.Status, check.Name, check.Details)
+			if err := output.RenderHuman(cmd.OutOrStdout(), "doctor", result); err != nil {
+				return err
 			}
-			fmt.Fprintf(out, "Blockers: %d\n", result.Blockers)
-			fmt.Fprintf(out, "Warnings: %d\n", result.Warnings)
 
 			if result.Blockers > 0 {
 				return fmt.Errorf("doctor found %d blocker(s)", result.Blockers)

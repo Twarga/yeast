@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"yeast/internal/app"
+	"yeast/internal/output"
 
 	"github.com/spf13/cobra"
 )
@@ -16,12 +16,7 @@ func newInitCmd(service *app.Service) *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			out := cmd.OutOrStdout()
-			fmt.Fprintf(out, "Created %s\n", result.ConfigPath)
-			fmt.Fprintf(out, "Created %s\n", result.MetadataPath)
-			fmt.Fprintf(out, "Project ID: %s\n", result.ProjectID)
-			return nil
+			return output.RenderHuman(cmd.OutOrStdout(), "init", result)
 		},
 	}
 }
