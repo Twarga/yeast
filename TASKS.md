@@ -1203,7 +1203,7 @@ Completion notes:
 
 ### M5-T2: Implement qemu-img disk preparation
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1229,6 +1229,13 @@ Tests:
 Definition of done:
 
 - disk preparation logic isolated
+
+Completion notes:
+
+- Added `qemu.PrepareDisk` to create qcow2 overlay disks from trusted base images.
+- Ensured runtime and instance disk directories are created before running `qemu-img`.
+- Added deterministic command-construction tests, including optional disk size handling.
+- Existing disks are left in place instead of being recreated.
 
 ### M5-T3: Implement QEMU command builder
 
