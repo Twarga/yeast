@@ -458,7 +458,7 @@ Definition of done:
 
 ### M1-T2: Implement project ID generation
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -485,6 +485,13 @@ Required tests:
 Definition of done:
 
 - project ID generation works and is tested
+
+Completion notes:
+
+- Added `GenerateID` using crypto-random bytes.
+- Added `ProjectIDPrefix` with the `proj_` prefix.
+- Added `IsValidID` to enforce path-safe lowercase hex IDs.
+- Added tests for non-empty generation, prefix, uniqueness across calls, and invalid path-like values.
 
 ### M1-T3: Implement project metadata create/load
 
