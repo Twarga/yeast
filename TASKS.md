@@ -1787,7 +1787,7 @@ Definition of done:
 
 ### M9-T3: Manual host-dependent v0.1 checklist
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1982,6 +1982,8 @@ Definition of done:
 - Git tag exists
 - GitHub release published
 - soft announcement ready
+- published as a GitHub prerelease because the manual host-dependent checklist is still pending
+- `docs/soft-announcement-v0.1.0.md` added
 
 ---
 

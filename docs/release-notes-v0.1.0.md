@@ -1,8 +1,8 @@
 # Yeast v0.1.0 Release Notes
 
-Status: Draft  
-Release type: first v2 lifecycle release  
-Target platform: Linux amd64  
+Status: Prerelease
+Release type: first v2 lifecycle release for early testers
+Target platform: Linux amd64
 
 ## Summary
 
@@ -24,7 +24,7 @@ The intended v0.1.0 user path is:
 curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
 ```
 
-Before publishing v0.1.0, the install script must pass the `M10-T3A` hardening gate.
+The install script passed the `M10-T3A` hardening gate for supported Linux package-manager paths, but the full manual KVM lifecycle checklist is still required before treating this as broadly proven.
 
 Manual source build:
 
@@ -148,7 +148,7 @@ Not included yet:
 - Windows/macOS host support
 - VirtualBox backend
 
-## Verification Before Publishing
+## Verification
 
 Automated checks:
 
@@ -159,7 +159,7 @@ go build ./...
 git diff --check
 ```
 
-Manual Linux/KVM checklist:
+Manual Linux/KVM checklist still required on a real host:
 
 ```bash
 yeast doctor
@@ -173,7 +173,7 @@ yeast up
 yeast destroy
 ```
 
-Do not tag v0.1.0 until the installer hardening gate and manual lifecycle checklist pass.
+This release is marked as a prerelease because the manual host-dependent checklist is still pending.
 
 ## Documentation
 
