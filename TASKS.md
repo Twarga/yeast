@@ -536,7 +536,7 @@ Completion notes:
 
 ### M1-T4: Implement runtime path resolver
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -566,6 +566,13 @@ Required tests:
 Definition of done:
 
 - no runtime path is based only on instance name
+
+Completion notes:
+
+- Added `Paths` resolver for Yeast home, project runtime directory, state file, lock file, instance directory, snapshot directory, and global image cache.
+- Added `DefaultYeastHome`, `NewPaths`, and `ResolvePaths`.
+- Added instance name validation before path creation.
+- Added tests for project-scoped runtime paths, project-scoped instance paths, global image cache path, invalid instance names, and invalid metadata.
 
 ### M1-T5: Add project package integration to `yeast init`
 
