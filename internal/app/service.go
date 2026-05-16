@@ -24,6 +24,7 @@ type Service struct {
 	createSeedISO    func(ctx context.Context, input cloudinit.SeedInput) (cloudinit.SeedResult, error)
 	waitForTCP       func(ctx context.Context, options guest.ReadinessOptions) error
 	sshAddress       func(host string, port int) (string, error)
+	runSSH           func(ctx context.Context, args []string) error
 	runtime          rtm.Runtime
 	httpClient       *http.Client
 }
@@ -39,6 +40,7 @@ func NewService() *Service {
 		createSeedISO:    cloudinit.CreateSeedISO,
 		waitForTCP:       guest.WaitForTCP,
 		sshAddress:       guest.SSHAddress,
+		runSSH:           guest.RunSSH,
 		runtime:          qemu.NewRuntime(),
 		httpClient:       http.DefaultClient,
 	}

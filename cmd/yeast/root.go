@@ -23,6 +23,7 @@ func newRootCmd(service *app.Service) *cobra.Command {
 	cmd.AddCommand(newInitCmd(service))
 	cmd.AddCommand(newDoctorCmd(service))
 	cmd.AddCommand(newPullCmd(service))
+	cmd.AddCommand(newSSHCmd(service))
 	cmd.AddCommand(newStatusCmd(service))
 	cmd.AddCommand(newUpCmd(service))
 	cmd.AddCommand(newVersionCmd(service))

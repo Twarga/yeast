@@ -1584,7 +1584,7 @@ Completion notes:
 
 ### M7-T5: Implement `yeast ssh`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1595,6 +1595,13 @@ Definition of done:
 
 - connects to running instance using stored SSH port
 - handles no/multiple targets clearly
+
+Completion notes:
+
+- Added `service.SSH` to reconcile state, select a running target, load the configured username, and invoke the system `ssh` client using the stored management port.
+- Added `yeast ssh [instance]` CLI wiring.
+- When no target is given, the workflow requires exactly one running instance.
+- Added tests for the single-running-instance happy path and the multi-instance ambiguity error.
 
 ### M7-T6: Implement `yeast down`
 
