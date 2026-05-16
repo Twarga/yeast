@@ -884,7 +884,7 @@ Completion notes:
 
 ### M3-T3: Implement state locking
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -911,6 +911,14 @@ Tests:
 Definition of done:
 
 - mutating commands can safely use locked state
+
+Completion notes:
+
+- Added `state.Acquire` and `FileLock.Release`.
+- Added lock metadata with owner PID and creation timestamp.
+- Added timeout behavior, stale lock recovery, and malformed stale lock recovery.
+- Added default lock options and injectable time/process liveness hooks for tests.
+- Added tests for acquire/release, double-acquire timeout, stale lock recovery, and malformed stale lock recovery.
 
 ### M3-T4: Implement reconciliation hooks
 
