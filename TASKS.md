@@ -805,7 +805,7 @@ Definition of done:
 
 ### M3-T1: Define state v2 model
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -835,6 +835,13 @@ Tests:
 Definition of done:
 
 - state model exists and is versioned
+
+Completion notes:
+
+- Added versioned `state.State` with `schema`, `project_id`, and `instances`.
+- Added `state.InstanceState` with `status`, `pid`, `management_ip`, `ssh_port`, `runtime_dir`, `provisioning_status`, and `last_error`.
+- Added `state.New(projectID)` to create initialized state values.
+- Added JSON marshal/unmarshal tests and initialization tests.
 
 ### M3-T2: Implement state load/save
 
