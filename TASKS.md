@@ -1660,7 +1660,7 @@ Make commands usable by humans and tools.
 
 ### M8-T1: Define result and error schemas
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1674,6 +1674,12 @@ Files:
 Definition of done:
 
 - common success/error shape exists
+
+Completion notes:
+
+- Added shared output envelopes in `internal/output/schemas.go` for success and error responses.
+- Added `internal/app/errors.go` with a small typed application error wrapper and normalization helper.
+- The new contract is intentionally small so later human/JSON renderers can build on one stable shape instead of per-command ad hoc formatting.
 
 ### M8-T2: Implement human renderer
 
