@@ -298,7 +298,7 @@ Create skeleton only. Do not implement behavior.
 
 ### M0-T4: Replace CLI with minimal v2 root command
 
-Status: [ ]
+Status: [x]
 
 Purpose:
 
@@ -331,6 +331,14 @@ Definition of done:
 - minimal binary builds
 - no old command workflow logic remains in active CLI
 - help output is clean
+
+Completion notes:
+
+- Replaced active root CLI with a minimal v2 command skeleton.
+- Added `internal/app.Service` with a development version value.
+- Active CLI now exposes only root help and `yeast version`.
+- Preserved old prototype command files behind the `prototype` build tag so their workflow logic is no longer active in the default CLI build.
+- Could not verify `gofmt`, build, or `go test ./...` because the Go toolchain is not installed in this environment.
 
 AI instruction:
 

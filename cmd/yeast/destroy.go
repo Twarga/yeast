@@ -1,3 +1,5 @@
+//go:build prototype
+
 package main
 
 import (
