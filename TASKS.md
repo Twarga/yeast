@@ -1955,7 +1955,7 @@ Definition of done:
 
 ### M10-T4: Build release artifact
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1966,6 +1966,8 @@ Definition of done:
 
 - Linux amd64 binary built
 - checksum generated
+- release build script added at `scripts/build-release.sh`
+- version can be embedded with `-ldflags`
 
 ### M10-T5: Tag and publish v0.1.0
 

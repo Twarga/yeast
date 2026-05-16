@@ -35,6 +35,21 @@ go build -o yeast ./cmd/yeast
 sudo install -m 0755 yeast /usr/local/bin/yeast
 ```
 
+Release artifact build:
+
+```bash
+bash scripts/build-release.sh v0.1.0
+```
+
+Expected local artifact files:
+
+```text
+dist/yeast-linux-amd64
+dist/yeast-linux-amd64.sha256
+```
+
+The `dist/` directory is not committed to git. Upload these files to the GitHub release.
+
 ## Requirements
 
 - Linux host
