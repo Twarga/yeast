@@ -1324,7 +1324,7 @@ Create reachable VMs.
 
 ### M6-T1: Implement SSH key discovery
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1349,6 +1349,13 @@ Tests:
 Definition of done:
 
 - Yeast can find user's public key safely
+
+Completion notes:
+
+- Added SSH public-key discovery in `internal/provision/cloudinit/user_data.go`.
+- Preferred `~/.ssh/id_ed25519.pub` and fell back to `~/.ssh/id_rsa.pub`.
+- Added explicit errors for missing keys and empty key files.
+- Added tests for preferred key, fallback key, missing key, and empty key behavior.
 
 ### M6-T2: Generate cloud-init user-data/meta-data
 
