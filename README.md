@@ -471,6 +471,12 @@ That is not a weakness in the README. It is the correct scope boundary for v0.1.
 - [YEAST_TEST_PLAN.md](YEAST_TEST_PLAN.md)
 - [YEAST_RELEASE_PLAN.md](YEAST_RELEASE_PLAN.md)
 - [YEAST_PRODUCT_ROADMAP.md](YEAST_PRODUCT_ROADMAP.md)
+- [docs/quickstart.md](docs/quickstart.md)
+- [docs/installation.md](docs/installation.md)
+- [docs/config-reference.md](docs/config-reference.md)
+- [docs/troubleshooting.md](docs/troubleshooting.md)
+- [docs/known-limitations.md](docs/known-limitations.md)
+- [docs/architecture-overview.md](docs/architecture-overview.md)
 - [docs/charm-cli-plan.md](docs/charm-cli-plan.md)
 - [TASKS.md](TASKS.md)
 

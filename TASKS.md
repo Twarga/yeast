@@ -1853,7 +1853,7 @@ Definition of done:
 
 ### M10-T2: Create required v0.1 docs
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1871,6 +1871,12 @@ Docs:
 Definition of done:
 
 - docs match actual commands
+- created `docs/quickstart.md`
+- created `docs/installation.md`
+- created `docs/config-reference.md`
+- created `docs/troubleshooting.md`
+- created `docs/known-limitations.md`
+- created `docs/architecture-overview.md`
 
 ### M10-T3: Prepare changelog and release notes
 
