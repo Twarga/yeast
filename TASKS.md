@@ -576,7 +576,7 @@ Completion notes:
 
 ### M1-T5: Add project package integration to `yeast init`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -604,6 +604,15 @@ Required tests:
 Definition of done:
 
 - project identity enters user workflow
+
+Completion notes:
+
+- Added `internal/app.Init` workflow.
+- Added starter `yeast.yaml` creation.
+- Added `.yeast/project.json` creation through the project package.
+- Added clear repeated-init failure through `ErrProjectAlreadyInitialized`.
+- Added active `yeast init` command wired into the root CLI.
+- Added tests for config creation, metadata creation, starter config content, and repeated init failure.
 
 ---
 
