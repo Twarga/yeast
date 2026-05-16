@@ -12,7 +12,7 @@
 Fast project-based virtual machines with cloud-init, trusted base images, SSH access, and clean JSON output.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Go](https://img.shields.io/badge/go-1.21-cyan.svg)
+![Go](https://img.shields.io/badge/go-1.25+-cyan.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 ![Runtime](https://img.shields.io/badge/runtime-QEMU%2FKVM-6f42c1.svg)
 ![State](https://img.shields.io/badge/status-v0.1%20in%20progress-8a6d3b.svg)
@@ -471,6 +471,7 @@ That is not a weakness in the README. It is the correct scope boundary for v0.1.
 - [YEAST_TEST_PLAN.md](YEAST_TEST_PLAN.md)
 - [YEAST_RELEASE_PLAN.md](YEAST_RELEASE_PLAN.md)
 - [YEAST_PRODUCT_ROADMAP.md](YEAST_PRODUCT_ROADMAP.md)
+- [docs/charm-cli-plan.md](docs/charm-cli-plan.md)
 - [TASKS.md](TASKS.md)
 
 ---

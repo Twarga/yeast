@@ -2,10 +2,13 @@ package output
 
 import (
 	"bytes"
+	"regexp"
 	"strings"
 	"testing"
 	"yeast/internal/app"
 )
+
+var ansiPattern = regexp.MustCompile(`\x1b\[[0-9;:]*m`)
 
 func TestRenderHumanInitResult(t *testing.T) {
 	t.Parallel()
@@ -20,11 +23,15 @@ func TestRenderHumanInitResult(t *testing.T) {
 		t.Fatalf("RenderHuman returned error: %v", err)
 	}
 
-	got := buf.String()
+	got := stripANSI(buf.String())
 	for _, want := range []string{
-		"Created /tmp/project/yeast.yaml",
-		"Created /tmp/project/.yeast/project.json",
-		"Project ID: proj_123",
+		"Project initialized",
+		"config:",
+		"/tmp/project/yeast.yaml",
+		"metadata:",
+		"/tmp/project/.yeast/project.json",
+		"project:",
+		"proj_123",
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, got)
@@ -46,9 +53,24 @@ func TestRenderHumanStatusResult(t *testing.T) {
 		t.Fatalf("RenderHuman returned error: %v", err)
 	}
 
-	got := buf.String()
-	want := "api\tstopped\nweb\trunning\t127.0.0.1:2222\n"
-	if got != want {
-		t.Fatalf("unexpected output:\n got: %q\nwant: %q", got, want)
+	got := stripANSI(buf.String())
+	for _, want := range []string{
+		"Project status",
+		"NAME",
+		"STATUS",
+		"SSH",
+		"api",
+		"stopped",
+		"web",
+		"running",
+		"127.0.0.1:2222",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, got)
+		}
 	}
+}
+
+func stripANSI(value string) string {
+	return ansiPattern.ReplaceAllString(value, "")
 }

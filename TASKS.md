@@ -104,6 +104,7 @@ M0-T1: Create v2 working branch / cleanup strategy
 | M8 | Human And JSON Output | Stable output for humans and tools | [ ] |
 | M9 | Tests And Examples | Prove v0.1 works | [ ] |
 | M10 | Docs And v0.1 Release Prep | Prepare first public release | [ ] |
+| C1 | Charm CLI Experience | Polished terminal UX without breaking JSON | [x] |
 | M11 | Provisioning | Packages/files/shell after v0.1 | [-] |
 | M12 | Snapshots And Reset | Lab reset capability | [-] |
 | M13 | Private Networking | Multi-VM lab networking | [-] |
@@ -1911,6 +1912,69 @@ Definition of done:
 - Git tag exists
 - GitHub release published
 - soft announcement ready
+
+---
+
+# C1: Charm CLI Experience
+
+Goal:
+
+Make Yeast feel like a polished flagship CLI while keeping machine output stable.
+
+## C1 Tasks
+
+### C1-T1: Add Charm CLI technical plan
+
+Status: [x]
+
+Definition of done:
+
+- `docs/charm-cli-plan.md` explains which Charm libraries Yeast should use and when
+
+### C1-T2: Add Lip Gloss human renderer
+
+Status: [x]
+
+Definition of done:
+
+- current human command output uses Lip Gloss styling
+- JSON output remains unchanged
+
+### C1-T3: Add Glamour terminal docs
+
+Status: [-]
+
+Dependencies:
+
+- M10-T2 docs exist
+
+Definition of done:
+
+- markdown docs can be rendered from Yeast in terminal
+
+### C1-T4: Add Huh interactive init
+
+Status: [-]
+
+Dependencies:
+
+- v0.1 init/config is stable
+
+Definition of done:
+
+- `yeast init --interactive` creates a config through terminal prompts
+
+### C1-T5: Add Bubble Tea lifecycle progress
+
+Status: [-]
+
+Dependencies:
+
+- lifecycle event model exists
+
+Definition of done:
+
+- `yeast up` and `yeast pull` can show live progress in human TTY mode
 
 ---
 
