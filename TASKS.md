@@ -845,7 +845,7 @@ Completion notes:
 
 ### M3-T2: Implement state load/save
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -874,6 +874,13 @@ Tests:
 Definition of done:
 
 - local state is reliable and inspectable
+
+Completion notes:
+
+- Added `state.Load(path, projectID)` with missing-file initialization, corrupt-state errors, schema checks, and project ID mismatch checks.
+- Added `state.Save(path, state)` with atomic write behavior.
+- Added `ErrProjectIDMismatch` for explicit mismatch detection.
+- Added tests for missing state, valid load, corrupt state, project mismatch, and save/reload round-trip.
 
 ### M3-T3: Implement state locking
 
