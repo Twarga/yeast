@@ -1048,7 +1048,7 @@ Completion notes:
 
 ### M4-T3: Implement checksum verification
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1073,6 +1073,12 @@ Tests:
 Definition of done:
 
 - image integrity check works
+
+Completion notes:
+
+- Added `images.FileSHA256`.
+- Added `images.VerifySHA256`.
+- Added tests for correct checksum, wrong checksum, and missing file behavior.
 
 ### M4-T4: Implement downloader
 
