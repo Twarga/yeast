@@ -751,7 +751,7 @@ Completion notes:
 
 ### M2-T4: Implement defaults and normalization
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -777,6 +777,14 @@ Tests:
 Definition of done:
 
 - loaded config is ready for application planning
+
+Completion notes:
+
+- Added `config.ApplyDefaults`.
+- Added defaults for memory, cpus, user, and sudo.
+- Added disk size normalization when `disk_size` is provided.
+- Updated `config.Load` to run parse, validate, and defaults/normalization in one path so loaded config is ready for the app layer.
+- Added tests for defaults being applied and explicit values being preserved.
 
 ---
 

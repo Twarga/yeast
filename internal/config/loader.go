@@ -17,7 +17,12 @@ func Load(path string) (*Config, error) {
 	if err := yaml.Unmarshal(raw, &cfg); err != nil {
 		return nil, fmt.Errorf("parse config file %s: %w", path, err)
 	}
+	if err := Validate(&cfg); err != nil {
+		return nil, fmt.Errorf("validate config file %s: %w", path, err)
+	}
+	if err := ApplyDefaults(&cfg); err != nil {
+		return nil, fmt.Errorf("prepare config file %s: %w", path, err)
+	}
 
 	return &cfg, nil
 }
-
