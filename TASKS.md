@@ -922,7 +922,7 @@ Completion notes:
 
 ### M3-T4: Implement reconciliation hooks
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -949,6 +949,13 @@ Tests:
 Definition of done:
 
 - status can avoid lying about dead processes
+
+Completion notes:
+
+- Added `state.Reconcile`.
+- Reconciliation now marks dead running instances as stopped, clears stale PID and connection fields, and records a simple last error.
+- Added injectable process liveness hooks for tests.
+- Added tests for dead PID reconciliation, stopped instance no-op behavior, and running alive instance no-op behavior.
 
 ---
 
