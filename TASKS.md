@@ -976,7 +976,7 @@ Definition of done:
 
 ### M4-T1: Define image manifest model
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1001,6 +1001,14 @@ Tests:
 Definition of done:
 
 - manifest logic works without network
+
+Completion notes:
+
+- Added `images.TrustedImage`.
+- Added built-in trusted manifest entries for `ubuntu-22.04` and `ubuntu-24.04`.
+- Added `SupportedImages` for sorted supported image names.
+- Added `Lookup` for manifest lookup by image name.
+- Added tests for sorted supported images, known lookup, and unknown lookup.
 
 ### M4-T2: Implement cache path resolution
 
