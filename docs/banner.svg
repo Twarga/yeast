@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" role="img" aria-label="Yeast - Linux-first local VM orchestration for QEMU/KVM">
+  <title>Yeast - Linux-first local VM orchestration for QEMU/KVM</title>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#101014"/>
+      <stop offset="100%" stop-color="#07080b"/>
+    </linearGradient>
+    <radialGradient id="glow-amber" cx="20%" cy="18%" r="58%">
+      <stop offset="0%" stop-color="#d6a85f" stop-opacity="0.34"/>
+      <stop offset="70%" stop-color="#d6a85f" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow-teal" cx="88%" cy="82%" r="52%">
+      <stop offset="0%" stop-color="#14b8a6" stop-opacity="0.18"/>
+      <stop offset="75%" stop-color="#14b8a6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffcb8a"/>
+      <stop offset="55%" stop-color="#d6a85f"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+    <linearGradient id="word" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#fff4e6"/>
+      <stop offset="55%" stop-color="#d6a85f"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#1a1c20" stroke-width="1" opacity="0.65"/>
+    </pattern>
+    <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="5"/>
+      <feOffset dx="0" dy="8" result="offset"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.45"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="400" fill="url(#bg)"/>
+  <rect width="1280" height="400" fill="url(#grid)" opacity="0.78"/>
+  <rect width="1280" height="400" fill="url(#glow-amber)"/>
+  <rect width="1280" height="400" fill="url(#glow-teal)"/>
+
+  <g transform="translate(72,112)" filter="url(#soft-shadow)">
+    <rect width="64" height="64" rx="16" fill="url(#mark)"/>
+    <g transform="translate(32,32)" fill="none" stroke="#08090c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M-17 7c8 9 25 9 34 0"/>
+      <path d="M-15-5c7-8 23-8 30 0"/>
+      <path d="M0-20v40"/>
+      <path d="M-18 0h36"/>
+    </g>
+  </g>
+
+  <text x="158" y="132" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="14" font-weight="700" letter-spacing="3" fill="#d6a85f">
+    TWARGAOPS LOCAL VM ENGINE
+  </text>
+
+  <text x="154" y="222" font-family="'Space Grotesk', 'Inter', system-ui, sans-serif" font-size="112" font-weight="800" letter-spacing="-5" fill="url(#word)">
+    Yeast
+  </text>
+
+  <text x="160" y="272" font-family="'Inter', system-ui, sans-serif" font-size="26" font-weight="500" fill="#a5a29a">
+    Linux-first local VM orchestration for QEMU/KVM.
+  </text>
+
+  <g transform="translate(160,304)" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" letter-spacing="2">
+    <g>
+      <rect width="102" height="26" fill="none" stroke="#2a2c31"/>
+      <text x="10" y="17" fill="#d6a85f">01</text>
+      <text x="31" y="17" fill="#a5a29a">KVM</text>
+    </g>
+    <g transform="translate(112,0)">
+      <rect width="128" height="26" fill="none" stroke="#2a2c31"/>
+      <text x="10" y="17" fill="#d6a85f">02</text>
+      <text x="31" y="17" fill="#a5a29a">CLOUD-INIT</text>
+    </g>
+    <g transform="translate(250,0)">
+      <rect width="124" height="26" fill="none" stroke="#2a2c31"/>
+      <text x="10" y="17" fill="#d6a85f">03</text>
+      <text x="31" y="17" fill="#a5a29a">PROJECTS</text>
+    </g>
+    <g transform="translate(384,0)">
+      <rect width="96" height="26" fill="none" stroke="#2a2c31"/>
+      <text x="10" y="17" fill="#d6a85f">04</text>
+      <text x="31" y="17" fill="#a5a29a">JSON</text>
+    </g>
+  </g>
+
+  <g transform="translate(760,72)" filter="url(#soft-shadow)">
+    <rect width="430" height="256" fill="#0f1012" stroke="#34373f"/>
+    <rect width="430" height="40" fill="#151619"/>
+    <line x1="0" y1="40" x2="430" y2="40" stroke="#2a2c31"/>
+    <circle cx="22" cy="20" r="4.5" fill="#ef4852"/>
+    <circle cx="40" cy="20" r="4.5" fill="#d6a85f"/>
+    <circle cx="58" cy="20" r="4.5" fill="#14b8a6"/>
+    <text x="84" y="25" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" fill="#a5a29a">yeast.yaml</text>
+
+    <text x="24" y="72" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" fill="#6f716e">version: 1</text>
+    <text x="24" y="96" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" fill="#d6a85f">instances:</text>
+    <text x="24" y="120" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" fill="#f4f1e8">  - name: web</text>
+    <text x="24" y="144" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" fill="#f4f1e8">    image: ubuntu-24.04</text>
+    <text x="24" y="168" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" fill="#f4f1e8">    memory: 1024</text>
+    <text x="24" y="192" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" fill="#f4f1e8">    cpus: 1</text>
+
+    <rect x="244" y="74" width="154" height="34" fill="#151619" stroke="#2a2c31"/>
+    <text x="258" y="96" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" fill="#14b8a6">$ yeast up</text>
+    <rect x="244" y="124" width="154" height="34" fill="#151619" stroke="#2a2c31"/>
+    <text x="258" y="146" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" fill="#d6a85f">ssh :2222</text>
+    <rect x="244" y="174" width="154" height="34" fill="#151619" stroke="#2a2c31"/>
+    <text x="258" y="196" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" fill="#a5a29a">state locked</text>
+  </g>
+</svg>
