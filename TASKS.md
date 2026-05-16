@@ -1120,7 +1120,7 @@ Completion notes:
 
 ### M4-T5: Implement `yeast pull`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1146,6 +1146,13 @@ Tests:
 Definition of done:
 
 - user can prepare image cache
+
+Completion notes:
+
+- Added `app.Pull` with `--list` support and named image download support.
+- Added `ErrUnsupportedImage` for clear unsupported image handling.
+- Added a thin `yeast pull` Cobra command.
+- Added app-level tests for image listing, unsupported image errors, and known-image download path resolution.
 
 ---
 
