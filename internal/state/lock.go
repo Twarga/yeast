@@ -145,4 +145,3 @@ func removeIfStale(path string, options LockOptions) (bool, error) {
 	}
 	return true, nil
 }
-

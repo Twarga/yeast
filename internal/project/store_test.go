@@ -105,4 +105,3 @@ func TestLoadMetadataRejectsInvalidMetadata(t *testing.T) {
 		t.Fatalf("expected invalid project metadata error, got %v", err)
 	}
 }
-

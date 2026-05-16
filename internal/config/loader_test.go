@@ -96,4 +96,3 @@ instances:
 		t.Fatalf("expected env APP_ENV=dev, got %q", instance.Env["APP_ENV"])
 	}
 }
-

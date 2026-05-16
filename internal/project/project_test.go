@@ -52,4 +52,3 @@ func TestNewMetadataStoresUTCTime(t *testing.T) {
 		t.Fatalf("expected normalized UTC time, got %s", got)
 	}
 }
-

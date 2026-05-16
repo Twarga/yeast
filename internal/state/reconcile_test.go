@@ -80,4 +80,3 @@ func TestReconcileRunningAliveInstanceUnchanged(t *testing.T) {
 		t.Fatalf("expected pid to remain 1234, got %d", instance.PID)
 	}
 }
-

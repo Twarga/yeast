@@ -37,4 +37,3 @@ func TestLookupUnknownImage(t *testing.T) {
 		t.Fatal("expected unknown image lookup to fail")
 	}
 }
-

@@ -14,9 +14,9 @@ const (
 	ImagesDirName     = "images"
 	ProjectsDirName   = "projects"
 	InstancesDirName  = "instances"
-	StateFileName      = "state.json"
-	StateLockFileName  = "state.lock"
-	SnapshotsDirName   = "snapshots"
+	StateFileName     = "state.json"
+	StateLockFileName = "state.lock"
+	SnapshotsDirName  = "snapshots"
 )
 
 var instanceNamePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
@@ -89,4 +89,3 @@ func IsValidInstanceName(name string) bool {
 	}
 	return !strings.Contains(name, "..")
 }
-

@@ -69,4 +69,3 @@ func Save(path string, state State) error {
 
 	return nil
 }
-

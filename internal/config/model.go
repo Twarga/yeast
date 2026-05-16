@@ -19,8 +19,8 @@ type Instance struct {
 	UserData string            `yaml:"user_data,omitempty"`
 
 	// Reserved for later milestones.
-	Networks  []string          `yaml:"networks,omitempty"`
-	Provision *ProvisionConfig  `yaml:"provision,omitempty"`
+	Networks  []string         `yaml:"networks,omitempty"`
+	Provision *ProvisionConfig `yaml:"provision,omitempty"`
 }
 
 type Network struct {
@@ -39,4 +39,3 @@ type FileProvision struct {
 	Destination string `yaml:"destination"`
 	Permissions string `yaml:"permissions,omitempty"`
 }
-

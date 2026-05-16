@@ -95,4 +95,3 @@ func writeFileAtomic(path string, content []byte) error {
 	}
 	return nil
 }
-

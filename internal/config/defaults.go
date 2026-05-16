@@ -56,4 +56,3 @@ func normalizeByteSize(raw string) (string, error) {
 	}
 	return matches[1] + suffix, nil
 }
-

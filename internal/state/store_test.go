@@ -106,4 +106,3 @@ func TestSaveReloadRoundTrip(t *testing.T) {
 		t.Fatalf("expected provisioning status pending, got %q", loaded.Instances["web"].ProvisioningStatus)
 	}
 }
-

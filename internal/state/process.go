@@ -15,4 +15,3 @@ func processAlive(pid int) bool {
 	}
 	return errors.Is(err, syscall.EPERM)
 }
-

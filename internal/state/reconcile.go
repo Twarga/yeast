@@ -37,4 +37,3 @@ func Reconcile(state *State, options ReconcileOptions) bool {
 
 	return changed
 }
-

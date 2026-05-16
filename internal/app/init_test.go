@@ -80,4 +80,3 @@ func TestInitFailsClearlyWhenRepeated(t *testing.T) {
 		t.Fatalf("expected ErrProjectAlreadyInitialized, got %v", err)
 	}
 }
-

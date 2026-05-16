@@ -77,4 +77,3 @@ func TestNewInitializesVersionedState(t *testing.T) {
 		t.Fatalf("expected empty instances map, got %d entries", len(state.Instances))
 	}
 }
-

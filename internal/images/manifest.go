@@ -34,4 +34,3 @@ func Lookup(name string) (TrustedImage, bool) {
 	image, ok := trustedManifest[name]
 	return image, ok
 }
-

@@ -112,4 +112,3 @@ func parseByteSize(raw string) (int64, error) {
 	}
 	return value * multiplier, nil
 }
-

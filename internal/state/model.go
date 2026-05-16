@@ -25,4 +25,3 @@ func New(projectID string) State {
 		Instances: make(map[string]InstanceState),
 	}
 }
-

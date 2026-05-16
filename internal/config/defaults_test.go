@@ -75,4 +75,3 @@ func TestApplyDefaultsPreservesExplicitValues(t *testing.T) {
 		t.Fatalf("expected normalized disk size 25G, got %q", instance.DiskSize)
 	}
 }
-

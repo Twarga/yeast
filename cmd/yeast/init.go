@@ -25,4 +25,3 @@ func newInitCmd(service *app.Service) *cobra.Command {
 		},
 	}
 }
-

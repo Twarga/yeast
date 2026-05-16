@@ -104,4 +104,3 @@ func testLockOptions() LockOptions {
 		IsProcessAlive: func(pid int) bool { return true },
 	}
 }
-

@@ -123,4 +123,3 @@ func TestValidateAcceptsValidConfig(t *testing.T) {
 		t.Fatalf("expected valid config, got %v", err)
 	}
 }
-

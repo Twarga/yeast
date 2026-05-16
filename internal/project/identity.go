@@ -22,4 +22,3 @@ func GenerateID() (string, error) {
 func IsValidID(id string) bool {
 	return projectIDPattern.MatchString(id)
 }
-

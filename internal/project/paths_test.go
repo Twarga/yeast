@@ -98,4 +98,3 @@ func TestNewPathsRejectsInvalidMetadata(t *testing.T) {
 		t.Fatal("expected invalid metadata error")
 	}
 }
-
