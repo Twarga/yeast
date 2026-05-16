@@ -1171,7 +1171,7 @@ Definition of done:
 
 ### M5-T1: Define runtime interface and models
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1194,6 +1194,12 @@ Definition of done:
 
 - runtime boundary exists
 - no QEMU-specific details in app interface
+
+Completion notes:
+
+- Added `internal/runtime.Runtime` as the application-facing runtime boundary.
+- Added generic runtime models: `MachinePlan`, `DiskPlan`, `NetworkOptions`, `RuntimeInstance`, and `ProcessInfo`.
+- Kept QEMU details out of the app interface so later backends can fit the same boundary.
 
 ### M5-T2: Implement qemu-img disk preparation
 
