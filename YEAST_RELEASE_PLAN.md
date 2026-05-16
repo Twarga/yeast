@@ -331,6 +331,12 @@ How to confirm it works
 
 ## 11. v0.1 Release Notes Draft
 
+Draft file:
+
+```text
+docs/release-notes-v0.1.0.md
+```
+
 Draft summary:
 
 ```text

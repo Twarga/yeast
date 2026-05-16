@@ -478,6 +478,7 @@ That is not a weakness in the README. It is the correct scope boundary for v0.1.
 - [docs/known-limitations.md](docs/known-limitations.md)
 - [docs/architecture-overview.md](docs/architecture-overview.md)
 - [docs/charm-cli-plan.md](docs/charm-cli-plan.md)
+- [docs/release-notes-v0.1.0.md](docs/release-notes-v0.1.0.md)
 - [TASKS.md](TASKS.md)
 
 ---

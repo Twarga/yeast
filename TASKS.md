@@ -1880,7 +1880,7 @@ Definition of done:
 
 ### M10-T3: Prepare changelog and release notes
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1890,6 +1890,8 @@ Dependencies:
 Definition of done:
 
 - v0.1.0 release notes ready
+- `CHANGELOG.md` contains a draft `0.1.0` section
+- `docs/release-notes-v0.1.0.md` created for GitHub release drafting
 
 ### M10-T3A: Harden one-script Linux installer
 
