@@ -1627,7 +1627,7 @@ Completion notes:
 
 ### M7-T7: Implement `yeast destroy`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1640,6 +1640,13 @@ Definition of done:
 - removes project instance runtime dir
 - removes state entry
 - never removes cache
+
+Completion notes:
+
+- Added `service.Destroy` to remove all tracked instance runtime directories for the current project and delete their state entries.
+- Running instances are destroyed through the runtime interface, which stops them first when needed.
+- Added `yeast destroy` CLI wiring.
+- Added app-level tests to verify tracked instances are destroyed and state entries are removed.
 
 ---
 
