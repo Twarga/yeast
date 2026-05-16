@@ -1502,7 +1502,7 @@ Completion notes:
 
 ### M7-T2: Implement `yeast doctor`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1521,6 +1521,13 @@ Checks:
 Definition of done:
 
 - clear blockers and warnings
+
+Completion notes:
+
+- Added `service.Doctor` as an application workflow with explicit checks for runtime binaries, `/dev/kvm`, SSH public key, and cache directory state.
+- Added CLI wiring for `yeast doctor`.
+- Missing `qemu-system-x86_64`, `qemu-img`, `genisoimage/mkisofs`, `/dev/kvm`, and SSH key are reported as blockers where appropriate.
+- Cache directory absence is treated as a warning with a clear explanation instead of failing early.
 
 ### M7-T3: Implement `yeast up`
 

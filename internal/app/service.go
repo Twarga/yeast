@@ -5,6 +5,7 @@ import (
 	"time"
 	"yeast/internal/images"
 	"yeast/internal/project"
+	"yeast/internal/provision/cloudinit"
 )
 
 const Version = "0.0.0-dev"
@@ -13,6 +14,7 @@ type Service struct {
 	version          string
 	resolveYeastHome func() (string, error)
 	downloadImage    func(image images.TrustedImage, destination string, options images.DownloadOptions) error
+	discoverSSHKey   func() (string, error)
 	httpClient       *http.Client
 }
 
@@ -21,6 +23,7 @@ func NewService() *Service {
 		version:          Version,
 		resolveYeastHome: project.DefaultYeastHome,
 		downloadImage:    images.Download,
+		discoverSSHKey:   cloudinit.DiscoverAuthorizedKey,
 		httpClient:       http.DefaultClient,
 	}
 }
