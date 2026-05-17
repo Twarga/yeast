@@ -86,7 +86,7 @@ v0.3.0 provisioning.
 Next task:
 
 ```text
-V0.3-T2: Decide top-level vs instance provisioning merge rules and first-boot vs post-boot execution split.
+V0.3-T4: Add SSH provisioning transport abstraction.
 ```
 
 ## 5. Milestone Overview
@@ -2808,7 +2808,7 @@ Completion notes:
 
 ### V0.3-T3: Add provisioning plan builder
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -2828,6 +2828,12 @@ Definition of done:
 - package, file, and shell steps are structured
 - plan construction does not execute anything
 - tests cover empty plans, project-only plans, instance-only plans, and merged plans
+
+Completion notes:
+
+- Added `internal/provision.Plan` plus structured package, file, and shell step types.
+- Added `BuildPlan` to merge project-level provision config before instance-level provision config.
+- Added focused tests for empty, project-only, instance-only, and merged-order plans.
 
 ### V0.3-T4: Add SSH provisioning transport abstraction
 
