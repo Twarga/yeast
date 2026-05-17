@@ -80,13 +80,13 @@ YEAST_FEEDBACK_LOG.md
 Current phase:
 
 ```text
-v0.2.0 disk_size support started.
+v0.2.0 disk_size support documented and verified.
 ```
 
 Next task:
 
 ```text
-No open v0.2.0 disk_size task. Define the next v0.2.0 task before continuing.
+No open v0.2.0 disk_size task. Pick the next planned v0.2.0 scope before continuing.
 ```
 
 ## 5. Milestone Overview
@@ -2134,6 +2134,31 @@ Completion notes:
 
 - Added runtime regression coverage proving `PrepareDisk` keeps an existing overlay disk even when a requested `disk_size` is present.
 - Confirmed no additional disk_size implementation was needed after config/schema, validation, app wiring, QEMU command construction, existing-disk behavior, tests, and docs were covered.
+- Networking and provisioning remain untouched.
+
+### V0.2-T3: Add disk_size release notes
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T2
+
+Files:
+
+- `docs/release-notes-v0.2.0.md`
+- `TASKS.md`
+
+Definition of done:
+
+- v0.2.0 disk_size behavior is summarized for users
+- verification expectations are documented
+- limitations stay clear, including no existing-disk resize behavior
+
+Completion notes:
+
+- Added draft v0.2.0 release notes focused on `disk_size` support.
+- Documented supported size formats, automated verification, manual host-dependent verification, and out-of-scope features.
 - Networking and provisioning remain untouched.
 
 ---
