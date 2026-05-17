@@ -87,7 +87,8 @@ func TestSaveReloadRoundTrip(t *testing.T) {
 		ManagementIP:       "127.0.0.1",
 		SSHPort:            2222,
 		RuntimeDir:         "/tmp/web",
-		ProvisioningStatus: "pending",
+		ProvisionLogPath:   "/tmp/web/provision.log",
+		ProvisioningStatus: ProvisioningStatusRunning,
 		LastError:          "none",
 	}
 
@@ -102,7 +103,10 @@ func TestSaveReloadRoundTrip(t *testing.T) {
 	if loaded.Instances["web"].RuntimeDir != "/tmp/web" {
 		t.Fatalf("expected runtime dir /tmp/web, got %q", loaded.Instances["web"].RuntimeDir)
 	}
-	if loaded.Instances["web"].ProvisioningStatus != "pending" {
-		t.Fatalf("expected provisioning status pending, got %q", loaded.Instances["web"].ProvisioningStatus)
+	if loaded.Instances["web"].ProvisionLogPath != "/tmp/web/provision.log" {
+		t.Fatalf("expected provision log path /tmp/web/provision.log, got %q", loaded.Instances["web"].ProvisionLogPath)
+	}
+	if loaded.Instances["web"].ProvisioningStatus != ProvisioningStatusRunning {
+		t.Fatalf("expected provisioning status running, got %q", loaded.Instances["web"].ProvisioningStatus)
 	}
 }

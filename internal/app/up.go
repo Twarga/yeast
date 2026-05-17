@@ -221,7 +221,8 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			ManagementIP:       defaultManagementHost,
 			SSHPort:            sshPort,
 			RuntimeDir:         runtimeDir,
-			ProvisioningStatus: "ssh_ready",
+			ProvisionLogPath:   filepath.Join(runtimeDir, "provision.log"),
+			ProvisioningStatus: state.ProvisioningStatusNotStarted,
 			LastError:          "",
 		}
 		result.Instances = append(result.Instances, UpInstanceResult{

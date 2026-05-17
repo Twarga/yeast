@@ -13,7 +13,8 @@ func TestStateJSONRoundTrip(t *testing.T) {
 		ManagementIP:       "127.0.0.1",
 		SSHPort:            2222,
 		RuntimeDir:         "/home/twarga/.yeast/projects/proj_0123456789abcdef01234567/instances/web",
-		ProvisioningStatus: "provisioned",
+		ProvisionLogPath:   "/home/twarga/.yeast/projects/proj_0123456789abcdef01234567/instances/web/provision.log",
+		ProvisioningStatus: ProvisioningStatusReady,
 		LastError:          "",
 	}
 
@@ -56,7 +57,10 @@ func TestStateJSONRoundTrip(t *testing.T) {
 	if instance.RuntimeDir == "" {
 		t.Fatal("expected runtime dir to survive round trip")
 	}
-	if instance.ProvisioningStatus != "provisioned" {
+	if instance.ProvisionLogPath == "" {
+		t.Fatal("expected provision log path to survive round trip")
+	}
+	if instance.ProvisioningStatus != ProvisioningStatusReady {
 		t.Fatalf("expected provisioning status provisioned, got %q", instance.ProvisioningStatus)
 	}
 }
@@ -75,5 +79,20 @@ func TestNewInitializesVersionedState(t *testing.T) {
 	}
 	if len(state.Instances) != 0 {
 		t.Fatalf("expected empty instances map, got %d entries", len(state.Instances))
+	}
+}
+
+func TestProvisioningStatusConstants(t *testing.T) {
+	if ProvisioningStatusNotStarted != "not_started" {
+		t.Fatalf("unexpected not_started value %q", ProvisioningStatusNotStarted)
+	}
+	if ProvisioningStatusRunning != "running" {
+		t.Fatalf("unexpected running value %q", ProvisioningStatusRunning)
+	}
+	if ProvisioningStatusReady != "provisioned" {
+		t.Fatalf("unexpected provisioned value %q", ProvisioningStatusReady)
+	}
+	if ProvisioningStatusFailed != "failed" {
+		t.Fatalf("unexpected failed value %q", ProvisioningStatusFailed)
 	}
 }

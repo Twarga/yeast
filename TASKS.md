@@ -2956,7 +2956,7 @@ Completion notes:
 
 ### V0.3-T8: Add provisioning logs and status model
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -2977,6 +2977,14 @@ Definition of done:
 - a per-instance `provision.log` path is defined
 - result types can render enough information for human and JSON output later
 - tests cover status transitions without needing real SSH
+
+Completion notes:
+
+- Added typed provisioning statuses to `state.InstanceState` and persisted a per-instance `provision_log_path`.
+- Added a minimal `provision.Result` / `provision.StepResult` model for later human and JSON rendering.
+- Updated app status results to expose provisioning status and log path.
+- Set new instances to `not_started` with a stable `provision.log` path so `V0.3-T9` can wire execution without another state-shape change.
+- Added and updated state, provision, and app tests to cover the new model without real SSH.
 
 ### V0.3-T9: Wire provisioning into `yeast up`
 
