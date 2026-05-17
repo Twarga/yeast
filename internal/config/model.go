@@ -9,6 +9,7 @@ type Config struct {
 
 type Instance struct {
 	Name     string            `yaml:"name"`
+	Hostname string            `yaml:"hostname,omitempty"`
 	Image    string            `yaml:"image"`
 	Memory   int               `yaml:"memory"`
 	CPUs     int               `yaml:"cpus"`

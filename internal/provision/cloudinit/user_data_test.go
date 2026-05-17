@@ -176,3 +176,21 @@ func TestRenderUserDataSupportsCustomMode(t *testing.T) {
 		t.Fatalf("expected custom user-data content, got:\n%s", got)
 	}
 }
+
+func TestRenderUserDataUsesExplicitHostname(t *testing.T) {
+	t.Parallel()
+
+	got, err := RenderUserData(UserDataInput{
+		Hostname: "web-lab",
+		Instance: config.Instance{
+			User: "yeast",
+		},
+		AuthorizedKey: "ssh-ed25519 AAAATEST",
+	})
+	if err != nil {
+		t.Fatalf("RenderUserData returned error: %v", err)
+	}
+	if !strings.Contains(got, "hostname: web-lab") {
+		t.Fatalf("expected explicit hostname in user-data, got:\n%s", got)
+	}
+}

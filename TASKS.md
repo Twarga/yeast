@@ -2614,6 +2614,41 @@ Completion notes:
 - Added focused coverage for the `status` root-resolution failure path.
 - Audited remaining `internal/app` raw returns and confirmed the remaining pass-throughs are either intentional wrapped selection errors or internal helper-local errors outside the app-surface contract.
 
+### V0.2-T21: Add explicit hostname config support
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T20
+
+Files:
+
+- `internal/config/model.go`
+- `internal/config/validate.go`
+- `internal/config/defaults.go`
+- `internal/config/*_test.go`
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `internal/provision/cloudinit/*_test.go`
+- `docs/config-reference.md`
+- `README.md`
+- `TASKS.md`
+
+Definition of done:
+
+- `hostname` is a supported instance field
+- omitted `hostname` defaults to instance `name`
+- explicit `hostname` reaches cloud-init user-data and meta-data
+- docs describe the field and its default behavior
+
+Completion notes:
+
+- Added `hostname` to the instance config model.
+- Defaulted omitted hostnames to the instance name and validated explicit hostnames with the existing safe-name rules.
+- Wired `hostname` through `yeast up` into cloud-init user-data and meta-data generation.
+- Added focused config, app, and cloud-init tests plus README/config-reference updates.
+
 ---
 
 # Future Milestones

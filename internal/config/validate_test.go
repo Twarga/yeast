@@ -8,6 +8,7 @@ func validConfig() *Config {
 		Instances: []Instance{
 			{
 				Name:     "web",
+				Hostname: "web",
 				Image:    "ubuntu-24.04",
 				Memory:   1024,
 				CPUs:     1,
@@ -91,6 +92,14 @@ func TestValidateRejectsInvalidUser(t *testing.T) {
 	cfg.Instances[0].User = "Admin"
 	if err := Validate(cfg); err == nil {
 		t.Fatal("expected invalid user error")
+	}
+}
+
+func TestValidateRejectsInvalidHostname(t *testing.T) {
+	cfg := validConfig()
+	cfg.Instances[0].Hostname = "../bad"
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected invalid hostname error")
 	}
 }
 

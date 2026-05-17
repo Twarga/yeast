@@ -40,6 +40,12 @@ func Validate(cfg *Config) error {
 			return fmt.Errorf("duplicate instance name: %s", instance.Name)
 		}
 		seen[instance.Name] = struct{}{}
+		if strings.TrimSpace(instance.Hostname) != "" {
+			hostname := strings.TrimSpace(instance.Hostname)
+			if !instanceNamePattern.MatchString(hostname) || strings.Contains(hostname, "..") {
+				return fmt.Errorf("instance %s has invalid hostname %q", instance.Name, instance.Hostname)
+			}
+		}
 
 		if strings.TrimSpace(instance.Image) == "" {
 			return fmt.Errorf("instance %s must define an image", instance.Name)

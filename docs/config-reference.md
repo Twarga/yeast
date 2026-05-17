@@ -8,6 +8,7 @@ Yeast reads project configuration from `yeast.yaml`.
 version: 1
 instances:
   - name: web
+    hostname: web-lab
     image: ubuntu-24.04
 ```
 
@@ -44,6 +45,7 @@ instances:
 | Field | Required | Default | Description |
 |---|---:|---|---|
 | `name` | yes | none | Instance name. Must be path-safe. |
+| `hostname` | no | instance `name` | Guest hostname rendered into cloud-init. |
 | `image` | yes | none | Trusted image name, such as `ubuntu-24.04`. |
 | `memory` | no | `512` | Memory in MiB. Must be at least `128`. |
 | `cpus` | no | `1` | Number of virtual CPUs. Must be at least `1`. |
@@ -87,6 +89,21 @@ Examples:
 - `target-01`
 
 Avoid spaces, slashes, shell syntax, and names that need quoting.
+
+## Hostname
+
+`hostname` controls the guest hostname Yeast writes into cloud-init `user-data` and `meta-data`.
+
+If you omit it, Yeast uses the instance `name`.
+
+Example:
+
+```yaml
+name: web
+hostname: web-lab
+```
+
+This changes the hostname inside the VM without changing the Yeast instance identity, runtime paths, or command target name.
 
 ## Disk Size
 

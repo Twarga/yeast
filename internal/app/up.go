@@ -150,14 +150,14 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		userData, err := s.renderUserData(cloudinit.UserDataInput{
-			Hostname:      instance.Name,
+			Hostname:      instance.Hostname,
 			Instance:      instance,
 			AuthorizedKey: userKey,
 		})
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
-		metaData, err := s.renderMetaData(cloudinit.MetaDataInput{Hostname: instance.Name})
+		metaData, err := s.renderMetaData(cloudinit.MetaDataInput{Hostname: instance.Hostname})
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}

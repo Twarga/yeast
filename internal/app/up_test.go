@@ -27,13 +27,16 @@ func TestUpStartsInstanceAndSavesState(t *testing.T) {
 	var userDataCalls int
 	service.renderUserData = func(input cloudinit.UserDataInput) (string, error) {
 		userDataCalls++
-		if input.Hostname != "web" {
+		if input.Hostname != "web-lab" {
 			t.Fatalf("unexpected hostname: %q", input.Hostname)
 		}
-		return "#cloud-config\nhostname: web\n", nil
+		return "#cloud-config\nhostname: web-lab\n", nil
 	}
 	service.renderMetaData = func(input cloudinit.MetaDataInput) (string, error) {
-		return "instance-id: web\nlocal-hostname: web\n", nil
+		if input.Hostname != "web-lab" {
+			t.Fatalf("unexpected meta-data hostname: %q", input.Hostname)
+		}
+		return "instance-id: web-lab\nlocal-hostname: web-lab\n", nil
 	}
 	service.createSeedISO = func(ctx context.Context, input cloudinit.SeedInput) (cloudinit.SeedResult, error) {
 		if input.InstanceName != "web" {
@@ -63,6 +66,7 @@ func TestUpStartsInstanceAndSavesState(t *testing.T) {
 	configContent := `version: 1
 instances:
   - name: web
+    hostname: web-lab
     image: ubuntu-24.04
     memory: 1024
     cpus: 1

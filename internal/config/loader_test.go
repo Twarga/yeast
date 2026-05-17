@@ -45,6 +45,7 @@ func TestLoadValidYAML(t *testing.T) {
 	raw := `version: 1
 instances:
   - name: web
+    hostname: web-lab
     image: ubuntu-24.04
     memory: 1024
     cpus: 1
@@ -76,6 +77,9 @@ instances:
 	}
 	if instance.Image != "ubuntu-24.04" {
 		t.Fatalf("expected image ubuntu-24.04, got %q", instance.Image)
+	}
+	if instance.Hostname != "web-lab" {
+		t.Fatalf("expected hostname web-lab, got %q", instance.Hostname)
 	}
 	if instance.Memory != 1024 {
 		t.Fatalf("expected memory 1024, got %d", instance.Memory)

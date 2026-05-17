@@ -156,6 +156,7 @@ Default starter config:
 version: 1
 instances:
   - name: web
+    hostname: web-lab
     image: ubuntu-24.04
     memory: 1024
     cpus: 1
@@ -339,6 +340,7 @@ instances:
 - `memory`
 - `cpus`
 - `disk_size`
+- `hostname`
 - `user`
 - `sudo`
 - `env`
@@ -349,6 +351,7 @@ instances:
 - `user_data` replaces Yeast-generated cloud-init instead of merging into it
 - `disk_size` applies to the overlay disk Yeast creates for the instance; existing disks are kept as-is
 - `disk_size` accepts whole-number sizes with optional `K`, `M`, `G`, `T`, or `P` suffixes, such as `20G`, `25600M`, or raw bytes
+- `hostname` controls the guest hostname written through cloud-init; if omitted, Yeast uses the instance `name`
 - `env` is rendered into the guest bootstrap profile script
 - `networks` and `provision` exist in the config model for future milestones but are not active v0.1 features
 
