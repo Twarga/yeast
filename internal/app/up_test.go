@@ -322,6 +322,76 @@ func TestUpClassifiesStateProjectMismatch(t *testing.T) {
 	}
 }
 
+func TestUpClassifiesCachedRunningSSHAddressFailure(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.sshAddress = func(host string, port int) (string, error) {
+		return "", errors.New("bad ssh address")
+	}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+	current := state.New(metadata.ID)
+	current.Instances["web"] = state.InstanceState{Status: "running", PID: os.Getpid(), SSHPort: 2222}
+	if err := state.Save(paths.StateFile, current); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	_, err = service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodeInternal)
+}
+
+func TestUpClassifiesMissingSSHPublicKey(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.discoverSSHKey = func() (string, error) {
+		return "", fmt.Errorf("%w: checked ~/.ssh/id_ed25519.pub and ~/.ssh/id_rsa.pub", cloudinit.ErrNoSSHPublicKey)
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodePrecondition)
+}
+
+func TestUpClassifiesUserDataRenderFailure(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.renderUserData = func(input cloudinit.UserDataInput) (string, error) {
+		return "", errors.New("render user-data failed")
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodeInternal)
+}
+
+func TestUpClassifiesMetaDataRenderFailure(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.renderMetaData = func(input cloudinit.MetaDataInput) (string, error) {
+		return "", errors.New("render meta-data failed")
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodeInternal)
+}
+
+func TestUpClassifiesSeedISOCreationFailure(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.createSeedISO = func(ctx context.Context, input cloudinit.SeedInput) (cloudinit.SeedResult, error) {
+		return cloudinit.SeedResult{}, errors.New("seed iso failed")
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodeInternal)
+}
+
 func newUpServiceWithCachedImage(t *testing.T) (*Service, string) {
 	t.Helper()
 

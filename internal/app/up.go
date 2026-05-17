@@ -110,7 +110,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		if existing, ok := currentState.Instances[instance.Name]; ok && existing.Status == "running" && existing.PID > 0 && existing.SSHPort > 0 {
 			address, err := s.sshAddress(defaultManagementHost, existing.SSHPort)
 			if err != nil {
-				return UpResult{}, err
+				return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 			}
 			result.Instances = append(result.Instances, UpInstanceResult{
 				Name:       instance.Name,
@@ -128,7 +128,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		}
 		cachePaths, err := images.ResolveCachePaths(paths.ImageCache, image.Name)
 		if err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		if _, err := os.Stat(cachePaths.ImageFile); err != nil {
 			message := fmt.Sprintf("image %s not found in cache at %s: run `yeast pull %s`", image.Name, cachePaths.ImageFile, image.Name)
@@ -137,14 +137,17 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 
 		runtimeDir, err := paths.InstanceDir(instance.Name)
 		if err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
 		}
 		sshPort := chooseManagementSSHPort(currentState, instance.Name, allocatedPorts)
 		allocatedPorts[sshPort] = true
 
 		userKey, err := s.discoverSSHKey()
 		if err != nil {
-			return UpResult{}, err
+			if errors.Is(err, cloudinit.ErrNoSSHPublicKey) {
+				return UpResult{}, WrapError(ErrorCodePrecondition, err.Error(), err)
+			}
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		userData, err := s.renderUserData(cloudinit.UserDataInput{
 			Hostname:      instance.Name,
@@ -152,11 +155,11 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			AuthorizedKey: userKey,
 		})
 		if err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		metaData, err := s.renderMetaData(cloudinit.MetaDataInput{Hostname: instance.Name})
 		if err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		seedResult, err := s.createSeedISO(ctx, cloudinit.SeedInput{
 			InstanceName: instance.Name,
@@ -165,7 +168,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			MetaData:     metaData,
 		})
 		if err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 
 		plan := rtm.MachinePlan{

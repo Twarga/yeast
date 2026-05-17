@@ -2427,6 +2427,35 @@ Completion notes:
 - Wrapped Yeast home resolution, path construction, runtime directory creation, state lock acquisition, state load, and state save failures in `ErrorCodeInternal`.
 - Added focused tests for uninitialized project, missing config, invalid config, and state project-id mismatch behavior.
 
+### V0.2-T14: Classify yeast up helper and cloud-init errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T13
+
+Files:
+
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- cached-running SSH address failures report `internal`
+- missing SSH public key reports `failed_precondition`
+- cloud-init render/seed helper failures report `internal`
+- invalid runtime-derived instance path input reports `invalid_argument`
+
+Completion notes:
+
+- Wrapped cached-running `sshAddress` failures in `ErrorCodeInternal`.
+- Wrapped missing SSH public key discovery as `ErrorCodePrecondition` using `cloudinit.ErrNoSSHPublicKey`.
+- Wrapped cache-path resolution, cloud-init user-data/meta-data rendering, and seed ISO creation failures in `ErrorCodeInternal`.
+- Wrapped invalid instance runtime-directory resolution in `ErrorCodeInvalidArgument`.
+- Added focused tests for cached-running SSH address, missing SSH key, user-data render, meta-data render, and seed ISO failures.
+
 ---
 
 # Future Milestones
