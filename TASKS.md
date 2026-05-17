@@ -2030,7 +2030,7 @@ Definition of done:
 
 ### C1-T3: Add Glamour terminal docs
 
-Status: [-]
+Status: [x]
 
 Dependencies:
 
@@ -2039,6 +2039,7 @@ Dependencies:
 Definition of done:
 
 - markdown docs can be rendered from Yeast in terminal
+- added `yeast docs` command with embedded topics and `--list`
 
 ### C1-T4: Add Huh interactive init
 

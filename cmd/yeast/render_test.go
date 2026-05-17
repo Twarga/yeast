@@ -154,3 +154,15 @@ func TestRenderCommandErrorJSON(t *testing.T) {
 		t.Fatalf("expected message, got %#v", errorBody["message"])
 	}
 }
+
+func TestWriteDocsIndex(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+	if err := writeDocsIndex(&buf); err != nil {
+		t.Fatalf("writeDocsIndex returned error: %v", err)
+	}
+	if got := buf.String(); got == "" {
+		t.Fatal("expected docs index output")
+	}
+}

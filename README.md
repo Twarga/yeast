@@ -464,6 +464,16 @@ That is not a weakness in the README. It is the correct scope boundary for v0.1.
 
 ## Project Docs
 
+Terminal docs are available directly from the CLI:
+
+```bash
+yeast docs
+yeast docs --list
+yeast docs quickstart
+yeast docs installation
+yeast docs tutorial-test
+```
+
 - [YEAST_VISION.md](YEAST_VISION.md)
 - [YEAST_TECHNICAL_DISCOVERY.md](YEAST_TECHNICAL_DISCOVERY.md)
 - [YEAST_TECHNICAL_ARCHITECTURE.md](YEAST_TECHNICAL_ARCHITECTURE.md)
