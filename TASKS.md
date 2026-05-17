@@ -2563,6 +2563,32 @@ Completion notes:
 - Preserved the existing runtime stop classification as `ErrorCodeInternal`.
 - Added focused tests for uninitialized project and state project-id mismatch behavior.
 
+### V0.2-T19: Classify yeast destroy setup and state errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T18
+
+Files:
+
+- `internal/app/destroy.go`
+- `internal/app/destroy_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- missing project metadata reports `failed_precondition`
+- home/path/lock/state load/save failures report `internal`
+- existing runtime destroy `internal` behavior stays unchanged
+
+Completion notes:
+
+- Wrapped metadata, Yeast home, path, lock, state load, and final state save failures in stable app error codes.
+- Preserved the existing runtime destroy classification as `ErrorCodeInternal`.
+- Added focused tests for uninitialized project and state project-id mismatch behavior.
+
 ---
 
 # Future Milestones
