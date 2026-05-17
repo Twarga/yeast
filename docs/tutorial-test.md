@@ -1,180 +1,218 @@
-# Yeast v0.1.0 Manual Test Tutorial
+# Yeast v0.2.0 Manual Test Tutorial
 
-This is the client-side test for Yeast v0.1.0.
+This is the real host manual test for the current `v0.2.0` candidate.
 
-Follow it from a normal Linux machine as if you are a new user installing Yeast from the landing page.
+It is written for your current situation:
 
-The goal is to prove the v0.1.0 loop:
+- you already have an older `yeast` installed in `/usr/local/bin`
+- you are using `fish`
+- you want to test the new binary without replacing the old one yet
 
-```text
-install -> doctor -> init -> pull -> up -> status -> ssh -> down -> up again -> destroy
+This guide uses the built binary directly from the repo:
+
+```fish
+~/Projects/yeast/dist/yeast-linux-amd64
 ```
+
+## Fast Path
+
+If you want the full loop in one command, use the smoke-test script from the repo root:
+
+```fish
+cd ~/Projects/yeast
+./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
+```
+
+That script will:
+
+- run `doctor`
+- create a clean temp project
+- write the test config
+- pull the image
+- start the VM
+- verify `status`
+- verify `hostname`
+- verify `whoami`
+- stop, restart, and destroy
+
+The rest of this document is the same flow, but broken into individual manual steps.
 
 ## 0. What This Test Proves
 
-This manual test proves that Yeast can:
+This test proves that the current `v0.2.0` candidate can:
 
-- install on a real Linux host
-- detect host requirements
-- create a project config
+- run on a real Linux host
+- detect host requirements with `doctor`
+- initialize a project
 - pull a trusted Ubuntu image
-- start a QEMU/KVM VM
-- wait for SSH
-- show accurate status
-- open an SSH session
-- stop the VM
-- start it again
-- destroy project runtime files
-- keep the shared image cache
+- start a real QEMU/KVM VM
+- wait for SSH readiness
+- report status correctly
+- SSH into the guest
+- honor explicit `hostname`
+- honor explicit `ssh_port`
+- stop and restart the VM cleanly
+- destroy runtime state cleanly
 
-This does not test future features like provisioning, snapshots, private networking, templates, LabsBackery, Yeast MCP, or Twarga Cloud.
+This does not test:
 
-## 1. Host Requirements
+- provisioning
+- snapshots
+- restore
+- multi-VM networking
+- guest exec/copy/logs
+- templates
+- LabsBackery
+- Yeast MCP
+- Twarga Cloud
 
-Use a Linux machine with virtualization enabled.
+## 1. Important Rule For This Test
 
-Required:
+Do not run plain `yeast`.
 
-- Linux host
-- CPU virtualization enabled in BIOS/UEFI
-- `/dev/kvm` available
-- internet access
-- permission to install packages with `sudo`
-- enough disk space for Ubuntu cloud image and VM disk
+Your shell currently resolves:
 
-Recommended:
-
-- 4 GB RAM minimum
-- 10 GB free disk
-- stable internet connection
-
-Check KVM:
-
-```bash
-ls -l /dev/kvm
-```
-
-If `/dev/kvm` does not exist, enable virtualization in BIOS/UEFI or install your distro's KVM/QEMU packages.
-
-## 2. Install Yeast From The Landing Page Command
-
-Copy this exact command:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.1.0/install.sh | YEAST_REF=v0.1.0 bash
-```
-
-Why `YEAST_REF=v0.1.0` is included:
-
-- the script is downloaded from the `v0.1.0` tag
-- the source build also checks out the `v0.1.0` tag
-- this avoids accidentally testing a newer branch
-
-Expected result:
-
-- installer detects your package manager
-- installer installs or verifies QEMU/KVM, SSH, Git, Go, and ISO tooling
-- installer creates Yeast directories
-- installer builds and installs `yeast`
-- installer runs `yeast doctor`
-
-If the installer says you were added to a KVM group, log out and log back in before continuing. A reboot is also fine.
-
-## 3. Verify The Installed Binary
-
-Run:
-
-```bash
+```fish
 which yeast
-yeast version
+```
+
+to:
+
+```text
+/usr/local/bin/yeast
+```
+
+That is the old installed binary.
+
+For this full test, use the new built binary only.
+
+## 2. Set The Binary Path In Fish
+
+From the repo root:
+
+```fish
+cd ~/Projects/yeast
+set BIN ./dist/yeast-linux-amd64
+```
+
+Confirm it:
+
+```fish
+$BIN version
 ```
 
 Expected:
 
 ```text
-v0.1.0
+v0.2.0-test
 ```
 
-If the version is not `v0.1.0`, stop and write down the output.
+If you do not see `v0.2.0-test`, stop and check which binary you are running.
+
+## 3. Host Requirements
+
+You need:
+
+- Linux
+- `/dev/kvm`
+- `qemu-system-x86_64`
+- `qemu-img`
+- `genisoimage` or `mkisofs`
+- `ssh`
+- a valid public key in `~/.ssh/id_ed25519.pub` or `~/.ssh/id_rsa.pub`
+
+Optional but recommended:
+
+- at least 4 GB RAM free
+- at least 10 GB disk free
+- stable internet for first image pull
 
 ## 4. Run Doctor
 
 Run:
 
-```bash
-yeast doctor
+```fish
+$BIN doctor
 ```
 
 Expected:
 
-- QEMU check passes
-- `qemu-img` check passes
-- ISO tool check passes
-- SSH check passes
-- SSH public key check passes
-- KVM check passes or gives clear instructions
+- `qemu-system-x86_64` ok
+- `qemu-img` ok
+- `iso-builder` ok
+- `ssh` ok
+- `/dev/kvm` ok
+- `ssh-public-key` ok
 
-If KVM permission fails:
+If any blocker appears, fix that before going further.
 
-```bash
-groups
-ls -l /dev/kvm
-```
+## 5. Create A Fresh Test Project
 
-If your user was just added to a group, log out and log back in.
+Use a clean folder:
 
-## 5. Create A Clean Test Project
-
-Use a new empty folder:
-
-```bash
-mkdir -p ~/yeast-v010-test
-cd ~/yeast-v010-test
-```
-
-Make sure it is empty:
-
-```bash
-ls -la
+```fish
+mkdir -p /tmp/yeast-v020-test
+cd /tmp/yeast-v020-test
+rm -rf .yeast yeast.yaml
 ```
 
 ## 6. Initialize The Project
 
 Run:
 
-```bash
-yeast init
+```fish
+$BIN init
 ```
 
 Expected:
 
-- `yeast.yaml` is created
-- default instance is named `web`
-- default image is `ubuntu-24.04`
+- `yeast.yaml` created
+- `.yeast/project.json` created
 
-Inspect the config:
+Check:
 
-```bash
+```fish
+ls -la
 cat yeast.yaml
 ```
 
-Expected shape:
+## 7. Replace The Config With A Real v0.2.0 Test Case
 
-```yaml
-version: 1
-instances:
-  - name: web
-    image: ubuntu-24.04
-    memory: 1024
-    cpus: 1
+Write this exact config:
+
+```fish
+printf '%s\n' \
+'version: 1' \
+'instances:' \
+'  - name: web' \
+'    hostname: web-lab' \
+'    image: ubuntu-24.04' \
+'    memory: 1024' \
+'    cpus: 1' \
+'    disk_size: 20G' \
+'    ssh_port: 2205' \
+'    user: yeast' \
+'    sudo: none' > yeast.yaml
 ```
 
-## 7. List Supported Images
+Verify it:
+
+```fish
+cat yeast.yaml
+```
+
+This config specifically tests:
+
+- `disk_size`
+- `hostname`
+- `ssh_port`
+
+## 8. List Supported Images
 
 Run:
 
-```bash
-yeast pull --list
+```fish
+$BIN pull --list
 ```
 
 Expected:
@@ -182,76 +220,74 @@ Expected:
 - `ubuntu-22.04`
 - `ubuntu-24.04`
 
-## 8. Pull Ubuntu 24.04
+## 9. Pull The Ubuntu Image
 
 Run:
 
-```bash
-yeast pull ubuntu-24.04
+```fish
+$BIN pull ubuntu-24.04
 ```
 
 Expected:
 
-- image downloads if not already cached
-- checksum verification succeeds
-- image is stored in the Yeast cache
+- image is downloaded or confirmed from cache
+- no checksum failure
+- command completes successfully
 
-This can take time depending on your internet connection.
-
-If the command fails, save the full output.
-
-## 9. Start The VM
+## 10. Start The VM
 
 Run:
 
-```bash
-yeast up
+```fish
+$BIN up
 ```
 
 Expected:
 
-- Yeast creates project runtime files
-- Yeast creates a VM disk
-- Yeast creates cloud-init seed data
-- Yeast starts QEMU/KVM
-- Yeast waits for SSH
-- Yeast reports the VM as ready or running
+- VM starts successfully
+- Yeast prints something like:
 
-First boot can take a few minutes because Ubuntu cloud-init needs to finish.
+```text
+Started web (127.0.0.1:2205)
+```
 
-## 10. Check Status
+Important checks here:
+
+- the host SSH port must be `2205`
+- startup must not silently choose `2222`
+
+## 11. Check Status
 
 Run:
 
-```bash
-yeast status
+```fish
+$BIN status
 ```
 
 Expected:
 
-- instance `web` appears
-- status is running
-- SSH address or port is visible
+- instance `web`
+- status `running`
+- host address `127.0.0.1:2205`
 
-Also test JSON output:
+Then run JSON mode:
 
-```bash
-yeast status --json
+```fish
+$BIN status --json
 ```
 
 Expected:
 
 - valid JSON
-- no styled terminal text
-- instance `web` exists in the JSON result
-- status is running
+- `SSHPort` or equivalent host-side port is `2205`
+- no terminal formatting noise
 
-## 11. SSH Into The VM
+## 12. SSH Into The VM
 
 Run:
 
-```bash
-yeast ssh web
+```fish
+$BIN ssh web
 ```
 
 Inside the VM, run:
@@ -259,205 +295,169 @@ Inside the VM, run:
 ```bash
 hostname
 whoami
-uname -a
-ip addr
+```
+
+Expected:
+
+- `hostname` returns `web-lab`
+- `whoami` returns `yeast`
+
+This is the most important `v0.2.0` check.
+
+If hostname is still `web`, then the new hostname feature is not working on a real guest.
+
+## 13. Exit The Guest
+
+Inside the guest:
+
+```bash
+exit
+```
+
+## 14. Stop The VM
+
+Run:
+
+```fish
+$BIN down
+```
+
+Then:
+
+```fish
+$BIN status
+```
+
+Expected:
+
+- instance still exists
+- status is stopped
+- no stale running PID/port state
+
+## 15. Start It Again
+
+Run:
+
+```fish
+$BIN up
+```
+
+Then:
+
+```fish
+$BIN status
+```
+
+Expected:
+
+- starts successfully again
+- still uses `2205`
+- no unexpected port drift
+
+## 16. SSH Again And Recheck
+
+Run:
+
+```fish
+$BIN ssh web
+```
+
+Inside the guest:
+
+```bash
+hostname
+whoami
 exit
 ```
 
 Expected:
 
-- SSH opens without manually typing a port
-- hostname is related to `web`
-- user is the configured cloud-init user
-- `exit` returns to your host shell
+- hostname still `web-lab`
+- user still `yeast`
 
-## 12. Stop The VM
+## 17. Destroy The Project
 
 Run:
 
-```bash
-yeast down
+```fish
+$BIN destroy
+```
+
+Then:
+
+```fish
+$BIN status
 ```
 
 Expected:
 
-- VM stops
-- disk is not deleted
-- image cache is not deleted
+- no running instances
+- project runtime state cleaned up
 
-Check status:
+## 18. Optional Cache Check
 
-```bash
-yeast status
-```
-
-Expected:
-
-- `web` is stopped or not running
-
-## 13. Start The VM Again
-
-Run:
-
-```bash
-yeast up
-```
-
-Expected:
-
-- Yeast reuses the existing project disk
-- VM starts again
-- SSH becomes reachable again
+Destroy should not remove the shared image cache.
 
 Check:
 
-```bash
-yeast status
-yeast ssh web
-```
-
-Then exit SSH:
-
-```bash
-exit
-```
-
-## 14. Destroy The Project Runtime
-
-Run:
-
-```bash
-yeast destroy
+```fish
+ls -la ~/.yeast/cache/images/ubuntu-24.04
 ```
 
 Expected:
 
-- project runtime files are removed
-- VM process is stopped
-- project disk is removed
-- shared image cache remains
-- `yeast.yaml` remains in your project folder
+- image cache still exists
 
-Check status:
+## 19. Pass Criteria
 
-```bash
-yeast status
-```
+Call this manual test a pass only if all of these are true:
 
-Expected:
+- `doctor` shows no blocker
+- `pull ubuntu-24.04` works
+- `up` works on a real VM
+- reported SSH port is `2205`
+- `ssh web` works
+- guest `hostname` is `web-lab`
+- guest user is `yeast`
+- `down` works
+- restart works
+- `destroy` works
+- `status --json` works cleanly
 
-- no running VM
-- no stale running status
+## 20. Failure Notes Template
 
-## 15. Verify Cache Was Not Destroyed
+If anything fails, capture:
 
-Check Yeast cache:
+- command you ran
+- exact output
+- whether failure is before boot, during boot, during SSH, or after restart
 
-```bash
-find ~/.yeast/cache -maxdepth 3 -type f | head
-```
-
-Expected:
-
-- cached image files still exist
-
-This matters because `destroy` should clean the project runtime, not delete shared base images.
-
-## 16. Test Error Handling
-
-Run this from the project folder:
-
-```bash
-yeast ssh missing-vm
-```
-
-Expected:
-
-- Yeast gives a clear error
-- it does not crash
-
-Run:
-
-```bash
-yeast pull does-not-exist
-```
-
-Expected:
-
-- Yeast gives a clear unsupported image error
-
-## 17. Clean Up After The Test
-
-If everything passed:
-
-```bash
-cd ~
-rm -rf ~/yeast-v010-test
-```
-
-Do not remove `~/.yeast/cache` unless you want to delete downloaded base images.
-
-Optional full cleanup:
-
-```bash
-rm -rf ~/.yeast
-```
-
-## 18. Pass Or Fail Report
-
-When finished, write a result like this:
+Use this format:
 
 ```text
-Yeast v0.1.0 manual test
+Command:
+$BIN up
 
-Host:
-Distro:
-Kernel:
-CPU:
+Observed:
+<paste output>
 
-Install: pass/fail
-Doctor: pass/fail
-Init: pass/fail
-Pull: pass/fail
-Up: pass/fail
-Status: pass/fail
-Status JSON: pass/fail
-SSH: pass/fail
-Down: pass/fail
-Up again: pass/fail
-Destroy: pass/fail
-Cache preserved: pass/fail
-Error handling: pass/fail
+Expected:
+Started web (127.0.0.1:2205)
 
 Notes:
+<anything unusual>
 ```
 
-Useful host info:
+## 21. Final Release Decision
 
-```bash
-cat /etc/os-release
-uname -a
-groups
-yeast version
-```
+If this full manual test passes on your laptop, then `v0.2.0` is in good shape to release.
 
-## 19. If Something Fails
+If it fails on:
 
-Save:
+- boot
+- SSH
+- hostname
+- ssh_port
+- restart
 
-- the exact command you ran
-- the full terminal output
-- your distro
-- whether `/dev/kvm` exists
-- whether your user is in the KVM/libvirt group
-
-Useful debug commands:
-
-```bash
-yeast doctor
-yeast status --json
-ps aux | grep qemu
-find ~/.yeast -maxdepth 4 -type f | sort
-```
-
-Do not delete the project folder before saving the output if you want to debug the failure.
+then do not release yet. Fix the failure first.
