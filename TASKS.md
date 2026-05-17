@@ -86,7 +86,7 @@ v0.3.0 provisioning.
 Next task:
 
 ```text
-V0.3-T4: Add SSH provisioning transport abstraction.
+V0.3-T5: Add package provisioner.
 ```
 
 ## 5. Milestone Overview
@@ -2837,7 +2837,7 @@ Completion notes:
 
 ### V0.3-T4: Add SSH provisioning transport abstraction
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -2856,6 +2856,13 @@ Definition of done:
 - fake transport exists for tests
 - timeouts and exit-code capture are represented in result types
 - no public `yeast exec` command is added in this milestone
+
+Completion notes:
+
+- Added `internal/provision/ssh.Transport` with `Run` and `Upload` methods.
+- Added a command-backed local transport using `ssh` and `scp`.
+- Added structured request/result types with stdout, stderr, exit code, and duration capture.
+- Added a fake transport plus focused tests for invocation building, validation, and error result preservation.
 
 ### V0.3-T5: Add package provisioner
 
