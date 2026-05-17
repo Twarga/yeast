@@ -86,7 +86,7 @@ v0.2.0 project safety and error structure cleanup.
 Next task:
 
 ```text
-V0.2-T5: Classify yeast ssh selection errors.
+V0.2-T6: Classify yeast pull unsupported image errors.
 ```
 
 ## 5. Milestone Overview
@@ -2215,6 +2215,32 @@ Completion notes:
 - Wrapped SSH target selection failures in stable app error codes.
 - Wrapped missing config lookup for selected state instances as `not_found`.
 - Added focused tests for missing, stopped, empty, and ambiguous SSH selection cases.
+
+### V0.2-T6: Classify yeast pull unsupported image errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T5
+
+Files:
+
+- `internal/app/pull.go`
+- `internal/app/pull_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- unsupported pull image reports `invalid_argument`
+- existing `ErrUnsupportedImage` compatibility is preserved
+- JSON output can use stable app error codes through existing renderers
+
+Completion notes:
+
+- Wrapped unsupported pull image failures in `ErrorCodeInvalidArgument`.
+- Preserved `errors.Is(err, ErrUnsupportedImage)` by keeping the sentinel as the wrapped cause.
+- Added test coverage for the app error code and sentinel behavior.
 
 ---
 

@@ -32,6 +32,13 @@ func TestPullUnsupportedImageFailsClearly(t *testing.T) {
 	if !errors.Is(err, ErrUnsupportedImage) {
 		t.Fatalf("expected ErrUnsupportedImage, got %v", err)
 	}
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	if appErr.Code != ErrorCodeInvalidArgument {
+		t.Fatalf("expected invalid_argument error code, got %q", appErr.Code)
+	}
 }
 
 func TestPullDownloadsKnownImage(t *testing.T) {
