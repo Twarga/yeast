@@ -323,10 +323,12 @@ Current v0.1 example:
 version: 1
 instances:
   - name: web
+    hostname: web-lab
     image: ubuntu-24.04
     memory: 1024
     cpus: 1
     disk_size: 20G
+    ssh_port: 2205
     user: yeast
     sudo: none
     env:
@@ -341,6 +343,7 @@ instances:
 - `cpus`
 - `disk_size`
 - `hostname`
+- `ssh_port`
 - `user`
 - `sudo`
 - `env`
@@ -352,6 +355,7 @@ instances:
 - `disk_size` applies to the overlay disk Yeast creates for the instance; existing disks are kept as-is
 - `disk_size` accepts whole-number sizes with optional `K`, `M`, `G`, `T`, or `P` suffixes, such as `20G`, `25600M`, or raw bytes
 - `hostname` controls the guest hostname written through cloud-init; if omitted, Yeast uses the instance `name`
+- `ssh_port` overrides the host-side SSH forwarding port; if omitted, Yeast auto-allocates starting at `2222`
 - `env` is rendered into the guest bootstrap profile script
 - `networks` and `provision` exist in the config model for future milestones but are not active v0.1 features
 

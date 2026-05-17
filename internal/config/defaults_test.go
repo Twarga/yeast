@@ -48,6 +48,7 @@ func TestApplyDefaultsPreservesExplicitValues(t *testing.T) {
 				Image:    "ubuntu-24.04",
 				Memory:   2048,
 				CPUs:     2,
+				SSHPort:  2205,
 				User:     "operator",
 				Sudo:     "nopasswd",
 				DiskSize: "25 gb",
@@ -68,6 +69,9 @@ func TestApplyDefaultsPreservesExplicitValues(t *testing.T) {
 	}
 	if instance.CPUs != 2 {
 		t.Fatalf("expected explicit cpus 2, got %d", instance.CPUs)
+	}
+	if instance.SSHPort != 2205 {
+		t.Fatalf("expected explicit ssh port 2205, got %d", instance.SSHPort)
 	}
 	if instance.Hostname != "web-lab" {
 		t.Fatalf("expected explicit hostname web-lab, got %q", instance.Hostname)

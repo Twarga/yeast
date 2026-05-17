@@ -56,6 +56,9 @@ func Validate(cfg *Config) error {
 		if instance.CPUs != 0 && instance.CPUs < 1 {
 			return fmt.Errorf("instance %s has invalid cpu count (min 1)", instance.Name)
 		}
+		if instance.SSHPort != 0 && (instance.SSHPort < 1 || instance.SSHPort > 65535) {
+			return fmt.Errorf("instance %s has invalid ssh_port %d", instance.Name, instance.SSHPort)
+		}
 		if strings.TrimSpace(instance.DiskSize) != "" {
 			if _, err := parseByteSize(instance.DiskSize); err != nil {
 				return fmt.Errorf("instance %s has invalid disk_size: %w", instance.Name, err)

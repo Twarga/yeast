@@ -13,6 +13,7 @@ func validConfig() *Config {
 				Memory:   1024,
 				CPUs:     1,
 				DiskSize: "20G",
+				SSHPort:  2222,
 				User:     "yeast",
 				Sudo:     "none",
 				Env: map[string]string{
@@ -84,6 +85,14 @@ func TestValidateRejectsInvalidDiskSize(t *testing.T) {
 	cfg.Instances[0].DiskSize = "20GiB"
 	if err := Validate(cfg); err == nil {
 		t.Fatal("expected invalid disk size error")
+	}
+}
+
+func TestValidateRejectsInvalidSSHPort(t *testing.T) {
+	cfg := validConfig()
+	cfg.Instances[0].SSHPort = 70000
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected invalid ssh port error")
 	}
 }
 

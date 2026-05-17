@@ -14,6 +14,7 @@ type Instance struct {
 	Memory   int               `yaml:"memory"`
 	CPUs     int               `yaml:"cpus"`
 	DiskSize string            `yaml:"disk_size,omitempty"`
+	SSHPort  int               `yaml:"ssh_port,omitempty"`
 	User     string            `yaml:"user,omitempty"`
 	Sudo     string            `yaml:"sudo,omitempty"`
 	Env      map[string]string `yaml:"env,omitempty"`

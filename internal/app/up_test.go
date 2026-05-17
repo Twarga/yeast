@@ -53,7 +53,7 @@ func TestUpStartsInstanceAndSavesState(t *testing.T) {
 	fakeRuntime := &fakeRuntime{}
 	service.runtime = fakeRuntime
 	service.waitForTCP = func(ctx context.Context, options guest.ReadinessOptions) error {
-		if options.Address != "127.0.0.1:2222" {
+		if options.Address != "127.0.0.1:2205" {
 			t.Fatalf("unexpected readiness address: %q", options.Address)
 		}
 		return nil
@@ -71,6 +71,7 @@ instances:
     memory: 1024
     cpus: 1
     disk_size: 25 gb
+    ssh_port: 2205
 `
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("write config with disk_size: %v", err)
@@ -95,7 +96,7 @@ instances:
 	if len(result.Instances) != 1 {
 		t.Fatalf("expected 1 instance result, got %d", len(result.Instances))
 	}
-	if result.Instances[0].SSHAddress != "127.0.0.1:2222" {
+	if result.Instances[0].SSHAddress != "127.0.0.1:2205" {
 		t.Fatalf("unexpected ssh address: %q", result.Instances[0].SSHAddress)
 	}
 	if userDataCalls != 1 {
@@ -120,7 +121,7 @@ instances:
 		t.Fatalf("read state file: %v", err)
 	}
 	content := string(raw)
-	for _, want := range []string{`"status": "running"`, `"ssh_port": 2222`, `"runtime_dir": "`} {
+	for _, want := range []string{`"status": "running"`, `"ssh_port": 2205`, `"runtime_dir": "`} {
 		if !strings.Contains(content, want) {
 			t.Fatalf("expected state content %q, got:\n%s", want, content)
 		}
@@ -322,6 +323,30 @@ func TestUpClassifiesStateProjectMismatch(t *testing.T) {
 	_, err = service.Up(context.Background(), UpOptions{ProjectRoot: root})
 	assertAppErrorCode(t, err, ErrorCodeInternal)
 	if !strings.Contains(err.Error(), "state project id mismatch") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestUpClassifiesRequestedSSHPortCollision(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.runtime = &fakeRuntime{}
+
+	configContent := `version: 1
+instances:
+  - name: web
+    image: ubuntu-24.04
+    ssh_port: 2222
+  - name: api
+    image: ubuntu-24.04
+    ssh_port: 2222
+`
+	if err := os.WriteFile(filepath.Join(root, ConfigFileName), []byte(configContent), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodeInvalidArgument)
+	if !strings.Contains(err.Error(), "already in use") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

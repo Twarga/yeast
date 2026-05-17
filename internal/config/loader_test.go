@@ -50,6 +50,7 @@ instances:
     memory: 1024
     cpus: 1
     disk_size: 20G
+    ssh_port: 2205
     user: yeast
     sudo: none
     env:
@@ -89,6 +90,9 @@ instances:
 	}
 	if instance.DiskSize != "20G" {
 		t.Fatalf("expected disk size 20G, got %q", instance.DiskSize)
+	}
+	if instance.SSHPort != 2205 {
+		t.Fatalf("expected ssh port 2205, got %d", instance.SSHPort)
 	}
 	if instance.User != "yeast" {
 		t.Fatalf("expected user yeast, got %q", instance.User)

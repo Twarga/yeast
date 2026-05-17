@@ -2649,6 +2649,39 @@ Completion notes:
 - Wired `hostname` through `yeast up` into cloud-init user-data and meta-data generation.
 - Added focused config, app, and cloud-init tests plus README/config-reference updates.
 
+### V0.2-T22: Add explicit ssh_port config support
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T21
+
+Files:
+
+- `internal/config/model.go`
+- `internal/config/validate.go`
+- `internal/config/*_test.go`
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `docs/config-reference.md`
+- `README.md`
+- `TASKS.md`
+
+Definition of done:
+
+- `ssh_port` is a supported instance field
+- explicit `ssh_port` reaches the runtime management port plan
+- invalid or colliding requested ports fail clearly
+- docs describe default and override behavior
+
+Completion notes:
+
+- Added `ssh_port` to the instance config model and validation.
+- Wired requested SSH ports through `yeast up` port selection and runtime planning.
+- Rejected invalid requested ports and same-run collisions as `invalid_argument`.
+- Added focused config/app tests plus README/config-reference updates.
+
 ---
 
 # Future Milestones

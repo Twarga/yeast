@@ -139,7 +139,10 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
 		}
-		sshPort := chooseManagementSSHPort(currentState, instance.Name, allocatedPorts)
+		sshPort, err := chooseManagementSSHPort(currentState, instance, allocatedPorts)
+		if err != nil {
+			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
+		}
 		allocatedPorts[sshPort] = true
 
 		userKey, err := s.discoverSSHKey()
@@ -252,13 +255,22 @@ func usedManagementPorts(currentState state.State) map[int]bool {
 	return used
 }
 
-func chooseManagementSSHPort(currentState state.State, instanceName string, used map[int]bool) int {
-	if existing, ok := currentState.Instances[instanceName]; ok && existing.SSHPort > 0 {
-		return existing.SSHPort
+func chooseManagementSSHPort(currentState state.State, instance config.Instance, used map[int]bool) (int, error) {
+	if instance.SSHPort > 0 {
+		if existing, ok := currentState.Instances[instance.Name]; ok && existing.SSHPort > 0 && existing.SSHPort != instance.SSHPort {
+			return 0, fmt.Errorf("instance %q requested ssh_port %d but existing state uses %d", instance.Name, instance.SSHPort, existing.SSHPort)
+		}
+		if used[instance.SSHPort] {
+			return 0, fmt.Errorf("requested ssh_port %d for instance %q is already in use", instance.SSHPort, instance.Name)
+		}
+		return instance.SSHPort, nil
+	}
+	if existing, ok := currentState.Instances[instance.Name]; ok && existing.SSHPort > 0 {
+		return existing.SSHPort, nil
 	}
 	port := firstManagementSSHPort
 	for used[port] {
 		port++
 	}
-	return port
+	return port, nil
 }
