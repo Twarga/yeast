@@ -532,6 +532,18 @@ Goal:
 
 Make VMs useful automatically.
 
+v0.3 contract:
+
+- top-level `provision` applies to every instance
+- instance-level `provision` appends after top-level steps
+- packages, files, and shell run post-boot over SSH
+- cloud-init remains bootstrap for user, SSH key, hostname, sudo, and environment setup
+- `yeast up` runs provisioning automatically after SSH readiness
+- `yeast provision` reruns the same post-boot plan against an existing reachable VM
+- package installation relies on package-manager idempotency
+- file provisioning overwrites destination files
+- shell commands always run and must be idempotent if reruns matter
+
 Features:
 
 - packages

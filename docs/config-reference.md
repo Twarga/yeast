@@ -144,7 +144,7 @@ Rules:
 
 ## Provisioning Schema
 
-Yeast now accepts provisioning config in the schema, but this first `v0.3.0` slice only defines and validates the shape. It does **not** execute provisioning yet.
+Yeast now accepts provisioning config in the schema. During `v0.3.0`, this config becomes the contract for post-boot provisioning.
 
 Provisioning can appear:
 
@@ -197,9 +197,27 @@ Rules:
 
 This schema is the contract for the upcoming provisioning implementation. Later `v0.3.0` tasks will decide:
 
-- how top-level and instance-level provisioning merge
-- what runs in cloud-init vs post-boot SSH
-- how `yeast provision` reruns steps safely
+- top-level steps run before instance-level steps
+- `packages`, `files`, and `shell` run post-boot over SSH
+- cloud-init remains responsible for user, SSH key, hostname, sudo, and environment bootstrap
+
+Merge order:
+
+```text
+project packages -> instance packages
+project files    -> instance files
+project shell    -> instance shell
+```
+
+`yeast up` will run the merged post-boot provisioning plan automatically after SSH readiness.
+
+`yeast provision` will rerun the same merged post-boot plan against an existing reachable VM. It will not recreate disks, regenerate cloud-init, or reboot the VM unless a user-authored shell command does that.
+
+Idempotency expectations:
+
+- package installation relies on the guest package manager's normal idempotency
+- file provisioning overwrites destination files
+- shell commands always run, so write them to be safe on reruns
 
 ## Sudo Modes
 

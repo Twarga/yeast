@@ -512,7 +512,8 @@ Responsibilities:
 - generate cloud-init user-data
 - generate cloud-init meta-data
 - create seed ISO
-- run post-boot package/file/shell provisioners
+- build merged provisioning plans from project and instance config
+- run post-boot package/file/shell provisioners over SSH
 - track provisioning steps
 - report provisioning errors
 
@@ -528,6 +529,48 @@ v1 provisioners:
 - packages
 - files
 - shell
+
+v0.3 rule:
+
+```text
+cloud-init remains bootstrap.
+packages, files, and shell run post-boot over SSH.
+```
+
+Cloud-init owns the bootstrap surface:
+
+- Linux user
+- SSH authorized key
+- hostname
+- sudo policy
+- environment/profile bootstrap
+- seed ISO generation
+
+Post-boot SSH provisioning owns the mutable setup surface:
+
+- package installation
+- file upload
+- permission application
+- shell command execution
+- service start/restart commands
+
+Project-level and instance-level provisioning merge by appending lists in this order:
+
+```text
+project packages -> instance packages
+project files    -> instance files
+project shell    -> instance shell
+```
+
+`yeast up` runs the merged post-boot provisioning plan automatically after SSH readiness.
+
+`yeast provision` reruns the same merged post-boot provisioning plan against an existing reachable VM. It does not recreate disks, regenerate cloud-init, or restart the VM unless a user-authored shell command does that.
+
+Idempotency rules:
+
+- package installation should rely on the guest package manager's normal idempotency
+- file provisioning overwrites destination files
+- shell commands always run and must be written as idempotent by the user
 
 Do not start with Ansible. Add it later only if needed.
 
@@ -695,6 +738,8 @@ Important config rules:
 - defaults must be predictable
 - invalid config should fail before runtime work starts
 - provisioning should be structured before allowing full custom scripts everywhere
+- top-level provision steps apply to every instance
+- instance provision steps append after top-level steps
 
 ## 9. State Model
 
@@ -851,15 +896,18 @@ Provisioning should be split into two clear phases.
 ```mermaid
 flowchart TD
     Config["Provision config"]
-    CloudInit["First boot cloud-init\nuser, key, hostname, packages"]
+    Merge["Merge project + instance provision"]
+    CloudInit["First boot cloud-init\nuser, key, hostname, sudo"]
     Boot["Boot VM"]
     ReadySSH["SSH ready"]
-    SSHProvision["Post-boot provisioners\nfiles, shell, verification"]
+    SSHProvision["Post-boot SSH provisioners\npackages, files, shell"]
     Ready["Instance ready"]
 
-    Config --> CloudInit
+    Config --> Merge
+    Merge --> CloudInit
     CloudInit --> Boot
     Boot --> ReadySSH
+    Merge --> SSHProvision
     ReadySSH --> SSHProvision
     SSHProvision --> Ready
 ```
@@ -870,24 +918,42 @@ Cloud-init owns:
 - SSH key
 - hostname
 - sudo policy
-- early packages if safe
-- simple files
 
 Post-boot provisioning owns:
 
+- installing packages
 - copying local project files
 - running shell commands
 - restarting services
 - verifying services
 
+Merge order:
+
+```text
+project packages -> instance packages
+project files    -> instance files
+project shell    -> instance shell
+```
+
+Automatic run:
+
+- `yeast up` runs provisioning after SSH readiness.
+- A VM is not considered fully ready until provisioning finishes or fails.
+
+Manual rerun:
+
+- `yeast provision` requires an existing reachable VM.
+- It reruns the same post-boot plan.
+- It does not recreate the VM.
+- It does not mutate first-boot cloud-init data.
+
 Provisioning result should be stored in state:
 
 ```text
-pending
+not_started
 running
-success
+provisioned
 failed
-skipped
 ```
 
 ## 15. Networking Architecture

@@ -2764,7 +2764,7 @@ Completion notes:
 
 ### V0.3-T2: Lock provisioning contract and merge rules
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -2798,6 +2798,13 @@ Contract to document:
 - package installation should be idempotent where the guest package manager supports it
 - file provisioning overwrites destination files
 - shell commands always run and must be authored as idempotent by the user
+
+Completion notes:
+
+- Documented provisioning merge order in architecture, implementation plan, and config reference.
+- Locked the v0.3 execution split: cloud-init remains bootstrap; packages/files/shell run post-boot over SSH.
+- Documented automatic `yeast up` provisioning and manual `yeast provision` rerun semantics.
+- Documented idempotency expectations for packages, files, and shell commands.
 
 ### V0.3-T3: Add provisioning plan builder
 
