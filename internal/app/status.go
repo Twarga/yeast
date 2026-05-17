@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"sort"
 	"yeast/internal/project"
@@ -41,26 +42,29 @@ func (s *Service) Status(ctx context.Context, options StatusOptions) (StatusResu
 
 	metadata, err := project.LoadMetadata(absoluteRoot)
 	if err != nil {
-		return StatusResult{}, err
+		if errors.Is(err, project.ErrMetadataNotFound) {
+			return StatusResult{}, WrapError(ErrorCodePrecondition, err.Error(), err)
+		}
+		return StatusResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	yeastHome, err := s.resolveYeastHome()
 	if err != nil {
-		return StatusResult{}, err
+		return StatusResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	paths, err := project.NewPaths(yeastHome, metadata)
 	if err != nil {
-		return StatusResult{}, err
+		return StatusResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	lock, err := state.Acquire(paths.StateLock, state.DefaultLockOptions())
 	if err != nil {
-		return StatusResult{}, err
+		return StatusResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	defer func() { _ = lock.Release() }()
 
 	currentState, err := state.Load(paths.StateFile, metadata.ID)
 	if err != nil {
-		return StatusResult{}, err
+		return StatusResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	changed := state.Reconcile(&currentState, state.ReconcileOptions{
@@ -74,7 +78,7 @@ func (s *Service) Status(ctx context.Context, options StatusOptions) (StatusResu
 	})
 	if changed {
 		if err := state.Save(paths.StateFile, currentState); err != nil {
-			return StatusResult{}, err
+			return StatusResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 	}
 

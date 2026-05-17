@@ -2344,6 +2344,33 @@ Completion notes:
 - Wrapped runtime `PrepareDisk` and `Start` failures in `ErrorCodeInternal`.
 - Added fake-runtime coverage proving failed prepare/start paths produce stable app error codes.
 
+### V0.2-T11: Classify yeast status project/state errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T10
+
+Files:
+
+- `internal/app/status.go`
+- `internal/app/status_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- non-initialized `yeast status` reports `failed_precondition`
+- corrupted or mismatched tracked state reports `internal`
+- existing human-facing messages are preserved
+- JSON output can use stable app error codes through existing renderers
+
+Completion notes:
+
+- Wrapped missing project metadata during `yeast status` as `ErrorCodePrecondition`.
+- Wrapped Yeast home resolution, path construction, state lock acquisition, and state load/save failures as `ErrorCodeInternal`.
+- Added focused tests for non-initialized projects and state project-id mismatch behavior.
+
 ---
 
 # Future Milestones
