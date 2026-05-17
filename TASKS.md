@@ -86,7 +86,7 @@ v0.2.0 disk_size support started.
 Next task:
 
 ```text
-V0.2-T2: Continue disk_size support with any remaining runtime/docs verification.
+No open v0.2.0 disk_size task. Define the next v0.2.0 task before continuing.
 ```
 
 ## 5. Milestone Overview
@@ -2120,7 +2120,7 @@ Completion notes:
 
 ### V0.2-T2: Continue disk_size support with any remaining runtime/docs verification
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -2129,6 +2129,12 @@ Dependencies:
 Definition of done:
 
 - decide whether any remaining disk_size work is needed before moving to the next v0.2.0 item
+
+Completion notes:
+
+- Added runtime regression coverage proving `PrepareDisk` keeps an existing overlay disk even when a requested `disk_size` is present.
+- Confirmed no additional disk_size implementation was needed after config/schema, validation, app wiring, QEMU command construction, existing-disk behavior, tests, and docs were covered.
+- Networking and provisioning remain untouched.
 
 ---
 

@@ -112,7 +112,7 @@ func TestPrepareDiskCreatesDirectoriesAndInvokesQEMUImg(t *testing.T) {
 	}
 }
 
-func TestPrepareDiskSkipsExistingDisk(t *testing.T) {
+func TestPrepareDiskKeepsExistingDiskEvenWithRequestedSize(t *testing.T) {
 	previous := runCommand
 	defer func() {
 		runCommand = previous
@@ -137,6 +137,7 @@ func TestPrepareDiskSkipsExistingDisk(t *testing.T) {
 		Disk: runtime.DiskPlan{
 			BaseImagePath: filepath.Join(root, "cache", "ubuntu.qcow2"),
 			DiskPath:      diskPath,
+			Size:          "30G",
 		},
 	}
 
