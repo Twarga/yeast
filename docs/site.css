@@ -412,3 +412,48 @@ code {
     flex-direction: column;
   }
 }
+
+.guide {
+  max-width: 920px;
+}
+
+.guide-hero {
+  padding: 74px 0 46px;
+}
+
+.guide-hero h1 {
+  max-width: 820px;
+  font-size: clamp(54px, 10vw, 112px);
+}
+
+.guide-hero,
+.guide-panel {
+  text-align: left;
+}
+
+.guide-panel {
+  padding: 34px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.guide-panel h2 {
+  max-width: 100%;
+  margin-bottom: 16px;
+  font-size: clamp(30px, 4.5vw, 54px);
+}
+
+.guide-panel p,
+.guide-panel li {
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.guide-panel ul {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.guide-panel .mini-terminal {
+  margin: 18px 0;
+}
