@@ -139,6 +139,55 @@ func TestDownClassifiesRuntimeStopFailure(t *testing.T) {
 	}
 }
 
+func TestDownClassifiesUninitializedProject(t *testing.T) {
+	service := NewService()
+
+	_, err := service.Down(context.Background(), DownOptions{ProjectRoot: t.TempDir()})
+	assertDownAppErrorCode(t, err, ErrorCodePrecondition)
+}
+
+func TestDownClassifiesStateProjectMismatch(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.runtime = &fakeDownRuntime{}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+
+	if err := state.Save(paths.StateFile, state.New("wrong-project")); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	_, err = service.Down(context.Background(), DownOptions{ProjectRoot: root})
+	assertDownAppErrorCode(t, err, ErrorCodeInternal)
+}
+
+func assertDownAppErrorCode(t *testing.T, err error, want ErrorCode) {
+	t.Helper()
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	if appErr.Code != want {
+		t.Fatalf("expected error code %q, got %q", want, appErr.Code)
+	}
+}
+
 type fakeDownRuntime struct {
 	stoppedPIDs []int
 	stopErr     error

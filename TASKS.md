@@ -2537,6 +2537,32 @@ Completion notes:
 - Preserved existing selection classification for missing/stopped/ambiguous targets.
 - Added focused tests for uninitialized project, missing config, SSH address failure, and SSH execution failure.
 
+### V0.2-T18: Classify yeast down setup and state errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T17
+
+Files:
+
+- `internal/app/down.go`
+- `internal/app/down_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- missing project metadata reports `failed_precondition`
+- home/path/lock/state load/save failures report `internal`
+- existing runtime stop `internal` behavior stays unchanged
+
+Completion notes:
+
+- Wrapped metadata, Yeast home, path, lock, state load, and final state save failures in stable app error codes.
+- Preserved the existing runtime stop classification as `ErrorCodeInternal`.
+- Added focused tests for uninitialized project and state project-id mismatch behavior.
+
 ---
 
 # Future Milestones
