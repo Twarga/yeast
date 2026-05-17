@@ -80,13 +80,13 @@ YEAST_FEEDBACK_LOG.md
 Current phase:
 
 ```text
-v0.2.0 project safety and error structure cleanup.
+v0.3.0 provisioning.
 ```
 
 Next task:
 
 ```text
-V0.2-T10: Classify yeast up runtime prepare/start errors.
+V0.3-T2: Decide top-level vs instance provisioning merge rules and first-boot vs post-boot execution split.
 ```
 
 ## 5. Milestone Overview
@@ -2690,21 +2690,214 @@ These are intentionally deferred until v0.1 works.
 
 ## M11: Provisioning
 
-Status: [-]
+Status: [~]
 
 Do not start until:
 
 - M10 complete
-- v0.1 lifecycle proven
+- v0.2.0 released
 
-Core tasks later:
+### V0.3-T1: Activate provisioning config schema and validation
 
-- provision model
-- packages
-- files
-- shell
-- provision command
-- Caddy demo
+Status: [x]
+
+Dependencies:
+
+- V0.2-T22
+
+Files:
+
+- `internal/config/validate.go`
+- `internal/config/validate_test.go`
+- `internal/config/loader_test.go`
+- `docs/config-reference.md`
+- `TASKS.md`
+
+Definition of done:
+
+- top-level and instance-level `provision` blocks are validated
+- package entries reject empty/newline values
+- file entries require `source` and `destination`
+- file `permissions` validate as octal strings when present
+- shell entries reject empty commands
+- docs describe the active provisioning schema and clearly state execution is not wired yet
+
+Completion notes:
+
+- Activated schema validation for top-level and instance-level `provision` blocks.
+- Added focused tests for valid provisioning config plus invalid package, file, permissions, and shell cases.
+- Extended loader coverage so top-level and instance-level provisioning sections parse from YAML.
+- Updated config reference to document the schema and its current non-executing status.
+
+### V0.3-T2: Decide provisioning merge rules and execution split
+
+Status: [ ]
+
+Dependencies:
+
+- V0.3-T1
+
+Files:
+
+- `YEAST_TECHNICAL_ARCHITECTURE.md`
+- `YEAST_V2_IMPLEMENTATION_PLAN.md`
+- `docs/config-reference.md`
+- `TASKS.md`
+
+Definition of done:
+
+- project-level vs instance-level provisioning precedence is explicit
+- first-boot cloud-init responsibilities are explicit
+- post-boot SSH provisioning responsibilities are explicit
+- rerun behavior for future `yeast provision` is stated clearly enough to implement
+
+### V0.3-T3: Add provisioning plan model in `internal/provision`
+
+Status: [ ]
+
+Dependencies:
+
+- V0.3-T2
+
+Files:
+
+- `internal/provision/*.go`
+- `internal/provision/*_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- internal provisioning plan/result types exist
+- package/file/shell steps have structured representations
+- tests cover basic plan construction and invariants
+
+### V0.3-T4: Generate first-boot package setup through cloud-init
+
+Status: [ ]
+
+Dependencies:
+
+- V0.3-T3
+
+Files:
+
+- `internal/provision/cloudinit/*.go`
+- `internal/provision/cloudinit/*_test.go`
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- package provisioning can be rendered into generated cloud-init
+- app up-flow passes the right package inputs
+- focused tests prove cloud-init output contains package setup
+
+### V0.3-T5: Add SSH post-boot shell provisioner
+
+Status: [ ]
+
+Dependencies:
+
+- V0.3-T3
+
+Files:
+
+- `internal/provision/ssh/*.go`
+- `internal/provision/ssh/*_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- shell steps can run over SSH with structured results
+- failure/success is surfaced cleanly
+- tests cover command execution planning and error handling
+
+### V0.3-T6: Add SSH post-boot file provisioner
+
+Status: [ ]
+
+Dependencies:
+
+- V0.3-T5
+
+Files:
+
+- `internal/provision/ssh/*.go`
+- `internal/provision/ssh/*_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- file upload steps are supported
+- permissions application path is defined
+- tests cover source/destination handling
+
+### V0.3-T7: Wire provisioning into `yeast up` and state tracking
+
+Status: [ ]
+
+Dependencies:
+
+- V0.3-T4
+- V0.3-T5
+- V0.3-T6
+
+Files:
+
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `internal/state/*.go`
+- `internal/state/*_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- `yeast up` runs the first `v0.3.0` provisioning flow
+- provisioning status updates are reflected in state/status
+- failures are visible and recoverable
+
+### V0.3-T8: Add `yeast provision` rerun command
+
+Status: [ ]
+
+Dependencies:
+
+- V0.3-T7
+
+Files:
+
+- `cmd/yeast/provision.go`
+- `internal/app/provision.go`
+- related tests
+- `TASKS.md`
+
+Definition of done:
+
+- user can rerun provisioning without recreating the VM
+- command has human and JSON output
+- tests cover success and failure paths
+
+### V0.3-T9: Ship one Caddy demo and provisioning smoke coverage
+
+Status: [ ]
+
+Dependencies:
+
+- V0.3-T8
+
+Files:
+
+- `examples/*`
+- `scripts/manual-smoke.sh`
+- docs
+- `TASKS.md`
+
+Definition of done:
+
+- one VM can boot, install Caddy, copy content, and serve it
+- smoke coverage proves the end-to-end provisioning flow
+- docs explain the demo clearly
 
 ## M12: Snapshots And Reset
 

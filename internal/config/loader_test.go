@@ -43,6 +43,11 @@ func TestLoadInvalidYAML(t *testing.T) {
 func TestLoadValidYAML(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "yeast.yaml")
 	raw := `version: 1
+provision:
+  packages:
+    - caddy
+  shell:
+    - systemctl enable --now caddy
 instances:
   - name: web
     hostname: web-lab
@@ -55,6 +60,11 @@ instances:
     sudo: none
     env:
       APP_ENV: dev
+    provision:
+      files:
+        - source: ./site
+          destination: /srv/site
+          permissions: "0644"
 `
 	if err := os.WriteFile(path, []byte(raw), 0644); err != nil {
 		t.Fatalf("failed to write valid yaml: %v", err)
@@ -70,6 +80,12 @@ instances:
 	}
 	if len(cfg.Instances) != 1 {
 		t.Fatalf("expected 1 instance, got %d", len(cfg.Instances))
+	}
+	if cfg.Provision == nil {
+		t.Fatal("expected top-level provision to load")
+	}
+	if len(cfg.Provision.Packages) != 1 || cfg.Provision.Packages[0] != "caddy" {
+		t.Fatalf("expected top-level provision packages to load, got %#v", cfg.Provision.Packages)
 	}
 
 	instance := cfg.Instances[0]
@@ -102,5 +118,14 @@ instances:
 	}
 	if instance.Env["APP_ENV"] != "dev" {
 		t.Fatalf("expected env APP_ENV=dev, got %q", instance.Env["APP_ENV"])
+	}
+	if instance.Provision == nil {
+		t.Fatal("expected instance provision to load")
+	}
+	if len(instance.Provision.Files) != 1 {
+		t.Fatalf("expected 1 provision file, got %d", len(instance.Provision.Files))
+	}
+	if instance.Provision.Files[0].Destination != "/srv/site" {
+		t.Fatalf("expected provision destination /srv/site, got %q", instance.Provision.Files[0].Destination)
 	}
 }

@@ -39,7 +39,7 @@ instances:
 | `version` | yes | Config schema version. Must be `1`. |
 | `instances` | yes | List of VMs in the project. Must contain at least one instance. |
 | `networks` | no | Reserved for future networking milestones. Not active in v0.1. |
-| `provision` | no | Reserved for future provisioning milestones. Not active in v0.1. |
+| `provision` | no | Provisioning config shared across instances. Schema is active in v0.3 development, runtime execution is not wired yet. |
 
 ## Instance Fields
 
@@ -57,7 +57,7 @@ instances:
 | `env` | no | empty | Environment values rendered into the guest profile script. |
 | `user_data` | no | empty | Raw cloud-init user-data override. |
 | `networks` | no | empty | Reserved for future networking milestones. |
-| `provision` | no | empty | Reserved for future provisioning milestones. |
+| `provision` | no | empty | Instance-specific provisioning config. Schema is active in v0.3 development, runtime execution is not wired yet. |
 
 ## Supported Images
 
@@ -141,6 +141,65 @@ Rules:
 - must be between `1` and `65535`
 - must not collide with another requested or already-running Yeast instance port in the same project run
 - if tracked state already uses a different SSH port for the same instance, Yeast fails instead of silently switching it
+
+## Provisioning Schema
+
+Yeast now accepts provisioning config in the schema, but this first `v0.3.0` slice only defines and validates the shape. It does **not** execute provisioning yet.
+
+Provisioning can appear:
+
+- once at the top level for project-wide defaults
+- per instance for instance-specific steps
+
+Current schema:
+
+```yaml
+provision:
+  packages:
+    - caddy
+    - curl
+  files:
+    - source: ./site
+      destination: /srv/site
+      permissions: "0644"
+  shell:
+    - systemctl enable --now caddy
+```
+
+### `packages`
+
+- list of package names
+- entries cannot be empty
+- entries cannot contain newlines
+
+### `files`
+
+Each file item requires:
+
+- `source`
+- `destination`
+
+Optional:
+
+- `permissions`
+
+Rules:
+
+- `source` cannot be empty
+- `destination` cannot be empty
+- `source` and `destination` cannot contain newlines
+- `permissions`, when set, must be an octal mode like `644` or `0644`
+
+### `shell`
+
+- list of shell commands
+- entries cannot be empty after trimming whitespace
+
+This schema is the contract for the upcoming provisioning implementation. Later `v0.3.0` tasks will decide:
+
+- how top-level and instance-level provisioning merge
+- what runs in cloud-init vs post-boot SSH
+- how `yeast provision` reruns steps safely
 
 ## Sudo Modes
 
