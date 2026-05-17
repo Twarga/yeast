@@ -86,7 +86,7 @@ v0.2.0 project safety and error structure cleanup.
 Next task:
 
 ```text
-V0.2-T9: Classify yeast destroy runtime errors.
+V0.2-T10: Classify yeast up runtime prepare/start errors.
 ```
 
 ## 5. Milestone Overview
@@ -2317,6 +2317,32 @@ Completion notes:
 
 - Wrapped runtime destroy failures in `ErrorCodeInternal` for running and stopped tracked instances.
 - Added fake-runtime coverage proving failed destroys produce a stable app error code.
+
+### V0.2-T10: Classify yeast up runtime prepare/start errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T9
+
+Files:
+
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- runtime disk preparation failures during `yeast up` report `internal`
+- runtime start failures during `yeast up` report `internal`
+- existing runtime error messages are preserved
+- JSON output can use stable app error codes through existing renderers
+
+Completion notes:
+
+- Wrapped runtime `PrepareDisk` and `Start` failures in `ErrorCodeInternal`.
+- Added fake-runtime coverage proving failed prepare/start paths produce stable app error codes.
 
 ---
 

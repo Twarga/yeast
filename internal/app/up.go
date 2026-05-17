@@ -179,12 +179,12 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		}
 
 		if _, err := s.runtime.PrepareDisk(ctx, plan); err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 
 		started, err := s.runtime.Start(ctx, plan)
 		if err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		startedInstances = append(startedInstances, started)
 

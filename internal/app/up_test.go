@@ -179,18 +179,68 @@ instances:
 	}
 }
 
+func TestUpClassifiesRuntimePrepareFailure(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.runtime = &fakeRuntime{prepareErr: errors.New("prepare failed")}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodeInternal)
+}
+
+func TestUpClassifiesRuntimeStartFailure(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.runtime = &fakeRuntime{startErr: errors.New("start failed")}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodeInternal)
+}
+
+func newUpServiceWithCachedImage(t *testing.T) (*Service, string) {
+	t.Helper()
+
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.discoverSSHKey = func() (string, error) { return "ssh-ed25519 AAAATEST", nil }
+	service.renderUserData = func(input cloudinit.UserDataInput) (string, error) { return "#cloud-config\n", nil }
+	service.renderMetaData = func(input cloudinit.MetaDataInput) (string, error) { return "instance-id: web\n", nil }
+	service.createSeedISO = func(ctx context.Context, input cloudinit.SeedInput) (cloudinit.SeedResult, error) {
+		return cloudinit.SeedResult{ISOPath: filepath.Join(input.RuntimeDir, "seed.iso")}, nil
+	}
+	service.waitForTCP = func(ctx context.Context, options guest.ReadinessOptions) error { return nil }
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	imagePath := filepath.Join(yeastHome, "cache", "images", "ubuntu-24.04", "image.qcow2")
+	if err := os.MkdirAll(filepath.Dir(imagePath), 0755); err != nil {
+		t.Fatalf("create image cache dir: %v", err)
+	}
+	if err := os.WriteFile(imagePath, []byte("image"), 0644); err != nil {
+		t.Fatalf("write cached image: %v", err)
+	}
+
+	return service, root
+}
+
 type fakeRuntime struct {
 	preparePlan rtm.MachinePlan
 	startPlan   rtm.MachinePlan
+	prepareErr  error
+	startErr    error
 }
 
 func (f *fakeRuntime) PrepareDisk(ctx context.Context, plan rtm.MachinePlan) (rtm.DiskPlan, error) {
 	f.preparePlan = plan
-	return plan.Disk, nil
+	return plan.Disk, f.prepareErr
 }
 
 func (f *fakeRuntime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.RuntimeInstance, error) {
 	f.startPlan = plan
+	if f.startErr != nil {
+		return rtm.RuntimeInstance{}, f.startErr
+	}
 	return rtm.RuntimeInstance{
 		Name:              plan.Name,
 		RuntimeDir:        plan.RuntimeDir,
