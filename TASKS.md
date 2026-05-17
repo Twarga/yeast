@@ -2509,6 +2509,34 @@ Completion notes:
 - Preserved the existing repeated-init `ErrorCodeConflict` behavior with `ErrProjectAlreadyInitialized`.
 - Added focused tests for config inspection failure and config write failure classification.
 
+### V0.2-T17: Classify yeast ssh setup and helper errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T16
+
+Files:
+
+- `internal/app/ssh.go`
+- `internal/app/ssh_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- missing project metadata and missing config report `failed_precondition`
+- invalid config reports `invalid_argument`
+- state/home/path/address/ssh-exec helper failures report `internal`
+- existing selection error codes stay unchanged
+
+Completion notes:
+
+- Wrapped metadata, Yeast home, path, state load/save, SSH address, and SSH execution failures in stable app error codes.
+- Wrapped missing config as `ErrorCodePrecondition` and invalid config as `ErrorCodeInvalidArgument`.
+- Preserved existing selection classification for missing/stopped/ambiguous targets.
+- Added focused tests for uninitialized project, missing config, SSH address failure, and SSH execution failure.
+
 ---
 
 # Future Milestones

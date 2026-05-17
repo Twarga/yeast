@@ -2,7 +2,9 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"yeast/internal/config"
 	"yeast/internal/guest"
@@ -30,35 +32,41 @@ func (s *Service) SSH(ctx context.Context, options SSHOptions) (SSHResult, error
 	}
 	absoluteRoot, err := filepath.Abs(root)
 	if err != nil {
-		return SSHResult{}, err
+		return SSHResult{}, WrapError(ErrorCodeInternal, fmt.Sprintf("resolve project root: %v", err), err)
 	}
 
 	metadata, err := project.LoadMetadata(absoluteRoot)
 	if err != nil {
-		return SSHResult{}, err
+		if errors.Is(err, project.ErrMetadataNotFound) {
+			return SSHResult{}, WrapError(ErrorCodePrecondition, err.Error(), err)
+		}
+		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	yeastHome, err := s.resolveYeastHome()
 	if err != nil {
-		return SSHResult{}, err
+		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	paths, err := project.NewPaths(yeastHome, metadata)
 	if err != nil {
-		return SSHResult{}, err
+		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	lock, err := state.Acquire(paths.StateLock, state.DefaultLockOptions())
 	if err != nil {
-		return SSHResult{}, err
+		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	defer func() { _ = lock.Release() }()
 
 	cfg, err := config.Load(filepath.Join(absoluteRoot, ConfigFileName))
 	if err != nil {
-		return SSHResult{}, err
+		if errors.Is(err, os.ErrNotExist) {
+			return SSHResult{}, WrapError(ErrorCodePrecondition, err.Error(), err)
+		}
+		return SSHResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
 	}
 	currentState, err := state.Load(paths.StateFile, metadata.ID)
 	if err != nil {
-		return SSHResult{}, err
+		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	changed := state.Reconcile(&currentState, state.ReconcileOptions{
 		IsProcessAlive: func(pid int) bool {
@@ -71,7 +79,7 @@ func (s *Service) SSH(ctx context.Context, options SSHOptions) (SSHResult, error
 	})
 	if changed {
 		if err := state.Save(paths.StateFile, currentState); err != nil {
-			return SSHResult{}, err
+			return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 	}
 
@@ -86,14 +94,14 @@ func (s *Service) SSH(ctx context.Context, options SSHOptions) (SSHResult, error
 	}
 	address, err := s.sshAddress(defaultManagementHost, selectedState.SSHPort)
 	if err != nil {
-		return SSHResult{}, err
+		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	args, err := guest.BuildSSHArgs(instanceCfg.User, defaultManagementHost, selectedState.SSHPort)
 	if err != nil {
-		return SSHResult{}, err
+		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	if err := s.runSSH(ctx, args); err != nil {
-		return SSHResult{}, err
+		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	return SSHResult{
