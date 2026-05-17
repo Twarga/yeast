@@ -37,7 +37,7 @@ This release is intentionally small. It proves the local VM engine before Yeast 
 Install:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.1.0/install.sh | YEAST_REF=v0.1.0 bash
 ```
 
 Repository:

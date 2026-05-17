@@ -21,7 +21,7 @@ The goal of this release is not to ship the full Yeast vision. The goal is to pr
 The intended v0.1.0 user path is:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.1.0/install.sh | YEAST_REF=v0.1.0 bash
 ```
 
 The install script passed the `M10-T3A` hardening gate for supported Linux package-manager paths, but the full manual KVM lifecycle checklist is still required before treating this as broadly proven.

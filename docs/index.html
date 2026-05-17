@@ -3,29 +3,28 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Yeast - Local VMs, baked fast</title>
+    <title>Yeast - Local VMs for Linux builders</title>
     <meta
       name="description"
       content="Yeast is a Linux-first local VM engine for QEMU/KVM, cloud-init, project VMs, JSON automation, and future cybersecurity labs."
     />
-    <meta property="og:title" content="Yeast - Local VMs, baked fast" />
+    <meta property="og:title" content="Yeast - Local VMs for Linux builders" />
     <meta
       property="og:description"
       content="A Linux-first local VM engine for QEMU/KVM, project labs, and automation."
     />
-    <meta property="og:image" content="banner.png" />
     <meta name="theme-color" content="#0f0e0c" />
     <link rel="stylesheet" href="site.css" />
   </head>
   <body>
     <header class="topbar">
-      <a class="wordmark" href="#top" aria-label="Yeast home">
-        <span class="cube">Y</span>
+      <a class="brand" href="#top" aria-label="Yeast home">
+        <span class="brand-icon">Y</span>
         <span>yeast</span>
       </a>
       <nav class="nav" aria-label="Main navigation">
         <a href="#install">Install</a>
-        <a href="#loop">Loop</a>
+        <a href="#test">Test v0.1</a>
         <a href="#docs">Docs</a>
         <a href="https://github.com/Twarga/yeast">GitHub</a>
       </nav>
@@ -33,123 +32,114 @@
 
     <main id="top">
       <section class="hero">
-        <div class="hero-copy">
-          <p class="kicker">TwargaOps local VM engine</p>
-          <h1>We make local Linux VMs feel project-native.</h1>
-          <p class="lead">
-            Yeast is a small, sharp QEMU/KVM workflow for builders who want real
-            machines without hand-writing the same VM plumbing every time.
-          </p>
-          <div class="hero-actions">
-            <a class="button hot" href="#install">Install Yeast</a>
-            <a class="button ghost" href="https://github.com/Twarga/yeast/releases/tag/v0.1.0">v0.1.0 prerelease</a>
+        <p class="eyebrow">TwargaOps local VM engine</p>
+        <h1>Local VMs, baked fast.</h1>
+        <p class="lead">
+          Yeast is a Linux-first QEMU/KVM tool that makes real virtual machines
+          feel like part of your project folder.
+        </p>
+
+        <div class="command-card" id="install">
+          <div class="terminal-head">
+            <span></span>
+            <span></span>
+            <span></span>
+            <b>install v0.1.0</b>
           </div>
+          <pre><code>curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.1.0/install.sh | YEAST_REF=v0.1.0 bash</code></pre>
         </div>
 
-        <div class="hero-art" aria-label="Yeast preview">
-          <img src="banner.png" alt="Yeast terminal preview" />
+        <div class="hero-actions">
+          <a class="button primary" href="tutorial-test.md">Manual test guide</a>
+          <a class="button secondary" href="https://github.com/Twarga/yeast/releases/tag/v0.1.0">Release notes</a>
         </div>
       </section>
 
-      <section class="ticker" aria-label="Release facts">
-        <span>Linux-first</span>
-        <span>QEMU/KVM</span>
-        <span>cloud-init</span>
-        <span>project VMs</span>
-        <span>JSON output</span>
-        <span>built for labs</span>
+      <section class="facts" aria-label="Yeast facts">
+        <div><strong>Linux</strong><span>first-class host</span></div>
+        <div><strong>QEMU/KVM</strong><span>real VM runtime</span></div>
+        <div><strong>cloud-init</strong><span>first boot setup</span></div>
+        <div><strong>JSON</strong><span>tool-friendly output</span></div>
       </section>
 
-      <section id="install" class="install">
+      <section class="split">
         <div>
-          <p class="kicker">Start here</p>
-          <h2>One command. Then a real VM.</h2>
+          <p class="eyebrow">Why</p>
+          <h2>No more VM plumbing every time you start a lab.</h2>
         </div>
-        <div class="terminal big">
-          <div class="dots"><i></i><i></i><i></i></div>
-          <pre><code>$ curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash</code></pre>
-        </div>
+        <p>
+          Yeast handles the boring pieces: project config, image cache, qcow2
+          disks, cloud-init seed files, QEMU startup, SSH readiness, state,
+          status, stop, and cleanup. The first release is small on purpose:
+          prove the lifecycle before adding provisioning, snapshots, private
+          networks, LabsBackery, MCP, and cloud workers.
+        </p>
       </section>
 
-      <section id="loop" class="loop">
-        <p class="kicker">The v0.1 loop</p>
-        <h2>Small enough to trust. Useful enough to build on.</h2>
+      <section class="loop">
+        <p class="eyebrow">v0.1 loop</p>
         <div class="steps">
-          <div><b>init</b><span>create `yeast.yaml`</span></div>
-          <div><b>pull</b><span>cache Ubuntu image</span></div>
-          <div><b>up</b><span>boot QEMU/KVM</span></div>
-          <div><b>ssh</b><span>enter the machine</span></div>
-          <div><b>down</b><span>stop safely</span></div>
-          <div><b>destroy</b><span>clean project files</span></div>
+          <span>init</span>
+          <span>pull</span>
+          <span>up</span>
+          <span>status</span>
+          <span>ssh</span>
+          <span>down</span>
+          <span>destroy</span>
         </div>
       </section>
 
-      <section class="bento">
+      <section class="grid">
         <article>
-          <p class="tag">For Linux builders</p>
-          <h3>No more random QEMU command archaeology.</h3>
-          <p>
-            Keep the machine definition beside the project and let Yeast handle
-            image cache, cloud-init seed data, runtime files, state, and SSH.
-          </p>
+          <p class="eyebrow">For builders</p>
+          <h3>Project-native machines.</h3>
+          <p>Put `yeast.yaml` in a folder and let that folder own the VM world.</p>
         </article>
         <article>
-          <p class="tag">For automation</p>
-          <h3>Pretty for humans. Structured for tools.</h3>
-          <p>
-            Human output can feel polished. JSON output stays clean so LabsBackery
-            and Yeast MCP can depend on it later.
-          </p>
+          <p class="eyebrow">For labs</p>
+          <h3>Small core now. Lab engine later.</h3>
+          <p>v0.1 proves lifecycle. Next comes Caddy provisioning, snapshots, and multi-VM labs.</p>
         </article>
         <article>
-          <p class="tag">For labs</p>
-          <h3>The base layer for breakable environments.</h3>
-          <p>
-            v0.1 proves lifecycle. Next comes provisioning, snapshots, private
-            networks, guest control, and full LabsBackery workflows.
-          </p>
+          <p class="eyebrow">For tools</p>
+          <h3>Pretty output, clean JSON.</h3>
+          <p>Humans get readable CLI output. Automation gets structured results.</p>
         </article>
       </section>
 
-      <section class="code-lane">
-        <div class="terminal">
-          <div class="dots"><i></i><i></i><i></i></div>
-          <pre><code>$ mkdir yeast-demo
-$ cd yeast-demo
-$ yeast init
-$ yeast pull ubuntu-24.04
-$ yeast up
-
-OK  web is running
-SSH 127.0.0.1:2222</code></pre>
-        </div>
-        <div class="plain">
-          <p class="kicker">What Yeast is not</p>
-          <h2>Not a cloud platform. Not Kubernetes. Not Proxmox.</h2>
+      <section class="demo" id="test">
+        <div>
+          <p class="eyebrow">Manual test</p>
+          <h2>Run Yeast like a real user.</h2>
           <p>
-            Yeast is the boring engine underneath the exciting things: repeatable
-            local labs, AI-controlled VM workflows, and eventually hosted Twarga
-            Cloud workers.
+            Follow the full v0.1.0 client-side test from install to VM boot,
+            SSH, shutdown, restart, destroy, and cleanup verification.
           </p>
+          <a class="button primary" href="tutorial-test.md">Open tutorial-test.md</a>
+        </div>
+        <div class="mini-terminal">
+          <pre><code>mkdir yeast-v010-test
+cd yeast-v010-test
+yeast init
+yeast pull ubuntu-24.04
+yeast up
+yeast ssh web</code></pre>
         </div>
       </section>
 
-      <section id="docs" class="docs">
-        <p class="kicker">Read next</p>
-        <div class="doc-links">
-          <a href="quickstart.md">Quickstart</a>
-          <a href="installation.md">Installation</a>
-          <a href="config-reference.md">Config</a>
-          <a href="architecture-overview.md">Architecture</a>
-          <a href="known-limitations.md">Limits</a>
-          <a href="https://github.com/Twarga/yeast">Repository</a>
-        </div>
+      <section class="docs" id="docs">
+        <a href="quickstart.md">Quickstart</a>
+        <a href="installation.md">Installation</a>
+        <a href="config-reference.md">Config</a>
+        <a href="known-limitations.md">Limits</a>
+        <a href="architecture-overview.md">Architecture</a>
+        <a href="https://github.com/Twarga/yeast">Repository</a>
       </section>
     </main>
 
     <footer class="footer">
-      <span>Yeast is built by TwargaOps.</span>
-      <span>Local first. Lab ready later.</span>
+      <span>Yeast by TwargaOps.</span>
+      <span>Local first. Labs next.</span>
     </footer>
   </body>
 </html>

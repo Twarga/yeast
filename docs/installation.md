@@ -102,7 +102,7 @@ bash install.sh
 From GitHub:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.1.0/install.sh | YEAST_REF=v0.1.0 bash
 ```
 
 The installer attempts to install host packages, build Yeast, install the binary, create cache directories, and generate an SSH key if needed.
@@ -148,7 +148,7 @@ Supported overrides:
 
 ```bash
 YEAST_REPO_URL=https://github.com/Twarga/yeast.git
-YEAST_REF=main
+YEAST_REF=v0.1.0
 YEAST_INSTALL_DIR=/usr/local/bin
 YEAST_INSTALL_VERBOSE=1
 YEAST_KEEP_LOGS=1

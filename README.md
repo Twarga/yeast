@@ -224,7 +224,7 @@ yeast destroy
 If the repository is reachable over HTTPS:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.1.0/install.sh | YEAST_REF=v0.1.0 bash
 ```
 
 If you already cloned the repo:
@@ -473,6 +473,7 @@ That is not a weakness in the README. It is the correct scope boundary for v0.1.
 - [YEAST_PRODUCT_ROADMAP.md](YEAST_PRODUCT_ROADMAP.md)
 - [docs/quickstart.md](docs/quickstart.md)
 - [docs/installation.md](docs/installation.md)
+- [docs/tutorial-test.md](docs/tutorial-test.md)
 - [docs/config-reference.md](docs/config-reference.md)
 - [docs/troubleshooting.md](docs/troubleshooting.md)
 - [docs/known-limitations.md](docs/known-limitations.md)
