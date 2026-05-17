@@ -86,7 +86,7 @@ v0.3.0 provisioning.
 Next task:
 
 ```text
-V0.3-T7: Add shell provisioner.
+V0.3-T8: Add provisioning logs and status model.
 ```
 
 ## 5. Milestone Overview
@@ -2926,7 +2926,7 @@ Completion notes:
 
 ### V0.3-T7: Add shell provisioner
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -2946,6 +2946,13 @@ Definition of done:
 - failures stop the provisioning run
 - result identifies the failed command and exit code
 - tests cover success, command failure, and ordering
+
+Completion notes:
+
+- Added `ssh.ShellProvisioner` for ordered shell-step execution over the SSH transport.
+- Stopped execution on the first failed shell command.
+- Preserved stdout/stderr/exit-code results for the failed command.
+- Added focused tests for no-op behavior, ordering, stop-on-failure, and request validation.
 
 ### V0.3-T8: Add provisioning logs and status model
 
