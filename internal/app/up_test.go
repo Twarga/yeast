@@ -10,8 +10,10 @@ import (
 	"testing"
 	"time"
 	"yeast/internal/guest"
+	"yeast/internal/project"
 	"yeast/internal/provision/cloudinit"
 	rtm "yeast/internal/runtime"
+	"yeast/internal/state"
 )
 
 func TestUpStartsInstanceAndSavesState(t *testing.T) {
@@ -226,6 +228,97 @@ func TestUpClassifiesReadinessFailureAndStopsStartedInstance(t *testing.T) {
 	}
 	if fake.stopCalls != 1 {
 		t.Fatalf("expected one stop call after readiness failure, got %d", fake.stopCalls)
+	}
+}
+
+func TestUpClassifiesUninitializedProject(t *testing.T) {
+	service := NewService()
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: t.TempDir()})
+	assertAppErrorCode(t, err, ErrorCodePrecondition)
+	if !strings.Contains(err.Error(), "project metadata not found") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestUpClassifiesMissingConfig(t *testing.T) {
+	root := t.TempDir()
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return filepath.Join(root, "yeast-home"), nil }
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	if err := os.Remove(filepath.Join(root, ConfigFileName)); err != nil {
+		t.Fatalf("remove config: %v", err)
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodePrecondition)
+	if !strings.Contains(err.Error(), "read config file") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestUpClassifiesInvalidConfig(t *testing.T) {
+	root := t.TempDir()
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return filepath.Join(root, "yeast-home"), nil }
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	configContent := `version: 1
+instances:
+  - name: web
+    image: ubuntu-24.04
+    disk_size: not-a-size
+`
+	if err := os.WriteFile(filepath.Join(root, ConfigFileName), []byte(configContent), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodeInvalidArgument)
+	if !strings.Contains(err.Error(), "validate config file") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestUpClassifiesStateProjectMismatch(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+
+	imagePath := filepath.Join(yeastHome, "cache", "images", "ubuntu-24.04", "image.qcow2")
+	if err := os.MkdirAll(filepath.Dir(imagePath), 0755); err != nil {
+		t.Fatalf("create image cache dir: %v", err)
+	}
+	if err := os.WriteFile(imagePath, []byte("image"), 0644); err != nil {
+		t.Fatalf("write cached image: %v", err)
+	}
+
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+	if err := state.Save(paths.StateFile, state.New("wrong-project")); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	_, err = service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodeInternal)
+	if !strings.Contains(err.Error(), "state project id mismatch") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

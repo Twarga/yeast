@@ -2398,6 +2398,35 @@ Completion notes:
 - Wrapped post-start SSH readiness failures in `ErrorCodePrecondition` while preserving the existing `wait for ssh readiness for <instance>` message prefix.
 - Added fake-runtime coverage proving both failure paths stop the started instance before returning.
 
+### V0.2-T13: Classify yeast up setup and state errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T12
+
+Files:
+
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- missing project metadata reports `failed_precondition`
+- missing config reports `failed_precondition`
+- invalid config reports `invalid_argument`
+- state/path/lock/save setup failures report `internal`
+- existing human-facing messages are preserved
+
+Completion notes:
+
+- Wrapped missing project metadata and missing config in `ErrorCodePrecondition`.
+- Wrapped invalid config load failures in `ErrorCodeInvalidArgument`.
+- Wrapped Yeast home resolution, path construction, runtime directory creation, state lock acquisition, state load, and state save failures in `ErrorCodeInternal`.
+- Added focused tests for uninitialized project, missing config, invalid config, and state project-id mismatch behavior.
+
 ---
 
 # Future Milestones

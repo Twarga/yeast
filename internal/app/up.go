@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -46,44 +47,50 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 	}
 	absoluteRoot, err := filepath.Abs(root)
 	if err != nil {
-		return UpResult{}, fmt.Errorf("resolve project root: %w", err)
+		return UpResult{}, WrapError(ErrorCodeInternal, fmt.Sprintf("resolve project root: %v", err), err)
 	}
 
 	metadata, err := project.LoadMetadata(absoluteRoot)
 	if err != nil {
-		return UpResult{}, err
+		if errors.Is(err, project.ErrMetadataNotFound) {
+			return UpResult{}, WrapError(ErrorCodePrecondition, err.Error(), err)
+		}
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	yeastHome, err := s.resolveYeastHome()
 	if err != nil {
-		return UpResult{}, err
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	paths, err := project.NewPaths(yeastHome, metadata)
 	if err != nil {
-		return UpResult{}, err
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	if err := os.MkdirAll(paths.ProjectDir, 0755); err != nil {
-		return UpResult{}, fmt.Errorf("create project runtime directory %s: %w", paths.ProjectDir, err)
+		return UpResult{}, WrapError(ErrorCodeInternal, fmt.Sprintf("create project runtime directory %s: %v", paths.ProjectDir, err), err)
 	}
 
 	lock, err := state.Acquire(paths.StateLock, state.DefaultLockOptions())
 	if err != nil {
-		return UpResult{}, err
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	defer func() { _ = lock.Release() }()
 
 	cfg, err := config.Load(filepath.Join(absoluteRoot, ConfigFileName))
 	if err != nil {
-		return UpResult{}, err
+		if errors.Is(err, os.ErrNotExist) {
+			return UpResult{}, WrapError(ErrorCodePrecondition, err.Error(), err)
+		}
+		return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
 	}
 
 	currentState, err := state.Load(paths.StateFile, metadata.ID)
 	if err != nil {
-		return UpResult{}, err
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	if state.Reconcile(&currentState, state.ReconcileOptions{}) {
 		if err := state.Save(paths.StateFile, currentState); err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 	}
 
@@ -223,7 +230,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		for i := len(startedInstances) - 1; i >= 0; i-- {
 			_ = s.runtime.Stop(ctx, startedInstances[i], 5*time.Second)
 		}
-		return UpResult{}, err
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	sort.Slice(result.Instances, func(i, j int) bool {
