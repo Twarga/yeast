@@ -86,7 +86,7 @@ v0.3.0 provisioning.
 Next task:
 
 ```text
-V0.3-T6: Add file provisioner.
+V0.3-T7: Add shell provisioner.
 ```
 
 ## 5. Milestone Overview
@@ -2896,7 +2896,7 @@ Completion notes:
 
 ### V0.3-T6: Add file provisioner
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -2916,6 +2916,13 @@ Definition of done:
 - optional permissions are applied after upload
 - failures identify the file step that failed
 - tests cover source/destination handling and permissions behavior
+
+Completion notes:
+
+- Added `ssh.FileProvisioner` for file-step execution over the SSH transport.
+- Added remote parent-directory creation before upload.
+- Added optional post-upload `chmod` handling.
+- Preserved failure context for mkdir/upload/chmod failures and added focused tests for each path.
 
 ### V0.3-T7: Add shell provisioner
 
