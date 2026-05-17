@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -195,6 +196,39 @@ func TestUpClassifiesRuntimeStartFailure(t *testing.T) {
 	assertAppErrorCode(t, err, ErrorCodeInternal)
 }
 
+func TestUpClassifiesSSHAddressFailureAndStopsStartedInstance(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	fake := &fakeRuntime{}
+	service.runtime = fake
+	service.sshAddress = func(host string, port int) (string, error) {
+		return "", fmt.Errorf("invalid ssh target")
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodeInternal)
+	if fake.stopCalls != 1 {
+		t.Fatalf("expected one stop call after ssh address failure, got %d", fake.stopCalls)
+	}
+}
+
+func TestUpClassifiesReadinessFailureAndStopsStartedInstance(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	fake := &fakeRuntime{}
+	service.runtime = fake
+	service.waitForTCP = func(ctx context.Context, options guest.ReadinessOptions) error {
+		return errors.New("connection refused")
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodePrecondition)
+	if !strings.Contains(err.Error(), "wait for ssh readiness for web") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if fake.stopCalls != 1 {
+		t.Fatalf("expected one stop call after readiness failure, got %d", fake.stopCalls)
+	}
+}
+
 func newUpServiceWithCachedImage(t *testing.T) (*Service, string) {
 	t.Helper()
 
@@ -229,6 +263,7 @@ type fakeRuntime struct {
 	startPlan   rtm.MachinePlan
 	prepareErr  error
 	startErr    error
+	stopCalls   int
 }
 
 func (f *fakeRuntime) PrepareDisk(ctx context.Context, plan rtm.MachinePlan) (rtm.DiskPlan, error) {
@@ -252,6 +287,7 @@ func (f *fakeRuntime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.Runt
 }
 
 func (f *fakeRuntime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeout time.Duration) error {
+	f.stopCalls++
 	return nil
 }
 

@@ -2371,6 +2371,33 @@ Completion notes:
 - Wrapped Yeast home resolution, path construction, state lock acquisition, and state load/save failures as `ErrorCodeInternal`.
 - Added focused tests for non-initialized projects and state project-id mismatch behavior.
 
+### V0.2-T12: Classify yeast up guest-readiness errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T11
+
+Files:
+
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- SSH address construction failures after runtime start report `internal`
+- SSH readiness failures after runtime start report `failed_precondition`
+- started instances are still stopped on these failure paths
+- existing human-facing readiness message is preserved
+
+Completion notes:
+
+- Wrapped post-start SSH address failures in `ErrorCodeInternal`.
+- Wrapped post-start SSH readiness failures in `ErrorCodePrecondition` while preserving the existing `wait for ssh readiness for <instance>` message prefix.
+- Added fake-runtime coverage proving both failure paths stop the started instance before returning.
+
 ---
 
 # Future Milestones

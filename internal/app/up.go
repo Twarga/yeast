@@ -191,14 +191,15 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		address, err := s.sshAddress(defaultManagementHost, sshPort)
 		if err != nil {
 			_ = s.runtime.Stop(ctx, started, 5*time.Second)
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		if err := s.waitForTCP(ctx, guest.ReadinessOptions{
 			Address: address,
 			Timeout: readinessTimeout,
 		}); err != nil {
 			_ = s.runtime.Stop(ctx, started, 5*time.Second)
-			return UpResult{}, fmt.Errorf("wait for ssh readiness for %s: %w", instance.Name, err)
+			message := fmt.Sprintf("wait for ssh readiness for %s: %v", instance.Name, err)
+			return UpResult{}, WrapError(ErrorCodePrecondition, message, err)
 		}
 
 		currentState.Instances[instance.Name] = state.InstanceState{
