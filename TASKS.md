@@ -86,7 +86,7 @@ v0.2.0 project safety and error structure cleanup.
 Next task:
 
 ```text
-V0.2-T6: Classify yeast pull unsupported image errors.
+V0.2-T7: Classify repeated yeast init errors.
 ```
 
 ## 5. Milestone Overview
@@ -2240,6 +2240,32 @@ Completion notes:
 
 - Wrapped unsupported pull image failures in `ErrorCodeInvalidArgument`.
 - Preserved `errors.Is(err, ErrUnsupportedImage)` by keeping the sentinel as the wrapped cause.
+- Added test coverage for the app error code and sentinel behavior.
+
+### V0.2-T7: Classify repeated yeast init errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T6
+
+Files:
+
+- `internal/app/init.go`
+- `internal/app/init_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- repeated init reports `conflict`
+- existing `ErrProjectAlreadyInitialized` compatibility is preserved
+- JSON output can use stable app error codes through existing renderers
+
+Completion notes:
+
+- Wrapped repeated-init config and metadata conflicts in `ErrorCodeConflict`.
+- Preserved `errors.Is(err, ErrProjectAlreadyInitialized)` by keeping the sentinel as the wrapped cause.
 - Added test coverage for the app error code and sentinel behavior.
 
 ---

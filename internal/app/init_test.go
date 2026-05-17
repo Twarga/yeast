@@ -79,4 +79,11 @@ func TestInitFailsClearlyWhenRepeated(t *testing.T) {
 	if !errors.Is(err, ErrProjectAlreadyInitialized) {
 		t.Fatalf("expected ErrProjectAlreadyInitialized, got %v", err)
 	}
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	if appErr.Code != ErrorCodeConflict {
+		t.Fatalf("expected conflict error code, got %q", appErr.Code)
+	}
 }

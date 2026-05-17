@@ -50,13 +50,15 @@ func (s *Service) Init(options InitOptions) (InitResult, error) {
 	}
 
 	if _, err := os.Stat(configPath); err == nil {
-		return result, fmt.Errorf("%w: %s already exists", ErrProjectAlreadyInitialized, configPath)
+		cause := fmt.Errorf("%w: %s already exists", ErrProjectAlreadyInitialized, configPath)
+		return result, WrapError(ErrorCodeConflict, cause.Error(), cause)
 	} else if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return result, fmt.Errorf("inspect config file %s: %w", configPath, err)
 	}
 
 	if _, err := os.Stat(metadataPath); err == nil {
-		return result, fmt.Errorf("%w: %s already exists", ErrProjectAlreadyInitialized, metadataPath)
+		cause := fmt.Errorf("%w: %s already exists", ErrProjectAlreadyInitialized, metadataPath)
+		return result, WrapError(ErrorCodeConflict, cause.Error(), cause)
 	} else if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return result, fmt.Errorf("inspect project metadata %s: %w", metadataPath, err)
 	}
