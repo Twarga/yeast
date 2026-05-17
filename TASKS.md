@@ -86,7 +86,7 @@ v0.2.0 project safety and error structure cleanup.
 Next task:
 
 ```text
-V0.2-T8: Classify yeast down runtime stop errors.
+V0.2-T9: Classify yeast destroy runtime errors.
 ```
 
 ## 5. Milestone Overview
@@ -2292,6 +2292,31 @@ Completion notes:
 
 - Wrapped runtime stop failures in `ErrorCodeInternal`.
 - Added fake-runtime coverage proving failed stops produce a stable app error code.
+
+### V0.2-T9: Classify yeast destroy runtime errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T8
+
+Files:
+
+- `internal/app/destroy.go`
+- `internal/app/destroy_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- runtime destroy failures during `yeast destroy` report `internal`
+- existing runtime error message is preserved
+- JSON output can use stable app error codes through existing renderers
+
+Completion notes:
+
+- Wrapped runtime destroy failures in `ErrorCodeInternal` for running and stopped tracked instances.
+- Added fake-runtime coverage proving failed destroys produce a stable app error code.
 
 ---
 

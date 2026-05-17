@@ -85,11 +85,11 @@ func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (DestroyR
 
 		if instance.Status == "running" && instance.PID > 0 {
 			if err := s.runtime.Destroy(ctx, runtimeInstance); err != nil {
-				return DestroyResult{}, err
+				return DestroyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 			}
 		} else if instance.RuntimeDir != "" {
 			if err := s.runtime.Destroy(ctx, runtimeInstance); err != nil {
-				return DestroyResult{}, err
+				return DestroyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 			}
 		}
 
