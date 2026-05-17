@@ -25,17 +25,25 @@ cd ~/Projects/yeast
 
 That script will:
 
-- run `doctor`
-- create a clean temp project
-- write the test config
-- pull the image
-- start the VM
-- verify `status`
-- verify `hostname`
-- verify `whoami`
-- stop, restart, and destroy
+- run the happy-path lifecycle test
+- run a negative-path contract test suite
+- assert JSON error codes for common v0.2.0 failure cases
 
 The rest of this document is the same flow, but broken into individual manual steps.
+
+### Smoke Script Modes
+
+The script supports three modes through `TEST_MODE`:
+
+```fish
+TEST_MODE=full ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
+TEST_MODE=positive ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
+TEST_MODE=negative ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
+```
+
+- `full`: happy path plus negative-path suite
+- `positive`: only the real VM lifecycle
+- `negative`: only error-path contract checks, no VM boot
 
 ## 0. What This Test Proves
 
@@ -53,6 +61,7 @@ This test proves that the current `v0.2.0` candidate can:
 - honor explicit `ssh_port`
 - stop and restart the VM cleanly
 - destroy runtime state cleanly
+- classify common invalid-input and bad-state failures with stable JSON error codes
 
 This does not test:
 
@@ -65,6 +74,8 @@ This does not test:
 - LabsBackery
 - Yeast MCP
 - Twarga Cloud
+- installer upgrade behavior across every Linux distro
+- every internal helper-failure branch that only unit tests can force
 
 ## 1. Important Rule For This Test
 

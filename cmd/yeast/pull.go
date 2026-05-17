@@ -35,7 +35,7 @@ func newPullCmd(service *app.Service) *cobra.Command {
 			result, err := service.Pull(options)
 			if err != nil {
 				if errors.Is(err, app.ErrUnsupportedImage) {
-					return fmt.Errorf("%w. use `yeast pull --list` to see supported images", err)
+					return app.WrapError(app.ErrorCodeInvalidArgument, fmt.Sprintf("%v. use `yeast pull --list` to see supported images", err), err)
 				}
 				return err
 			}
