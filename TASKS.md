@@ -86,7 +86,7 @@ v0.3.0 provisioning.
 Next task:
 
 ```text
-V0.3-T5: Add package provisioner.
+V0.3-T6: Add file provisioner.
 ```
 
 ## 5. Milestone Overview
@@ -2866,7 +2866,7 @@ Completion notes:
 
 ### V0.3-T5: Add package provisioner
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -2886,6 +2886,13 @@ Definition of done:
 - empty package plans are no-ops
 - command result includes stdout, stderr, exit code, and duration where practical
 - tests cover generated command behavior and failure propagation
+
+Completion notes:
+
+- Added `ssh.PackageProvisioner` for package-step execution over the SSH transport.
+- Collapsed package steps into a single Ubuntu/Debian `apt-get update && apt-get install -y ...` command.
+- Preserved stdout/stderr/exit-code results on failures from the transport.
+- Added focused tests for no-op behavior, command generation, validation, default timeout, and failure-result preservation.
 
 ### V0.3-T6: Add file provisioner
 
