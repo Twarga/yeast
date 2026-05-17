@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -121,6 +122,18 @@ func TestStatusClassifiesUninitializedProject(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	assertAppErrorCode(t, err, ErrorCodePrecondition)
+}
+
+func TestStatusClassifiesProjectRootResolutionFailure(t *testing.T) {
+	root := t.TempDir()
+	blocker := filepath.Join(root, "not-a-directory")
+	if err := os.WriteFile(blocker, []byte("x"), 0644); err != nil {
+		t.Fatalf("write blocker: %v", err)
+	}
+
+	service := NewService()
+	_, err := service.Status(context.Background(), StatusOptions{ProjectRoot: filepath.Join(blocker, "child")})
+	assertAppErrorCode(t, err, ErrorCodeInternal)
 }
 
 func TestStatusClassifiesStateProjectMismatch(t *testing.T) {

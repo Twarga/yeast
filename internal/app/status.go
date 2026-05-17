@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"sort"
 	"yeast/internal/project"
@@ -37,7 +38,7 @@ func (s *Service) Status(ctx context.Context, options StatusOptions) (StatusResu
 	}
 	absoluteRoot, err := filepath.Abs(root)
 	if err != nil {
-		return StatusResult{}, err
+		return StatusResult{}, WrapError(ErrorCodeInternal, fmt.Sprintf("resolve project root: %v", err), err)
 	}
 
 	metadata, err := project.LoadMetadata(absoluteRoot)

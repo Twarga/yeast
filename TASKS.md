@@ -2589,6 +2589,31 @@ Completion notes:
 - Preserved the existing runtime destroy classification as `ErrorCodeInternal`.
 - Added focused tests for uninitialized project and state project-id mismatch behavior.
 
+### V0.2-T20: Finish app error-classification audit
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T19
+
+Files:
+
+- `internal/app/status.go`
+- `internal/app/status_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- remaining raw app-surface setup errors are either classified or explicitly accepted
+- the v0.2.0 error-classification pass has a clear stopping point
+
+Completion notes:
+
+- Wrapped the remaining raw `yeast status` project-root resolution failure in `ErrorCodeInternal`.
+- Added focused coverage for the `status` root-resolution failure path.
+- Audited remaining `internal/app` raw returns and confirmed the remaining pass-throughs are either intentional wrapped selection errors or internal helper-local errors outside the app-surface contract.
+
 ---
 
 # Future Milestones
