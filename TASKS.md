@@ -80,13 +80,13 @@ YEAST_FEEDBACK_LOG.md
 Current phase:
 
 ```text
-Pre-implementation planning complete enough to begin Milestone 0.
+v0.2.0 disk_size support started.
 ```
 
 Next task:
 
 ```text
-M0-T1: Create v2 working branch / cleanup strategy
+V0.2-T2: Continue disk_size support with any remaining runtime/docs verification.
 ```
 
 ## 5. Milestone Overview
@@ -2064,6 +2064,71 @@ Dependencies:
 Definition of done:
 
 - `yeast up` and `yeast pull` can show live progress in human TTY mode
+
+---
+
+# V0.2.0: Disk Size Support
+
+Goal:
+
+Make `disk_size` a documented and verified desired-state setting for instance overlay disk creation.
+
+Scope:
+
+- config schema
+- validation
+- disk creation/runtime wiring
+- tests
+- docs
+
+Out of scope:
+
+- networking
+- provisioning
+
+## V0.2.0 Tasks
+
+### V0.2-T1: Verify disk_size config and runtime wiring
+
+Status: [x]
+
+Dependencies:
+
+- M10 complete
+- C1 complete/deferred decisions preserved
+
+Files:
+
+- `internal/app/up_test.go`
+- `docs/config-reference.md`
+- `README.md`
+- `TASKS.md`
+
+Definition of done:
+
+- config-level `disk_size` is verified to reach the runtime disk plan
+- normalized sizes are verified at the app/runtime boundary
+- docs explain supported size formats
+- docs explain existing disks are not resized by `up`
+- networking and provisioning remain untouched
+
+Completion notes:
+
+- Confirmed existing config schema, validation, defaults/normalization, runtime model, and QEMU disk creation already support `disk_size`.
+- Added an app-level `up` workflow test proving `disk_size: 25 gb` normalizes to `25G` and reaches both `PrepareDisk` and `Start` machine plans.
+- Documented supported `disk_size` formats and the existing-disk no-resize behavior.
+
+### V0.2-T2: Continue disk_size support with any remaining runtime/docs verification
+
+Status: [ ]
+
+Dependencies:
+
+- V0.2-T1
+
+Definition of done:
+
+- decide whether any remaining disk_size work is needed before moving to the next v0.2.0 item
 
 ---
 

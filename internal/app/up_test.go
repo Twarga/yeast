@@ -55,6 +55,18 @@ func TestUpStartsInstanceAndSavesState(t *testing.T) {
 	if _, err := service.Init(InitOptions{ProjectRoot: root, Now: time.Date(2026, 5, 16, 12, 0, 0, 0, time.UTC)}); err != nil {
 		t.Fatalf("Init returned error: %v", err)
 	}
+	configPath := filepath.Join(root, ConfigFileName)
+	configContent := `version: 1
+instances:
+  - name: web
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    disk_size: 25 gb
+`
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatalf("write config with disk_size: %v", err)
+	}
 
 	imagePath := filepath.Join(yeastHome, "cache", "images", "ubuntu-24.04", "image.qcow2")
 	if err := os.MkdirAll(filepath.Dir(imagePath), 0755); err != nil {
@@ -86,6 +98,12 @@ func TestUpStartsInstanceAndSavesState(t *testing.T) {
 	}
 	if fakeRuntime.startPlan.Disk.BaseImagePath != imagePath {
 		t.Fatalf("unexpected base image path: %q", fakeRuntime.startPlan.Disk.BaseImagePath)
+	}
+	if fakeRuntime.preparePlan.Disk.Size != "25G" {
+		t.Fatalf("expected normalized disk size 25G, got %q", fakeRuntime.preparePlan.Disk.Size)
+	}
+	if fakeRuntime.startPlan.Disk.Size != "25G" {
+		t.Fatalf("expected start plan disk size 25G, got %q", fakeRuntime.startPlan.Disk.Size)
 	}
 
 	statePath := filepath.Join(yeastHome, "projects", result.ProjectID, "state.json")

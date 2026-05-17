@@ -347,7 +347,8 @@ instances:
 ### Important behavior
 
 - `user_data` replaces Yeast-generated cloud-init instead of merging into it
-- `disk_size` applies to the overlay disk Yeast creates for the instance
+- `disk_size` applies to the overlay disk Yeast creates for the instance; existing disks are kept as-is
+- `disk_size` accepts whole-number sizes with optional `K`, `M`, `G`, `T`, or `P` suffixes, such as `20G`, `25600M`, or raw bytes
 - `env` is rendered into the guest bootstrap profile script
 - `networks` and `provision` exist in the config model for future milestones but are not active v0.1 features
 

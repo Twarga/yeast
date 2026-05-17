@@ -88,6 +88,22 @@ Examples:
 
 Avoid spaces, slashes, shell syntax, and names that need quoting.
 
+## Disk Size
+
+`disk_size` controls the virtual size passed to `qemu-img` when Yeast creates a new instance overlay disk.
+
+Supported formats use whole numbers with optional `K`, `M`, `G`, `T`, or `P` suffixes. A trailing `B` and spaces are accepted and normalized, so `20GB` and `20 gb` become `20G`.
+
+If the instance disk already exists, Yeast keeps it and does not resize it during `up`.
+
+Examples:
+
+```yaml
+disk_size: 20G
+disk_size: 25600M
+disk_size: 10737418240
+```
+
 ## Sudo Modes
 
 `sudo: none`
