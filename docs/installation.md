@@ -102,7 +102,7 @@ bash install.sh
 From GitHub:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.1.0/install.sh | YEAST_REF=v0.1.0 bash
 ```
 
 The installer attempts to install host packages, build Yeast, install the binary, create cache directories, and generate an SSH key if needed.
@@ -148,8 +148,21 @@ Supported overrides:
 
 ```bash
 YEAST_REPO_URL=https://github.com/Twarga/yeast.git
-YEAST_REF=main
+YEAST_REF=v0.1.0
 YEAST_INSTALL_DIR=/usr/local/bin
 YEAST_INSTALL_VERBOSE=1
 YEAST_KEEP_LOGS=1
+YEAST_MIN_GO_VERSION=1.25.0
+YEAST_GO_VERSION=1.26.3
+YEAST_GO_INSTALL_ROOT=/usr/local/lib/yeast/go
+YEAST_GO_TARBALL_SHA256=
 ```
+
+If the distribution Go package is older than `YEAST_MIN_GO_VERSION`, the installer downloads an official Go toolchain tarball from `go.dev` for the current Linux architecture.
+
+Set `YEAST_GO_TARBALL_SHA256` if you want the installer to verify the downloaded Go toolchain with a pinned checksum.
+
+The installer supports these CPU architectures:
+
+- `amd64`
+- `arm64`

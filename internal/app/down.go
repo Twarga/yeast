@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"path/filepath"
 	"sort"
 	"time"
@@ -32,31 +34,34 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 	}
 	absoluteRoot, err := filepath.Abs(root)
 	if err != nil {
-		return DownResult{}, err
+		return DownResult{}, WrapError(ErrorCodeInternal, fmt.Sprintf("resolve project root: %v", err), err)
 	}
 
 	metadata, err := project.LoadMetadata(absoluteRoot)
 	if err != nil {
-		return DownResult{}, err
+		if errors.Is(err, project.ErrMetadataNotFound) {
+			return DownResult{}, WrapError(ErrorCodePrecondition, err.Error(), err)
+		}
+		return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	yeastHome, err := s.resolveYeastHome()
 	if err != nil {
-		return DownResult{}, err
+		return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	paths, err := project.NewPaths(yeastHome, metadata)
 	if err != nil {
-		return DownResult{}, err
+		return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	lock, err := state.Acquire(paths.StateLock, state.DefaultLockOptions())
 	if err != nil {
-		return DownResult{}, err
+		return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	defer func() { _ = lock.Release() }()
 
 	currentState, err := state.Load(paths.StateFile, metadata.ID)
 	if err != nil {
-		return DownResult{}, err
+		return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	timeout := options.Timeout
@@ -97,7 +102,7 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 			PID:        instance.PID,
 		}, timeout)
 		if err != nil {
-			return DownResult{}, err
+			return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 
 		instance.Status = "stopped"
@@ -114,7 +119,7 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 	}
 
 	if err := state.Save(paths.StateFile, currentState); err != nil {
-		return DownResult{}, err
+		return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	return result, nil

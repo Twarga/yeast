@@ -8,6 +8,7 @@ Yeast reads project configuration from `yeast.yaml`.
 version: 1
 instances:
   - name: web
+    hostname: web-lab
     image: ubuntu-24.04
 ```
 
@@ -23,6 +24,7 @@ instances:
     memory: 1024
     cpus: 1
     disk_size: 20G
+    ssh_port: 2205
     user: yeast
     sudo: none
     env:
@@ -44,10 +46,12 @@ instances:
 | Field | Required | Default | Description |
 |---|---:|---|---|
 | `name` | yes | none | Instance name. Must be path-safe. |
+| `hostname` | no | instance `name` | Guest hostname rendered into cloud-init. |
 | `image` | yes | none | Trusted image name, such as `ubuntu-24.04`. |
 | `memory` | no | `512` | Memory in MiB. Must be at least `128`. |
 | `cpus` | no | `1` | Number of virtual CPUs. Must be at least `1`. |
 | `disk_size` | no | empty | Optional overlay disk size, such as `20G`. |
+| `ssh_port` | no | auto from `2222` | Optional host SSH port forwarding override. |
 | `user` | no | `yeast` | Linux user created by cloud-init. |
 | `sudo` | no | `none` | Sudo policy: `none`, `password`, or `nopasswd`. |
 | `env` | no | empty | Environment values rendered into the guest profile script. |
@@ -87,6 +91,56 @@ Examples:
 - `target-01`
 
 Avoid spaces, slashes, shell syntax, and names that need quoting.
+
+## Hostname
+
+`hostname` controls the guest hostname Yeast writes into cloud-init `user-data` and `meta-data`.
+
+If you omit it, Yeast uses the instance `name`.
+
+Example:
+
+```yaml
+name: web
+hostname: web-lab
+```
+
+This changes the hostname inside the VM without changing the Yeast instance identity, runtime paths, or command target name.
+
+## Disk Size
+
+`disk_size` controls the virtual size passed to `qemu-img` when Yeast creates a new instance overlay disk.
+
+Supported formats use whole numbers with optional `K`, `M`, `G`, `T`, or `P` suffixes. A trailing `B` and spaces are accepted and normalized, so `20GB` and `20 gb` become `20G`.
+
+If the instance disk already exists, Yeast keeps it and does not resize it during `up`.
+
+Examples:
+
+```yaml
+disk_size: 20G
+disk_size: 25600M
+disk_size: 10737418240
+```
+
+## SSH Port
+
+`ssh_port` lets you request a specific host port for SSH forwarding instead of using Yeast's automatic allocation starting at `2222`.
+
+If you omit it, Yeast keeps the current behavior and picks the next available port.
+
+Example:
+
+```yaml
+name: web
+ssh_port: 2205
+```
+
+Rules:
+
+- must be between `1` and `65535`
+- must not collide with another requested or already-running Yeast instance port in the same project run
+- if tracked state already uses a different SSH port for the same instance, Yeast fails instead of silently switching it
 
 ## Sudo Modes
 

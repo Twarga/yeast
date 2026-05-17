@@ -3,6 +3,7 @@ package app
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -78,5 +79,57 @@ func TestInitFailsClearlyWhenRepeated(t *testing.T) {
 	}
 	if !errors.Is(err, ErrProjectAlreadyInitialized) {
 		t.Fatalf("expected ErrProjectAlreadyInitialized, got %v", err)
+	}
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	if appErr.Code != ErrorCodeConflict {
+		t.Fatalf("expected conflict error code, got %q", appErr.Code)
+	}
+}
+
+func TestInitClassifiesConfigInspectFailure(t *testing.T) {
+	root := t.TempDir()
+	blocker := filepath.Join(root, "not-a-directory")
+	if err := os.WriteFile(blocker, []byte("x"), 0644); err != nil {
+		t.Fatalf("write blocker: %v", err)
+	}
+
+	service := NewService()
+	_, err := service.Init(InitOptions{ProjectRoot: blocker})
+	assertInitAppErrorCode(t, err, ErrorCodeInternal)
+	if !strings.Contains(err.Error(), "inspect config file") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestInitClassifiesConfigWriteFailure(t *testing.T) {
+	root := t.TempDir()
+	previousWriteConfigFileAtomic := writeConfigFileAtomic
+	defer func() { writeConfigFileAtomic = previousWriteConfigFileAtomic }()
+	writeConfigFileAtomic = func(path string, content []byte) error {
+		return errors.New("write temp file failed")
+	}
+
+	service := NewService()
+	_, err := service.Init(InitOptions{ProjectRoot: root})
+	assertInitAppErrorCode(t, err, ErrorCodeInternal)
+	if !strings.Contains(err.Error(), "write temp file failed") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func assertInitAppErrorCode(t *testing.T, err error, want ErrorCode) {
+	t.Helper()
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	if appErr.Code != want {
+		t.Fatalf("expected error code %q, got %q", want, appErr.Code)
 	}
 }

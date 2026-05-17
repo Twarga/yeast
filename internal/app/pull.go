@@ -32,20 +32,21 @@ func (s *Service) Pull(options PullOptions) (PullResult, error) {
 
 	image, ok := images.Lookup(options.ImageName)
 	if !ok {
-		return PullResult{}, fmt.Errorf("%w: %s", ErrUnsupportedImage, options.ImageName)
+		cause := fmt.Errorf("%w: %s", ErrUnsupportedImage, options.ImageName)
+		return PullResult{}, WrapError(ErrorCodeInvalidArgument, cause.Error(), cause)
 	}
 
 	cacheRoot, err := s.resolveYeastHome()
 	if err != nil {
-		return PullResult{}, err
+		return PullResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	cachePaths, err := images.ResolveCachePaths(cacheRoot+"/cache/images", image.Name)
 	if err != nil {
-		return PullResult{}, err
+		return PullResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	if err := s.downloadImage(image, cachePaths.ImageFile, s.downloadOptions()); err != nil {
-		return PullResult{}, err
+		return PullResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	return PullResult{

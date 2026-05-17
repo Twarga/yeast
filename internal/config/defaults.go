@@ -26,6 +26,9 @@ func ApplyDefaults(cfg *Config) error {
 		if instance.CPUs == 0 {
 			instance.CPUs = DefaultCPUs
 		}
+		if strings.TrimSpace(instance.Hostname) == "" {
+			instance.Hostname = instance.Name
+		}
 		if strings.TrimSpace(instance.User) == "" {
 			instance.User = DefaultUser
 		}

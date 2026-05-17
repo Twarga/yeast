@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Yeast v0.1.0 Manual Test Tutorial</title>
+    <meta
+      name="description"
+      content="Step-by-step manual client test for Yeast v0.1.0 on a Linux QEMU/KVM host."
+    />
+    <meta name="theme-color" content="#0f0e0c" />
+    <link rel="stylesheet" href="site.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Yeast home">
+        <span class="brand-icon">Y</span>
+        <span>yeast</span>
+      </a>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="index.html">Home</a>
+        <a href="#install">Install</a>
+        <a href="#checklist">Checklist</a>
+        <a href="https://github.com/Twarga/yeast">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="guide">
+      <section class="guide-hero">
+        <p class="eyebrow">Manual client test</p>
+        <h1>Yeast v0.1.0 test tutorial.</h1>
+        <p class="lead">
+          Follow this from your own Linux machine as a real user. The goal is to
+          prove install, doctor, VM boot, SSH, shutdown, restart, destroy, and cleanup.
+        </p>
+      </section>
+
+      <section class="guide-panel">
+        <h2>What this proves</h2>
+        <ul>
+          <li>Yeast installs on a real Linux host.</li>
+          <li>The host has QEMU/KVM, SSH, Git, Go, and ISO tooling ready.</li>
+          <li>A project can be initialized with `yeast.yaml`.</li>
+          <li>Ubuntu 24.04 can be pulled and verified.</li>
+          <li>A QEMU/KVM VM can boot and become reachable by SSH.</li>
+          <li>The VM can stop, start again, and be destroyed cleanly.</li>
+        </ul>
+      </section>
+
+      <section class="guide-panel">
+        <h2>Before you start</h2>
+        <p>Use a Linux machine with virtualization enabled and internet access.</p>
+        <div class="mini-terminal">
+          <pre><code>ls -l /dev/kvm</code></pre>
+        </div>
+        <p>
+          If `/dev/kvm` does not exist, enable virtualization in BIOS/UEFI or install
+          your distro's KVM/QEMU packages.
+        </p>
+      </section>
+
+      <section class="guide-panel" id="install">
+        <h2>1. Install Yeast v0.1.0</h2>
+        <p>Copy this exact command from the landing page:</p>
+        <div class="mini-terminal">
+          <pre><code>curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.1.0/install.sh | YEAST_REF=v0.1.0 bash</code></pre>
+        </div>
+        <p>
+          If the installer adds your user to a KVM group, log out and log back in
+          before continuing. A reboot is also fine.
+        </p>
+      </section>
+
+      <section class="guide-panel" id="checklist">
+        <h2>2. Verify install</h2>
+        <div class="mini-terminal">
+          <pre><code>which yeast
+yeast version
+yeast doctor</code></pre>
+        </div>
+        <p>Expected version: `v0.1.0`.</p>
+      </section>
+
+      <section class="guide-panel">
+        <h2>3. Create a clean test project</h2>
+        <div class="mini-terminal">
+          <pre><code>mkdir -p ~/yeast-v010-test
+cd ~/yeast-v010-test
+ls -la
+yeast init
+cat yeast.yaml</code></pre>
+        </div>
+        <p>Expected: a `yeast.yaml` file with one `web` instance using `ubuntu-24.04`.</p>
+      </section>
+
+      <section class="guide-panel">
+        <h2>4. Pull the Ubuntu image</h2>
+        <div class="mini-terminal">
+          <pre><code>yeast pull --list
+yeast pull ubuntu-24.04</code></pre>
+        </div>
+        <p>Expected: Ubuntu 24.04 downloads or reuses the cache, then checksum verification succeeds.</p>
+      </section>
+
+      <section class="guide-panel">
+        <h2>5. Start and inspect the VM</h2>
+        <div class="mini-terminal">
+          <pre><code>yeast up
+yeast status
+yeast status --json</code></pre>
+        </div>
+        <p>
+          Expected: `web` becomes running. The JSON output should be valid JSON with
+          no terminal styling.
+        </p>
+      </section>
+
+      <section class="guide-panel">
+        <h2>6. SSH into the VM</h2>
+        <div class="mini-terminal">
+          <pre><code>yeast ssh web
+hostname
+whoami
+uname -a
+ip addr
+exit</code></pre>
+        </div>
+        <p>Expected: SSH opens without manually typing the forwarded port.</p>
+      </section>
+
+      <section class="guide-panel">
+        <h2>7. Stop, start again, then destroy</h2>
+        <div class="mini-terminal">
+          <pre><code>yeast down
+yeast status
+yeast up
+yeast status
+yeast destroy
+yeast status</code></pre>
+        </div>
+        <p>
+          Expected: `down` stops the VM without deleting the disk. `up` starts it
+          again. `destroy` removes project runtime files.
+        </p>
+      </section>
+
+      <section class="guide-panel">
+        <h2>8. Confirm cache remains</h2>
+        <div class="mini-terminal">
+          <pre><code>find ~/.yeast/cache -maxdepth 3 -type f | head</code></pre>
+        </div>
+        <p>Expected: shared cached image files still exist.</p>
+      </section>
+
+      <section class="guide-panel">
+        <h2>9. Test clear errors</h2>
+        <div class="mini-terminal">
+          <pre><code>yeast ssh missing-vm
+yeast pull does-not-exist</code></pre>
+        </div>
+        <p>Expected: clear errors, no crash.</p>
+      </section>
+
+      <section class="guide-panel">
+        <h2>10. Final report</h2>
+        <p>Send or save this report after testing:</p>
+        <div class="mini-terminal">
+          <pre><code>Yeast v0.1.0 manual test
+
+Host:
+Distro:
+Kernel:
+CPU:
+
+Install: pass/fail
+Doctor: pass/fail
+Init: pass/fail
+Pull: pass/fail
+Up: pass/fail
+Status: pass/fail
+Status JSON: pass/fail
+SSH: pass/fail
+Down: pass/fail
+Up again: pass/fail
+Destroy: pass/fail
+Cache preserved: pass/fail
+Error handling: pass/fail
+
+Notes:</code></pre>
+        </div>
+      </section>
+
+      <section class="guide-panel">
+        <h2>If something fails</h2>
+        <p>Save the exact command, full output, distro, and KVM status.</p>
+        <div class="mini-terminal">
+          <pre><code>cat /etc/os-release
+uname -a
+groups
+ls -l /dev/kvm
+yeast version
+yeast doctor
+yeast status --json
+ps aux | grep qemu
+find ~/.yeast -maxdepth 4 -type f | sort</code></pre>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

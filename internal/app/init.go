@@ -12,6 +12,7 @@ import (
 const ConfigFileName = "yeast.yaml"
 
 var ErrProjectAlreadyInitialized = errors.New("project already initialized")
+var writeConfigFileAtomic = writeFileAtomic
 
 type InitOptions struct {
 	ProjectRoot string
@@ -33,7 +34,7 @@ func (s *Service) Init(options InitOptions) (InitResult, error) {
 	}
 	absoluteRoot, err := filepath.Abs(root)
 	if err != nil {
-		return InitResult{}, fmt.Errorf("resolve project root: %w", err)
+		return InitResult{}, WrapError(ErrorCodeInternal, fmt.Sprintf("resolve project root: %v", err), err)
 	}
 
 	now := options.Now
@@ -50,23 +51,25 @@ func (s *Service) Init(options InitOptions) (InitResult, error) {
 	}
 
 	if _, err := os.Stat(configPath); err == nil {
-		return result, fmt.Errorf("%w: %s already exists", ErrProjectAlreadyInitialized, configPath)
+		cause := fmt.Errorf("%w: %s already exists", ErrProjectAlreadyInitialized, configPath)
+		return result, WrapError(ErrorCodeConflict, cause.Error(), cause)
 	} else if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return result, fmt.Errorf("inspect config file %s: %w", configPath, err)
+		return result, WrapError(ErrorCodeInternal, fmt.Sprintf("inspect config file %s: %v", configPath, err), err)
 	}
 
 	if _, err := os.Stat(metadataPath); err == nil {
-		return result, fmt.Errorf("%w: %s already exists", ErrProjectAlreadyInitialized, metadataPath)
+		cause := fmt.Errorf("%w: %s already exists", ErrProjectAlreadyInitialized, metadataPath)
+		return result, WrapError(ErrorCodeConflict, cause.Error(), cause)
 	} else if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return result, fmt.Errorf("inspect project metadata %s: %w", metadataPath, err)
+		return result, WrapError(ErrorCodeInternal, fmt.Sprintf("inspect project metadata %s: %v", metadataPath, err), err)
 	}
 
 	metadata, err := project.EnsureMetadata(absoluteRoot, now)
 	if err != nil {
-		return result, err
+		return result, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
-	if err := writeFileAtomic(configPath, []byte(defaultConfig())); err != nil {
-		return result, err
+	if err := writeConfigFileAtomic(configPath, []byte(defaultConfig())); err != nil {
+		return result, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	result.ProjectID = metadata.ID

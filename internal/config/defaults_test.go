@@ -27,6 +27,9 @@ func TestApplyDefaults(t *testing.T) {
 	if instance.CPUs != DefaultCPUs {
 		t.Fatalf("expected default cpus %d, got %d", DefaultCPUs, instance.CPUs)
 	}
+	if instance.Hostname != "web" {
+		t.Fatalf("expected default hostname web, got %q", instance.Hostname)
+	}
 	if instance.User != DefaultUser {
 		t.Fatalf("expected default user %q, got %q", DefaultUser, instance.User)
 	}
@@ -41,9 +44,11 @@ func TestApplyDefaultsPreservesExplicitValues(t *testing.T) {
 		Instances: []Instance{
 			{
 				Name:     "web",
+				Hostname: "web-lab",
 				Image:    "ubuntu-24.04",
 				Memory:   2048,
 				CPUs:     2,
+				SSHPort:  2205,
 				User:     "operator",
 				Sudo:     "nopasswd",
 				DiskSize: "25 gb",
@@ -64,6 +69,12 @@ func TestApplyDefaultsPreservesExplicitValues(t *testing.T) {
 	}
 	if instance.CPUs != 2 {
 		t.Fatalf("expected explicit cpus 2, got %d", instance.CPUs)
+	}
+	if instance.SSHPort != 2205 {
+		t.Fatalf("expected explicit ssh port 2205, got %d", instance.SSHPort)
+	}
+	if instance.Hostname != "web-lab" {
+		t.Fatalf("expected explicit hostname web-lab, got %q", instance.Hostname)
 	}
 	if instance.User != "operator" {
 		t.Fatalf("expected explicit user operator, got %q", instance.User)

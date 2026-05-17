@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"testing"
 	"yeast/internal/images"
@@ -31,6 +32,13 @@ func TestPullUnsupportedImageFailsClearly(t *testing.T) {
 	}
 	if !errors.Is(err, ErrUnsupportedImage) {
 		t.Fatalf("expected ErrUnsupportedImage, got %v", err)
+	}
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	if appErr.Code != ErrorCodeInvalidArgument {
+		t.Fatalf("expected invalid_argument error code, got %q", appErr.Code)
 	}
 }
 
@@ -63,4 +71,38 @@ func TestPullDownloadsKnownImage(t *testing.T) {
 	if result.ImagePath != wantDestination {
 		t.Fatalf("expected result image path %q, got %q", wantDestination, result.ImagePath)
 	}
+}
+
+func TestPullClassifiesYeastHomeResolutionFailure(t *testing.T) {
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) {
+		return "", errors.New("home lookup failed")
+	}
+
+	_, err := service.Pull(PullOptions{ImageName: "ubuntu-24.04"})
+	assertAppErrorCode(t, err, ErrorCodeInternal)
+}
+
+func TestPullClassifiesCachePathFailure(t *testing.T) {
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) {
+		return "", nil
+	}
+
+	_, err := service.Pull(PullOptions{ImageName: "ubuntu-24.04"})
+	assertAppErrorCode(t, err, ErrorCodeInternal)
+}
+
+func TestPullClassifiesDownloadFailure(t *testing.T) {
+	service := NewService()
+	tempHome := t.TempDir()
+	service.resolveYeastHome = func() (string, error) {
+		return filepath.Join(tempHome, ".yeast"), nil
+	}
+	service.downloadImage = func(image images.TrustedImage, destination string, options images.DownloadOptions) error {
+		return fmt.Errorf("download failed")
+	}
+
+	_, err := service.Pull(PullOptions{ImageName: "ubuntu-24.04"})
+	assertAppErrorCode(t, err, ErrorCodeInternal)
 }

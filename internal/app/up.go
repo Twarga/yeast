@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -46,44 +47,50 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 	}
 	absoluteRoot, err := filepath.Abs(root)
 	if err != nil {
-		return UpResult{}, fmt.Errorf("resolve project root: %w", err)
+		return UpResult{}, WrapError(ErrorCodeInternal, fmt.Sprintf("resolve project root: %v", err), err)
 	}
 
 	metadata, err := project.LoadMetadata(absoluteRoot)
 	if err != nil {
-		return UpResult{}, err
+		if errors.Is(err, project.ErrMetadataNotFound) {
+			return UpResult{}, WrapError(ErrorCodePrecondition, err.Error(), err)
+		}
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	yeastHome, err := s.resolveYeastHome()
 	if err != nil {
-		return UpResult{}, err
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	paths, err := project.NewPaths(yeastHome, metadata)
 	if err != nil {
-		return UpResult{}, err
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	if err := os.MkdirAll(paths.ProjectDir, 0755); err != nil {
-		return UpResult{}, fmt.Errorf("create project runtime directory %s: %w", paths.ProjectDir, err)
+		return UpResult{}, WrapError(ErrorCodeInternal, fmt.Sprintf("create project runtime directory %s: %v", paths.ProjectDir, err), err)
 	}
 
 	lock, err := state.Acquire(paths.StateLock, state.DefaultLockOptions())
 	if err != nil {
-		return UpResult{}, err
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	defer func() { _ = lock.Release() }()
 
 	cfg, err := config.Load(filepath.Join(absoluteRoot, ConfigFileName))
 	if err != nil {
-		return UpResult{}, err
+		if errors.Is(err, os.ErrNotExist) {
+			return UpResult{}, WrapError(ErrorCodePrecondition, err.Error(), err)
+		}
+		return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
 	}
 
 	currentState, err := state.Load(paths.StateFile, metadata.ID)
 	if err != nil {
-		return UpResult{}, err
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	if state.Reconcile(&currentState, state.ReconcileOptions{}) {
 		if err := state.Save(paths.StateFile, currentState); err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 	}
 
@@ -103,7 +110,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		if existing, ok := currentState.Instances[instance.Name]; ok && existing.Status == "running" && existing.PID > 0 && existing.SSHPort > 0 {
 			address, err := s.sshAddress(defaultManagementHost, existing.SSHPort)
 			if err != nil {
-				return UpResult{}, err
+				return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 			}
 			result.Instances = append(result.Instances, UpInstanceResult{
 				Name:       instance.Name,
@@ -117,38 +124,45 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 
 		image, ok := images.Lookup(instance.Image)
 		if !ok {
-			return UpResult{}, fmt.Errorf("unsupported image %q", instance.Image)
+			return UpResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("unsupported image %q", instance.Image), nil)
 		}
 		cachePaths, err := images.ResolveCachePaths(paths.ImageCache, image.Name)
 		if err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		if _, err := os.Stat(cachePaths.ImageFile); err != nil {
-			return UpResult{}, fmt.Errorf("image %s not found in cache at %s: run `yeast pull %s`", image.Name, cachePaths.ImageFile, image.Name)
+			message := fmt.Sprintf("image %s not found in cache at %s: run `yeast pull %s`", image.Name, cachePaths.ImageFile, image.Name)
+			return UpResult{}, WrapError(ErrorCodeNotFound, message, err)
 		}
 
 		runtimeDir, err := paths.InstanceDir(instance.Name)
 		if err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
 		}
-		sshPort := chooseManagementSSHPort(currentState, instance.Name, allocatedPorts)
+		sshPort, err := chooseManagementSSHPort(currentState, instance, allocatedPorts)
+		if err != nil {
+			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
+		}
 		allocatedPorts[sshPort] = true
 
 		userKey, err := s.discoverSSHKey()
 		if err != nil {
-			return UpResult{}, err
+			if errors.Is(err, cloudinit.ErrNoSSHPublicKey) {
+				return UpResult{}, WrapError(ErrorCodePrecondition, err.Error(), err)
+			}
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		userData, err := s.renderUserData(cloudinit.UserDataInput{
-			Hostname:      instance.Name,
+			Hostname:      instance.Hostname,
 			Instance:      instance,
 			AuthorizedKey: userKey,
 		})
 		if err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
-		metaData, err := s.renderMetaData(cloudinit.MetaDataInput{Hostname: instance.Name})
+		metaData, err := s.renderMetaData(cloudinit.MetaDataInput{Hostname: instance.Hostname})
 		if err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		seedResult, err := s.createSeedISO(ctx, cloudinit.SeedInput{
 			InstanceName: instance.Name,
@@ -157,7 +171,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			MetaData:     metaData,
 		})
 		if err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 
 		plan := rtm.MachinePlan{
@@ -178,26 +192,27 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		}
 
 		if _, err := s.runtime.PrepareDisk(ctx, plan); err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 
 		started, err := s.runtime.Start(ctx, plan)
 		if err != nil {
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		startedInstances = append(startedInstances, started)
 
 		address, err := s.sshAddress(defaultManagementHost, sshPort)
 		if err != nil {
 			_ = s.runtime.Stop(ctx, started, 5*time.Second)
-			return UpResult{}, err
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		if err := s.waitForTCP(ctx, guest.ReadinessOptions{
 			Address: address,
 			Timeout: readinessTimeout,
 		}); err != nil {
 			_ = s.runtime.Stop(ctx, started, 5*time.Second)
-			return UpResult{}, fmt.Errorf("wait for ssh readiness for %s: %w", instance.Name, err)
+			message := fmt.Sprintf("wait for ssh readiness for %s: %v", instance.Name, err)
+			return UpResult{}, WrapError(ErrorCodePrecondition, message, err)
 		}
 
 		currentState.Instances[instance.Name] = state.InstanceState{
@@ -221,7 +236,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		for i := len(startedInstances) - 1; i >= 0; i-- {
 			_ = s.runtime.Stop(ctx, startedInstances[i], 5*time.Second)
 		}
-		return UpResult{}, err
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	sort.Slice(result.Instances, func(i, j int) bool {
@@ -240,13 +255,22 @@ func usedManagementPorts(currentState state.State) map[int]bool {
 	return used
 }
 
-func chooseManagementSSHPort(currentState state.State, instanceName string, used map[int]bool) int {
-	if existing, ok := currentState.Instances[instanceName]; ok && existing.SSHPort > 0 {
-		return existing.SSHPort
+func chooseManagementSSHPort(currentState state.State, instance config.Instance, used map[int]bool) (int, error) {
+	if instance.SSHPort > 0 {
+		if existing, ok := currentState.Instances[instance.Name]; ok && existing.SSHPort > 0 && existing.SSHPort != instance.SSHPort {
+			return 0, fmt.Errorf("instance %q requested ssh_port %d but existing state uses %d", instance.Name, instance.SSHPort, existing.SSHPort)
+		}
+		if used[instance.SSHPort] {
+			return 0, fmt.Errorf("requested ssh_port %d for instance %q is already in use", instance.SSHPort, instance.Name)
+		}
+		return instance.SSHPort, nil
+	}
+	if existing, ok := currentState.Instances[instance.Name]; ok && existing.SSHPort > 0 {
+		return existing.SSHPort, nil
 	}
 	port := firstManagementSSHPort
 	for used[port] {
 		port++
 	}
-	return port
+	return port, nil
 }

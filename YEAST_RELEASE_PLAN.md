@@ -182,6 +182,14 @@ dist/
   yeast-linux-amd64.sha256
 ```
 
+`dist/` is ignored by git. Release artifacts should be uploaded to GitHub Releases, not committed to the repository.
+
+Build command:
+
+```bash
+bash scripts/build-release.sh v0.1.0
+```
+
 Future build automation:
 
 - GitHub Actions
@@ -330,6 +338,12 @@ How to confirm it works
 ```
 
 ## 11. v0.1 Release Notes Draft
+
+Draft file:
+
+```text
+docs/release-notes-v0.1.0.md
+```
 
 Draft summary:
 

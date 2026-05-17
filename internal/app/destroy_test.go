@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -65,8 +66,97 @@ func TestDestroyStopsAndRemovesTrackedInstances(t *testing.T) {
 	}
 }
 
+func TestDestroyClassifiesRuntimeDestroyFailure(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.runtime = &fakeDestroyRuntime{destroyErr: errors.New("destroy failed")}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+
+	current := state.New(metadata.ID)
+	current.Instances["web"] = state.InstanceState{Status: "running", PID: 1001, RuntimeDir: "/tmp/web"}
+	if err := state.Save(paths.StateFile, current); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	_, err = service.Destroy(context.Background(), DestroyOptions{ProjectRoot: root})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	if appErr.Code != ErrorCodeInternal {
+		t.Fatalf("expected internal error code, got %q", appErr.Code)
+	}
+}
+
+func TestDestroyClassifiesUninitializedProject(t *testing.T) {
+	service := NewService()
+
+	_, err := service.Destroy(context.Background(), DestroyOptions{ProjectRoot: t.TempDir()})
+	assertDestroyAppErrorCode(t, err, ErrorCodePrecondition)
+}
+
+func TestDestroyClassifiesStateProjectMismatch(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.runtime = &fakeDestroyRuntime{}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+
+	if err := state.Save(paths.StateFile, state.New("wrong-project")); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	_, err = service.Destroy(context.Background(), DestroyOptions{ProjectRoot: root})
+	assertDestroyAppErrorCode(t, err, ErrorCodeInternal)
+}
+
+func assertDestroyAppErrorCode(t *testing.T, err error, want ErrorCode) {
+	t.Helper()
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	if appErr.Code != want {
+		t.Fatalf("expected error code %q, got %q", want, appErr.Code)
+	}
+}
+
 type fakeDestroyRuntime struct {
-	destroyed []rtm.RuntimeInstance
+	destroyed  []rtm.RuntimeInstance
+	destroyErr error
 }
 
 func (f *fakeDestroyRuntime) PrepareDisk(ctx context.Context, plan rtm.MachinePlan) (rtm.DiskPlan, error) {
@@ -87,5 +177,5 @@ func (f *fakeDestroyRuntime) Inspect(ctx context.Context, instance rtm.RuntimeIn
 
 func (f *fakeDestroyRuntime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) error {
 	f.destroyed = append(f.destroyed, instance)
-	return nil
+	return f.destroyErr
 }

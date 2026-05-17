@@ -9,10 +9,12 @@ type Config struct {
 
 type Instance struct {
 	Name     string            `yaml:"name"`
+	Hostname string            `yaml:"hostname,omitempty"`
 	Image    string            `yaml:"image"`
 	Memory   int               `yaml:"memory"`
 	CPUs     int               `yaml:"cpus"`
 	DiskSize string            `yaml:"disk_size,omitempty"`
+	SSHPort  int               `yaml:"ssh_port,omitempty"`
 	User     string            `yaml:"user,omitempty"`
 	Sudo     string            `yaml:"sudo,omitempty"`
 	Env      map[string]string `yaml:"env,omitempty"`

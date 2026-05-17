@@ -7,6 +7,11 @@ YEAST_INSTALL_DIR="${YEAST_INSTALL_DIR:-/usr/local/bin}"
 YEAST_BIN_PATH="${YEAST_INSTALL_DIR}/yeast"
 YEAST_INSTALL_VERBOSE="${YEAST_INSTALL_VERBOSE:-0}"
 YEAST_KEEP_LOGS="${YEAST_KEEP_LOGS:-0}"
+YEAST_MIN_GO_VERSION="${YEAST_MIN_GO_VERSION:-1.25.0}"
+YEAST_GO_VERSION="${YEAST_GO_VERSION:-1.26.3}"
+YEAST_GO_INSTALL_ROOT="${YEAST_GO_INSTALL_ROOT:-/usr/local/lib/yeast/go}"
+YEAST_GO_TARBALL_SHA256="${YEAST_GO_TARBALL_SHA256:-}"
+GO_BIN=""
 
 if [[ -t 1 && -z "${NO_COLOR:-}" && "${TERM:-}" != "dumb" ]]; then
   C_RESET=$'\033[0m'
@@ -195,6 +200,20 @@ detect_package_manager() {
   fi
 }
 
+detect_arch() {
+  case "$(uname -m)" in
+    x86_64|amd64)
+      YEAST_ARCH="amd64"
+      ;;
+    aarch64|arm64)
+      YEAST_ARCH="arm64"
+      ;;
+    *)
+      die "unsupported CPU architecture: $(uname -m)"
+      ;;
+  esac
+}
+
 require_sudo_session() {
   if [[ "$(id -u)" -eq 0 ]]; then
     return
@@ -326,19 +345,19 @@ install_one_of() {
 install_base_packages() {
   case "${PKG_MANAGER}" in
     apt)
-      pkg_install ca-certificates curl git openssh-client golang-go build-essential
+      pkg_install ca-certificates curl git openssh-client golang-go build-essential tar
       ;;
     dnf|yum)
-      pkg_install ca-certificates curl git openssh-clients golang gcc
+      pkg_install ca-certificates curl git openssh-clients golang gcc tar
       ;;
     pacman)
-      pkg_install ca-certificates curl git openssh go base-devel
+      pkg_install ca-certificates curl git openssh go base-devel tar
       ;;
     zypper)
-      pkg_install ca-certificates curl git openssh go gcc
+      pkg_install ca-certificates curl git openssh go gcc tar
       ;;
     apk)
-      pkg_install ca-certificates curl git openssh-client go build-base bash
+      pkg_install ca-certificates curl git openssh-client go build-base bash tar
       ;;
   esac
 }
@@ -389,13 +408,120 @@ EOF
   need_root chmod 0755 "${YEAST_INSTALL_DIR}/genisoimage"
 }
 
+version_at_least() {
+  local current="$1"
+  local minimum="$2"
+  local current_major current_minor current_patch
+  local minimum_major minimum_minor minimum_patch
+
+  IFS=. read -r current_major current_minor current_patch <<<"${current}"
+  IFS=. read -r minimum_major minimum_minor minimum_patch <<<"${minimum}"
+
+  current_major="${current_major:-0}"
+  current_minor="${current_minor:-0}"
+  current_patch="${current_patch:-0}"
+  minimum_major="${minimum_major:-0}"
+  minimum_minor="${minimum_minor:-0}"
+  minimum_patch="${minimum_patch:-0}"
+
+  ((current_major > minimum_major)) && return 0
+  ((current_major < minimum_major)) && return 1
+  ((current_minor > minimum_minor)) && return 0
+  ((current_minor < minimum_minor)) && return 1
+  ((current_patch >= minimum_patch))
+}
+
+go_version_value() {
+  local output
+  output="$("$1" version 2>/dev/null || true)"
+  output="${output#go version go}"
+  printf '%s' "${output%% *}"
+}
+
+official_go_bin_path() {
+  printf '%s/go%s/bin/go' "${YEAST_GO_INSTALL_ROOT}" "${YEAST_GO_VERSION}"
+}
+
+resolve_go_bin() {
+  local candidate
+
+  candidate="$(command -v go || true)"
+  if [[ -n "${candidate}" ]]; then
+    printf '%s' "${candidate}"
+    return 0
+  fi
+
+  candidate="$(official_go_bin_path)"
+  if [[ -x "${candidate}" ]]; then
+    printf '%s' "${candidate}"
+    return 0
+  fi
+
+  return 1
+}
+
+download_official_go() {
+  local archive
+  local url
+  local install_dir
+
+  archive="${WORKDIR}/go${YEAST_GO_VERSION}.linux-${YEAST_ARCH}.tar.gz"
+  url="https://go.dev/dl/go${YEAST_GO_VERSION}.linux-${YEAST_ARCH}.tar.gz"
+  install_dir="${YEAST_GO_INSTALL_ROOT}/go${YEAST_GO_VERSION}"
+
+  info "Installing Go ${YEAST_GO_VERSION} from ${url}"
+  curl -fL --retry 3 --retry-delay 2 -o "${archive}" "${url}"
+
+  if [[ -n "${YEAST_GO_TARBALL_SHA256}" ]]; then
+    printf '%s  %s\n' "${YEAST_GO_TARBALL_SHA256}" "${archive}" | sha256sum -c -
+  else
+    warn "YEAST_GO_TARBALL_SHA256 is not set; relying on HTTPS transport for Go toolchain download"
+  fi
+
+  need_root rm -rf "${install_dir}"
+  need_root install -d "$(dirname "${install_dir}")"
+  need_root tar -C "$(dirname "${install_dir}")" -xzf "${archive}"
+  need_root mv "$(dirname "${install_dir}")/go" "${install_dir}"
+  GO_BIN="${install_dir}/bin/go"
+}
+
+ensure_go_toolchain() {
+  GO_BIN="$(resolve_go_bin || true)"
+  if [[ -n "${GO_BIN}" ]]; then
+    local current
+    current="$(go_version_value "${GO_BIN}")"
+    if [[ -n "${current}" ]] && version_at_least "${current}" "${YEAST_MIN_GO_VERSION}"; then
+      info "Using Go ${current} at ${GO_BIN}"
+      return
+    fi
+    warn "Found Go ${current:-unknown}, but Yeast requires Go ${YEAST_MIN_GO_VERSION}+"
+  fi
+
+  download_official_go
+
+  local installed
+  installed="$(go_version_value "${GO_BIN}")"
+  if [[ -z "${installed}" ]] || ! version_at_least "${installed}" "${YEAST_MIN_GO_VERSION}"; then
+    die "installed Go ${installed:-unknown}, but Yeast requires Go ${YEAST_MIN_GO_VERSION}+"
+  fi
+}
+
+ensure_iso_builder() {
+  if command -v genisoimage >/dev/null 2>&1 || command -v mkisofs >/dev/null 2>&1; then
+    return
+  fi
+  die "required ISO builder is missing: install genisoimage or mkisofs"
+}
+
 ensure_required_tools() {
   local tool
-  for tool in git go qemu-system-x86_64 qemu-img genisoimage ssh-keygen; do
+  for tool in git curl tar qemu-system-x86_64 qemu-img ssh ssh-keygen; do
     if ! command -v "${tool}" >/dev/null 2>&1; then
       die "required tool ${tool} is still missing after installation"
     fi
   done
+  ensure_iso_builder
+  ensure_go_toolchain
 }
 
 clone_source() {
@@ -404,9 +530,13 @@ clone_source() {
 }
 
 build_source() {
+  local go_bin
+  ensure_go_toolchain
+  go_bin="$(resolve_go_bin || true)"
+  [[ -n "${go_bin}" ]] || die "failed to resolve Go toolchain after installation"
   (
     cd "${SRC_DIR}"
-    go build -o "${WORKDIR}/yeast" ./cmd/yeast
+    "${go_bin}" build -o "${WORKDIR}/yeast" ./cmd/yeast
   )
 }
 
@@ -418,6 +548,7 @@ install_binary() {
 ensure_user_paths() {
   need_root install -d -m 0755 -o "${TARGET_USER}" -g "${TARGET_GROUP}" "${TARGET_HOME}/.yeast"
   need_root install -d -m 0755 -o "${TARGET_USER}" -g "${TARGET_GROUP}" "${TARGET_HOME}/.yeast/cache"
+  need_root install -d -m 0755 -o "${TARGET_USER}" -g "${TARGET_GROUP}" "${TARGET_HOME}/.yeast/cache/images"
 }
 
 ensure_ssh_key() {
@@ -450,23 +581,43 @@ ensure_kvm_group_membership() {
   KVM_GROUP_UPDATED=1
 }
 
+check_kvm_access() {
+  if [[ ! -e /dev/kvm ]]; then
+    warn "/dev/kvm does not exist. Enable virtualization in BIOS/UEFI and load KVM modules before running VMs."
+    return
+  fi
+  if [[ ! -c /dev/kvm ]]; then
+    warn "/dev/kvm exists but is not a character device"
+    return
+  fi
+  if run_as_target test -r /dev/kvm -a -w /dev/kvm; then
+    info "${TARGET_USER} can access /dev/kvm"
+    return
+  fi
+  warn "${TARGET_USER} cannot access /dev/kvm in the current session"
+}
+
 run_post_install_checks() {
   run_as_target "${YEAST_BIN_PATH}" doctor
 }
 
 print_summary() {
+  local go_bin
+  go_bin="$(resolve_go_bin || true)"
+
   section "Installation Complete"
   key_value "Binary" "${YEAST_BIN_PATH}"
   key_value "Repo" "${YEAST_REPO_URL}"
   key_value "Ref" "${YEAST_REF}"
   key_value "Target user" "${TARGET_USER}"
   key_value "Package manager" "${PKG_MANAGER}"
+  key_value "Go" "$("${go_bin:-false}" version 2>/dev/null || printf 'unknown')"
   printf '\n'
   info "Next steps"
   key_value "1" "yeast pull --list"
   key_value "2" "mkdir my-project && cd my-project"
-  key_value "3" "yeast init --name web --image ubuntu-22.04 --memory 2048 --cpus 2"
-  key_value "4" "yeast pull ubuntu-22.04"
+  key_value "3" "yeast init"
+  key_value "4" "yeast pull ubuntu-24.04"
   key_value "5" "yeast up"
   if [[ "${KVM_GROUP_UPDATED:-0}" -eq 1 ]]; then
     printf '\n'
@@ -479,6 +630,7 @@ main() {
 
   prepare_workspace
   show_banner
+  detect_arch
   detect_target_user
   detect_package_manager
   require_sudo_session
@@ -487,6 +639,7 @@ main() {
   key_value "Target user" "${TARGET_USER}"
   key_value "Home" "${TARGET_HOME}"
   key_value "Package manager" "${PKG_MANAGER}"
+  key_value "Architecture" "${YEAST_ARCH}"
   key_value "Repo" "${YEAST_REPO_URL}"
   key_value "Ref" "${YEAST_REF}"
   key_value "Install path" "${YEAST_BIN_PATH}"
@@ -507,6 +660,7 @@ main() {
   run_required_step "Creating Yeast directories" ensure_user_paths
   run_required_step "Ensuring SSH key" ensure_ssh_key
   run_required_step "Ensuring kvm group membership" ensure_kvm_group_membership
+  run_optional_step "Checking KVM access" check_kvm_access
 
   section "Running Validation"
   run_optional_step "Running yeast doctor" run_post_install_checks

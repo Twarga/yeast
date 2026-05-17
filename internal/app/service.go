@@ -12,7 +12,7 @@ import (
 	"yeast/internal/runtime/qemu"
 )
 
-const Version = "0.0.0-dev"
+var Version = "0.0.0-dev"
 
 type Service struct {
 	version          string

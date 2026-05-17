@@ -8,10 +8,12 @@ func validConfig() *Config {
 		Instances: []Instance{
 			{
 				Name:     "web",
+				Hostname: "web",
 				Image:    "ubuntu-24.04",
 				Memory:   1024,
 				CPUs:     1,
 				DiskSize: "20G",
+				SSHPort:  2222,
 				User:     "yeast",
 				Sudo:     "none",
 				Env: map[string]string{
@@ -86,11 +88,27 @@ func TestValidateRejectsInvalidDiskSize(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsInvalidSSHPort(t *testing.T) {
+	cfg := validConfig()
+	cfg.Instances[0].SSHPort = 70000
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected invalid ssh port error")
+	}
+}
+
 func TestValidateRejectsInvalidUser(t *testing.T) {
 	cfg := validConfig()
 	cfg.Instances[0].User = "Admin"
 	if err := Validate(cfg); err == nil {
 		t.Fatal("expected invalid user error")
+	}
+}
+
+func TestValidateRejectsInvalidHostname(t *testing.T) {
+	cfg := validConfig()
+	cfg.Instances[0].Hostname = "../bad"
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected invalid hostname error")
 	}
 }
 

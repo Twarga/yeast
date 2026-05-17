@@ -2,7 +2,9 @@ package app
 
 import (
 	"context"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 	"yeast/internal/project"
@@ -106,6 +108,66 @@ func TestStatusReconcilesDeadProcessesAndSavesState(t *testing.T) {
 	if reloaded.Instances["web"].Status != "stopped" {
 		t.Fatalf("expected saved state to be reconciled, got %#v", reloaded.Instances["web"])
 	}
+}
+
+func TestStatusClassifiesUninitializedProject(t *testing.T) {
+	root := t.TempDir()
+	service := NewService()
+
+	_, err := service.Status(context.Background(), StatusOptions{ProjectRoot: root})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "project metadata not found") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertAppErrorCode(t, err, ErrorCodePrecondition)
+}
+
+func TestStatusClassifiesProjectRootResolutionFailure(t *testing.T) {
+	root := t.TempDir()
+	blocker := filepath.Join(root, "not-a-directory")
+	if err := os.WriteFile(blocker, []byte("x"), 0644); err != nil {
+		t.Fatalf("write blocker: %v", err)
+	}
+
+	service := NewService()
+	_, err := service.Status(context.Background(), StatusOptions{ProjectRoot: filepath.Join(blocker, "child")})
+	assertAppErrorCode(t, err, ErrorCodeInternal)
+}
+
+func TestStatusClassifiesStateProjectMismatch(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.runtime = &fakeStatusRuntime{}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+
+	otherState := state.New("other-project")
+	if err := state.Save(paths.StateFile, otherState); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	_, err = service.Status(context.Background(), StatusOptions{ProjectRoot: root})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "state project id mismatch") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertAppErrorCode(t, err, ErrorCodeInternal)
 }
 
 type fakeStatusRuntime struct {

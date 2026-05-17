@@ -1,5 +1,6 @@
 /yeast
 artifacts/
+dist/
 *.state
 *.state.lock
 vm_test*/

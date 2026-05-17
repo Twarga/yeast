@@ -80,13 +80,13 @@ YEAST_FEEDBACK_LOG.md
 Current phase:
 
 ```text
-Pre-implementation planning complete enough to begin Milestone 0.
+v0.2.0 project safety and error structure cleanup.
 ```
 
 Next task:
 
 ```text
-M0-T1: Create v2 working branch / cleanup strategy
+V0.2-T10: Classify yeast up runtime prepare/start errors.
 ```
 
 ## 5. Milestone Overview
@@ -103,7 +103,7 @@ M0-T1: Create v2 working branch / cleanup strategy
 | M7 | Core Commands v0.1 | init/doctor/pull/up/status/ssh/down/destroy | [ ] |
 | M8 | Human And JSON Output | Stable output for humans and tools | [ ] |
 | M9 | Tests And Examples | Prove v0.1 works | [ ] |
-| M10 | Docs And v0.1 Release Prep | Prepare first public release | [ ] |
+| M10 | Docs And v0.1 Release Prep | Prepare first public release | [x] |
 | C1 | Charm CLI Experience | Polished terminal UX without breaking JSON | [x] |
 | M11 | Provisioning | Packages/files/shell after v0.1 | [-] |
 | M12 | Snapshots And Reset | Lab reset capability | [-] |
@@ -1787,7 +1787,7 @@ Definition of done:
 
 ### M9-T3: Manual host-dependent v0.1 checklist
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1880,7 +1880,7 @@ Definition of done:
 
 ### M10-T3: Prepare changelog and release notes
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1890,10 +1890,12 @@ Dependencies:
 Definition of done:
 
 - v0.1.0 release notes ready
+- `CHANGELOG.md` contains a draft `0.1.0` section
+- `docs/release-notes-v0.1.0.md` created for GitHub release drafting
 
 ### M10-T3A: Harden one-script Linux installer
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1945,10 +1947,15 @@ Definition of done:
 - script has a shell syntax check
 - install docs match script behavior
 - release plan treats one-script install as part of v0.1.0
+- Go 1.25+ fallback behavior is implemented for old distro Go packages
+- installer now detects `amd64` and `arm64`
+- installer creates `~/.yeast/cache/images`
+- installer checks KVM access after group setup
+- installer next steps match real v0.1 commands
 
 ### M10-T4: Build release artifact
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1959,10 +1966,12 @@ Definition of done:
 
 - Linux amd64 binary built
 - checksum generated
+- release build script added at `scripts/build-release.sh`
+- version can be embedded with `-ldflags`
 
 ### M10-T5: Tag and publish v0.1.0
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -1973,6 +1982,24 @@ Definition of done:
 - Git tag exists
 - GitHub release published
 - soft announcement ready
+- published as a GitHub prerelease because the manual host-dependent checklist is still pending
+- `docs/soft-announcement-v0.1.0.md` added
+
+### M10-T6: Create GitHub Pages landing page
+
+Status: [x]
+
+Dependencies:
+
+- M10-T5
+
+Definition of done:
+
+- static landing page exists under `docs/`
+- site uses the approved Yeast banner
+- install, features, docs, roadmap, and release links are visible
+- GitHub Pages deployment workflow exists
+- local preview instructions are documented
 
 ---
 
@@ -2003,7 +2030,7 @@ Definition of done:
 
 ### C1-T3: Add Glamour terminal docs
 
-Status: [-]
+Status: [x]
 
 Dependencies:
 
@@ -2012,6 +2039,7 @@ Dependencies:
 Definition of done:
 
 - markdown docs can be rendered from Yeast in terminal
+- added `yeast docs` command with embedded topics and `--list`
 
 ### C1-T4: Add Huh interactive init
 
@@ -2036,6 +2064,623 @@ Dependencies:
 Definition of done:
 
 - `yeast up` and `yeast pull` can show live progress in human TTY mode
+
+---
+
+# V0.2.0: Disk Size Support
+
+Goal:
+
+Make `disk_size` a documented and verified desired-state setting for instance overlay disk creation.
+
+Scope:
+
+- config schema
+- validation
+- disk creation/runtime wiring
+- tests
+- docs
+
+Out of scope:
+
+- networking
+- provisioning
+
+## V0.2.0 Tasks
+
+### V0.2-T1: Verify disk_size config and runtime wiring
+
+Status: [x]
+
+Dependencies:
+
+- M10 complete
+- C1 complete/deferred decisions preserved
+
+Files:
+
+- `internal/app/up_test.go`
+- `docs/config-reference.md`
+- `README.md`
+- `TASKS.md`
+
+Definition of done:
+
+- config-level `disk_size` is verified to reach the runtime disk plan
+- normalized sizes are verified at the app/runtime boundary
+- docs explain supported size formats
+- docs explain existing disks are not resized by `up`
+- networking and provisioning remain untouched
+
+Completion notes:
+
+- Confirmed existing config schema, validation, defaults/normalization, runtime model, and QEMU disk creation already support `disk_size`.
+- Added an app-level `up` workflow test proving `disk_size: 25 gb` normalizes to `25G` and reaches both `PrepareDisk` and `Start` machine plans.
+- Documented supported `disk_size` formats and the existing-disk no-resize behavior.
+
+### V0.2-T2: Continue disk_size support with any remaining runtime/docs verification
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T1
+
+Definition of done:
+
+- decide whether any remaining disk_size work is needed before moving to the next v0.2.0 item
+
+Completion notes:
+
+- Added runtime regression coverage proving `PrepareDisk` keeps an existing overlay disk even when a requested `disk_size` is present.
+- Confirmed no additional disk_size implementation was needed after config/schema, validation, app wiring, QEMU command construction, existing-disk behavior, tests, and docs were covered.
+- Networking and provisioning remain untouched.
+
+### V0.2-T3: Add disk_size release notes
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T2
+
+Files:
+
+- `docs/release-notes-v0.2.0.md`
+- `TASKS.md`
+
+Definition of done:
+
+- v0.2.0 disk_size behavior is summarized for users
+- verification expectations are documented
+- limitations stay clear, including no existing-disk resize behavior
+
+Completion notes:
+
+- Added draft v0.2.0 release notes focused on `disk_size` support.
+- Documented supported size formats, automated verification, manual host-dependent verification, and out-of-scope features.
+- Networking and provisioning remain untouched.
+
+### V0.2-T4: Classify yeast up image errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T3
+
+Files:
+
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- unsupported configured images report `invalid_argument`
+- missing cached images report `not_found`
+- existing human-facing guidance is preserved
+- JSON output can use stable app error codes through existing renderers
+
+Completion notes:
+
+- Wrapped unsupported-image failures in `ErrorCodeInvalidArgument`.
+- Wrapped missing cached-image failures in `ErrorCodeNotFound` while preserving the existing `yeast pull` guidance.
+- Added app workflow tests for both error classifications.
+
+### V0.2-T5: Classify yeast ssh selection errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T4
+
+Files:
+
+- `internal/app/ssh.go`
+- `internal/app/ssh_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- missing SSH target reports `not_found`
+- stopped or unavailable SSH target reports `failed_precondition`
+- no running instances reports `failed_precondition`
+- ambiguous target selection reports `invalid_argument`
+- existing human-facing messages are preserved
+
+Completion notes:
+
+- Wrapped SSH target selection failures in stable app error codes.
+- Wrapped missing config lookup for selected state instances as `not_found`.
+- Added focused tests for missing, stopped, empty, and ambiguous SSH selection cases.
+
+### V0.2-T6: Classify yeast pull unsupported image errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T5
+
+Files:
+
+- `internal/app/pull.go`
+- `internal/app/pull_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- unsupported pull image reports `invalid_argument`
+- existing `ErrUnsupportedImage` compatibility is preserved
+- JSON output can use stable app error codes through existing renderers
+
+Completion notes:
+
+- Wrapped unsupported pull image failures in `ErrorCodeInvalidArgument`.
+- Preserved `errors.Is(err, ErrUnsupportedImage)` by keeping the sentinel as the wrapped cause.
+- Added test coverage for the app error code and sentinel behavior.
+
+### V0.2-T7: Classify repeated yeast init errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T6
+
+Files:
+
+- `internal/app/init.go`
+- `internal/app/init_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- repeated init reports `conflict`
+- existing `ErrProjectAlreadyInitialized` compatibility is preserved
+- JSON output can use stable app error codes through existing renderers
+
+Completion notes:
+
+- Wrapped repeated-init config and metadata conflicts in `ErrorCodeConflict`.
+- Preserved `errors.Is(err, ErrProjectAlreadyInitialized)` by keeping the sentinel as the wrapped cause.
+- Added test coverage for the app error code and sentinel behavior.
+
+### V0.2-T8: Classify yeast down runtime stop errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T7
+
+Files:
+
+- `internal/app/down.go`
+- `internal/app/down_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- runtime stop failures during `yeast down` report `internal`
+- existing runtime error message is preserved
+- JSON output can use stable app error codes through existing renderers
+
+Completion notes:
+
+- Wrapped runtime stop failures in `ErrorCodeInternal`.
+- Added fake-runtime coverage proving failed stops produce a stable app error code.
+
+### V0.2-T9: Classify yeast destroy runtime errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T8
+
+Files:
+
+- `internal/app/destroy.go`
+- `internal/app/destroy_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- runtime destroy failures during `yeast destroy` report `internal`
+- existing runtime error message is preserved
+- JSON output can use stable app error codes through existing renderers
+
+Completion notes:
+
+- Wrapped runtime destroy failures in `ErrorCodeInternal` for running and stopped tracked instances.
+- Added fake-runtime coverage proving failed destroys produce a stable app error code.
+
+### V0.2-T10: Classify yeast up runtime prepare/start errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T9
+
+Files:
+
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- runtime disk preparation failures during `yeast up` report `internal`
+- runtime start failures during `yeast up` report `internal`
+- existing runtime error messages are preserved
+- JSON output can use stable app error codes through existing renderers
+
+Completion notes:
+
+- Wrapped runtime `PrepareDisk` and `Start` failures in `ErrorCodeInternal`.
+- Added fake-runtime coverage proving failed prepare/start paths produce stable app error codes.
+
+### V0.2-T11: Classify yeast status project/state errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T10
+
+Files:
+
+- `internal/app/status.go`
+- `internal/app/status_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- non-initialized `yeast status` reports `failed_precondition`
+- corrupted or mismatched tracked state reports `internal`
+- existing human-facing messages are preserved
+- JSON output can use stable app error codes through existing renderers
+
+Completion notes:
+
+- Wrapped missing project metadata during `yeast status` as `ErrorCodePrecondition`.
+- Wrapped Yeast home resolution, path construction, state lock acquisition, and state load/save failures as `ErrorCodeInternal`.
+- Added focused tests for non-initialized projects and state project-id mismatch behavior.
+
+### V0.2-T12: Classify yeast up guest-readiness errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T11
+
+Files:
+
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- SSH address construction failures after runtime start report `internal`
+- SSH readiness failures after runtime start report `failed_precondition`
+- started instances are still stopped on these failure paths
+- existing human-facing readiness message is preserved
+
+Completion notes:
+
+- Wrapped post-start SSH address failures in `ErrorCodeInternal`.
+- Wrapped post-start SSH readiness failures in `ErrorCodePrecondition` while preserving the existing `wait for ssh readiness for <instance>` message prefix.
+- Added fake-runtime coverage proving both failure paths stop the started instance before returning.
+
+### V0.2-T13: Classify yeast up setup and state errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T12
+
+Files:
+
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- missing project metadata reports `failed_precondition`
+- missing config reports `failed_precondition`
+- invalid config reports `invalid_argument`
+- state/path/lock/save setup failures report `internal`
+- existing human-facing messages are preserved
+
+Completion notes:
+
+- Wrapped missing project metadata and missing config in `ErrorCodePrecondition`.
+- Wrapped invalid config load failures in `ErrorCodeInvalidArgument`.
+- Wrapped Yeast home resolution, path construction, runtime directory creation, state lock acquisition, state load, and state save failures in `ErrorCodeInternal`.
+- Added focused tests for uninitialized project, missing config, invalid config, and state project-id mismatch behavior.
+
+### V0.2-T14: Classify yeast up helper and cloud-init errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T13
+
+Files:
+
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- cached-running SSH address failures report `internal`
+- missing SSH public key reports `failed_precondition`
+- cloud-init render/seed helper failures report `internal`
+- invalid runtime-derived instance path input reports `invalid_argument`
+
+Completion notes:
+
+- Wrapped cached-running `sshAddress` failures in `ErrorCodeInternal`.
+- Wrapped missing SSH public key discovery as `ErrorCodePrecondition` using `cloudinit.ErrNoSSHPublicKey`.
+- Wrapped cache-path resolution, cloud-init user-data/meta-data rendering, and seed ISO creation failures in `ErrorCodeInternal`.
+- Wrapped invalid instance runtime-directory resolution in `ErrorCodeInvalidArgument`.
+- Added focused tests for cached-running SSH address, missing SSH key, user-data render, meta-data render, and seed ISO failures.
+
+### V0.2-T15: Classify yeast pull helper errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T14
+
+Files:
+
+- `internal/app/pull.go`
+- `internal/app/pull_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- Yeast home resolution failures report `internal`
+- cache path construction failures report `internal`
+- download failures report `internal`
+- existing unsupported-image `invalid_argument` behavior stays unchanged
+
+Completion notes:
+
+- Wrapped `resolveYeastHome`, cache path construction, and image download failures in `ErrorCodeInternal`.
+- Preserved the existing `unsupported image` path as `ErrorCodeInvalidArgument` with `ErrUnsupportedImage` compatibility.
+- Added focused tests for home resolution, cache path, and download failure classification.
+
+### V0.2-T16: Classify yeast init setup and write errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T15
+
+Files:
+
+- `internal/app/init.go`
+- `internal/app/init_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- project-root resolution and setup/write failures report `internal`
+- repeated init still reports `conflict`
+- existing human-facing setup/write messages are preserved
+
+Completion notes:
+
+- Wrapped config/metadata inspection failures, metadata creation failures, and starter-config write failures in `ErrorCodeInternal`.
+- Preserved the existing repeated-init `ErrorCodeConflict` behavior with `ErrProjectAlreadyInitialized`.
+- Added focused tests for config inspection failure and config write failure classification.
+
+### V0.2-T17: Classify yeast ssh setup and helper errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T16
+
+Files:
+
+- `internal/app/ssh.go`
+- `internal/app/ssh_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- missing project metadata and missing config report `failed_precondition`
+- invalid config reports `invalid_argument`
+- state/home/path/address/ssh-exec helper failures report `internal`
+- existing selection error codes stay unchanged
+
+Completion notes:
+
+- Wrapped metadata, Yeast home, path, state load/save, SSH address, and SSH execution failures in stable app error codes.
+- Wrapped missing config as `ErrorCodePrecondition` and invalid config as `ErrorCodeInvalidArgument`.
+- Preserved existing selection classification for missing/stopped/ambiguous targets.
+- Added focused tests for uninitialized project, missing config, SSH address failure, and SSH execution failure.
+
+### V0.2-T18: Classify yeast down setup and state errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T17
+
+Files:
+
+- `internal/app/down.go`
+- `internal/app/down_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- missing project metadata reports `failed_precondition`
+- home/path/lock/state load/save failures report `internal`
+- existing runtime stop `internal` behavior stays unchanged
+
+Completion notes:
+
+- Wrapped metadata, Yeast home, path, lock, state load, and final state save failures in stable app error codes.
+- Preserved the existing runtime stop classification as `ErrorCodeInternal`.
+- Added focused tests for uninitialized project and state project-id mismatch behavior.
+
+### V0.2-T19: Classify yeast destroy setup and state errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T18
+
+Files:
+
+- `internal/app/destroy.go`
+- `internal/app/destroy_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- missing project metadata reports `failed_precondition`
+- home/path/lock/state load/save failures report `internal`
+- existing runtime destroy `internal` behavior stays unchanged
+
+Completion notes:
+
+- Wrapped metadata, Yeast home, path, lock, state load, and final state save failures in stable app error codes.
+- Preserved the existing runtime destroy classification as `ErrorCodeInternal`.
+- Added focused tests for uninitialized project and state project-id mismatch behavior.
+
+### V0.2-T20: Finish app error-classification audit
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T19
+
+Files:
+
+- `internal/app/status.go`
+- `internal/app/status_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- remaining raw app-surface setup errors are either classified or explicitly accepted
+- the v0.2.0 error-classification pass has a clear stopping point
+
+Completion notes:
+
+- Wrapped the remaining raw `yeast status` project-root resolution failure in `ErrorCodeInternal`.
+- Added focused coverage for the `status` root-resolution failure path.
+- Audited remaining `internal/app` raw returns and confirmed the remaining pass-throughs are either intentional wrapped selection errors or internal helper-local errors outside the app-surface contract.
+
+### V0.2-T21: Add explicit hostname config support
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T20
+
+Files:
+
+- `internal/config/model.go`
+- `internal/config/validate.go`
+- `internal/config/defaults.go`
+- `internal/config/*_test.go`
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `internal/provision/cloudinit/*_test.go`
+- `docs/config-reference.md`
+- `README.md`
+- `TASKS.md`
+
+Definition of done:
+
+- `hostname` is a supported instance field
+- omitted `hostname` defaults to instance `name`
+- explicit `hostname` reaches cloud-init user-data and meta-data
+- docs describe the field and its default behavior
+
+Completion notes:
+
+- Added `hostname` to the instance config model.
+- Defaulted omitted hostnames to the instance name and validated explicit hostnames with the existing safe-name rules.
+- Wired `hostname` through `yeast up` into cloud-init user-data and meta-data generation.
+- Added focused config, app, and cloud-init tests plus README/config-reference updates.
+
+### V0.2-T22: Add explicit ssh_port config support
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T21
+
+Files:
+
+- `internal/config/model.go`
+- `internal/config/validate.go`
+- `internal/config/*_test.go`
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `docs/config-reference.md`
+- `README.md`
+- `TASKS.md`
+
+Definition of done:
+
+- `ssh_port` is a supported instance field
+- explicit `ssh_port` reaches the runtime management port plan
+- invalid or colliding requested ports fail clearly
+- docs describe default and override behavior
+
+Completion notes:
+
+- Added `ssh_port` to the instance config model and validation.
+- Wired requested SSH ports through `yeast up` port selection and runtime planning.
+- Rejected invalid requested ports and same-run collisions as `invalid_argument`.
+- Added focused config/app tests plus README/config-reference updates.
 
 ---
 

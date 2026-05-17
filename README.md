@@ -17,7 +17,7 @@ Fast project-based virtual machines with cloud-init, trusted base images, SSH ac
 ![Runtime](https://img.shields.io/badge/runtime-QEMU%2FKVM-6f42c1.svg)
 ![State](https://img.shields.io/badge/status-v0.1%20in%20progress-8a6d3b.svg)
 
-[Quick Start](#quick-start) · [Current Scope](#current-scope) · [Commands](#commands) · [Examples](#examples) · [Architecture](#architecture) · [Limits](#current-limits)
+[Website](https://twarga.github.io/yeast/) · [Quick Start](#quick-start) · [Current Scope](#current-scope) · [Commands](#commands) · [Examples](#examples) · [Architecture](#architecture) · [Limits](#current-limits)
 
 </div>
 
@@ -156,6 +156,7 @@ Default starter config:
 version: 1
 instances:
   - name: web
+    hostname: web-lab
     image: ubuntu-24.04
     memory: 1024
     cpus: 1
@@ -224,7 +225,7 @@ yeast destroy
 If the repository is reachable over HTTPS:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.1.0/install.sh | YEAST_REF=v0.1.0 bash
 ```
 
 If you already cloned the repo:
@@ -322,10 +323,12 @@ Current v0.1 example:
 version: 1
 instances:
   - name: web
+    hostname: web-lab
     image: ubuntu-24.04
     memory: 1024
     cpus: 1
     disk_size: 20G
+    ssh_port: 2205
     user: yeast
     sudo: none
     env:
@@ -339,6 +342,8 @@ instances:
 - `memory`
 - `cpus`
 - `disk_size`
+- `hostname`
+- `ssh_port`
 - `user`
 - `sudo`
 - `env`
@@ -347,7 +352,10 @@ instances:
 ### Important behavior
 
 - `user_data` replaces Yeast-generated cloud-init instead of merging into it
-- `disk_size` applies to the overlay disk Yeast creates for the instance
+- `disk_size` applies to the overlay disk Yeast creates for the instance; existing disks are kept as-is
+- `disk_size` accepts whole-number sizes with optional `K`, `M`, `G`, `T`, or `P` suffixes, such as `20G`, `25600M`, or raw bytes
+- `hostname` controls the guest hostname written through cloud-init; if omitted, Yeast uses the instance `name`
+- `ssh_port` overrides the host-side SSH forwarding port; if omitted, Yeast auto-allocates starting at `2222`
 - `env` is rendered into the guest bootstrap profile script
 - `networks` and `provision` exist in the config model for future milestones but are not active v0.1 features
 
@@ -464,6 +472,16 @@ That is not a weakness in the README. It is the correct scope boundary for v0.1.
 
 ## Project Docs
 
+Terminal docs are available directly from the CLI:
+
+```bash
+yeast docs
+yeast docs --list
+yeast docs quickstart
+yeast docs installation
+yeast docs tutorial-test
+```
+
 - [YEAST_VISION.md](YEAST_VISION.md)
 - [YEAST_TECHNICAL_DISCOVERY.md](YEAST_TECHNICAL_DISCOVERY.md)
 - [YEAST_TECHNICAL_ARCHITECTURE.md](YEAST_TECHNICAL_ARCHITECTURE.md)
@@ -473,11 +491,13 @@ That is not a weakness in the README. It is the correct scope boundary for v0.1.
 - [YEAST_PRODUCT_ROADMAP.md](YEAST_PRODUCT_ROADMAP.md)
 - [docs/quickstart.md](docs/quickstart.md)
 - [docs/installation.md](docs/installation.md)
+- [docs/tutorial-test.md](docs/tutorial-test.md)
 - [docs/config-reference.md](docs/config-reference.md)
 - [docs/troubleshooting.md](docs/troubleshooting.md)
 - [docs/known-limitations.md](docs/known-limitations.md)
 - [docs/architecture-overview.md](docs/architecture-overview.md)
 - [docs/charm-cli-plan.md](docs/charm-cli-plan.md)
+- [docs/release-notes-v0.1.0.md](docs/release-notes-v0.1.0.md)
 - [TASKS.md](TASKS.md)
 
 ---
