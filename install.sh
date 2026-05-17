@@ -11,6 +11,7 @@ YEAST_MIN_GO_VERSION="${YEAST_MIN_GO_VERSION:-1.25.0}"
 YEAST_GO_VERSION="${YEAST_GO_VERSION:-1.26.3}"
 YEAST_GO_INSTALL_ROOT="${YEAST_GO_INSTALL_ROOT:-/usr/local/lib/yeast/go}"
 YEAST_GO_TARBALL_SHA256="${YEAST_GO_TARBALL_SHA256:-}"
+GO_BIN=""
 
 if [[ -t 1 && -z "${NO_COLOR:-}" && "${TERM:-}" != "dumb" ]]; then
   C_RESET=$'\033[0m'
@@ -437,6 +438,28 @@ go_version_value() {
   printf '%s' "${output%% *}"
 }
 
+official_go_bin_path() {
+  printf '%s/go%s/bin/go' "${YEAST_GO_INSTALL_ROOT}" "${YEAST_GO_VERSION}"
+}
+
+resolve_go_bin() {
+  local candidate
+
+  candidate="$(command -v go || true)"
+  if [[ -n "${candidate}" ]]; then
+    printf '%s' "${candidate}"
+    return 0
+  fi
+
+  candidate="$(official_go_bin_path)"
+  if [[ -x "${candidate}" ]]; then
+    printf '%s' "${candidate}"
+    return 0
+  fi
+
+  return 1
+}
+
 download_official_go() {
   local archive
   local url
@@ -463,7 +486,7 @@ download_official_go() {
 }
 
 ensure_go_toolchain() {
-  GO_BIN="$(command -v go || true)"
+  GO_BIN="$(resolve_go_bin || true)"
   if [[ -n "${GO_BIN}" ]]; then
     local current
     current="$(go_version_value "${GO_BIN}")"
@@ -507,9 +530,13 @@ clone_source() {
 }
 
 build_source() {
+  local go_bin
+  ensure_go_toolchain
+  go_bin="$(resolve_go_bin || true)"
+  [[ -n "${go_bin}" ]] || die "failed to resolve Go toolchain after installation"
   (
     cd "${SRC_DIR}"
-    "${GO_BIN}" build -o "${WORKDIR}/yeast" ./cmd/yeast
+    "${go_bin}" build -o "${WORKDIR}/yeast" ./cmd/yeast
   )
 }
 
@@ -575,13 +602,16 @@ run_post_install_checks() {
 }
 
 print_summary() {
+  local go_bin
+  go_bin="$(resolve_go_bin || true)"
+
   section "Installation Complete"
   key_value "Binary" "${YEAST_BIN_PATH}"
   key_value "Repo" "${YEAST_REPO_URL}"
   key_value "Ref" "${YEAST_REF}"
   key_value "Target user" "${TARGET_USER}"
   key_value "Package manager" "${PKG_MANAGER}"
-  key_value "Go" "$("${GO_BIN}" version 2>/dev/null || printf 'unknown')"
+  key_value "Go" "$("${go_bin:-false}" version 2>/dev/null || printf 'unknown')"
   printf '\n'
   info "Next steps"
   key_value "1" "yeast pull --list"
