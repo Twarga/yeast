@@ -117,14 +117,15 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 
 		image, ok := images.Lookup(instance.Image)
 		if !ok {
-			return UpResult{}, fmt.Errorf("unsupported image %q", instance.Image)
+			return UpResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("unsupported image %q", instance.Image), nil)
 		}
 		cachePaths, err := images.ResolveCachePaths(paths.ImageCache, image.Name)
 		if err != nil {
 			return UpResult{}, err
 		}
 		if _, err := os.Stat(cachePaths.ImageFile); err != nil {
-			return UpResult{}, fmt.Errorf("image %s not found in cache at %s: run `yeast pull %s`", image.Name, cachePaths.ImageFile, image.Name)
+			message := fmt.Sprintf("image %s not found in cache at %s: run `yeast pull %s`", image.Name, cachePaths.ImageFile, image.Name)
+			return UpResult{}, WrapError(ErrorCodeNotFound, message, err)
 		}
 
 		runtimeDir, err := paths.InstanceDir(instance.Name)

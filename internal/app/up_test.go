@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -136,6 +137,45 @@ func TestUpFailsClearlyWhenCachedImageMissing(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "run `yeast pull ubuntu-24.04`") {
 		t.Fatalf("expected pull guidance, got %q", err)
+	}
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	if appErr.Code != ErrorCodeNotFound {
+		t.Fatalf("expected not_found error code, got %q", appErr.Code)
+	}
+}
+
+func TestUpReportsUnsupportedImageAsInvalidArgument(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	configContent := `version: 1
+instances:
+  - name: web
+    image: unknown-image
+`
+	if err := os.WriteFile(filepath.Join(root, ConfigFileName), []byte(configContent), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	if appErr.Code != ErrorCodeInvalidArgument {
+		t.Fatalf("expected invalid_argument error code, got %q", appErr.Code)
 	}
 }
 

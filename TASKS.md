@@ -80,13 +80,13 @@ YEAST_FEEDBACK_LOG.md
 Current phase:
 
 ```text
-v0.2.0 disk_size support documented and verified.
+v0.2.0 project safety and error structure cleanup.
 ```
 
 Next task:
 
 ```text
-No open v0.2.0 disk_size task. Pick the next planned v0.2.0 scope before continuing.
+V0.2-T4: Classify yeast up image errors.
 ```
 
 ## 5. Milestone Overview
@@ -2160,6 +2160,33 @@ Completion notes:
 - Added draft v0.2.0 release notes focused on `disk_size` support.
 - Documented supported size formats, automated verification, manual host-dependent verification, and out-of-scope features.
 - Networking and provisioning remain untouched.
+
+### V0.2-T4: Classify yeast up image errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T3
+
+Files:
+
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- unsupported configured images report `invalid_argument`
+- missing cached images report `not_found`
+- existing human-facing guidance is preserved
+- JSON output can use stable app error codes through existing renderers
+
+Completion notes:
+
+- Wrapped unsupported-image failures in `ErrorCodeInvalidArgument`.
+- Wrapped missing cached-image failures in `ErrorCodeNotFound` while preserving the existing `yeast pull` guidance.
+- Added app workflow tests for both error classifications.
 
 ---
 
