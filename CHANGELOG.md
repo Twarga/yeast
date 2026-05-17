@@ -7,10 +7,81 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-17
+
+### Summary
+
+Yeast v0.2.0 strengthens the local VM engine after the initial lifecycle release. It adds explicit instance controls for `disk_size`, `hostname`, and `ssh_port`, tightens app-level JSON error contracts across core commands, and ships a broader smoke-test workflow that covers both happy-path and negative-path validation.
+
+This release still does not add provisioning, snapshots, private networking, guest control, LabsBackery integration, MCP, or cloud workers. It focuses on making the base local VM workflow more controlled and more dependable.
+
 ### Added
 
-- Installer hardening is planned before the v0.1.0 release artifact is built.
-- Final Linux/KVM host checklist is still pending before tagging.
+- Explicit `disk_size` support in `yeast.yaml`.
+- Explicit `hostname` support in `yeast.yaml`, defaulting to the instance name when omitted.
+- Explicit `ssh_port` support in `yeast.yaml`.
+- Validation for invalid `disk_size`, `hostname`, and `ssh_port` values before runtime start.
+- Requested `ssh_port` collision detection across instances.
+- Release notes for the v0.2.0 feature set.
+- Expanded manual smoke script with:
+  - full positive-path lifecycle validation
+  - negative-path JSON error-contract validation
+
+### Changed
+
+- `yeast up` now passes configured hostnames through cloud-init user-data and meta-data.
+- `yeast up` now preserves explicit `ssh_port` choices through start and restart flows.
+- Overlay disk creation now consistently uses normalized `disk_size` values.
+- The unsupported-image JSON contract for `yeast pull` now preserves `invalid_argument` instead of collapsing to `unknown`.
+
+### Fixed
+
+- App-level error normalization across:
+  - `yeast up`
+  - `yeast status`
+  - `yeast ssh`
+  - `yeast pull`
+  - `yeast init`
+  - `yeast down`
+  - `yeast destroy`
+- Project-state and config-path failures now return stable JSON error codes instead of raw uncategorized errors in the main command surface.
+
+### Verification
+
+Automated checks passing:
+
+- `go test ./... -count=1`
+- `go build ./...`
+- `git diff --check`
+- `bash -n scripts/manual-smoke.sh`
+
+Real host smoke validation passing:
+
+- `TEST_MODE=full ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64`
+
+Covered by the full smoke suite:
+
+- `doctor`
+- `init`
+- `pull`
+- `up`
+- `status`
+- `status --json`
+- direct SSH validation
+- `down`
+- restart
+- `destroy`
+- invalid config and bad-state JSON contract checks
+
+### Known Limitations
+
+- Linux host only.
+- QEMU/KVM only.
+- No provisioning workflows yet.
+- No snapshots or restore yet.
+- No private VM-to-VM networking yet.
+- No guest `exec`, `copy`, `logs`, or `inspect` yet.
+- No templates, daemon API, LabsBackery integration contract, MCP contract, or cloud worker mode yet.
 
 ## [0.1.0] - Draft
 
