@@ -2483,6 +2483,32 @@ Completion notes:
 - Preserved the existing `unsupported image` path as `ErrorCodeInvalidArgument` with `ErrUnsupportedImage` compatibility.
 - Added focused tests for home resolution, cache path, and download failure classification.
 
+### V0.2-T16: Classify yeast init setup and write errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T15
+
+Files:
+
+- `internal/app/init.go`
+- `internal/app/init_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- project-root resolution and setup/write failures report `internal`
+- repeated init still reports `conflict`
+- existing human-facing setup/write messages are preserved
+
+Completion notes:
+
+- Wrapped config/metadata inspection failures, metadata creation failures, and starter-config write failures in `ErrorCodeInternal`.
+- Preserved the existing repeated-init `ErrorCodeConflict` behavior with `ErrProjectAlreadyInitialized`.
+- Added focused tests for config inspection failure and config write failure classification.
+
 ---
 
 # Future Milestones
