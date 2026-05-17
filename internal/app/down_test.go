@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -99,8 +100,48 @@ func TestDownHandlesAlreadyStoppedInstances(t *testing.T) {
 	}
 }
 
+func TestDownClassifiesRuntimeStopFailure(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.runtime = &fakeDownRuntime{stopErr: errors.New("stop failed")}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+
+	current := state.New(metadata.ID)
+	current.Instances["web"] = state.InstanceState{Status: "running", PID: 1001, SSHPort: 2222, RuntimeDir: "/tmp/web"}
+	if err := state.Save(paths.StateFile, current); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	_, err = service.Down(context.Background(), DownOptions{ProjectRoot: root})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	if appErr.Code != ErrorCodeInternal {
+		t.Fatalf("expected internal error code, got %q", appErr.Code)
+	}
+}
+
 type fakeDownRuntime struct {
 	stoppedPIDs []int
+	stopErr     error
 }
 
 func (f *fakeDownRuntime) PrepareDisk(ctx context.Context, plan rtm.MachinePlan) (rtm.DiskPlan, error) {
@@ -113,7 +154,7 @@ func (f *fakeDownRuntime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.
 
 func (f *fakeDownRuntime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeout time.Duration) error {
 	f.stoppedPIDs = append(f.stoppedPIDs, instance.PID)
-	return nil
+	return f.stopErr
 }
 
 func (f *fakeDownRuntime) Inspect(ctx context.Context, instance rtm.RuntimeInstance) (rtm.ProcessInfo, error) {

@@ -86,7 +86,7 @@ v0.2.0 project safety and error structure cleanup.
 Next task:
 
 ```text
-V0.2-T7: Classify repeated yeast init errors.
+V0.2-T8: Classify yeast down runtime stop errors.
 ```
 
 ## 5. Milestone Overview
@@ -2267,6 +2267,31 @@ Completion notes:
 - Wrapped repeated-init config and metadata conflicts in `ErrorCodeConflict`.
 - Preserved `errors.Is(err, ErrProjectAlreadyInitialized)` by keeping the sentinel as the wrapped cause.
 - Added test coverage for the app error code and sentinel behavior.
+
+### V0.2-T8: Classify yeast down runtime stop errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T7
+
+Files:
+
+- `internal/app/down.go`
+- `internal/app/down_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- runtime stop failures during `yeast down` report `internal`
+- existing runtime error message is preserved
+- JSON output can use stable app error codes through existing renderers
+
+Completion notes:
+
+- Wrapped runtime stop failures in `ErrorCodeInternal`.
+- Added fake-runtime coverage proving failed stops produce a stable app error code.
 
 ---
 

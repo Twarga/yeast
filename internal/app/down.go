@@ -97,7 +97,7 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 			PID:        instance.PID,
 		}, timeout)
 		if err != nil {
-			return DownResult{}, err
+			return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 
 		instance.Status = "stopped"
