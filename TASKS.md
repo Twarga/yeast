@@ -86,7 +86,7 @@ v0.2.0 project safety and error structure cleanup.
 Next task:
 
 ```text
-V0.2-T4: Classify yeast up image errors.
+V0.2-T5: Classify yeast ssh selection errors.
 ```
 
 ## 5. Milestone Overview
@@ -2187,6 +2187,34 @@ Completion notes:
 - Wrapped unsupported-image failures in `ErrorCodeInvalidArgument`.
 - Wrapped missing cached-image failures in `ErrorCodeNotFound` while preserving the existing `yeast pull` guidance.
 - Added app workflow tests for both error classifications.
+
+### V0.2-T5: Classify yeast ssh selection errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T4
+
+Files:
+
+- `internal/app/ssh.go`
+- `internal/app/ssh_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- missing SSH target reports `not_found`
+- stopped or unavailable SSH target reports `failed_precondition`
+- no running instances reports `failed_precondition`
+- ambiguous target selection reports `invalid_argument`
+- existing human-facing messages are preserved
+
+Completion notes:
+
+- Wrapped SSH target selection failures in stable app error codes.
+- Wrapped missing config lookup for selected state instances as `not_found`.
+- Added focused tests for missing, stopped, empty, and ambiguous SSH selection cases.
 
 ---
 

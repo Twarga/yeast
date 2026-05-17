@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -103,5 +104,36 @@ func TestSSHErrorsOnMultipleRunningInstancesWithoutTarget(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "multiple running instances") {
 		t.Fatalf("unexpected error: %v", err)
+	}
+	assertAppErrorCode(t, err, ErrorCodeInvalidArgument)
+}
+
+func TestSelectSSHInstanceClassifiesSelectionErrors(t *testing.T) {
+	t.Parallel()
+
+	current := state.New("project-test")
+	current.Instances["web"] = state.InstanceState{Status: "stopped", SSHPort: 2222}
+
+	_, _, err := selectSSHInstance(current, "missing")
+	assertAppErrorCode(t, err, ErrorCodeNotFound)
+
+	_, _, err = selectSSHInstance(current, "web")
+	assertAppErrorCode(t, err, ErrorCodePrecondition)
+
+	_, _, err = selectSSHInstance(current, "")
+	assertAppErrorCode(t, err, ErrorCodePrecondition)
+}
+
+func assertAppErrorCode(t *testing.T, err error, want ErrorCode) {
+	t.Helper()
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	if appErr.Code != want {
+		t.Fatalf("expected error code %q, got %q", want, appErr.Code)
 	}
 }

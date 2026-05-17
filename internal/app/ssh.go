@@ -82,7 +82,7 @@ func (s *Service) SSH(ctx context.Context, options SSHOptions) (SSHResult, error
 
 	instanceCfg, ok := lookupConfigInstance(cfg, selectedName)
 	if !ok {
-		return SSHResult{}, fmt.Errorf("instance %q not found in config", selectedName)
+		return SSHResult{}, WrapError(ErrorCodeNotFound, fmt.Sprintf("instance %q not found in config", selectedName), nil)
 	}
 	address, err := s.sshAddress(defaultManagementHost, selectedState.SSHPort)
 	if err != nil {
@@ -108,10 +108,10 @@ func selectSSHInstance(currentState state.State, target string) (string, state.I
 	if target != "" {
 		instance, ok := currentState.Instances[target]
 		if !ok {
-			return "", state.InstanceState{}, fmt.Errorf("instance %q not found", target)
+			return "", state.InstanceState{}, WrapError(ErrorCodeNotFound, fmt.Sprintf("instance %q not found", target), nil)
 		}
 		if instance.Status != "running" || instance.SSHPort <= 0 {
-			return "", state.InstanceState{}, fmt.Errorf("instance %q is not running", target)
+			return "", state.InstanceState{}, WrapError(ErrorCodePrecondition, fmt.Sprintf("instance %q is not running", target), nil)
 		}
 		return target, instance, nil
 	}
@@ -131,11 +131,11 @@ func selectSSHInstance(currentState state.State, target string) (string, state.I
 
 	switch len(matches) {
 	case 0:
-		return "", state.InstanceState{}, fmt.Errorf("no running instances")
+		return "", state.InstanceState{}, WrapError(ErrorCodePrecondition, "no running instances", nil)
 	case 1:
 		return matches[0].name, matches[0].instance, nil
 	default:
-		return "", state.InstanceState{}, fmt.Errorf("multiple running instances; specify a target")
+		return "", state.InstanceState{}, WrapError(ErrorCodeInvalidArgument, "multiple running instances; specify a target", nil)
 	}
 }
 
