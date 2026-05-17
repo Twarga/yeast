@@ -2456,6 +2456,33 @@ Completion notes:
 - Wrapped invalid instance runtime-directory resolution in `ErrorCodeInvalidArgument`.
 - Added focused tests for cached-running SSH address, missing SSH key, user-data render, meta-data render, and seed ISO failures.
 
+### V0.2-T15: Classify yeast pull helper errors
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T14
+
+Files:
+
+- `internal/app/pull.go`
+- `internal/app/pull_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- Yeast home resolution failures report `internal`
+- cache path construction failures report `internal`
+- download failures report `internal`
+- existing unsupported-image `invalid_argument` behavior stays unchanged
+
+Completion notes:
+
+- Wrapped `resolveYeastHome`, cache path construction, and image download failures in `ErrorCodeInternal`.
+- Preserved the existing `unsupported image` path as `ErrorCodeInvalidArgument` with `ErrUnsupportedImage` compatibility.
+- Added focused tests for home resolution, cache path, and download failure classification.
+
 ---
 
 # Future Milestones

@@ -38,15 +38,15 @@ func (s *Service) Pull(options PullOptions) (PullResult, error) {
 
 	cacheRoot, err := s.resolveYeastHome()
 	if err != nil {
-		return PullResult{}, err
+		return PullResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	cachePaths, err := images.ResolveCachePaths(cacheRoot+"/cache/images", image.Name)
 	if err != nil {
-		return PullResult{}, err
+		return PullResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	if err := s.downloadImage(image, cachePaths.ImageFile, s.downloadOptions()); err != nil {
-		return PullResult{}, err
+		return PullResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	return PullResult{
