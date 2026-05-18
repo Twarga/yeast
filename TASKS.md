@@ -3116,20 +3116,252 @@ Completion notes:
 
 ## M12: Snapshots And Reset
 
-Status: [-]
+Status: [>]
 
 Do not start until:
 
 - M11 complete
-- snapshot experiment complete
 
-Core tasks later:
+Goal:
 
-- choose snapshot model
-- snapshot command
-- restore command
-- list/delete snapshots
-- reset demo
+Make single-VM lab reset real and safe before multi-VM reset.
+
+Non-goals for `v0.4.0`:
+
+- live snapshots of running VMs
+- multi-VM atomic restore
+- browser/UI reset flows
+- libvirt or alternate runtime support
+
+Snapshot safety rules:
+
+- early snapshot and restore require stopped VMs
+- restore must never silently touch a running VM
+- snapshot metadata must be explicit and inspectable
+- snapshot behavior must prefer disk safety over convenience
+
+Execution order:
+
+- contract and metadata first
+- runtime file operations second
+- app workflows third
+- CLI/docs/smoke last
+
+### V0.4-T1: Lock snapshot contract and metadata model
+
+Status: [ ]
+
+Dependencies:
+
+- M11 complete
+
+Files:
+
+- `YEAST_TECHNICAL_ARCHITECTURE.md`
+- `YEAST_V2_IMPLEMENTATION_PLAN.md`
+- `docs/known-limitations.md`
+- `TASKS.md`
+
+Definition of done:
+
+- stopped-VM requirement is documented as the `v0.4` rule
+- snapshot metadata fields are fixed
+- single-instance and project-wide command scope is defined
+- delete behavior and restore preconditions are explicit
+
+### V0.4-T2: Add snapshot metadata model to state
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T1
+
+Files:
+
+- `internal/state/*.go`
+- `internal/state/*_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- state can store snapshot metadata per instance
+- metadata includes at least name, created time, description, and disk path/reference
+- state round-trip tests cover the new snapshot model
+
+### V0.4-T3: Add runtime snapshot file helpers
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T2
+
+Files:
+
+- `internal/runtime/*.go`
+- `internal/runtime/qemu/*.go`
+- related tests
+- `TASKS.md`
+
+Definition of done:
+
+- runtime can create a snapshot copy for a stopped instance disk
+- runtime can restore a stopped instance disk from a snapshot copy
+- runtime can delete snapshot files
+- tests cover missing-file and overwrite safety paths
+
+### V0.4-T4: Add snapshot listing helpers
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T2
+- V0.4-T3
+
+Files:
+
+- `internal/state/*.go`
+- `internal/app/*.go`
+- related tests
+- `TASKS.md`
+
+Definition of done:
+
+- app layer can list instance snapshots from state
+- snapshots are sorted predictably
+- missing snapshot state is handled cleanly
+
+### V0.4-T5: Add `app.Service.Snapshot`
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T3
+- V0.4-T4
+
+Files:
+
+- `internal/app/snapshot.go`
+- `internal/app/snapshot_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- snapshots can be created for a stopped target instance
+- snapshot metadata is persisted
+- duplicate snapshot names fail cleanly
+- tests use fake runtime helpers rather than real QEMU
+
+### V0.4-T6: Add `app.Service.Restore`
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T5
+
+Files:
+
+- `internal/app/restore.go`
+- `internal/app/restore_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- restore requires a stopped target instance
+- restore replaces the tracked disk with the snapshot copy
+- missing snapshot names fail cleanly
+- state stays consistent after restore
+
+### V0.4-T7: Add snapshot deletion and list commands in app layer
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T5
+
+Files:
+
+- `internal/app/snapshots.go`
+- related tests
+- `TASKS.md`
+
+Definition of done:
+
+- list snapshots returns metadata for one target instance
+- delete snapshot removes file plus metadata
+- deleting a missing snapshot returns `not_found`
+
+### V0.4-T8: Add CLI commands for snapshot workflows
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T6
+- V0.4-T7
+
+Files:
+
+- `cmd/yeast/snapshot.go`
+- `cmd/yeast/restore.go`
+- `cmd/yeast/snapshots.go`
+- `cmd/yeast/delete-snapshot.go`
+- renderer tests
+- `TASKS.md`
+
+Definition of done:
+
+- commands exist for snapshot, restore, list, and delete
+- human output is readable
+- JSON output uses existing success/error envelopes
+
+### V0.4-T9: Add single-VM reset demo docs
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T8
+
+Files:
+
+- `examples/*`
+- `docs/quickstart.md`
+- `docs/known-limitations.md`
+- `README.md`
+- `TASKS.md`
+
+Definition of done:
+
+- one example shows provision -> snapshot -> modify -> restore
+- docs explain stopped-VM restore expectations clearly
+
+### V0.4-T10: Add snapshot smoke coverage and release notes
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T9
+
+Files:
+
+- `scripts/manual-smoke.sh`
+- `docs/tutorial-test.md`
+- `docs/release-notes-v0.4.0.md`
+- `CHANGELOG.md`
+- `TASKS.md`
+
+Definition of done:
+
+- smoke script validates snapshot create/list/restore/delete on one real VM
+- release notes describe snapshot limits honestly
+- docs stay explicit that multi-VM reset is still later work
 
 ## M13: Private Networking
 
