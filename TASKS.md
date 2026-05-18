@@ -86,7 +86,7 @@ v0.4.0 snapshots and reset.
 Next task:
 
 ```text
-V0.4-T2: Add snapshot metadata model to state.
+V0.4-T3: Add runtime snapshot file helpers.
 ```
 
 ## 5. Milestone Overview
@@ -3188,7 +3188,7 @@ Completion notes:
 
 ### V0.4-T2: Add snapshot metadata model to state
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3205,6 +3205,20 @@ Definition of done:
 - state can store snapshot metadata per instance
 - metadata includes at least name, created time, description, and disk path/reference
 - state round-trip tests cover the new snapshot model
+
+Completion notes:
+
+- Added `SnapshotState` to `internal/state/model.go`.
+- Added per-instance `Snapshots map[string]SnapshotState` to tracked instance state.
+- Fixed first metadata shape to:
+  - `name`
+  - `created_at`
+  - `description`
+  - `disk_path`
+  - `source_disk_size`
+- Extended JSON round-trip coverage in `internal/state/model_test.go`.
+- Extended save/load round-trip coverage in `internal/state/store_test.go`.
+- No runtime or CLI behavior changed in this task.
 
 ### V0.4-T3: Add runtime snapshot file helpers
 

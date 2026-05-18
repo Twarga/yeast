@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestLoadMissingReturnsEmptyState(t *testing.T) {
@@ -29,7 +30,17 @@ func TestLoadMissingReturnsEmptyState(t *testing.T) {
 func TestLoadValidState(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "state.json")
 	original := New("proj_0123456789abcdef01234567")
-	original.Instances["web"] = InstanceState{Status: "running", PID: 42}
+	original.Instances["web"] = InstanceState{
+		Status: "running",
+		PID:    42,
+		Snapshots: map[string]SnapshotState{
+			"clean": {
+				Name:      "clean",
+				CreatedAt: time.Date(2026, 5, 18, 14, 30, 0, 0, time.UTC),
+				DiskPath:  "/tmp/web/snapshots/clean.qcow2",
+			},
+		},
+	}
 
 	if err := Save(path, original); err != nil {
 		t.Fatalf("Save returned error: %v", err)
@@ -44,6 +55,9 @@ func TestLoadValidState(t *testing.T) {
 	}
 	if loaded.Instances["web"].PID != 42 {
 		t.Fatalf("expected pid 42, got %d", loaded.Instances["web"].PID)
+	}
+	if loaded.Instances["web"].Snapshots["clean"].DiskPath != "/tmp/web/snapshots/clean.qcow2" {
+		t.Fatalf("expected snapshot disk path to round-trip, got %#v", loaded.Instances["web"].Snapshots["clean"])
 	}
 }
 
@@ -82,11 +96,20 @@ func TestSaveReloadRoundTrip(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "nested", "state.json")
 	original := New("proj_0123456789abcdef01234567")
 	original.Instances["web"] = InstanceState{
-		Status:             "running",
-		PID:                1001,
-		ManagementIP:       "127.0.0.1",
-		SSHPort:            2222,
-		RuntimeDir:         "/tmp/web",
+		Status:       "running",
+		PID:          1001,
+		ManagementIP: "127.0.0.1",
+		SSHPort:      2222,
+		RuntimeDir:   "/tmp/web",
+		Snapshots: map[string]SnapshotState{
+			"baseline": {
+				Name:           "baseline",
+				CreatedAt:      time.Date(2026, 5, 18, 15, 0, 0, 0, time.UTC),
+				Description:    "Initial ready state",
+				DiskPath:       "/tmp/web/snapshots/baseline.qcow2",
+				SourceDiskSize: "20G",
+			},
+		},
 		ProvisionLogPath:   "/tmp/web/provision.log",
 		ProvisioningStatus: ProvisioningStatusRunning,
 		LastError:          "none",
@@ -108,5 +131,8 @@ func TestSaveReloadRoundTrip(t *testing.T) {
 	}
 	if loaded.Instances["web"].ProvisioningStatus != ProvisioningStatusRunning {
 		t.Fatalf("expected provisioning status running, got %q", loaded.Instances["web"].ProvisioningStatus)
+	}
+	if loaded.Instances["web"].Snapshots["baseline"].Description != "Initial ready state" {
+		t.Fatalf("expected snapshot description to round-trip, got %#v", loaded.Instances["web"].Snapshots["baseline"])
 	}
 }

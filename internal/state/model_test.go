@@ -3,16 +3,26 @@ package state
 import (
 	"encoding/json"
 	"testing"
+	"time"
 )
 
 func TestStateJSONRoundTrip(t *testing.T) {
 	original := New("proj_0123456789abcdef01234567")
 	original.Instances["web"] = InstanceState{
-		Status:             "running",
-		PID:                1234,
-		ManagementIP:       "127.0.0.1",
-		SSHPort:            2222,
-		RuntimeDir:         "/home/twarga/.yeast/projects/proj_0123456789abcdef01234567/instances/web",
+		Status:       "running",
+		PID:          1234,
+		ManagementIP: "127.0.0.1",
+		SSHPort:      2222,
+		RuntimeDir:   "/home/twarga/.yeast/projects/proj_0123456789abcdef01234567/instances/web",
+		Snapshots: map[string]SnapshotState{
+			"clean": {
+				Name:           "clean",
+				CreatedAt:      time.Date(2026, 5, 18, 14, 0, 0, 0, time.UTC),
+				Description:    "Clean post-provision baseline",
+				DiskPath:       "/home/twarga/.yeast/projects/proj_0123456789abcdef01234567/instances/web/snapshots/clean.qcow2",
+				SourceDiskSize: "20G",
+			},
+		},
 		ProvisionLogPath:   "/home/twarga/.yeast/projects/proj_0123456789abcdef01234567/instances/web/provision.log",
 		ProvisioningStatus: ProvisioningStatusReady,
 		LastError:          "",
@@ -57,6 +67,22 @@ func TestStateJSONRoundTrip(t *testing.T) {
 	if instance.RuntimeDir == "" {
 		t.Fatal("expected runtime dir to survive round trip")
 	}
+	snapshot, ok := instance.Snapshots["clean"]
+	if !ok {
+		t.Fatal("expected snapshot metadata to survive round trip")
+	}
+	if snapshot.Name != "clean" {
+		t.Fatalf("expected snapshot name clean, got %q", snapshot.Name)
+	}
+	if snapshot.Description != "Clean post-provision baseline" {
+		t.Fatalf("unexpected snapshot description %q", snapshot.Description)
+	}
+	if snapshot.DiskPath == "" {
+		t.Fatal("expected snapshot disk path to survive round trip")
+	}
+	if snapshot.SourceDiskSize != "20G" {
+		t.Fatalf("expected snapshot source disk size 20G, got %q", snapshot.SourceDiskSize)
+	}
 	if instance.ProvisionLogPath == "" {
 		t.Fatal("expected provision log path to survive round trip")
 	}
@@ -94,5 +120,25 @@ func TestProvisioningStatusConstants(t *testing.T) {
 	}
 	if ProvisioningStatusFailed != "failed" {
 		t.Fatalf("unexpected failed value %q", ProvisioningStatusFailed)
+	}
+}
+
+func TestSnapshotStateFields(t *testing.T) {
+	snapshot := SnapshotState{
+		Name:           "baseline",
+		CreatedAt:      time.Date(2026, 5, 18, 15, 0, 0, 0, time.UTC),
+		Description:    "Provisioned baseline",
+		DiskPath:       "/tmp/baseline.qcow2",
+		SourceDiskSize: "20G",
+	}
+
+	if snapshot.Name != "baseline" {
+		t.Fatalf("unexpected snapshot name %q", snapshot.Name)
+	}
+	if snapshot.DiskPath != "/tmp/baseline.qcow2" {
+		t.Fatalf("unexpected disk path %q", snapshot.DiskPath)
+	}
+	if snapshot.SourceDiskSize != "20G" {
+		t.Fatalf("unexpected source disk size %q", snapshot.SourceDiskSize)
 	}
 }
