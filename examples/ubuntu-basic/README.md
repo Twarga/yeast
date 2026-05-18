@@ -1,16 +1,16 @@
 # ubuntu-basic
 
-Minimal single-VM example for Yeast v0.1.
+Minimal single-VM example for Yeast `v0.3`.
 
 What this example does:
 
 - starts one Ubuntu 24.04 VM
 - uses the default Yeast SSH access flow
-- keeps the scope to the current v0.1 feature set
+- keeps the scope to the lifecycle-only feature set
 
 What this example does not do yet:
 
-- provisioning
+- post-boot provisioning
 - private networking
 - snapshots
 - multi-VM labs
@@ -30,7 +30,7 @@ yeast init
 cp /path/to/yeast/examples/ubuntu-basic/yeast.yaml ./yeast.yaml
 ```
 
-Then run the normal v0.1 flow:
+Then run the basic lifecycle flow:
 
 ```bash
 yeast doctor

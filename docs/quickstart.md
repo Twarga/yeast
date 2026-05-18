@@ -1,8 +1,8 @@
 # Yeast Quickstart
 
-This guide gets one Ubuntu VM running with Yeast v0.1.
+This guide gets one Ubuntu VM running with Yeast `v0.3` and then shows the first provisioning workflow.
 
-Yeast v0.1 is Linux-first and QEMU/KVM-first. It does not support snapshots, provisioning workflows, private lab networking, or templates yet.
+Yeast is still Linux-first and QEMU/KVM-first. `v0.3` adds post-boot provisioning, but snapshots, private lab networking, and templates are still out of scope.
 
 ## 1. Check The Host
 
@@ -71,6 +71,7 @@ Yeast will:
 - create a qcow2 overlay disk
 - start QEMU/KVM
 - wait for SSH readiness
+- run post-boot provisioning when the config contains `provision`
 - save runtime state
 
 ## 5. Check Status
@@ -93,7 +94,21 @@ yeast ssh web
 
 If the project has exactly one running VM, `yeast ssh` can be run without an instance name.
 
-## 7. Stop The VM
+## 7. Rerun Provisioning
+
+If you edit provisioned files or shell commands and want to apply them again without recreating the VM:
+
+```bash
+yeast provision web
+```
+
+`yeast provision`:
+
+- requires a running reachable VM
+- reruns the same merged project-level and instance-level plan as `yeast up`
+- does not recreate disks or reboot the guest by itself
+
+## 8. Stop The VM
 
 ```bash
 yeast down
@@ -101,7 +116,7 @@ yeast down
 
 This stops tracked running VMs but keeps runtime files and disks.
 
-## 8. Destroy Runtime Files
+## 9. Destroy Runtime Files
 
 ```bash
 yeast destroy
@@ -120,3 +135,13 @@ yeast status --json
 ```
 
 `yeast ssh` is interactive and should not be used as a JSON workflow.
+
+## First Provisioning Demo
+
+The reference `v0.3` demo is:
+
+```text
+examples/caddy-single-vm
+```
+
+It installs Caddy, copies a static page, writes a Caddyfile, and starts the service.

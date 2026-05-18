@@ -3054,7 +3054,7 @@ Completion notes:
 
 ### V0.3-T11: Add provisioning docs and Caddy example
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3074,6 +3074,14 @@ Definition of done:
 - one VM can boot, install Caddy, copy content, and serve it
 - example config is small and readable
 - docs explain the demo clearly
+
+Completion notes:
+
+- Added `examples/caddy-single-vm` with a small Caddy provisioning demo and static site assets.
+- Updated the quickstart to include provisioning and `yeast provision`.
+- Updated the config reference to describe shipped `v0.3` provisioning behavior instead of future intent.
+- Updated known limitations to reflect current provisioning support and current gaps.
+- Updated the README examples, scope, and install snippet to match the current product state.
 
 ### V0.3-T12: Add provisioning smoke coverage and release notes
 

@@ -9,13 +9,13 @@
 
 **Linux-first local VM orchestration for QEMU/KVM**
 
-Fast project-based virtual machines with cloud-init, trusted base images, SSH access, and clean JSON output.
+Fast project-based virtual machines with cloud-init, trusted base images, post-boot provisioning, SSH access, and clean JSON output.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Go](https://img.shields.io/badge/go-1.25+-cyan.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 ![Runtime](https://img.shields.io/badge/runtime-QEMU%2FKVM-6f42c1.svg)
-![State](https://img.shields.io/badge/status-v0.1%20in%20progress-8a6d3b.svg)
+![State](https://img.shields.io/badge/status-v0.3%20in%20progress-8a6d3b.svg)
 
 [Website](https://twarga.github.io/yeast/) · [Quick Start](#quick-start) · [Current Scope](#current-scope) · [Commands](#commands) · [Examples](#examples) · [Architecture](#architecture) · [Limits](#current-limits)
 
@@ -42,15 +42,15 @@ At the product level, Yeast is meant to become the foundation for:
 - Yeast MCP
 - future hosted Twarga Cloud workers
 
-The important constraint for v0.1 is simple: **keep the core small and reliable before adding the larger ecosystem layers.**
+The important constraint is still simple: **keep the core small and reliable before adding the larger ecosystem layers.**
 
 ---
 
 ## Current Scope
 
-Yeast v0.1 is intentionally narrow. It focuses on one job: making local Linux VMs predictable enough to use as a base product.
+Yeast `v0.3` is still intentionally narrow. It now covers one complete loop: boot a VM, provision it into something useful, rerun provisioning, and keep the base product understandable.
 
-| Area | v0.1 status |
+| Area | v0.3 status |
 |---|---|
 | Host support | Linux only |
 | Runtime | QEMU + KVM |
@@ -60,7 +60,8 @@ Yeast v0.1 is intentionally narrow. It focuses on one job: making local Linux VM
 | Access | SSH over host port forwarding |
 | State | Project-scoped state with locking and reconciliation |
 | Automation | Stable `--json` output for core non-interactive commands |
-| Examples | Single-VM Ubuntu example |
+| Provisioning | Packages, files, shell, and `yeast provision` |
+| Examples | Single-VM Ubuntu and Caddy provisioning examples |
 
 ### What works now
 
@@ -69,15 +70,16 @@ Yeast v0.1 is intentionally narrow. It focuses on one job: making local Linux VM
 - `yeast pull --list`
 - `yeast pull <image>`
 - `yeast up`
+- post-boot provisioning during `yeast up`
+- `yeast provision [instance]`
 - `yeast status`
 - `yeast ssh [instance]`
 - `yeast down`
 - `yeast destroy`
 - `yeast version`
 
-### What is not in v0.1 yet
+### What is not in v0.3 yet
 
-- provisioning packages/files/shell workflows
 - snapshots and restore
 - multi-VM private lab networking
 - guest exec/copy/logs
@@ -120,7 +122,7 @@ The raw workflow usually means stitching together too many manual steps:
 
 Yeast reduces that to a project workflow instead of a pile of ad hoc commands.
 
-It is not trying to be a cloud platform, a container system, or a Proxmox replacement. The v0.1 goal is much simpler: **make local real VMs feel project-native and repeatable.**
+It is not trying to be a cloud platform, a container system, or a Proxmox replacement. The current goal is still simple: **make local real VMs feel project-native and repeatable.**
 
 ---
 
@@ -209,7 +211,13 @@ web	running	127.0.0.1:2222
 yeast ssh web
 ```
 
-### 8. Stop or remove
+### 8. Rerun provisioning
+
+```bash
+yeast provision web
+```
+
+### 9. Stop or remove
 
 ```bash
 yeast down
@@ -225,7 +233,7 @@ yeast destroy
 If the repository is reachable over HTTPS:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.1.0/install.sh | YEAST_REF=v0.1.0 bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.2.0/install.sh | YEAST_REF=v0.2.0 bash
 ```
 
 If you already cloned the repo:
@@ -286,6 +294,7 @@ Then log out and back in before your first `yeast up`.
 | `yeast pull --list` | List supported trusted images |
 | `yeast pull <image>` | Download a trusted base image |
 | `yeast up` | Start all instances in the project |
+| `yeast provision [instance]` | Rerun post-boot provisioning for a running instance |
 | `yeast status` | Show tracked instance state |
 | `yeast ssh [instance]` | Open SSH into a running instance |
 | `yeast down` | Stop tracked running instances |
@@ -317,7 +326,7 @@ yeast status --json
 
 ## Config
 
-Current v0.1 example:
+Current `v0.3` example:
 
 ```yaml
 version: 1
@@ -357,7 +366,9 @@ instances:
 - `hostname` controls the guest hostname written through cloud-init; if omitted, Yeast uses the instance `name`
 - `ssh_port` overrides the host-side SSH forwarding port; if omitted, Yeast auto-allocates starting at `2222`
 - `env` is rendered into the guest bootstrap profile script
-- `networks` and `provision` exist in the config model for future milestones but are not active v0.1 features
+- `provision` now supports packages, files, and shell steps during `yeast up` and `yeast provision`
+- file provision `source` paths are resolved relative to the project root unless they are absolute
+- `networks` still exists in the config model for future milestones but is not active yet
 
 ---
 
@@ -366,15 +377,15 @@ instances:
 Current repo example:
 
 - [examples/ubuntu-basic](examples/ubuntu-basic/README.md)
+- [examples/caddy-single-vm](examples/caddy-single-vm/README.md)
 
-That example is intentionally small:
+The examples are intentionally small:
 
-- one Ubuntu VM
-- no provisioning
-- no networking topology
-- no snapshot logic
+- `ubuntu-basic` keeps the lifecycle-only path minimal
+- `caddy-single-vm` shows `v0.3` provisioning with packages, files, and shell
+- neither example covers networking topology or snapshots
 
-It exists to prove the real v0.1 path cleanly.
+They exist to prove the current shipped paths cleanly.
 
 ---
 
@@ -460,13 +471,13 @@ Current known limits:
 - no Windows or macOS host support
 - no VirtualBox backend
 - no snapshots yet
-- no provisioning workflow yet
+- no multi-VM provisioning topology yet
 - no multi-VM networking yet
 - no guest exec/copy/logs yet
 - no daemon or remote worker mode yet
 - no full LabsBackery contract yet
 
-That is not a weakness in the README. It is the correct scope boundary for v0.1.
+That is not a weakness in the README. It is the correct scope boundary for the current release line.
 
 ---
 

@@ -14,7 +14,7 @@ instances:
 
 `memory`, `cpus`, `user`, and `sudo` have defaults.
 
-## Full v0.1 Example
+## Full Example
 
 ```yaml
 version: 1
@@ -38,8 +38,8 @@ instances:
 |---|---:|---|
 | `version` | yes | Config schema version. Must be `1`. |
 | `instances` | yes | List of VMs in the project. Must contain at least one instance. |
-| `networks` | no | Reserved for future networking milestones. Not active in v0.1. |
-| `provision` | no | Provisioning config shared across instances. Schema is active in v0.3 development, runtime execution is not wired yet. |
+| `networks` | no | Reserved for future networking milestones. Not active in `v0.3`. |
+| `provision` | no | Provisioning config shared across instances. Runs before instance-level provisioning during `yeast up` and `yeast provision`. |
 
 ## Instance Fields
 
@@ -57,7 +57,7 @@ instances:
 | `env` | no | empty | Environment values rendered into the guest profile script. |
 | `user_data` | no | empty | Raw cloud-init user-data override. |
 | `networks` | no | empty | Reserved for future networking milestones. |
-| `provision` | no | empty | Instance-specific provisioning config. Schema is active in v0.3 development, runtime execution is not wired yet. |
+| `provision` | no | empty | Instance-specific provisioning config. Runs after top-level provisioning during `yeast up` and `yeast provision`. |
 
 ## Supported Images
 
@@ -195,7 +195,7 @@ Rules:
 - list of shell commands
 - entries cannot be empty after trimming whitespace
 
-This schema is the contract for the upcoming provisioning implementation. Later `v0.3.0` tasks will decide:
+Provisioning behavior in `v0.3`:
 
 - top-level steps run before instance-level steps
 - `packages`, `files`, and `shell` run post-boot over SSH
@@ -209,15 +209,17 @@ project files    -> instance files
 project shell    -> instance shell
 ```
 
-`yeast up` will run the merged post-boot provisioning plan automatically after SSH readiness.
+`yeast up` runs the merged post-boot provisioning plan automatically after SSH readiness.
 
-`yeast provision` will rerun the same merged post-boot plan against an existing reachable VM. It will not recreate disks, regenerate cloud-init, or reboot the VM unless a user-authored shell command does that.
+`yeast provision` reruns the same merged post-boot provisioning plan against an existing reachable VM. It does not recreate disks, regenerate cloud-init, or reboot the VM unless a user-authored shell command does that.
 
 Idempotency expectations:
 
 - package installation relies on the guest package manager's normal idempotency
 - file provisioning overwrites destination files
 - shell commands always run, so write them to be safe on reruns
+
+File source paths are resolved relative to the project root when they are not absolute.
 
 ## Sudo Modes
 
