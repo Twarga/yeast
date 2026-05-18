@@ -86,7 +86,7 @@ v0.4.0 snapshots and reset.
 Next task:
 
 ```text
-V0.4-T4: Add snapshot listing helpers.
+V0.4-T5: Add `app.Service.Snapshot`.
 ```
 
 ## 5. Milestone Overview
@@ -3261,7 +3261,7 @@ Completion notes:
 
 ### V0.4-T4: Add snapshot listing helpers
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3280,6 +3280,21 @@ Definition of done:
 - app layer can list instance snapshots from state
 - snapshots are sorted predictably
 - missing snapshot state is handled cleanly
+
+Completion notes:
+
+- Added `state.SortedSnapshots` in `internal/state/snapshots.go`.
+- Sorting rule is stable and explicit:
+  - `created_at` ascending
+  - `name` ascending as the tie-breaker
+- Added app-layer helper `listInstanceSnapshots` in `internal/app/snapshots.go`.
+- Helper now:
+  - requires a target instance name
+  - returns `not_found` when the instance does not exist
+  - returns an empty list when the instance exists but has no snapshot metadata yet
+- Added focused tests in:
+  - `internal/state/snapshots_test.go`
+  - `internal/app/snapshots_test.go`
 
 ### V0.4-T5: Add `app.Service.Snapshot`
 
