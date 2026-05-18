@@ -23,6 +23,11 @@ type NetworkOptions struct {
 	ManagementSSHPort int
 }
 
+type SnapshotPlan struct {
+	InstanceDiskPath string
+	SnapshotPath     string
+}
+
 type RuntimeInstance struct {
 	Name              string
 	RuntimeDir        string

@@ -86,7 +86,7 @@ v0.4.0 snapshots and reset.
 Next task:
 
 ```text
-V0.4-T3: Add runtime snapshot file helpers.
+V0.4-T4: Add snapshot listing helpers.
 ```
 
 ## 5. Milestone Overview
@@ -3222,7 +3222,7 @@ Completion notes:
 
 ### V0.4-T3: Add runtime snapshot file helpers
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3241,6 +3241,23 @@ Definition of done:
 - runtime can restore a stopped instance disk from a snapshot copy
 - runtime can delete snapshot files
 - tests cover missing-file and overwrite safety paths
+
+Completion notes:
+
+- Added `runtime.SnapshotPlan` in `internal/runtime/model.go`.
+- Added QEMU snapshot helper functions in `internal/runtime/qemu/snapshot.go`:
+  - `CreateSnapshotCopy`
+  - `RestoreSnapshotCopy`
+  - `DeleteSnapshotFile`
+- Implemented create as copy-without-overwrite.
+- Implemented restore as atomic temp-file copy plus rename over the tracked disk path.
+- Added focused tests for:
+  - create success
+  - create source missing
+  - create overwrite protection
+  - restore success
+  - restore snapshot missing
+  - delete success
 
 ### V0.4-T4: Add snapshot listing helpers
 
