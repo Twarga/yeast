@@ -6,8 +6,8 @@ What this example does:
 
 - boots one Ubuntu 24.04 VM
 - installs `caddy`
-- copies a static `index.html` file into `/var/www/html`
-- writes a simple Caddy config
+- copies site files into the guest user home
+- installs them into Caddy-owned paths during shell provisioning
 - enables and restarts the `caddy` service
 
 What this example does not do:
@@ -69,4 +69,5 @@ yeast destroy
 
 - this example assumes Ubuntu or Debian package management because package provisioning currently uses `apt-get`
 - file sources are resolved relative to the project root
+- privileged destination writes are handled through shell provisioning in `v0.3`
 - service verification is still manual in `v0.3`

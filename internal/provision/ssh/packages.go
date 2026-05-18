@@ -81,7 +81,7 @@ func (p *PackageProvisioner) Install(ctx context.Context, request PackageRequest
 }
 
 func buildAPTInstallCommand(packages []string) string {
-	return "sudo DEBIAN_FRONTEND=noninteractive apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y " + strings.Join(packages, " ")
+	return "sudo -n DEBIAN_FRONTEND=noninteractive apt-get update && sudo -n DEBIAN_FRONTEND=noninteractive apt-get install -y " + strings.Join(packages, " ")
 }
 
 func normalizePackageSteps(steps []provision.PackageStep) ([]string, error) {

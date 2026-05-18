@@ -212,12 +212,14 @@ printf '%s\n' \
 '    - caddy' \
 '  files:' \
 '    - source: ./site/index.html' \
-'      destination: /var/www/html/index.html' \
+'      destination: /home/yeast/site/index.html' \
 '      permissions: "0644"' \
 '    - source: ./site/Caddyfile' \
-'      destination: /etc/caddy/Caddyfile' \
+'      destination: /home/yeast/site/Caddyfile' \
 '      permissions: "0644"' \
 '  shell:' \
+'    - sudo install -D -m 0644 /home/yeast/site/index.html /var/www/html/index.html' \
+'    - sudo install -D -m 0644 /home/yeast/site/Caddyfile /etc/caddy/Caddyfile' \
 '    - sudo systemctl enable caddy' \
 '    - sudo systemctl restart caddy' \
 'instances:' \
@@ -244,7 +246,7 @@ This config specifically tests:
 - `hostname`
 - `ssh_port`
 - `provision.packages`
-- `provision.files`
+- `provision.files` for user-writable guest paths
 - `provision.shell`
 
 ## 9. Pull The Ubuntu Image

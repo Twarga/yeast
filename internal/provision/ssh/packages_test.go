@@ -57,7 +57,7 @@ func TestPackageProvisionerInstallBuildsAPTCommand(t *testing.T) {
 		t.Fatalf("Install returned error: %v", err)
 	}
 
-	wantCommand := "sudo DEBIAN_FRONTEND=noninteractive apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y caddy curl"
+	wantCommand := "sudo -n DEBIAN_FRONTEND=noninteractive apt-get update && sudo -n DEBIAN_FRONTEND=noninteractive apt-get install -y caddy curl"
 	if seen.Command != wantCommand {
 		t.Fatalf("unexpected apt command:\n got: %q\nwant: %q", seen.Command, wantCommand)
 	}

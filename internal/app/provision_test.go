@@ -42,9 +42,10 @@ func TestProvisionRerunsForReachableInstance(t *testing.T) {
 	}
 
 	wantCommands := []string{
-		"sudo DEBIAN_FRONTEND=noninteractive apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y curl caddy",
-		"mkdir -p '/srv/site'",
-		"chmod 0644 '/srv/site/index.html'",
+		"cloud-init status --wait",
+		"sudo -n DEBIAN_FRONTEND=noninteractive apt-get update && sudo -n DEBIAN_FRONTEND=noninteractive apt-get install -y curl caddy",
+		"mkdir -p '/home/yeast/site'",
+		"chmod 0644 '/home/yeast/site/index.html'",
 		"echo project",
 		"echo instance",
 	}
@@ -151,7 +152,7 @@ provision:
     - curl
   files:
     - source: ./site/index.html
-      destination: /srv/site/index.html
+      destination: /home/yeast/site/index.html
       permissions: "0644"
   shell:
     - echo project

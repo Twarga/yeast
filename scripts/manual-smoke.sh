@@ -131,12 +131,14 @@ provision:
     - caddy
   files:
     - source: ./site/index.html
-      destination: /var/www/html/index.html
+      destination: /home/${INSTANCE_USER}/site/index.html
       permissions: "0644"
     - source: ./site/Caddyfile
-      destination: /etc/caddy/Caddyfile
+      destination: /home/${INSTANCE_USER}/site/Caddyfile
       permissions: "0644"
   shell:
+    - sudo install -D -m 0644 /home/${INSTANCE_USER}/site/index.html /var/www/html/index.html
+    - sudo install -D -m 0644 /home/${INSTANCE_USER}/site/Caddyfile /etc/caddy/Caddyfile
     - sudo systemctl enable caddy
     - sudo systemctl restart caddy
 instances:

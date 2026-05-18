@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"sort"
@@ -22,6 +23,7 @@ import (
 
 const (
 	defaultReadinessTimeout = 2 * time.Minute
+	defaultBootstrapTimeout = 5 * time.Minute
 	defaultManagementHost   = "127.0.0.1"
 	firstManagementSSHPort  = 2222
 )
@@ -142,7 +144,11 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
 		}
-		sshPort, err := chooseManagementSSHPort(currentState, instance, allocatedPorts)
+		portAvailable := s.managementPortAvailable
+		if portAvailable == nil {
+			portAvailable = managementPortAvailable
+		}
+		sshPort, err := s.chooseManagementSSHPort(currentState, instance, allocatedPorts, portAvailable)
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
 		}
@@ -203,6 +209,17 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		startedInstances = append(startedInstances, started)
+		if conflict, err := s.waitForManagementPortConflict(plan.LogPath, sshPort, time.Second); err != nil {
+			_ = s.runtime.Stop(ctx, started, 5*time.Second)
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+		} else if conflict {
+			_ = s.runtime.Stop(ctx, started, 5*time.Second)
+			return UpResult{}, WrapError(
+				ErrorCodeInvalidArgument,
+				fmt.Sprintf("requested ssh_port %d for instance %q is already bound on the host", sshPort, instance.Name),
+				nil,
+			)
+		}
 
 		address, err := s.sshAddress(defaultManagementHost, sshPort)
 		if err != nil {
@@ -294,7 +311,10 @@ func usedManagementPorts(currentState state.State) map[int]bool {
 	return used
 }
 
-func chooseManagementSSHPort(currentState state.State, instance config.Instance, used map[int]bool) (int, error) {
+func (s *Service) chooseManagementSSHPort(currentState state.State, instance config.Instance, used map[int]bool, portAvailable func(int) bool) (int, error) {
+	if portAvailable == nil {
+		portAvailable = managementPortAvailable
+	}
 	if instance.SSHPort > 0 {
 		if existing, ok := currentState.Instances[instance.Name]; ok && existing.SSHPort > 0 && existing.SSHPort != instance.SSHPort {
 			return 0, fmt.Errorf("instance %q requested ssh_port %d but existing state uses %d", instance.Name, instance.SSHPort, existing.SSHPort)
@@ -308,10 +328,50 @@ func chooseManagementSSHPort(currentState state.State, instance config.Instance,
 		return existing.SSHPort, nil
 	}
 	port := firstManagementSSHPort
-	for used[port] {
+	for used[port] || !portAvailable(port) {
 		port++
 	}
 	return port, nil
+}
+
+func managementPortAvailable(port int) bool {
+	if port <= 0 {
+		return false
+	}
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", defaultManagementHost, port))
+	if err != nil {
+		return false
+	}
+	_ = listener.Close()
+	return true
+}
+
+func (s *Service) waitForManagementPortConflict(logPath string, port int, timeout time.Duration) (bool, error) {
+	if logPath == "" || port <= 0 {
+		return false, nil
+	}
+	sleep := s.sleep
+	if sleep == nil {
+		sleep = time.Sleep
+	}
+	deadline := time.Now().Add(timeout)
+	conflictNeedle := fmt.Sprintf("tcp:%s:%d-:22", defaultManagementHost, port)
+
+	for {
+		content, err := os.ReadFile(logPath)
+		if err == nil {
+			text := string(content)
+			if strings.Contains(text, "Could not set up host forwarding rule") && strings.Contains(text, conflictNeedle) {
+				return true, nil
+			}
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return false, fmt.Errorf("read runtime log %s: %w", logPath, err)
+		}
+		if time.Now().After(deadline) {
+			return false, nil
+		}
+		sleep(100 * time.Millisecond)
+	}
 }
 
 func resolveProvisionPlan(projectRoot string, plan provision.Plan) (provision.Plan, error) {
@@ -358,6 +418,33 @@ func (s *Service) runProvisionPlan(ctx context.Context, instance config.Instance
 
 	user := instance.User
 	host := defaultManagementHost
+
+	bootstrapWaitResult, err := transport.Run(ctx, provssh.RunRequest{
+		User:    user,
+		Host:    host,
+		Port:    sshPort,
+		Command: "cloud-init status --wait",
+		Timeout: defaultBootstrapTimeout,
+	})
+	if bootstrapWaitResult.ExitCode != 0 || err != nil {
+		now := time.Now().UTC()
+		result.Steps = append(result.Steps, provision.StepResult{
+			Kind:        provision.StepKindShell,
+			Description: "cloud-init status --wait",
+			ExitCode:    bootstrapWaitResult.ExitCode,
+			Stdout:      bootstrapWaitResult.Stdout,
+			Stderr:      bootstrapWaitResult.Stderr,
+			StartedAt:   now.Add(-bootstrapWaitResult.Duration),
+			FinishedAt:  now,
+			Err:         errorString(err),
+		})
+		result.Status = state.ProvisioningStatusFailed
+		writeErr := writeProvisionLog(logPath, result)
+		if writeErr != nil {
+			return result, WrapError(ErrorCodeInternal, writeErr.Error(), writeErr)
+		}
+		return result, WrapError(ErrorCodePrecondition, fmt.Sprintf("wait for cloud-init bootstrap: %v", err), err)
+	}
 
 	appendPackageResult := func(pkgResult provssh.PackageResult, err error) {
 		if len(pkgResult.Packages) == 0 && pkgResult.Command == "" && err == nil {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -25,6 +26,7 @@ func TestUpStartsInstanceAndSavesState(t *testing.T) {
 	service := NewService()
 	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
 	service.discoverSSHKey = func() (string, error) { return "ssh-ed25519 AAAATEST", nil }
+	service.managementPortAvailable = func(port int) bool { return true }
 
 	var userDataCalls int
 	service.renderUserData = func(input cloudinit.UserDataInput) (string, error) {
@@ -161,7 +163,7 @@ provision:
     - curl
   files:
     - source: ./site/index.html
-      destination: /srv/site/index.html
+      destination: /home/yeast/site/index.html
       permissions: "0644"
   shell:
     - echo project
@@ -188,9 +190,10 @@ instances:
 	}
 
 	wantCommands := []string{
-		"sudo DEBIAN_FRONTEND=noninteractive apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y curl caddy",
-		"mkdir -p '/srv/site'",
-		"chmod 0644 '/srv/site/index.html'",
+		"cloud-init status --wait",
+		"sudo -n DEBIAN_FRONTEND=noninteractive apt-get update && sudo -n DEBIAN_FRONTEND=noninteractive apt-get install -y curl caddy",
+		"mkdir -p '/home/yeast/site'",
+		"chmod 0644 '/home/yeast/site/index.html'",
 		"echo project",
 		"echo instance",
 	}
@@ -208,7 +211,7 @@ instances:
 	if uploadRequests[0].Source != filepath.Join(root, "site", "index.html") {
 		t.Fatalf("unexpected upload source: %q", uploadRequests[0].Source)
 	}
-	if uploadRequests[0].Destination != "/srv/site/index.html" {
+	if uploadRequests[0].Destination != "/home/yeast/site/index.html" {
 		t.Fatalf("unexpected upload destination: %q", uploadRequests[0].Destination)
 	}
 
@@ -273,8 +276,8 @@ instances:
 	if fake.stopCalls != 0 {
 		t.Fatalf("expected instance to remain running after provisioning failure, got %d stop calls", fake.stopCalls)
 	}
-	if runCalls != 1 {
-		t.Fatalf("expected one provisioning run call, got %d", runCalls)
+	if runCalls != 2 {
+		t.Fatalf("expected bootstrap wait plus one provisioning run call, got %d", runCalls)
 	}
 
 	metadata, err := project.LoadMetadata(root)
@@ -301,6 +304,43 @@ instances:
 	}
 	if !strings.Contains(string(logContent), "status: failed") {
 		t.Fatalf("expected failed provision log, got:\n%s", string(logContent))
+	}
+}
+
+func TestUpClassifiesExternallyBoundRequestedSSHPort(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen on test port: %v", err)
+	}
+	defer listener.Close()
+	port := listener.Addr().(*net.TCPAddr).Port
+
+	service, root := newUpServiceWithCachedImage(t)
+	service.runtime = &fakeRuntime{
+		startHook: func(plan rtm.MachinePlan) error {
+			return os.WriteFile(plan.LogPath, []byte(fmt.Sprintf(
+				"qemu-system-x86_64: -netdev user,id=mgmt0,hostfwd=tcp:127.0.0.1:%d-:22: Could not set up host forwarding rule 'tcp:127.0.0.1:%d-:22'\n",
+				port,
+				port,
+			)), 0644)
+		},
+	}
+	service.sleep = func(time.Duration) {}
+
+	configContent := `version: 1
+instances:
+  - name: web
+    image: ubuntu-24.04
+    ssh_port: %d
+`
+	if err := os.WriteFile(filepath.Join(root, ConfigFileName), []byte(fmt.Sprintf(configContent, port)), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	_, err = service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodeInvalidArgument)
+	if !strings.Contains(err.Error(), "already bound on the host") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
@@ -611,6 +651,7 @@ func newUpServiceWithCachedImage(t *testing.T) (*Service, string) {
 		return cloudinit.SeedResult{ISOPath: filepath.Join(input.RuntimeDir, "seed.iso")}, nil
 	}
 	service.waitForTCP = func(ctx context.Context, options guest.ReadinessOptions) error { return nil }
+	service.managementPortAvailable = func(port int) bool { return true }
 
 	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
 		t.Fatalf("Init returned error: %v", err)
@@ -632,6 +673,7 @@ type fakeRuntime struct {
 	prepareErr  error
 	startErr    error
 	stopCalls   int
+	startHook   func(plan rtm.MachinePlan) error
 }
 
 func (f *fakeRuntime) PrepareDisk(ctx context.Context, plan rtm.MachinePlan) (rtm.DiskPlan, error) {
@@ -643,6 +685,14 @@ func (f *fakeRuntime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.Runt
 	f.startPlan = plan
 	if f.startErr != nil {
 		return rtm.RuntimeInstance{}, f.startErr
+	}
+	if f.startHook != nil {
+		if err := os.MkdirAll(filepath.Dir(plan.LogPath), 0755); err != nil {
+			return rtm.RuntimeInstance{}, err
+		}
+		if err := f.startHook(plan); err != nil {
+			return rtm.RuntimeInstance{}, err
+		}
 	}
 	return rtm.RuntimeInstance{
 		Name:              plan.Name,

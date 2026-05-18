@@ -18,6 +18,8 @@ func TestDownStopsRunningVMsAndMarksStopped(t *testing.T) {
 
 	service := NewService()
 	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.managementPortAvailable = func(port int) bool { return true }
+	service.sleep = func(time.Duration) {}
 
 	fakeRuntime := &fakeDownRuntime{}
 	service.runtime = fakeRuntime
@@ -71,6 +73,8 @@ func TestDownHandlesAlreadyStoppedInstances(t *testing.T) {
 
 	service := NewService()
 	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.managementPortAvailable = func(port int) bool { return true }
+	service.sleep = func(time.Duration) {}
 	service.runtime = &fakeDownRuntime{}
 
 	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
@@ -106,6 +110,8 @@ func TestDownClassifiesRuntimeStopFailure(t *testing.T) {
 
 	service := NewService()
 	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.managementPortAvailable = func(port int) bool { return true }
+	service.sleep = func(time.Duration) {}
 	service.runtime = &fakeDownRuntime{stopErr: errors.New("stop failed")}
 
 	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
@@ -141,6 +147,8 @@ func TestDownClassifiesRuntimeStopFailure(t *testing.T) {
 
 func TestDownClassifiesUninitializedProject(t *testing.T) {
 	service := NewService()
+	service.managementPortAvailable = func(port int) bool { return true }
+	service.sleep = func(time.Duration) {}
 
 	_, err := service.Down(context.Background(), DownOptions{ProjectRoot: t.TempDir()})
 	assertDownAppErrorCode(t, err, ErrorCodePrecondition)
@@ -152,6 +160,8 @@ func TestDownClassifiesStateProjectMismatch(t *testing.T) {
 
 	service := NewService()
 	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.managementPortAvailable = func(port int) bool { return true }
+	service.sleep = func(time.Duration) {}
 	service.runtime = &fakeDownRuntime{}
 
 	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
@@ -171,6 +181,79 @@ func TestDownClassifiesStateProjectMismatch(t *testing.T) {
 	}
 
 	_, err = service.Down(context.Background(), DownOptions{ProjectRoot: root})
+	assertDownAppErrorCode(t, err, ErrorCodeInternal)
+}
+
+func TestDownWaitsForPortRelease(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.runtime = &fakeDownRuntime{}
+	service.sleep = func(time.Duration) {}
+
+	checks := 0
+	service.managementPortAvailable = func(port int) bool {
+		checks++
+		return checks >= 3
+	}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+
+	current := state.New(metadata.ID)
+	current.Instances["web"] = state.InstanceState{Status: "running", PID: 1001, SSHPort: 2222, RuntimeDir: "/tmp/web"}
+	if err := state.Save(paths.StateFile, current); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	if _, err := service.Down(context.Background(), DownOptions{ProjectRoot: root, Timeout: 100 * time.Millisecond}); err != nil {
+		t.Fatalf("Down returned error: %v", err)
+	}
+	if checks < 3 {
+		t.Fatalf("expected multiple port availability checks, got %d", checks)
+	}
+}
+
+func TestDownClassifiesPortReleaseTimeout(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.runtime = &fakeDownRuntime{}
+	service.managementPortAvailable = func(port int) bool { return false }
+	service.sleep = func(time.Duration) {}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+
+	current := state.New(metadata.ID)
+	current.Instances["web"] = state.InstanceState{Status: "running", PID: 1001, SSHPort: 2222, RuntimeDir: "/tmp/web"}
+	if err := state.Save(paths.StateFile, current); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	_, err = service.Down(context.Background(), DownOptions{ProjectRoot: root, Timeout: 10 * time.Millisecond})
 	assertDownAppErrorCode(t, err, ErrorCodeInternal)
 }
 
