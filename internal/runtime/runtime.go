@@ -10,5 +10,8 @@ type Runtime interface {
 	Start(ctx context.Context, plan MachinePlan) (RuntimeInstance, error)
 	Stop(ctx context.Context, instance RuntimeInstance, timeout time.Duration) error
 	Inspect(ctx context.Context, instance RuntimeInstance) (ProcessInfo, error)
+	CreateSnapshot(ctx context.Context, plan SnapshotPlan) error
+	RestoreSnapshot(ctx context.Context, plan SnapshotPlan) error
+	DeleteSnapshot(ctx context.Context, snapshotPath string) error
 	Destroy(ctx context.Context, instance RuntimeInstance) error
 }

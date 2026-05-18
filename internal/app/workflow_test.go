@@ -178,6 +178,18 @@ func (f *workflowRuntime) Inspect(ctx context.Context, instance rtm.RuntimeInsta
 	}, nil
 }
 
+func (f *workflowRuntime) CreateSnapshot(ctx context.Context, plan rtm.SnapshotPlan) error {
+	return nil
+}
+
+func (f *workflowRuntime) RestoreSnapshot(ctx context.Context, plan rtm.SnapshotPlan) error {
+	return nil
+}
+
+func (f *workflowRuntime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
+	return nil
+}
+
 func (f *workflowRuntime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) error {
 	f.destroyCalls++
 	if f.running != nil {

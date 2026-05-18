@@ -175,6 +175,18 @@ func (f *fakeDestroyRuntime) Inspect(ctx context.Context, instance rtm.RuntimeIn
 	return rtm.ProcessInfo{}, nil
 }
 
+func (f *fakeDestroyRuntime) CreateSnapshot(ctx context.Context, plan rtm.SnapshotPlan) error {
+	return nil
+}
+
+func (f *fakeDestroyRuntime) RestoreSnapshot(ctx context.Context, plan rtm.SnapshotPlan) error {
+	return nil
+}
+
+func (f *fakeDestroyRuntime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
+	return nil
+}
+
 func (f *fakeDestroyRuntime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) error {
 	f.destroyed = append(f.destroyed, instance)
 	return f.destroyErr

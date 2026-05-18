@@ -86,7 +86,7 @@ v0.4.0 snapshots and reset.
 Next task:
 
 ```text
-V0.4-T5: Add `app.Service.Snapshot`.
+V0.4-T6: Add `app.Service.Restore`.
 ```
 
 ## 5. Milestone Overview
@@ -3298,7 +3298,7 @@ Completion notes:
 
 ### V0.4-T5: Add `app.Service.Snapshot`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3317,6 +3317,23 @@ Definition of done:
 - snapshot metadata is persisted
 - duplicate snapshot names fail cleanly
 - tests use fake runtime helpers rather than real QEMU
+
+Completion notes:
+
+- Added `Service.Snapshot` in `internal/app/snapshot.go`.
+- First snapshot API is explicit:
+  - target instance required
+  - snapshot name required
+  - optional description persisted in metadata
+- Snapshot creation now:
+  - requires a stopped target instance
+  - requires a tracked runtime directory
+  - uses runtime snapshot helpers through the runtime interface
+  - persists snapshot metadata into state after the copy succeeds
+- Duplicate names fail as `conflict`.
+- Missing target fails as `not_found`.
+- Running target fails as `failed_precondition`.
+- Added focused tests in `internal/app/snapshot_test.go` using a fake runtime.
 
 ### V0.4-T6: Add `app.Service.Restore`
 

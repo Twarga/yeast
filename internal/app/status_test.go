@@ -198,6 +198,18 @@ func (f *fakeStatusRuntime) Inspect(ctx context.Context, instance rtm.RuntimeIns
 	return rtm.ProcessInfo{PID: instance.PID, State: stateValue}, nil
 }
 
+func (f *fakeStatusRuntime) CreateSnapshot(ctx context.Context, plan rtm.SnapshotPlan) error {
+	return nil
+}
+
+func (f *fakeStatusRuntime) RestoreSnapshot(ctx context.Context, plan rtm.SnapshotPlan) error {
+	return nil
+}
+
+func (f *fakeStatusRuntime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
+	return nil
+}
+
 func (f *fakeStatusRuntime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) error {
 	return nil
 }

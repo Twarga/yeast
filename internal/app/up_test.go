@@ -713,6 +713,18 @@ func (f *fakeRuntime) Inspect(ctx context.Context, instance rtm.RuntimeInstance)
 	return rtm.ProcessInfo{PID: instance.PID, State: rtm.ProcessStateRunning}, nil
 }
 
+func (f *fakeRuntime) CreateSnapshot(ctx context.Context, plan rtm.SnapshotPlan) error {
+	return nil
+}
+
+func (f *fakeRuntime) RestoreSnapshot(ctx context.Context, plan rtm.SnapshotPlan) error {
+	return nil
+}
+
+func (f *fakeRuntime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
+	return nil
+}
+
 func (f *fakeRuntime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) error {
 	return nil
 }

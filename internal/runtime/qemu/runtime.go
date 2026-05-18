@@ -120,6 +120,18 @@ func (r *Runtime) Inspect(ctx context.Context, instance rtm.RuntimeInstance) (rt
 	}, nil
 }
 
+func (r *Runtime) CreateSnapshot(ctx context.Context, plan rtm.SnapshotPlan) error {
+	return CreateSnapshotCopy(ctx, plan)
+}
+
+func (r *Runtime) RestoreSnapshot(ctx context.Context, plan rtm.SnapshotPlan) error {
+	return RestoreSnapshotCopy(ctx, plan)
+}
+
+func (r *Runtime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
+	return DeleteSnapshotFile(snapshotPath)
+}
+
 func (r *Runtime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) error {
 	if instance.PID > 0 {
 		if err := r.Stop(ctx, instance, 5*time.Second); err != nil {
