@@ -2988,7 +2988,7 @@ Completion notes:
 
 ### V0.3-T9: Wire provisioning into `yeast up`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3012,6 +3012,14 @@ Definition of done:
 - provisioning status updates are reflected in state/status
 - failures are visible and recoverable
 - tests use fake provisioning dependencies rather than real SSH
+
+Completion notes:
+
+- Wired `yeast up` to build the merged provisioning plan and run it automatically after SSH readiness.
+- Resolved file provision sources relative to the project root before upload.
+- Updated state transitions to `running -> not_started/running -> provisioned|failed` with a stable per-instance `provision.log`.
+- Kept instances running on provisioning failure while persisting `failed` state and `last_error` for later recovery.
+- Added focused `up` tests for merged provisioning order, source-path resolution, success logging, and failure-state persistence using a fake SSH transport.
 
 ### V0.3-T10: Add `yeast provision` rerun command
 

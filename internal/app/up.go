@@ -7,12 +7,15 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 	"yeast/internal/config"
 	"yeast/internal/guest"
 	"yeast/internal/images"
 	"yeast/internal/project"
+	"yeast/internal/provision"
 	"yeast/internal/provision/cloudinit"
+	provssh "yeast/internal/provision/ssh"
 	rtm "yeast/internal/runtime"
 	"yeast/internal/state"
 )
@@ -215,7 +218,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			return UpResult{}, WrapError(ErrorCodePrecondition, message, err)
 		}
 
-		currentState.Instances[instance.Name] = state.InstanceState{
+		instanceState := state.InstanceState{
 			Status:             "running",
 			PID:                started.PID,
 			ManagementIP:       defaultManagementHost,
@@ -225,6 +228,41 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			ProvisioningStatus: state.ProvisioningStatusNotStarted,
 			LastError:          "",
 		}
+		currentState.Instances[instance.Name] = instanceState
+
+		provisionPlan, err := resolveProvisionPlan(absoluteRoot, provision.BuildPlan(instance, cfg.Provision))
+		if err != nil {
+			return UpResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("resolve provision plan for %s: %v", instance.Name, err), err)
+		}
+		provisionLogPath := instanceState.ProvisionLogPath
+		if provisionPlan.Empty() {
+			instanceState.ProvisioningStatus = state.ProvisioningStatusReady
+		} else {
+			instanceState.ProvisioningStatus = state.ProvisioningStatusRunning
+		}
+		currentState.Instances[instance.Name] = instanceState
+		if err := state.Save(paths.StateFile, currentState); err != nil {
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+		}
+
+		provisionResult, err := s.runProvisionPlan(ctx, instance, sshPort, provisionLogPath, provisionPlan)
+		instanceState.ProvisioningStatus = provisionResult.Status
+		instanceState.LastError = ""
+		if err != nil {
+			instanceState.ProvisioningStatus = state.ProvisioningStatusFailed
+			instanceState.LastError = err.Error()
+			currentState.Instances[instance.Name] = instanceState
+			if saveErr := state.Save(paths.StateFile, currentState); saveErr != nil {
+				return UpResult{}, WrapError(ErrorCodeInternal, saveErr.Error(), saveErr)
+			}
+			appErr := NormalizeError(err)
+			if appErr.Code == ErrorCodeInternal {
+				return UpResult{}, appErr
+			}
+			return UpResult{}, WrapError(ErrorCodePrecondition, fmt.Sprintf("provision instance %s: %v", instance.Name, err), err)
+		}
+		currentState.Instances[instance.Name] = instanceState
+
 		result.Instances = append(result.Instances, UpInstanceResult{
 			Name:       instance.Name,
 			Status:     "running",
@@ -274,4 +312,237 @@ func chooseManagementSSHPort(currentState state.State, instance config.Instance,
 		port++
 	}
 	return port, nil
+}
+
+func resolveProvisionPlan(projectRoot string, plan provision.Plan) (provision.Plan, error) {
+	if plan.Empty() {
+		return plan, nil
+	}
+
+	resolved := plan
+	resolved.Files = make([]provision.FileStep, 0, len(plan.Files))
+	for _, step := range plan.Files {
+		source := step.Source
+		if !filepath.IsAbs(source) {
+			source = filepath.Join(projectRoot, source)
+		}
+		source = filepath.Clean(source)
+		if _, err := os.Stat(source); err != nil {
+			return provision.Plan{}, fmt.Errorf("file source %q: %w", step.Source, err)
+		}
+		resolved.Files = append(resolved.Files, provision.FileStep{
+			Source:      source,
+			Destination: step.Destination,
+			Permissions: step.Permissions,
+			Origin:      step.Origin,
+		})
+	}
+
+	return resolved, nil
+}
+
+func (s *Service) runProvisionPlan(ctx context.Context, instance config.Instance, sshPort int, logPath string, plan provision.Plan) (provision.Result, error) {
+	result := provision.NewResult(logPath)
+	if plan.Empty() {
+		result.Status = state.ProvisioningStatusReady
+		if err := writeProvisionLog(logPath, result); err != nil {
+			return result, err
+		}
+		return result, nil
+	}
+
+	transport := s.provisionTransport
+	if transport == nil {
+		transport = provssh.NewLocalTransport()
+	}
+
+	user := instance.User
+	host := defaultManagementHost
+
+	appendPackageResult := func(pkgResult provssh.PackageResult, err error) {
+		if len(pkgResult.Packages) == 0 && pkgResult.Command == "" && err == nil {
+			return
+		}
+		now := time.Now().UTC()
+		result.Steps = append(result.Steps, provision.StepResult{
+			Kind:        provision.StepKindPackage,
+			Description: strings.TrimSpace(pkgResult.Command),
+			ExitCode:    pkgResult.Run.ExitCode,
+			Stdout:      pkgResult.Run.Stdout,
+			Stderr:      pkgResult.Run.Stderr,
+			StartedAt:   now.Add(-pkgResult.Run.Duration),
+			FinishedAt:  now,
+			Err:         errorString(err),
+		})
+	}
+	appendFileResult := func(fileResult provssh.FileResult, err error) {
+		for _, step := range fileResult.Files {
+			exitCode := 0
+			stdout := step.Mkdir.Stdout
+			stderr := step.Mkdir.Stderr
+			startedAt := time.Now().UTC().Add(-step.Mkdir.Duration)
+			finishedAt := time.Now().UTC()
+			if step.Chmod.ExitCode != 0 || step.Chmod.Stdout != "" || step.Chmod.Stderr != "" || step.Chmod.Duration != 0 {
+				exitCode = step.Chmod.ExitCode
+				stdout = joinOutput(step.Mkdir.Stdout, step.Chmod.Stdout)
+				stderr = joinOutput(step.Mkdir.Stderr, step.Chmod.Stderr)
+				startedAt = time.Now().UTC().Add(-(step.Mkdir.Duration + step.Chmod.Duration))
+			}
+			result.Steps = append(result.Steps, provision.StepResult{
+				Kind:        provision.StepKindFile,
+				Description: fmt.Sprintf("%s -> %s", step.Source, step.Destination),
+				ExitCode:    exitCode,
+				Stdout:      stdout,
+				Stderr:      stderr,
+				StartedAt:   startedAt,
+				FinishedAt:  finishedAt,
+				Err:         errorString(err),
+			})
+		}
+	}
+	appendShellResult := func(shellResult provssh.ShellResult, err error) {
+		for _, step := range shellResult.Steps {
+			now := time.Now().UTC()
+			result.Steps = append(result.Steps, provision.StepResult{
+				Kind:        provision.StepKindShell,
+				Description: step.Command,
+				ExitCode:    step.Run.ExitCode,
+				Stdout:      step.Run.Stdout,
+				Stderr:      step.Run.Stderr,
+				StartedAt:   now.Add(-step.Run.Duration),
+				FinishedAt:  now,
+				Err:         errorString(err),
+			})
+		}
+	}
+
+	packageProvisioner := provssh.NewPackageProvisioner(transport)
+	packageResult, err := packageProvisioner.Install(ctx, provssh.PackageRequest{
+		User:     user,
+		Host:     host,
+		Port:     sshPort,
+		Packages: plan.Packages,
+	})
+	appendPackageResult(packageResult, err)
+	if err != nil {
+		result.Status = state.ProvisioningStatusFailed
+		writeErr := writeProvisionLog(logPath, result)
+		if writeErr != nil {
+			return result, WrapError(ErrorCodeInternal, writeErr.Error(), writeErr)
+		}
+		return result, WrapError(ErrorCodePrecondition, fmt.Sprintf("package provisioning failed: %v", err), err)
+	}
+
+	fileProvisioner := provssh.NewFileProvisioner(transport)
+	fileResult, err := fileProvisioner.Upload(ctx, provssh.FileRequest{
+		User:  user,
+		Host:  host,
+		Port:  sshPort,
+		Files: plan.Files,
+	})
+	appendFileResult(fileResult, err)
+	if err != nil {
+		result.Status = state.ProvisioningStatusFailed
+		writeErr := writeProvisionLog(logPath, result)
+		if writeErr != nil {
+			return result, WrapError(ErrorCodeInternal, writeErr.Error(), writeErr)
+		}
+		return result, WrapError(ErrorCodePrecondition, fmt.Sprintf("file provisioning failed: %v", err), err)
+	}
+
+	shellProvisioner := provssh.NewShellProvisioner(transport)
+	shellResult, err := shellProvisioner.Run(ctx, provssh.ShellRequest{
+		User:     user,
+		Host:     host,
+		Port:     sshPort,
+		Commands: plan.Shell,
+	})
+	appendShellResult(shellResult, err)
+	if err != nil {
+		result.Status = state.ProvisioningStatusFailed
+		writeErr := writeProvisionLog(logPath, result)
+		if writeErr != nil {
+			return result, WrapError(ErrorCodeInternal, writeErr.Error(), writeErr)
+		}
+		return result, WrapError(ErrorCodePrecondition, fmt.Sprintf("shell provisioning failed: %v", err), err)
+	}
+
+	result.Status = state.ProvisioningStatusReady
+	if err := writeProvisionLog(logPath, result); err != nil {
+		return result, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	return result, nil
+}
+
+func writeProvisionLog(logPath string, result provision.Result) error {
+	if logPath == "" {
+		return nil
+	}
+	if err := os.MkdirAll(filepath.Dir(logPath), 0755); err != nil {
+		return fmt.Errorf("create provision log directory for %s: %w", logPath, err)
+	}
+
+	var builder strings.Builder
+	builder.WriteString("status: ")
+	builder.WriteString(string(result.Status))
+	builder.WriteString("\n")
+	if len(result.Steps) == 0 {
+		builder.WriteString("steps: 0\n")
+	} else {
+		builder.WriteString("steps:\n")
+		for _, step := range result.Steps {
+			builder.WriteString("- [")
+			builder.WriteString(string(step.Kind))
+			builder.WriteString("] ")
+			builder.WriteString(step.Description)
+			builder.WriteString(" exit=")
+			builder.WriteString(fmt.Sprintf("%d", step.ExitCode))
+			if step.Err != "" {
+				builder.WriteString(" error=")
+				builder.WriteString(step.Err)
+			}
+			builder.WriteString("\n")
+			if trimmed := strings.TrimSpace(step.Stdout); trimmed != "" {
+				builder.WriteString("  stdout:\n")
+				for _, line := range strings.Split(trimmed, "\n") {
+					builder.WriteString("    ")
+					builder.WriteString(line)
+					builder.WriteString("\n")
+				}
+			}
+			if trimmed := strings.TrimSpace(step.Stderr); trimmed != "" {
+				builder.WriteString("  stderr:\n")
+				for _, line := range strings.Split(trimmed, "\n") {
+					builder.WriteString("    ")
+					builder.WriteString(line)
+					builder.WriteString("\n")
+				}
+			}
+		}
+	}
+
+	if err := os.WriteFile(logPath, []byte(builder.String()), 0644); err != nil {
+		return fmt.Errorf("write provision log %s: %w", logPath, err)
+	}
+	return nil
+}
+
+func joinOutput(parts ...string) string {
+	combined := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if strings.TrimSpace(part) != "" {
+			combined = append(combined, strings.TrimRight(part, "\n"))
+		}
+	}
+	if len(combined) == 0 {
+		return ""
+	}
+	return strings.Join(combined, "\n") + "\n"
+}
+
+func errorString(err error) string {
+	if err == nil {
+		return ""
+	}
+	return err.Error()
 }

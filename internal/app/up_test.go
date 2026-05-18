@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 	"yeast/internal/guest"
 	"yeast/internal/project"
 	"yeast/internal/provision/cloudinit"
+	provssh "yeast/internal/provision/ssh"
 	rtm "yeast/internal/runtime"
 	"yeast/internal/state"
 )
@@ -121,10 +123,184 @@ instances:
 		t.Fatalf("read state file: %v", err)
 	}
 	content := string(raw)
-	for _, want := range []string{`"status": "running"`, `"ssh_port": 2205`, `"runtime_dir": "`} {
+	for _, want := range []string{`"status": "running"`, `"ssh_port": 2205`, `"runtime_dir": "`, `"provisioning_status": "provisioned"`, `"provision_log_path": "`} {
 		if !strings.Contains(content, want) {
 			t.Fatalf("expected state content %q, got:\n%s", want, content)
 		}
+	}
+}
+
+func TestUpRunsProvisioningInDocumentedOrder(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.runtime = &fakeRuntime{}
+
+	siteDir := filepath.Join(root, "site")
+	if err := os.MkdirAll(siteDir, 0755); err != nil {
+		t.Fatalf("mkdir site dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(siteDir, "index.html"), []byte("<h1>yeast</h1>\n"), 0644); err != nil {
+		t.Fatalf("write site file: %v", err)
+	}
+
+	runRequests := make([]provssh.RunRequest, 0)
+	uploadRequests := make([]provssh.UploadRequest, 0)
+	service.provisionTransport = provssh.FakeTransport{
+		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
+			runRequests = append(runRequests, request)
+			return provssh.RunResult{Stdout: "ok\n", ExitCode: 0, Duration: time.Millisecond}, nil
+		},
+		UploadFunc: func(ctx context.Context, request provssh.UploadRequest) error {
+			uploadRequests = append(uploadRequests, request)
+			return nil
+		},
+	}
+
+	configContent := `version: 1
+provision:
+  packages:
+    - curl
+  files:
+    - source: ./site/index.html
+      destination: /srv/site/index.html
+      permissions: "0644"
+  shell:
+    - echo project
+instances:
+  - name: web
+    image: ubuntu-24.04
+    ssh_port: 2205
+    provision:
+      packages:
+        - caddy
+      shell:
+        - echo instance
+`
+	if err := os.WriteFile(filepath.Join(root, ConfigFileName), []byte(configContent), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	result, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	if err != nil {
+		t.Fatalf("Up returned error: %v", err)
+	}
+	if len(result.Instances) != 1 {
+		t.Fatalf("expected 1 instance result, got %d", len(result.Instances))
+	}
+
+	wantCommands := []string{
+		"sudo DEBIAN_FRONTEND=noninteractive apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y curl caddy",
+		"mkdir -p '/srv/site'",
+		"chmod 0644 '/srv/site/index.html'",
+		"echo project",
+		"echo instance",
+	}
+	gotCommands := make([]string, 0, len(runRequests))
+	for _, request := range runRequests {
+		gotCommands = append(gotCommands, request.Command)
+	}
+	if !reflect.DeepEqual(gotCommands, wantCommands) {
+		t.Fatalf("unexpected provisioning command order:\n got: %#v\nwant: %#v", gotCommands, wantCommands)
+	}
+
+	if len(uploadRequests) != 1 {
+		t.Fatalf("expected 1 upload request, got %d", len(uploadRequests))
+	}
+	if uploadRequests[0].Source != filepath.Join(root, "site", "index.html") {
+		t.Fatalf("unexpected upload source: %q", uploadRequests[0].Source)
+	}
+	if uploadRequests[0].Destination != "/srv/site/index.html" {
+		t.Fatalf("unexpected upload destination: %q", uploadRequests[0].Destination)
+	}
+
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	loaded, err := state.Load(filepath.Join(root, "yeast-home", "projects", metadata.ID, "state.json"), metadata.ID)
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+	instance := loaded.Instances["web"]
+	if instance.ProvisioningStatus != state.ProvisioningStatusReady {
+		t.Fatalf("expected provisioned status, got %#v", instance)
+	}
+	logContent, err := os.ReadFile(instance.ProvisionLogPath)
+	if err != nil {
+		t.Fatalf("read provision log: %v", err)
+	}
+	logText := string(logContent)
+	for _, want := range []string{"status: provisioned", "[package]", "[file]", "[shell] echo project", "[shell] echo instance"} {
+		if !strings.Contains(logText, want) {
+			t.Fatalf("expected provision log to contain %q, got:\n%s", want, logText)
+		}
+	}
+}
+
+func TestUpMarksProvisioningFailureAndKeepsInstanceRunning(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	fake := &fakeRuntime{}
+	service.runtime = fake
+
+	runCalls := 0
+	service.provisionTransport = provssh.FakeTransport{
+		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
+			runCalls++
+			if strings.Contains(request.Command, "apt-get install") {
+				return provssh.RunResult{Stderr: "apt failed\n", ExitCode: 100, Duration: time.Millisecond}, errors.New("ssh failed")
+			}
+			return provssh.RunResult{Stdout: "ok\n", ExitCode: 0, Duration: time.Millisecond}, nil
+		},
+	}
+
+	configContent := `version: 1
+provision:
+  packages:
+    - curl
+instances:
+  - name: web
+    image: ubuntu-24.04
+    ssh_port: 2205
+`
+	if err := os.WriteFile(filepath.Join(root, ConfigFileName), []byte(configContent), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	if err == nil {
+		t.Fatal("expected provisioning failure")
+	}
+	assertAppErrorCode(t, err, ErrorCodePrecondition)
+	if fake.stopCalls != 0 {
+		t.Fatalf("expected instance to remain running after provisioning failure, got %d stop calls", fake.stopCalls)
+	}
+	if runCalls != 1 {
+		t.Fatalf("expected one provisioning run call, got %d", runCalls)
+	}
+
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	loaded, err := state.Load(filepath.Join(root, "yeast-home", "projects", metadata.ID, "state.json"), metadata.ID)
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+	instance := loaded.Instances["web"]
+	if instance.Status != "running" {
+		t.Fatalf("expected running status after provisioning failure, got %#v", instance)
+	}
+	if instance.ProvisioningStatus != state.ProvisioningStatusFailed {
+		t.Fatalf("expected failed provisioning status, got %#v", instance)
+	}
+	if !strings.Contains(instance.LastError, "package provisioning failed") {
+		t.Fatalf("unexpected last_error: %#v", instance)
+	}
+	logContent, err := os.ReadFile(instance.ProvisionLogPath)
+	if err != nil {
+		t.Fatalf("read provision log: %v", err)
+	}
+	if !strings.Contains(string(logContent), "status: failed") {
+		t.Fatalf("expected failed provision log, got:\n%s", string(logContent))
 	}
 }
 
