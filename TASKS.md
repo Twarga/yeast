@@ -3023,7 +3023,7 @@ Completion notes:
 
 ### V0.3-T10: Add `yeast provision` rerun command
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3043,6 +3043,14 @@ Definition of done:
 - command requires a reachable existing VM in v0.3.0
 - command has human and JSON output
 - tests cover success and failure paths
+
+Completion notes:
+
+- Added `app.Service.Provision` to rerun the same merged provisioning plan against an existing running instance.
+- Reused the same plan resolution and provisioning execution path as `yeast up` rather than adding a second implementation.
+- Added `yeast provision [instance]` with the same target-selection behavior as `yeast ssh`.
+- Added human and JSON renderer coverage for the new command.
+- Added focused service tests for successful reruns, failure-state persistence, and reachable-instance preconditions.
 
 ### V0.3-T11: Add provisioning docs and Caddy example
 
