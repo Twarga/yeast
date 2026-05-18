@@ -29,6 +29,8 @@ func RenderHuman(w io.Writer, command string, data any) error {
 		return renderUp(w, theme, value)
 	case app.StatusResult:
 		return renderStatus(w, theme, value)
+	case app.ProvisionResult:
+		return renderProvision(w, theme, value)
 	case app.DownResult:
 		return renderDown(w, theme, value)
 	case app.DestroyResult:
@@ -186,6 +188,20 @@ func renderStatus(w io.Writer, theme humanTheme, value app.StatusResult) error {
 
 	lines := []string{theme.Title.Render("Project status")}
 	lines = append(lines, renderRows(theme, rows)...)
+	return writeBlock(w, theme, lines)
+}
+
+func renderProvision(w io.Writer, theme humanTheme, value app.ProvisionResult) error {
+	lines := []string{
+		theme.Success.Render("OK") + " " + theme.Title.Render("Provisioning finished"),
+		keyValue(theme, "instance", value.Instance.Name),
+		keyValue(theme, "status", string(value.Instance.ProvisioningStatus)),
+		keyValue(theme, "ssh", value.Instance.SSHAddress),
+		keyValue(theme, "log", value.Instance.ProvisionLogPath),
+	}
+	if value.Instance.LastError != "" {
+		lines = append(lines, keyValue(theme, "last_error", value.Instance.LastError))
+	}
 	return writeBlock(w, theme, lines)
 }
 

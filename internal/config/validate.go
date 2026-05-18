@@ -15,6 +15,7 @@ var (
 	envKeyPattern       = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 	linuxUserPattern    = regexp.MustCompile(`^[a-z_][a-z0-9_-]{0,31}$`)
 	byteSizePattern     = regexp.MustCompile(`(?i)^\s*([0-9]+)\s*([kmgtp]?)(?:b)?\s*$`)
+	fileModePattern     = regexp.MustCompile(`^[0-7]{3,4}$`)
 )
 
 func Validate(cfg *Config) error {
@@ -26,6 +27,9 @@ func Validate(cfg *Config) error {
 	}
 	if len(cfg.Instances) == 0 {
 		return fmt.Errorf("at least one instance is required")
+	}
+	if err := validateProvision("top-level provision", cfg.Provision); err != nil {
+		return err
 	}
 
 	seen := make(map[string]struct{}, len(cfg.Instances))
@@ -81,6 +85,50 @@ func Validate(cfg *Config) error {
 			if strings.Contains(value, "\n") {
 				return fmt.Errorf("instance %s env %q contains newline", instance.Name, key)
 			}
+		}
+		if err := validateProvision(fmt.Sprintf("instance %s provision", instance.Name), instance.Provision); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateProvision(label string, provision *ProvisionConfig) error {
+	if provision == nil {
+		return nil
+	}
+
+	for i, pkg := range provision.Packages {
+		if strings.TrimSpace(pkg) == "" {
+			return fmt.Errorf("%s packages[%d] cannot be empty", label, i)
+		}
+		if strings.Contains(pkg, "\n") {
+			return fmt.Errorf("%s packages[%d] contains newline", label, i)
+		}
+	}
+
+	for i, file := range provision.Files {
+		if strings.TrimSpace(file.Source) == "" {
+			return fmt.Errorf("%s files[%d] source is required", label, i)
+		}
+		if strings.TrimSpace(file.Destination) == "" {
+			return fmt.Errorf("%s files[%d] destination is required", label, i)
+		}
+		if strings.Contains(file.Source, "\n") {
+			return fmt.Errorf("%s files[%d] source contains newline", label, i)
+		}
+		if strings.Contains(file.Destination, "\n") {
+			return fmt.Errorf("%s files[%d] destination contains newline", label, i)
+		}
+		if strings.TrimSpace(file.Permissions) != "" && !fileModePattern.MatchString(strings.TrimSpace(file.Permissions)) {
+			return fmt.Errorf("%s files[%d] has invalid permissions %q", label, i, file.Permissions)
+		}
+	}
+
+	for i, command := range provision.Shell {
+		if strings.TrimSpace(command) == "" {
+			return fmt.Errorf("%s shell[%d] cannot be empty", label, i)
 		}
 	}
 

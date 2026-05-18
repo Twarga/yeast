@@ -84,7 +84,8 @@ func TestStatusReconcilesDeadProcessesAndSavesState(t *testing.T) {
 		PID:                3333,
 		ManagementIP:       "127.0.0.1",
 		SSHPort:            2222,
-		ProvisioningStatus: "ssh_ready",
+		ProvisionLogPath:   filepath.Join(yeastHome, "projects", metadata.ID, "instances", "web", "provision.log"),
+		ProvisioningStatus: state.ProvisioningStatusNotStarted,
 	}
 	if err := state.Save(paths.StateFile, current); err != nil {
 		t.Fatalf("Save returned error: %v", err)
@@ -99,6 +100,12 @@ func TestStatusReconcilesDeadProcessesAndSavesState(t *testing.T) {
 	}
 	if result.Instances[0].PID != 0 || result.Instances[0].SSHPort != 0 {
 		t.Fatalf("expected pid and ssh port cleared, got %#v", result.Instances[0])
+	}
+	if result.Instances[0].ProvisionLogPath == "" {
+		t.Fatalf("expected provision log path to remain set, got %#v", result.Instances[0])
+	}
+	if result.Instances[0].ProvisioningStatus != state.ProvisioningStatusNotStarted {
+		t.Fatalf("expected provisioning status not_started, got %q", result.Instances[0].ProvisioningStatus)
 	}
 
 	reloaded, err := state.Load(paths.StateFile, metadata.ID)

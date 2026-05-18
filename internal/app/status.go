@@ -22,7 +22,8 @@ type StatusInstanceResult struct {
 	ManagementIP       string
 	SSHPort            int
 	RuntimeDir         string
-	ProvisioningStatus string
+	ProvisionLogPath   string
+	ProvisioningStatus state.ProvisioningStatus
 	LastError          string
 }
 
@@ -95,6 +96,7 @@ func (s *Service) Status(ctx context.Context, options StatusOptions) (StatusResu
 			ManagementIP:       instance.ManagementIP,
 			SSHPort:            instance.SSHPort,
 			RuntimeDir:         instance.RuntimeDir,
+			ProvisionLogPath:   instance.ProvisionLogPath,
 			ProvisioningStatus: instance.ProvisioningStatus,
 			LastError:          instance.LastError,
 		})

@@ -1,0 +1,26 @@
+version: 1
+provision:
+  packages:
+    - caddy
+  files:
+    - source: ./site/index.html
+      destination: /home/yeast/site/index.html
+      permissions: "0644"
+    - source: ./site/Caddyfile
+      destination: /home/yeast/site/Caddyfile
+      permissions: "0644"
+  shell:
+    - sudo install -D -m 0644 /home/yeast/site/index.html /var/www/html/index.html
+    - sudo install -D -m 0644 /home/yeast/site/Caddyfile /etc/caddy/Caddyfile
+    - sudo systemctl enable caddy
+    - sudo systemctl restart caddy
+instances:
+  - name: web
+    hostname: caddy-lab
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    disk_size: 20G
+    ssh_port: 2205
+    user: yeast
+    sudo: nopasswd

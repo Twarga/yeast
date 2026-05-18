@@ -63,6 +63,20 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 			},
 		},
 		{
+			name:    "provision",
+			command: "provision",
+			data: app.ProvisionResult{
+				ProjectID: "proj_123",
+				Instance: app.ProvisionInstanceResult{
+					Name:               "web",
+					ProvisioningStatus: "provisioned",
+					SSHAddress:         "127.0.0.1:2222",
+					SSHPort:            2222,
+					ProvisionLogPath:   "/tmp/provision.log",
+				},
+			},
+		},
+		{
 			name:    "down",
 			command: "down",
 			data: app.DownResult{

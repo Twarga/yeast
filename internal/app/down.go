@@ -87,7 +87,7 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 			instance.PID = 0
 			instance.ManagementIP = ""
 			instance.SSHPort = 0
-			instance.ProvisioningStatus = ""
+			instance.ProvisioningStatus = state.ProvisioningStatusNotStarted
 			currentState.Instances[name] = instance
 			result.Instances = append(result.Instances, DownInstanceResult{
 				Name:   name,
@@ -104,12 +104,19 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 		if err != nil {
 			return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
+		if err := s.waitForManagementPortRelease(ctx, instance.SSHPort, timeout); err != nil {
+			return DownResult{}, WrapError(
+				ErrorCodeInternal,
+				fmt.Sprintf("wait for ssh_port %d to become available: %v", instance.SSHPort, err),
+				err,
+			)
+		}
 
 		instance.Status = "stopped"
 		instance.PID = 0
 		instance.ManagementIP = ""
 		instance.SSHPort = 0
-		instance.ProvisioningStatus = ""
+		instance.ProvisioningStatus = state.ProvisioningStatusNotStarted
 		instance.LastError = ""
 		currentState.Instances[name] = instance
 		result.Instances = append(result.Instances, DownInstanceResult{

@@ -80,13 +80,13 @@ YEAST_FEEDBACK_LOG.md
 Current phase:
 
 ```text
-v0.2.0 project safety and error structure cleanup.
+v0.3.0 provisioning.
 ```
 
 Next task:
 
 ```text
-V0.2-T10: Classify yeast up runtime prepare/start errors.
+V0.3-T8: Add provisioning logs and status model.
 ```
 
 ## 5. Milestone Overview
@@ -2686,42 +2686,682 @@ Completion notes:
 
 # Future Milestones
 
-These are intentionally deferred until v0.1 works.
+These milestones are ordered by dependency. Do not pull features forward from later milestones unless a current milestone explicitly needs a small internal primitive.
 
 ## M11: Provisioning
 
-Status: [-]
+Status: [~]
 
 Do not start until:
 
 - M10 complete
-- v0.1 lifecycle proven
+- v0.2.0 released
 
-Core tasks later:
+Goal:
 
-- provision model
-- packages
-- files
-- shell
-- provision command
-- Caddy demo
+Turn a booted VM into a useful machine automatically.
+
+v0.3.0 success target:
+
+- `yeast up` boots a VM, waits for SSH, provisions it, and reports `provisioned`
+- `yeast provision` reruns the post-boot provisioning plan without recreating the VM
+- one example VM installs a web server, copies content, runs setup commands, and is verifiable from the host
+
+Non-goals:
+
+- no snapshots
+- no private networking
+- no templates
+- no LabsBackery-specific API
+- no MCP commands
+- no Ansible/provider/plugin system
+- no cloud worker behavior
+
+Important v0.3.0 product rule:
+
+```text
+cloud-init remains bootstrap.
+post-boot SSH provisioning owns packages, files, and shell.
+```
+
+Reason:
+
+- post-boot provisioning can be logged, retried, and rerun through `yeast provision`
+- shell steps are easier to debug after SSH readiness than inside opaque first-boot logs
+- package/file/shell behavior should have one execution path, not one cloud-init path and one rerun path
+
+### V0.3-T1: Activate provisioning config schema and validation
+
+Status: [x]
+
+Dependencies:
+
+- V0.2-T22
+
+Files:
+
+- `internal/config/validate.go`
+- `internal/config/validate_test.go`
+- `internal/config/loader_test.go`
+- `docs/config-reference.md`
+- `TASKS.md`
+
+Definition of done:
+
+- top-level and instance-level `provision` blocks are validated
+- package entries reject empty/newline values
+- file entries require `source` and `destination`
+- file `permissions` validate as octal strings when present
+- shell entries reject empty commands
+- docs describe the active provisioning schema and clearly state execution is not wired yet
+
+Completion notes:
+
+- Activated schema validation for top-level and instance-level `provision` blocks.
+- Added focused tests for valid provisioning config plus invalid package, file, permissions, and shell cases.
+- Extended loader coverage so top-level and instance-level provisioning sections parse from YAML.
+- Updated config reference to document the schema and its current non-executing status.
+
+### V0.3-T2: Lock provisioning contract and merge rules
+
+Status: [x]
+
+Dependencies:
+
+- V0.3-T1
+
+Files:
+
+- `YEAST_TECHNICAL_ARCHITECTURE.md`
+- `YEAST_V2_IMPLEMENTATION_PLAN.md`
+- `docs/config-reference.md`
+- `TASKS.md`
+
+Definition of done:
+
+- top-level `provision` behavior is explicit
+- instance-level `provision` behavior is explicit
+- merge order is explicit for packages, files, and shell
+- cloud-init vs post-boot responsibilities are explicit
+- auto-run behavior during `yeast up` is explicit
+- rerun behavior for `yeast provision` is explicit
+- idempotency expectations are explicit
+
+Contract to document:
+
+- top-level provision steps run before instance-level steps
+- list fields append in order: project packages/files/shell, then instance packages/files/shell
+- `provision.packages`, `provision.files`, and `provision.shell` run post-boot over SSH in v0.3.0
+- cloud-init remains responsible for user, SSH key, hostname, sudo, and environment bootstrap
+- `yeast up` runs provisioning automatically after SSH readiness
+- `yeast provision` requires an existing reachable VM and reruns the same post-boot plan
+- package installation should be idempotent where the guest package manager supports it
+- file provisioning overwrites destination files
+- shell commands always run and must be authored as idempotent by the user
+
+Completion notes:
+
+- Documented provisioning merge order in architecture, implementation plan, and config reference.
+- Locked the v0.3 execution split: cloud-init remains bootstrap; packages/files/shell run post-boot over SSH.
+- Documented automatic `yeast up` provisioning and manual `yeast provision` rerun semantics.
+- Documented idempotency expectations for packages, files, and shell commands.
+
+### V0.3-T3: Add provisioning plan builder
+
+Status: [x]
+
+Dependencies:
+
+- V0.3-T2
+
+Files:
+
+- `internal/provision/*.go`
+- `internal/provision/*_test.go`
+- `internal/config/model.go`
+- `TASKS.md`
+
+Definition of done:
+
+- `internal/provision` exposes a small plan type built from config
+- project-level and instance-level steps merge in documented order
+- package, file, and shell steps are structured
+- plan construction does not execute anything
+- tests cover empty plans, project-only plans, instance-only plans, and merged plans
+
+Completion notes:
+
+- Added `internal/provision.Plan` plus structured package, file, and shell step types.
+- Added `BuildPlan` to merge project-level provision config before instance-level provision config.
+- Added focused tests for empty, project-only, instance-only, and merged-order plans.
+
+### V0.3-T4: Add SSH provisioning transport abstraction
+
+Status: [x]
+
+Dependencies:
+
+- V0.3-T3
+
+Files:
+
+- `internal/provision/ssh/*.go`
+- `internal/provision/ssh/*_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- SSH transport interface exists for command execution and file upload
+- implementation can use system `ssh` / `scp` or a minimal command runner wrapper
+- fake transport exists for tests
+- timeouts and exit-code capture are represented in result types
+- no public `yeast exec` command is added in this milestone
+
+Completion notes:
+
+- Added `internal/provision/ssh.Transport` with `Run` and `Upload` methods.
+- Added a command-backed local transport using `ssh` and `scp`.
+- Added structured request/result types with stdout, stderr, exit code, and duration capture.
+- Added a fake transport plus focused tests for invocation building, validation, and error result preservation.
+
+### V0.3-T5: Add package provisioner
+
+Status: [x]
+
+Dependencies:
+
+- V0.3-T3
+- V0.3-T4
+
+Files:
+
+- `internal/provision/ssh/*.go`
+- `internal/provision/ssh/*_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- package steps install packages over SSH
+- Ubuntu/Debian guests are supported first through `apt-get`
+- empty package plans are no-ops
+- command result includes stdout, stderr, exit code, and duration where practical
+- tests cover generated command behavior and failure propagation
+
+Completion notes:
+
+- Added `ssh.PackageProvisioner` for package-step execution over the SSH transport.
+- Collapsed package steps into a single Ubuntu/Debian `apt-get update && apt-get install -y ...` command.
+- Preserved stdout/stderr/exit-code results on failures from the transport.
+- Added focused tests for no-op behavior, command generation, validation, default timeout, and failure-result preservation.
+
+### V0.3-T6: Add file provisioner
+
+Status: [x]
+
+Dependencies:
+
+- V0.3-T3
+- V0.3-T4
+
+Files:
+
+- `internal/provision/ssh/*.go`
+- `internal/provision/ssh/*_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- file upload steps copy local files/directories into the guest
+- destination parent directories are created when needed
+- optional permissions are applied after upload
+- failures identify the file step that failed
+- tests cover source/destination handling and permissions behavior
+
+Completion notes:
+
+- Added `ssh.FileProvisioner` for file-step execution over the SSH transport.
+- Added remote parent-directory creation before upload.
+- Added optional post-upload `chmod` handling.
+- Preserved failure context for mkdir/upload/chmod failures and added focused tests for each path.
+
+### V0.3-T7: Add shell provisioner
+
+Status: [x]
+
+Dependencies:
+
+- V0.3-T3
+- V0.3-T4
+
+Files:
+
+- `internal/provision/ssh/*.go`
+- `internal/provision/ssh/*_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- shell steps run over SSH after package and file steps
+- shell steps run in the configured order
+- failures stop the provisioning run
+- result identifies the failed command and exit code
+- tests cover success, command failure, and ordering
+
+Completion notes:
+
+- Added `ssh.ShellProvisioner` for ordered shell-step execution over the SSH transport.
+- Stopped execution on the first failed shell command.
+- Preserved stdout/stderr/exit-code results for the failed command.
+- Added focused tests for no-op behavior, ordering, stop-on-failure, and request validation.
+
+### V0.3-T8: Add provisioning logs and status model
+
+Status: [x]
+
+Dependencies:
+
+- V0.3-T3
+
+Files:
+
+- `internal/state/*.go`
+- `internal/state/*_test.go`
+- `internal/provision/*.go`
+- `internal/provision/*_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- state can represent `not_started`, `running`, `provisioned`, and `failed`
+- provisioning failure stores a useful `last_error`
+- a per-instance `provision.log` path is defined
+- result types can render enough information for human and JSON output later
+- tests cover status transitions without needing real SSH
+
+Completion notes:
+
+- Added typed provisioning statuses to `state.InstanceState` and persisted a per-instance `provision_log_path`.
+- Added a minimal `provision.Result` / `provision.StepResult` model for later human and JSON rendering.
+- Updated app status results to expose provisioning status and log path.
+- Set new instances to `not_started` with a stable `provision.log` path so `V0.3-T9` can wire execution without another state-shape change.
+- Added and updated state, provision, and app tests to cover the new model without real SSH.
+
+### V0.3-T9: Wire provisioning into `yeast up`
+
+Status: [x]
+
+Dependencies:
+
+- V0.3-T5
+- V0.3-T6
+- V0.3-T7
+- V0.3-T8
+
+Files:
+
+- `internal/app/up.go`
+- `internal/app/up_test.go`
+- `internal/state/*.go`
+- `internal/state/*_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- `yeast up` runs provisioning automatically after SSH readiness
+- package, file, and shell steps run in the documented order
+- provisioning status updates are reflected in state/status
+- failures are visible and recoverable
+- tests use fake provisioning dependencies rather than real SSH
+
+Completion notes:
+
+- Wired `yeast up` to build the merged provisioning plan and run it automatically after SSH readiness.
+- Resolved file provision sources relative to the project root before upload.
+- Updated state transitions to `running -> not_started/running -> provisioned|failed` with a stable per-instance `provision.log`.
+- Kept instances running on provisioning failure while persisting `failed` state and `last_error` for later recovery.
+- Added focused `up` tests for merged provisioning order, source-path resolution, success logging, and failure-state persistence using a fake SSH transport.
+
+### V0.3-T10: Add `yeast provision` rerun command
+
+Status: [x]
+
+Dependencies:
+
+- V0.3-T9
+
+Files:
+
+- `cmd/yeast/provision.go`
+- `internal/app/provision.go`
+- related tests
+- docs
+- `TASKS.md`
+
+Definition of done:
+
+- user can rerun provisioning without recreating the VM
+- command requires a reachable existing VM in v0.3.0
+- command has human and JSON output
+- tests cover success and failure paths
+
+Completion notes:
+
+- Added `app.Service.Provision` to rerun the same merged provisioning plan against an existing running instance.
+- Reused the same plan resolution and provisioning execution path as `yeast up` rather than adding a second implementation.
+- Added `yeast provision [instance]` with the same target-selection behavior as `yeast ssh`.
+- Added human and JSON renderer coverage for the new command.
+- Added focused service tests for successful reruns, failure-state persistence, and reachable-instance preconditions.
+
+### V0.3-T11: Add provisioning docs and Caddy example
+
+Status: [x]
+
+Dependencies:
+
+- V0.3-T10
+
+Files:
+
+- `examples/*`
+- `docs/config-reference.md`
+- `docs/quickstart.md`
+- `docs/known-limitations.md`
+- `README.md`
+- `TASKS.md`
+
+Definition of done:
+
+- one VM can boot, install Caddy, copy content, and serve it
+- example config is small and readable
+- docs explain the demo clearly
+
+Completion notes:
+
+- Added `examples/caddy-single-vm` with a small Caddy provisioning demo and static site assets.
+- Updated the quickstart to include provisioning and `yeast provision`.
+- Updated the config reference to describe shipped `v0.3` provisioning behavior instead of future intent.
+- Updated known limitations to reflect current provisioning support and current gaps.
+- Updated the README examples, scope, and install snippet to match the current product state.
+
+### V0.3-T12: Add provisioning smoke coverage and release notes
+
+Status: [x]
+
+Dependencies:
+
+- V0.3-T11
+
+Files:
+
+- `scripts/manual-smoke.sh`
+- `docs/tutorial-test.md`
+- `docs/release-notes-v0.3.0.md`
+- `CHANGELOG.md`
+- `TASKS.md`
+
+Definition of done:
+
+- smoke script can validate provisioning on a real Linux/KVM host
+- smoke script proves the Caddy example reaches a serving state
+- release notes list v0.3.0 features and limitations
+- known limitations remain honest about snapshots/networking/templates/MCP/cloud
+
+Completion notes:
+
+- Expanded `scripts/manual-smoke.sh` from a lifecycle-only `v0.2` script into a `v0.3` provisioning smoke suite.
+- Added positive-path checks for automatic provisioning, Caddy service state, guest HTTP content, and `yeast provision` reruns.
+- Added a negative-path check for missing provision source files.
+- Rewrote `docs/tutorial-test.md` for the `v0.3.0` candidate and the new smoke workflow.
+- Added `docs/release-notes-v0.3.0.md` and a `0.3.0` changelog entry.
 
 ## M12: Snapshots And Reset
 
-Status: [-]
+Status: [>]
 
 Do not start until:
 
 - M11 complete
-- snapshot experiment complete
 
-Core tasks later:
+Goal:
 
-- choose snapshot model
-- snapshot command
-- restore command
-- list/delete snapshots
-- reset demo
+Make single-VM lab reset real and safe before multi-VM reset.
+
+Non-goals for `v0.4.0`:
+
+- live snapshots of running VMs
+- multi-VM atomic restore
+- browser/UI reset flows
+- libvirt or alternate runtime support
+
+Snapshot safety rules:
+
+- early snapshot and restore require stopped VMs
+- restore must never silently touch a running VM
+- snapshot metadata must be explicit and inspectable
+- snapshot behavior must prefer disk safety over convenience
+
+Execution order:
+
+- contract and metadata first
+- runtime file operations second
+- app workflows third
+- CLI/docs/smoke last
+
+### V0.4-T1: Lock snapshot contract and metadata model
+
+Status: [ ]
+
+Dependencies:
+
+- M11 complete
+
+Files:
+
+- `YEAST_TECHNICAL_ARCHITECTURE.md`
+- `YEAST_V2_IMPLEMENTATION_PLAN.md`
+- `docs/known-limitations.md`
+- `TASKS.md`
+
+Definition of done:
+
+- stopped-VM requirement is documented as the `v0.4` rule
+- snapshot metadata fields are fixed
+- single-instance and project-wide command scope is defined
+- delete behavior and restore preconditions are explicit
+
+### V0.4-T2: Add snapshot metadata model to state
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T1
+
+Files:
+
+- `internal/state/*.go`
+- `internal/state/*_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- state can store snapshot metadata per instance
+- metadata includes at least name, created time, description, and disk path/reference
+- state round-trip tests cover the new snapshot model
+
+### V0.4-T3: Add runtime snapshot file helpers
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T2
+
+Files:
+
+- `internal/runtime/*.go`
+- `internal/runtime/qemu/*.go`
+- related tests
+- `TASKS.md`
+
+Definition of done:
+
+- runtime can create a snapshot copy for a stopped instance disk
+- runtime can restore a stopped instance disk from a snapshot copy
+- runtime can delete snapshot files
+- tests cover missing-file and overwrite safety paths
+
+### V0.4-T4: Add snapshot listing helpers
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T2
+- V0.4-T3
+
+Files:
+
+- `internal/state/*.go`
+- `internal/app/*.go`
+- related tests
+- `TASKS.md`
+
+Definition of done:
+
+- app layer can list instance snapshots from state
+- snapshots are sorted predictably
+- missing snapshot state is handled cleanly
+
+### V0.4-T5: Add `app.Service.Snapshot`
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T3
+- V0.4-T4
+
+Files:
+
+- `internal/app/snapshot.go`
+- `internal/app/snapshot_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- snapshots can be created for a stopped target instance
+- snapshot metadata is persisted
+- duplicate snapshot names fail cleanly
+- tests use fake runtime helpers rather than real QEMU
+
+### V0.4-T6: Add `app.Service.Restore`
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T5
+
+Files:
+
+- `internal/app/restore.go`
+- `internal/app/restore_test.go`
+- `TASKS.md`
+
+Definition of done:
+
+- restore requires a stopped target instance
+- restore replaces the tracked disk with the snapshot copy
+- missing snapshot names fail cleanly
+- state stays consistent after restore
+
+### V0.4-T7: Add snapshot deletion and list commands in app layer
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T5
+
+Files:
+
+- `internal/app/snapshots.go`
+- related tests
+- `TASKS.md`
+
+Definition of done:
+
+- list snapshots returns metadata for one target instance
+- delete snapshot removes file plus metadata
+- deleting a missing snapshot returns `not_found`
+
+### V0.4-T8: Add CLI commands for snapshot workflows
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T6
+- V0.4-T7
+
+Files:
+
+- `cmd/yeast/snapshot.go`
+- `cmd/yeast/restore.go`
+- `cmd/yeast/snapshots.go`
+- `cmd/yeast/delete-snapshot.go`
+- renderer tests
+- `TASKS.md`
+
+Definition of done:
+
+- commands exist for snapshot, restore, list, and delete
+- human output is readable
+- JSON output uses existing success/error envelopes
+
+### V0.4-T9: Add single-VM reset demo docs
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T8
+
+Files:
+
+- `examples/*`
+- `docs/quickstart.md`
+- `docs/known-limitations.md`
+- `README.md`
+- `TASKS.md`
+
+Definition of done:
+
+- one example shows provision -> snapshot -> modify -> restore
+- docs explain stopped-VM restore expectations clearly
+
+### V0.4-T10: Add snapshot smoke coverage and release notes
+
+Status: [ ]
+
+Dependencies:
+
+- V0.4-T9
+
+Files:
+
+- `scripts/manual-smoke.sh`
+- `docs/tutorial-test.md`
+- `docs/release-notes-v0.4.0.md`
+- `CHANGELOG.md`
+- `TASKS.md`
+
+Definition of done:
+
+- smoke script validates snapshot create/list/restore/delete on one real VM
+- release notes describe snapshot limits honestly
+- docs stay explicit that multi-VM reset is still later work
 
 ## M13: Private Networking
 

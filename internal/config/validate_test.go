@@ -141,3 +141,75 @@ func TestValidateAcceptsValidConfig(t *testing.T) {
 		t.Fatalf("expected valid config, got %v", err)
 	}
 }
+
+func TestValidateAcceptsProvisionConfig(t *testing.T) {
+	cfg := validConfig()
+	cfg.Provision = &ProvisionConfig{
+		Packages: []string{"caddy", "curl"},
+		Files: []FileProvision{
+			{Source: "./site", Destination: "/srv/site", Permissions: "0644"},
+		},
+		Shell: []string{"systemctl enable --now caddy"},
+	}
+	cfg.Instances[0].Provision = &ProvisionConfig{
+		Packages: []string{"git"},
+		Shell:    []string{"echo ready >/tmp/ready"},
+	}
+
+	if err := Validate(cfg); err != nil {
+		t.Fatalf("expected valid provision config, got %v", err)
+	}
+}
+
+func TestValidateRejectsEmptyProvisionPackage(t *testing.T) {
+	cfg := validConfig()
+	cfg.Instances[0].Provision = &ProvisionConfig{Packages: []string{"", "curl"}}
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected empty package error")
+	}
+}
+
+func TestValidateRejectsMissingProvisionFileSource(t *testing.T) {
+	cfg := validConfig()
+	cfg.Instances[0].Provision = &ProvisionConfig{
+		Files: []FileProvision{{Destination: "/etc/example"}},
+	}
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected missing provision file source error")
+	}
+}
+
+func TestValidateRejectsMissingProvisionFileDestination(t *testing.T) {
+	cfg := validConfig()
+	cfg.Provision = &ProvisionConfig{
+		Files: []FileProvision{{Source: "./local-file"}},
+	}
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected missing provision file destination error")
+	}
+}
+
+func TestValidateRejectsInvalidProvisionFilePermissions(t *testing.T) {
+	cfg := validConfig()
+	cfg.Instances[0].Provision = &ProvisionConfig{
+		Files: []FileProvision{{Source: "./local-file", Destination: "/tmp/file", Permissions: "rwx"}},
+	}
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected invalid provision file permissions error")
+	}
+}
+
+func TestValidateRejectsEmptyProvisionShellCommand(t *testing.T) {
+	cfg := validConfig()
+	cfg.Provision = &ProvisionConfig{
+		Shell: []string{"echo ok", "   "},
+	}
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected empty provision shell command error")
+	}
+}

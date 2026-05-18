@@ -8,8 +8,6 @@ import (
 )
 
 func TestPullUnsupportedImageRendersInvalidArgumentJSON(t *testing.T) {
-	t.Parallel()
-
 	previous := outputJSON
 	outputJSON = true
 	defer func() {

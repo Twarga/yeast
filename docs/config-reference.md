@@ -14,7 +14,7 @@ instances:
 
 `memory`, `cpus`, `user`, and `sudo` have defaults.
 
-## Full v0.1 Example
+## Full Example
 
 ```yaml
 version: 1
@@ -38,8 +38,8 @@ instances:
 |---|---:|---|
 | `version` | yes | Config schema version. Must be `1`. |
 | `instances` | yes | List of VMs in the project. Must contain at least one instance. |
-| `networks` | no | Reserved for future networking milestones. Not active in v0.1. |
-| `provision` | no | Reserved for future provisioning milestones. Not active in v0.1. |
+| `networks` | no | Reserved for future networking milestones. Not active in `v0.3`. |
+| `provision` | no | Provisioning config shared across instances. Runs before instance-level provisioning during `yeast up` and `yeast provision`. |
 
 ## Instance Fields
 
@@ -57,7 +57,7 @@ instances:
 | `env` | no | empty | Environment values rendered into the guest profile script. |
 | `user_data` | no | empty | Raw cloud-init user-data override. |
 | `networks` | no | empty | Reserved for future networking milestones. |
-| `provision` | no | empty | Reserved for future provisioning milestones. |
+| `provision` | no | empty | Instance-specific provisioning config. Runs after top-level provisioning during `yeast up` and `yeast provision`. |
 
 ## Supported Images
 
@@ -141,6 +141,85 @@ Rules:
 - must be between `1` and `65535`
 - must not collide with another requested or already-running Yeast instance port in the same project run
 - if tracked state already uses a different SSH port for the same instance, Yeast fails instead of silently switching it
+
+## Provisioning Schema
+
+Yeast now accepts provisioning config in the schema. During `v0.3.0`, this config becomes the contract for post-boot provisioning.
+
+Provisioning can appear:
+
+- once at the top level for project-wide defaults
+- per instance for instance-specific steps
+
+Current schema:
+
+```yaml
+provision:
+  packages:
+    - caddy
+    - curl
+  files:
+    - source: ./site
+      destination: /srv/site
+      permissions: "0644"
+  shell:
+    - systemctl enable --now caddy
+```
+
+### `packages`
+
+- list of package names
+- entries cannot be empty
+- entries cannot contain newlines
+
+### `files`
+
+Each file item requires:
+
+- `source`
+- `destination`
+
+Optional:
+
+- `permissions`
+
+Rules:
+
+- `source` cannot be empty
+- `destination` cannot be empty
+- `source` and `destination` cannot contain newlines
+- `permissions`, when set, must be an octal mode like `644` or `0644`
+
+### `shell`
+
+- list of shell commands
+- entries cannot be empty after trimming whitespace
+
+Provisioning behavior in `v0.3`:
+
+- top-level steps run before instance-level steps
+- `packages`, `files`, and `shell` run post-boot over SSH
+- cloud-init remains responsible for user, SSH key, hostname, sudo, and environment bootstrap
+
+Merge order:
+
+```text
+project packages -> instance packages
+project files    -> instance files
+project shell    -> instance shell
+```
+
+`yeast up` runs the merged post-boot provisioning plan automatically after SSH readiness.
+
+`yeast provision` reruns the same merged post-boot provisioning plan against an existing reachable VM. It does not recreate disks, regenerate cloud-init, or reboot the VM unless a user-authored shell command does that.
+
+Idempotency expectations:
+
+- package installation relies on the guest package manager's normal idempotency
+- file provisioning overwrites destination files
+- shell commands always run, so write them to be safe on reruns
+
+File source paths are resolved relative to the project root when they are not absolute.
 
 ## Sudo Modes
 

@@ -1,6 +1,6 @@
 # Yeast Known Limitations
 
-This document describes Yeast v0.1 limits.
+This document describes Yeast `v0.3` limits.
 
 Yeast is intentionally narrow right now. The goal is a reliable local VM core before adding LabsBackery, MCP, cloud, snapshots, and advanced provisioning.
 
@@ -35,22 +35,28 @@ Current images:
 
 ## Provisioning Limits
 
-Yeast v0.1 uses cloud-init for base bootstrap.
-
-It does not yet provide:
+Yeast `v0.3` now supports:
 
 - `provision.packages`
 - `provision.files`
 - `provision.shell`
-- `yeast provision`
-- Ansible integration
-- reusable provisioning bundles
+- automatic provisioning during `yeast up`
+- manual reruns with `yeast provision`
 
-Raw `user_data` exists, but it fully replaces Yeast-generated cloud-init.
+Current limits:
+
+- package provisioning is currently tuned for Ubuntu and Debian guests and uses `apt-get`
+- there is no service or HTTP health-check stage yet
+- file provisioning copies host files one by one; directory sync and templating are not implemented
+- shell steps always rerun and must be authored to be safe on repeat execution
+- per-step timeout tuning is not exposed in config yet
+- no Ansible integration or reusable provisioning bundles yet
+
+Raw `user_data` still fully replaces Yeast-generated cloud-init.
 
 ## Networking Limits
 
-Yeast v0.1 uses QEMU user-mode networking with SSH port forwarding for management.
+Yeast uses QEMU user-mode networking with SSH port forwarding for management.
 
 It does not yet support:
 
@@ -64,11 +70,11 @@ It does not yet support:
 
 Snapshots and restore are not implemented yet.
 
-This means Yeast v0.1 is not yet enough for full resettable cybersecurity labs. LabsBackery needs snapshot/reset support before serious classroom use.
+This means Yeast `v0.3` is not yet enough for full resettable cybersecurity labs. LabsBackery needs snapshot/reset support before serious classroom use.
 
 ## Guest Control Limits
 
-Yeast v0.1 supports interactive SSH.
+Yeast supports interactive SSH and provisioning-time SSH automation.
 
 It does not yet support:
 

@@ -7,6 +7,54 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-18
+
+### Summary
+
+Yeast v0.3.0 adds the first real provisioning workflow to the local VM engine. It can now boot a guest, install packages, copy files, run shell commands, rerun provisioning against an existing VM, and track provisioning state and logs.
+
+### Added
+
+- Top-level and per-instance `provision` config.
+- SSH package provisioner for Ubuntu/Debian guests.
+- SSH file provisioner with source-path resolution relative to the project root.
+- SSH shell provisioner.
+- Automatic provisioning during `yeast up`.
+- `yeast provision [instance]`.
+- Provisioning status model: `not_started`, `running`, `provisioned`, `failed`.
+- Per-instance `provision.log`.
+- `examples/caddy-single-vm`.
+- Updated smoke script coverage for lifecycle plus provisioning.
+- `docs/release-notes-v0.3.0.md`.
+
+### Changed
+
+- `yeast up` now treats "ready" as "booted and provisioned" when a provisioning plan exists.
+- State and status output now track provisioning progress and log paths.
+- Quickstart, config reference, limitations, and README now describe provisioning as a shipped feature instead of a planned one.
+
+### Fixed
+
+- The Caddy example and provisioning smoke path now verify guest HTTP service from inside the guest rather than incorrectly assuming host HTTP reachability.
+- CLI test isolation around the global JSON flag is tighter by removing unsafe parallel mutation.
+
+### Verification
+
+- `go test ./... -count=1`
+- `git diff --check`
+- `bash -n scripts/manual-smoke.sh`
+- `TEST_MODE=negative ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64`
+
+### Known Limitations
+
+- Linux host only.
+- QEMU/KVM only.
+- Package provisioning currently assumes Ubuntu/Debian `apt-get`.
+- No snapshots or restore yet.
+- No private VM-to-VM networking yet.
+- No guest `exec`, `copy`, `logs`, or `inspect` yet.
+- No templates, LabsBackery contract, MCP contract, or cloud worker mode yet.
+
 ## [0.2.0] - 2026-05-17
 
 ### Summary
