@@ -64,11 +64,6 @@ func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (DestroyR
 		return DestroyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
-	timeout := options.Timeout
-	if timeout <= 0 {
-		timeout = 10 * time.Second
-	}
-
 	result := DestroyResult{
 		ProjectID: metadata.ID,
 		Instances: make([]DestroyInstanceResult, 0, len(currentState.Instances)),

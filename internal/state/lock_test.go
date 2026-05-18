@@ -32,7 +32,11 @@ func TestDoubleAcquireTimesOut(t *testing.T) {
 	if err != nil {
 		t.Fatalf("first Acquire returned error: %v", err)
 	}
-	defer first.Release()
+	defer func() {
+		if err := first.Release(); err != nil {
+			t.Fatalf("first Release returned error: %v", err)
+		}
+	}()
 
 	_, err = Acquire(path, LockOptions{
 		AcquireTimeout: 50 * time.Millisecond,

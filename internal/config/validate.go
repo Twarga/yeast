@@ -146,7 +146,7 @@ func parseByteSize(raw string) (int64, error) {
 		return 0, fmt.Errorf("invalid size value %q: %w", matches[1], err)
 	}
 
-	multiplier := int64(1)
+	var multiplier int64
 	switch strings.ToUpper(matches[2]) {
 	case "":
 		multiplier = 1
