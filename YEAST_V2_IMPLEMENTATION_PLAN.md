@@ -574,9 +574,19 @@ Features:
 - snapshot all
 - restore all
 
+Execution contract:
+
+- `v0.4` snapshot create and restore only support stopped VMs
+- restore must fail clearly for running targets
+- project-wide snapshot/restore is sequential, not atomic
+- metadata is tracked in state per instance
+- first metadata fields are `name`, `created_at`, `description`, `disk_path`, and optional `source_disk_size`
+
 Definition of done:
 
 - VM can be provisioned, snapshotted, broken, restored, and verified.
+- one stopped-instance snapshot/restore loop works reliably on a real host
+- command scope is fixed before runtime helpers are built
 
 Blocked by:
 

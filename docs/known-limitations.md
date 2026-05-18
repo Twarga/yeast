@@ -72,6 +72,15 @@ Snapshots and restore are not implemented yet.
 
 This means Yeast `v0.3` is not yet enough for full resettable cybersecurity labs. LabsBackery needs snapshot/reset support before serious classroom use.
 
+The planned `v0.4` scope is intentionally narrow:
+
+- stopped-VM snapshot create only
+- stopped-VM restore only
+- per-instance snapshot metadata tracked in state
+- project-wide snapshot/restore as a sequential loop
+
+It will not try to ship live snapshots, live restore, or multi-VM atomic reset in the first pass.
+
 ## Guest Control Limits
 
 Yeast supports interactive SSH and provisioning-time SSH automation.

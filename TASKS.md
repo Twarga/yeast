@@ -80,13 +80,13 @@ YEAST_FEEDBACK_LOG.md
 Current phase:
 
 ```text
-v0.3.0 provisioning.
+v0.4.0 snapshots and reset.
 ```
 
 Next task:
 
 ```text
-V0.3-T8: Add provisioning logs and status model.
+V0.4-T2: Add snapshot metadata model to state.
 ```
 
 ## 5. Milestone Overview
@@ -105,8 +105,8 @@ V0.3-T8: Add provisioning logs and status model.
 | M9 | Tests And Examples | Prove v0.1 works | [ ] |
 | M10 | Docs And v0.1 Release Prep | Prepare first public release | [x] |
 | C1 | Charm CLI Experience | Polished terminal UX without breaking JSON | [x] |
-| M11 | Provisioning | Packages/files/shell after v0.1 | [-] |
-| M12 | Snapshots And Reset | Lab reset capability | [-] |
+| M11 | Provisioning | Packages/files/shell after v0.1 | [x] |
+| M12 | Snapshots And Reset | Lab reset capability | [~] |
 | M13 | Private Networking | Multi-VM lab networking | [-] |
 | M14 | Guest Control | exec/copy/logs/inspect | [-] |
 | M15 | LabsBackery Contract | CLI/JSON lab integration | [-] |
@@ -3116,7 +3116,7 @@ Completion notes:
 
 ## M12: Snapshots And Reset
 
-Status: [>]
+Status: [~]
 
 Do not start until:
 
@@ -3149,7 +3149,7 @@ Execution order:
 
 ### V0.4-T1: Lock snapshot contract and metadata model
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3168,6 +3168,23 @@ Definition of done:
 - snapshot metadata fields are fixed
 - single-instance and project-wide command scope is defined
 - delete behavior and restore preconditions are explicit
+
+Completion notes:
+
+- Locked `v0.4` snapshot safety to stopped-VM-only create/restore flows.
+- Fixed the first metadata model to: `name`, `created_at`, `description`, `disk_path`, and optional `source_disk_size`.
+- Defined command scope:
+  - `yeast snapshot <instance> <name>`
+  - `yeast snapshot --all <name>`
+  - `yeast snapshots [instance]`
+  - `yeast restore <instance> <name>`
+  - `yeast restore --all <name>`
+  - `yeast delete-snapshot <instance> <name>`
+- Defined restore/delete preconditions:
+  - restore target must exist in metadata
+  - restore target instance must be stopped
+  - delete does not touch running guests, but must fail if metadata/file target is missing inconsistently
+- Updated architecture, implementation plan, known limitations, and this task file before runtime work.
 
 ### V0.4-T2: Add snapshot metadata model to state
 

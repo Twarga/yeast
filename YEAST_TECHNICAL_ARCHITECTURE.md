@@ -1014,7 +1014,7 @@ Do not mix management access and lab traffic conceptually.
 
 ## 16. Snapshot Architecture
 
-Snapshot model is not final until experiments are complete.
+`v0.4` snapshot scope is intentionally conservative.
 
 Architecture must allow:
 
@@ -1033,17 +1033,47 @@ Reason:
 
 Disk safety matters more than clever live restore.
 
-Snapshot metadata should belong in state or a snapshot metadata file under the instance directory.
+For `v0.4`, the contract is:
 
-Possible snapshot state:
+- snapshot create requires the target instance to be stopped
+- snapshot restore requires the target instance to be stopped
+- `yeast restore` must fail explicitly if the instance is running
+- project-wide snapshot/restore is an ordered loop across instance targets, not a multi-VM atomic transaction
+- snapshot delete removes stored snapshot data plus tracked metadata for one instance target
+
+Snapshot metadata belongs in Yeast state and points to files stored under the instance snapshot directory.
+
+Snapshot metadata fields for the first implementation:
 
 ```text
 name
 created_at
-disk_reference
 description
-status
+disk_path
+source_disk_size
 ```
+
+Storage shape for the first implementation:
+
+```text
+~/.yeast/projects/<project-id>/instances/<instance>/snapshots/<snapshot-name>.qcow2
+```
+
+Command scope for `v0.4`:
+
+- `yeast snapshot <instance> <name>`
+- `yeast snapshot --all <name>`
+- `yeast snapshots [instance]`
+- `yeast restore <instance> <name>`
+- `yeast restore --all <name>`
+- `yeast delete-snapshot <instance> <name>`
+
+Non-goals for this version:
+
+- live snapshots
+- live restore
+- RAM state capture
+- cross-instance transactional restore guarantees
 
 ## 17. Guest Control Architecture
 
