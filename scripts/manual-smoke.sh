@@ -2,16 +2,20 @@
 set -euo pipefail
 
 BIN_PATH="${1:-}"
-WORKDIR="${WORKDIR:-/tmp/yeast-v020-test}"
+WORKDIR="${WORKDIR:-/tmp/yeast-v030-test}"
 IMAGE_NAME="${IMAGE_NAME:-ubuntu-24.04}"
 INSTANCE_NAME="${INSTANCE_NAME:-web}"
-INSTANCE_HOSTNAME="${INSTANCE_HOSTNAME:-web-lab}"
+INSTANCE_HOSTNAME="${INSTANCE_HOSTNAME:-caddy-lab}"
 INSTANCE_USER="${INSTANCE_USER:-yeast}"
 INSTANCE_MEMORY="${INSTANCE_MEMORY:-1024}"
 INSTANCE_CPUS="${INSTANCE_CPUS:-1}"
 INSTANCE_DISK_SIZE="${INSTANCE_DISK_SIZE:-20G}"
 INSTANCE_SSH_PORT="${INSTANCE_SSH_PORT:-2205}"
 TEST_MODE="${TEST_MODE:-full}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PROVISION_SENTINEL_ONE="Yeast v0.3 provisioning works."
+PROVISION_SENTINEL_TWO="Yeast reprovisioned content."
 
 if [[ -z "${BIN_PATH}" ]]; then
   echo "usage: $0 /absolute/or/relative/path/to/yeast-binary" >&2
@@ -122,6 +126,19 @@ write_config() {
   local target_dir="$1"
   cat >"${target_dir}/yeast.yaml" <<EOF
 version: 1
+provision:
+  packages:
+    - caddy
+  files:
+    - source: ./site/index.html
+      destination: /var/www/html/index.html
+      permissions: "0644"
+    - source: ./site/Caddyfile
+      destination: /etc/caddy/Caddyfile
+      permissions: "0644"
+  shell:
+    - sudo systemctl enable caddy
+    - sudo systemctl restart caddy
 instances:
   - name: ${INSTANCE_NAME}
     hostname: ${INSTANCE_HOSTNAME}
@@ -131,8 +148,15 @@ instances:
     disk_size: ${INSTANCE_DISK_SIZE}
     ssh_port: ${INSTANCE_SSH_PORT}
     user: ${INSTANCE_USER}
-    sudo: none
+    sudo: nopasswd
 EOF
+}
+
+prepare_caddy_example() {
+  local target_dir="$1"
+  mkdir -p "${target_dir}/site"
+  cp "${REPO_ROOT}/examples/caddy-single-vm/site/index.html" "${target_dir}/site/index.html"
+  cp "${REPO_ROOT}/examples/caddy-single-vm/site/Caddyfile" "${target_dir}/site/Caddyfile"
 }
 
 write_file() {
@@ -310,7 +334,12 @@ run_positive_suite() {
 
   run_capture "Init" "${BIN_PATH}" init
 
-  section "Write v0.2.0 config"
+  section "Prepare Caddy example"
+  prepare_caddy_example "${POSITIVE_DIR}"
+  ok "copied example site assets"
+  record_pass "Prepare Caddy example"
+
+  section "Write v0.3.0 config"
   write_config "${POSITIVE_DIR}"
   cat "${POSITIVE_DIR}/yeast.yaml"
   record_pass "Write config"
@@ -336,6 +365,7 @@ run_positive_suite() {
     fail "expected SSHPort ${INSTANCE_SSH_PORT}, got ${PORT_VALUE}"
   fi
   ok "status json reports ssh port ${PORT_VALUE}"
+  assert_contains "${STATUS_JSON}" '"ProvisioningStatus":"provisioned"' "status json reports provisioned state"
   record_pass "Status JSON"
 
   section "Direct SSH checks"
@@ -355,7 +385,37 @@ run_positive_suite() {
     fail "expected guest user ${INSTANCE_USER}, got ${WHOAMI_OUTPUT}"
   fi
   ok "guest user is ${INSTANCE_USER}"
+
+  printf "%s$ %s sudo systemctl is-active caddy%s\n" "${DIM}" "${SSH_BASE[*]}" "${RESET}"
+  CADDY_STATUS="$("${SSH_BASE[@]}" sudo systemctl is-active caddy)"
+  printf "%s\n" "${CADDY_STATUS}"
+  if [[ "${CADDY_STATUS}" != "active" ]]; then
+    fail "expected caddy service active, got ${CADDY_STATUS}"
+  fi
+  ok "caddy service is active"
+
+  printf "%s$ %s curl -fsS http://127.0.0.1%s\n" "${DIM}" "${SSH_BASE[*]}" "${RESET}"
+  CADDY_PAGE="$("${SSH_BASE[@]}" curl -fsS http://127.0.0.1)"
+  printf "%s\n" "${CADDY_PAGE}"
+  assert_contains "${CADDY_PAGE}" "${PROVISION_SENTINEL_ONE}" "caddy serves initial provisioned content"
   record_pass "Direct SSH checks"
+
+  section "Update content and rerun provisioning"
+  cat >"${POSITIVE_DIR}/site/index.html" <<EOF
+<!doctype html>
+<html lang="en">
+  <body>
+    <h1>${PROVISION_SENTINEL_TWO}</h1>
+  </body>
+</html>
+EOF
+  printf "%s$ %s provision %s%s\n" "${DIM}" "${BIN_PATH}" "${INSTANCE_NAME}" "${RESET}"
+  "${BIN_PATH}" provision "${INSTANCE_NAME}"
+  printf "%s$ %s curl -fsS http://127.0.0.1%s\n" "${DIM}" "${SSH_BASE[*]}" "${RESET}"
+  REPROVISIONED_PAGE="$("${SSH_BASE[@]}" curl -fsS http://127.0.0.1)"
+  printf "%s\n" "${REPROVISIONED_PAGE}"
+  assert_contains "${REPROVISIONED_PAGE}" "${PROVISION_SENTINEL_TWO}" "yeast provision updates guest content"
+  record_pass "Provision rerun"
 
   run_capture "Stop VM" "${BIN_PATH}" down
 
@@ -371,6 +431,15 @@ run_positive_suite() {
   printf "%s\n" "${STATUS_AFTER_RESTART}"
   assert_contains "${STATUS_AFTER_RESTART}" "${INSTANCE_SSH_PORT}" "status after restart keeps requested ssh port"
   record_pass "Status after restart"
+
+  STATUS_JSON_AFTER_RESTART="$("${BIN_PATH}" status --json)"
+  assert_contains "${STATUS_JSON_AFTER_RESTART}" '"ProvisioningStatus":"provisioned"' "status json after restart remains provisioned"
+
+  printf "%s$ %s curl -fsS http://127.0.0.1%s\n" "${DIM}" "${SSH_BASE[*]}" "${RESET}"
+  RESTARTED_PAGE="$("${SSH_BASE[@]}" curl -fsS http://127.0.0.1)"
+  printf "%s\n" "${RESTARTED_PAGE}"
+  assert_contains "${RESTARTED_PAGE}" "${PROVISION_SENTINEL_TWO}" "restarted guest still serves provisioned content"
+  record_pass "Restarted service check"
 
   run_capture "Destroy VM" "${BIN_PATH}" destroy
   FINAL_STATUS_JSON="$("${BIN_PATH}" status --json)"
@@ -472,6 +541,20 @@ run_negative_suite() {
     '    image: ubuntu-24.04' \
     '    ssh_port: 2222'
   run_expect_json_error_in_dir "Up rejects duplicate requested ssh_port values" "invalid_argument" \
+    "${dir}" "${BIN_PATH}" up --json
+
+  dir="$(new_case_dir "up-missing-provision-source")"
+  init_case_project "${dir}"
+  write_file "${dir}/yeast.yaml" \
+    'version: 1' \
+    'provision:' \
+    '  files:' \
+    '    - source: ./site/missing.txt' \
+    '      destination: /tmp/missing.txt' \
+    'instances:' \
+    '  - name: web' \
+    '    image: ubuntu-24.04'
+  run_expect_json_error_in_dir "Up rejects missing provision source file" "invalid_argument" \
     "${dir}" "${BIN_PATH}" up --json
 }
 

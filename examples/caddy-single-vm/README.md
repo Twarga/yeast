@@ -44,13 +44,13 @@ yeast doctor
 yeast pull ubuntu-24.04
 yeast up
 yeast status
-curl http://127.0.0.1
+yeast ssh web
 ```
 
 Expected result:
 
 - `yeast up` finishes with the instance in `provisioned` state
-- `curl http://127.0.0.1` returns the example HTML page
+- inside the guest, `curl http://127.0.0.1` returns the example HTML page
 
 To rerun provisioning after editing files:
 

@@ -3085,7 +3085,7 @@ Completion notes:
 
 ### V0.3-T12: Add provisioning smoke coverage and release notes
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3105,6 +3105,14 @@ Definition of done:
 - smoke script proves the Caddy example reaches a serving state
 - release notes list v0.3.0 features and limitations
 - known limitations remain honest about snapshots/networking/templates/MCP/cloud
+
+Completion notes:
+
+- Expanded `scripts/manual-smoke.sh` from a lifecycle-only `v0.2` script into a `v0.3` provisioning smoke suite.
+- Added positive-path checks for automatic provisioning, Caddy service state, guest HTTP content, and `yeast provision` reruns.
+- Added a negative-path check for missing provision source files.
+- Rewrote `docs/tutorial-test.md` for the `v0.3.0` candidate and the new smoke workflow.
+- Added `docs/release-notes-v0.3.0.md` and a `0.3.0` changelog entry.
 
 ## M12: Snapshots And Reset
 
