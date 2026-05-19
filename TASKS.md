@@ -86,7 +86,7 @@ v0.4.0 snapshots and reset.
 Next task:
 
 ```text
-V0.4-T6: Add `app.Service.Restore`.
+V0.4-T7: Add snapshot deletion and list commands in app layer.
 ```
 
 ## 5. Milestone Overview
@@ -3337,7 +3337,7 @@ Completion notes:
 
 ### V0.4-T6: Add `app.Service.Restore`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3354,6 +3354,20 @@ Definition of done:
 - restore requires a stopped target instance
 - restore replaces the tracked disk with the snapshot copy
 - missing snapshot names fail cleanly
+
+Completion notes:
+
+- Added `Service.Restore` in `internal/app/restore.go`.
+- Restore now:
+  - requires explicit target instance
+  - requires explicit snapshot name
+  - requires the instance to be stopped
+  - loads snapshot metadata from state
+  - calls runtime restore helpers to replace the tracked disk from the snapshot copy
+- Missing instance fails as `not_found`.
+- Missing snapshot name fails as `not_found`.
+- Running instance fails as `failed_precondition`.
+- Added focused tests in `internal/app/restore_test.go` with a fake runtime.
 - state stays consistent after restore
 
 ### V0.4-T7: Add snapshot deletion and list commands in app layer
