@@ -3372,7 +3372,7 @@ Completion notes:
 
 ### V0.4-T7: Add snapshot deletion and list commands in app layer
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3389,6 +3389,12 @@ Definition of done:
 - list snapshots returns metadata for one target instance
 - delete snapshot removes file plus metadata
 - deleting a missing snapshot returns `not_found`
+
+Completion notes:
+
+- Added `app.Service.Snapshots` to load one target instance's snapshot metadata from project state.
+- Added `app.Service.DeleteSnapshot` to remove the snapshot file through the runtime layer and then remove snapshot metadata from state.
+- Added focused tests for sorted listing, deletion persistence, and `not_found` behavior for missing targets and missing snapshot files.
 
 ### V0.4-T8: Add CLI commands for snapshot workflows
 
