@@ -239,6 +239,56 @@ instances:
 	}
 }
 
+func TestUpPreservesSnapshotsAcrossRestart(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.runtime = &fakeRuntime{}
+
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(filepath.Join(root, "yeast-home"), metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+	runtimeDir, err := paths.InstanceDir("web")
+	if err != nil {
+		t.Fatalf("InstanceDir returned error: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(runtimeDir, "snapshots"), 0755); err != nil {
+		t.Fatalf("mkdir snapshots dir: %v", err)
+	}
+
+	current := state.New(metadata.ID)
+	current.Instances["web"] = state.InstanceState{
+		Status:     "stopped",
+		RuntimeDir: runtimeDir,
+		Snapshots: map[string]state.SnapshotState{
+			"clean": {
+				Name:        "clean",
+				CreatedAt:   time.Date(2026, 5, 22, 15, 0, 0, 0, time.UTC),
+				Description: "baseline",
+				DiskPath:    filepath.Join(runtimeDir, "snapshots", "clean.qcow2"),
+			},
+		},
+	}
+	if err := state.Save(paths.StateFile, current); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	if _, err := service.Up(context.Background(), UpOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Up returned error: %v", err)
+	}
+
+	loaded, err := state.Load(paths.StateFile, metadata.ID)
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+	if _, ok := loaded.Instances["web"].Snapshots["clean"]; !ok {
+		t.Fatalf("expected snapshot metadata to survive restart, got %#v", loaded.Instances["web"])
+	}
+}
+
 func TestUpMarksProvisioningFailureAndKeepsInstanceRunning(t *testing.T) {
 	service, root := newUpServiceWithCachedImage(t)
 	fake := &fakeRuntime{}
@@ -307,6 +357,47 @@ instances:
 	}
 }
 
+func TestUpRetriesBootstrapSSHReadinessWithinTimeout(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.runtime = &fakeRuntime{}
+	service.sleep = func(time.Duration) {}
+
+	runCalls := 0
+	service.provisionTransport = provssh.FakeTransport{
+		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
+			runCalls++
+			switch runCalls {
+			case 1:
+				return provssh.RunResult{ExitCode: 255, Duration: time.Millisecond}, errors.New("ssh failed")
+			case 2:
+				return provssh.RunResult{Stdout: "done\n", ExitCode: 0, Duration: time.Millisecond}, nil
+			default:
+				return provssh.RunResult{Stdout: "ok\n", ExitCode: 0, Duration: time.Millisecond}, nil
+			}
+		},
+	}
+
+	configContent := `version: 1
+provision:
+  shell:
+    - echo ready
+instances:
+  - name: web
+    image: ubuntu-24.04
+    ssh_port: 2205
+`
+	if err := os.WriteFile(filepath.Join(root, ConfigFileName), []byte(configContent), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	if _, err := service.Up(context.Background(), UpOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Up returned error: %v", err)
+	}
+	if runCalls != 3 {
+		t.Fatalf("expected bootstrap retry plus shell command, got %d run calls", runCalls)
+	}
+}
+
 func TestUpClassifiesExternallyBoundRequestedSSHPort(t *testing.T) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -341,6 +432,41 @@ instances:
 	assertAppErrorCode(t, err, ErrorCodeInvalidArgument)
 	if !strings.Contains(err.Error(), "already bound on the host") {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestUpRetriesHostForwardConflictBeforeFailing(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	fake := &fakeRuntime{}
+	service.runtime = fake
+	service.sleep = func(time.Duration) {}
+	service.managementPortAvailable = func(port int) bool { return true }
+
+	startAttempts := 0
+	fake.startHook = func(plan rtm.MachinePlan) error {
+		startAttempts++
+		if startAttempts < 3 {
+			return os.WriteFile(plan.LogPath, []byte(fmt.Sprintf(
+				"qemu-system-x86_64: -netdev user,id=mgmt0,hostfwd=tcp:127.0.0.1:%d-:22: Could not set up host forwarding rule 'tcp:127.0.0.1:%d-:22'\n",
+				plan.ManagementNetwork.ManagementSSHPort,
+				plan.ManagementNetwork.ManagementSSHPort,
+			)), 0644)
+		}
+		return os.WriteFile(plan.LogPath, []byte("booted cleanly\n"), 0644)
+	}
+
+	result, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	if err != nil {
+		t.Fatalf("Up returned error: %v", err)
+	}
+	if len(result.Instances) != 1 {
+		t.Fatalf("expected one instance, got %#v", result.Instances)
+	}
+	if startAttempts != 3 {
+		t.Fatalf("expected 3 start attempts, got %d", startAttempts)
+	}
+	if fake.stopCalls != 2 {
+		t.Fatalf("expected 2 stop calls for conflict retries, got %d", fake.stopCalls)
 	}
 }
 

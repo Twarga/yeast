@@ -26,6 +26,7 @@ const (
 	defaultBootstrapTimeout = 5 * time.Minute
 	defaultManagementHost   = "127.0.0.1"
 	firstManagementSSHPort  = 2222
+	managementStartAttempts = 3
 )
 
 type UpOptions struct {
@@ -204,22 +205,11 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 
-		started, err := s.runtime.Start(ctx, plan)
+		started, err := s.startWithManagementPortRetry(ctx, plan, sshPort, instance.Name)
 		if err != nil {
-			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+			return UpResult{}, err
 		}
 		startedInstances = append(startedInstances, started)
-		if conflict, err := s.waitForManagementPortConflict(plan.LogPath, sshPort, time.Second); err != nil {
-			_ = s.runtime.Stop(ctx, started, 5*time.Second)
-			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
-		} else if conflict {
-			_ = s.runtime.Stop(ctx, started, 5*time.Second)
-			return UpResult{}, WrapError(
-				ErrorCodeInvalidArgument,
-				fmt.Sprintf("requested ssh_port %d for instance %q is already bound on the host", sshPort, instance.Name),
-				nil,
-			)
-		}
 
 		address, err := s.sshAddress(defaultManagementHost, sshPort)
 		if err != nil {
@@ -235,6 +225,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			return UpResult{}, WrapError(ErrorCodePrecondition, message, err)
 		}
 
+		previousState, hadPreviousState := currentState.Instances[instance.Name]
 		instanceState := state.InstanceState{
 			Status:             "running",
 			PID:                started.PID,
@@ -244,6 +235,9 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			ProvisionLogPath:   filepath.Join(runtimeDir, "provision.log"),
 			ProvisioningStatus: state.ProvisioningStatusNotStarted,
 			LastError:          "",
+		}
+		if hadPreviousState && len(previousState.Snapshots) > 0 {
+			instanceState.Snapshots = previousState.Snapshots
 		}
 		currentState.Instances[instance.Name] = instanceState
 
@@ -299,6 +293,46 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		return result.Instances[i].Name < result.Instances[j].Name
 	})
 	return result, nil
+}
+
+func (s *Service) startWithManagementPortRetry(ctx context.Context, plan rtm.MachinePlan, sshPort int, instanceName string) (rtm.RuntimeInstance, error) {
+	sleep := s.sleep
+	if sleep == nil {
+		sleep = time.Sleep
+	}
+
+	for attempt := 1; attempt <= managementStartAttempts; attempt++ {
+		started, err := s.runtime.Start(ctx, plan)
+		if err != nil {
+			return rtm.RuntimeInstance{}, WrapError(ErrorCodeInternal, err.Error(), err)
+		}
+
+		conflict, conflictErr := s.waitForManagementPortConflict(plan.LogPath, sshPort, time.Second)
+		if conflictErr != nil {
+			_ = s.runtime.Stop(ctx, started, 5*time.Second)
+			return rtm.RuntimeInstance{}, WrapError(ErrorCodeInternal, conflictErr.Error(), conflictErr)
+		}
+		if !conflict {
+			return started, nil
+		}
+
+		_ = s.runtime.Stop(ctx, started, 5*time.Second)
+		if attempt == managementStartAttempts {
+			return rtm.RuntimeInstance{}, WrapError(
+				ErrorCodeInvalidArgument,
+				fmt.Sprintf("requested ssh_port %d for instance %q is already bound on the host", sshPort, instanceName),
+				nil,
+			)
+		}
+		_ = s.waitForManagementPortRelease(ctx, sshPort, 2*time.Second)
+		sleep(500 * time.Millisecond)
+	}
+
+	return rtm.RuntimeInstance{}, WrapError(
+		ErrorCodeInvalidArgument,
+		fmt.Sprintf("requested ssh_port %d for instance %q is already bound on the host", sshPort, instanceName),
+		nil,
+	)
 }
 
 func usedManagementPorts(currentState state.State) map[int]bool {
@@ -419,7 +453,7 @@ func (s *Service) runProvisionPlan(ctx context.Context, instance config.Instance
 	user := instance.User
 	host := defaultManagementHost
 
-	bootstrapWaitResult, err := transport.Run(ctx, provssh.RunRequest{
+	bootstrapWaitResult, err := s.waitForCloudInitBootstrap(ctx, transport, provssh.RunRequest{
 		User:    user,
 		Host:    host,
 		Port:    sshPort,
@@ -559,6 +593,25 @@ func (s *Service) runProvisionPlan(ctx context.Context, instance config.Instance
 		return result, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 	return result, nil
+}
+
+func (s *Service) waitForCloudInitBootstrap(ctx context.Context, transport provssh.Transport, request provssh.RunRequest) (provssh.RunResult, error) {
+	sleep := s.sleep
+	if sleep == nil {
+		sleep = time.Sleep
+	}
+
+	deadline := time.Now().Add(request.Timeout)
+	for {
+		result, err := transport.Run(ctx, request)
+		if err == nil && result.ExitCode == 0 {
+			return result, nil
+		}
+		if ctx.Err() != nil || time.Now().After(deadline) {
+			return result, err
+		}
+		sleep(2 * time.Second)
+	}
 }
 
 func writeProvisionLog(logPath string, result provision.Result) error {

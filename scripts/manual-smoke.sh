@@ -2,7 +2,7 @@
 set -euo pipefail
 
 BIN_PATH="${1:-}"
-WORKDIR="${WORKDIR:-/tmp/yeast-v030-test}"
+WORKDIR="${WORKDIR:-/tmp/yeast-v040-test}"
 IMAGE_NAME="${IMAGE_NAME:-ubuntu-24.04}"
 INSTANCE_NAME="${INSTANCE_NAME:-web}"
 INSTANCE_HOSTNAME="${INSTANCE_HOSTNAME:-caddy-lab}"
@@ -11,11 +11,14 @@ INSTANCE_MEMORY="${INSTANCE_MEMORY:-1024}"
 INSTANCE_CPUS="${INSTANCE_CPUS:-1}"
 INSTANCE_DISK_SIZE="${INSTANCE_DISK_SIZE:-20G}"
 INSTANCE_SSH_PORT="${INSTANCE_SSH_PORT:-2205}"
+RESTORE_SSH_PORT="${RESTORE_SSH_PORT:-$((INSTANCE_SSH_PORT + 1))}"
 TEST_MODE="${TEST_MODE:-full}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-PROVISION_SENTINEL_ONE="Yeast v0.3 provisioning works."
+PROVISION_SENTINEL_ONE="Yeast v0.4 provisioning works."
 PROVISION_SENTINEL_TWO="Yeast reprovisioned content."
+SNAPSHOT_NAME="${SNAPSHOT_NAME:-clean}"
+SNAPSHOT_DESCRIPTION="${SNAPSHOT_DESCRIPTION:-Provisioned reset baseline}"
 
 if [[ -z "${BIN_PATH}" ]]; then
   echo "usage: $0 /absolute/or/relative/path/to/yeast-binary" >&2
@@ -122,6 +125,38 @@ run_capture() {
   "$@"
 }
 
+run_capture_with_port_retry() {
+  local label="$1"
+  local attempts="$2"
+  shift 2
+
+  section "${label}"
+
+  local output=""
+  local status=0
+  local attempt=1
+  while (( attempt <= attempts )); do
+    printf "%s$ %s%s\n" "${DIM}" "$*" "${RESET}"
+    set +e
+    output="$("$@" 2>&1)"
+    status=$?
+    set -e
+    printf "%s\n" "${output}"
+    if [[ ${status} -eq 0 ]]; then
+      record_pass "${label}"
+      return 0
+    fi
+    if [[ "${output}" == *"already bound on the host"* ]] && (( attempt < attempts )); then
+      warn "${label}: requested ssh_port still settling on host, retrying (${attempt}/${attempts})"
+      sleep 1
+      ((attempt++))
+      continue
+    fi
+    record_fail "${label}"
+    fail "${label}"
+  done
+}
+
 write_config() {
   local target_dir="$1"
   cat >"${target_dir}/yeast.yaml" <<EOF
@@ -165,6 +200,24 @@ write_file() {
   local path="$1"
   shift
   printf '%s\n' "$@" >"${path}"
+}
+
+rewrite_ssh_port() {
+  local target_dir="$1"
+  local new_port="$2"
+  python3 - <<'PY' "${target_dir}/yeast.yaml" "${new_port}"
+import pathlib
+import re
+import sys
+
+path = pathlib.Path(sys.argv[1])
+port = sys.argv[2]
+text = path.read_text(encoding="utf-8")
+updated, count = re.subn(r'(^\s*ssh_port:\s*)\d+\s*$', r'\g<1>' + port, text, flags=re.MULTILINE)
+if count != 1:
+    raise SystemExit(f"expected exactly one ssh_port entry in {path}, found {count}")
+path.write_text(updated, encoding="utf-8")
+PY
 }
 
 assert_contains() {
@@ -341,7 +394,7 @@ run_positive_suite() {
   ok "copied example site assets"
   record_pass "Prepare Caddy example"
 
-  section "Write v0.3.0 config"
+  section "Write v0.4.0 config"
   write_config "${POSITIVE_DIR}"
   cat "${POSITIVE_DIR}/yeast.yaml"
   record_pass "Write config"
@@ -370,8 +423,10 @@ run_positive_suite() {
   assert_contains "${STATUS_JSON}" '"ProvisioningStatus":"provisioned"' "status json reports provisioned state"
   record_pass "Status JSON"
 
+  local active_ssh_port="${INSTANCE_SSH_PORT}"
+
   section "Direct SSH checks"
-  SSH_BASE=(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p "${INSTANCE_SSH_PORT}" "${INSTANCE_USER}@127.0.0.1")
+  SSH_BASE=(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p "${active_ssh_port}" "${INSTANCE_USER}@127.0.0.1")
   printf "%s$ %s hostname%s\n" "${DIM}" "${SSH_BASE[*]}" "${RESET}"
   HOSTNAME_OUTPUT="$("${SSH_BASE[@]}" hostname)"
   printf "%s\n" "${HOSTNAME_OUTPUT}"
@@ -442,6 +497,56 @@ EOF
   printf "%s\n" "${RESTARTED_PAGE}"
   assert_contains "${RESTARTED_PAGE}" "${PROVISION_SENTINEL_TWO}" "restarted guest still serves provisioned content"
   record_pass "Restarted service check"
+
+  run_capture "Stop before snapshot" "${BIN_PATH}" down
+
+  run_capture "Create snapshot" "${BIN_PATH}" snapshot "${INSTANCE_NAME}" "${SNAPSHOT_NAME}" --description "${SNAPSHOT_DESCRIPTION}"
+
+  SNAPSHOTS_TEXT="$("${BIN_PATH}" snapshots "${INSTANCE_NAME}")"
+  section "Snapshots"
+  printf "%s\n" "${SNAPSHOTS_TEXT}"
+  assert_contains "${SNAPSHOTS_TEXT}" "${SNAPSHOT_NAME}" "snapshot list includes snapshot name"
+  assert_contains "${SNAPSHOTS_TEXT}" "${SNAPSHOT_DESCRIPTION}" "snapshot list includes snapshot description"
+  record_pass "Snapshots"
+
+  run_capture "Start VM for break phase" "${BIN_PATH}" up
+
+  section "Break guest content"
+  printf "%s$ %s sudo rm -f /var/www/html/index.html%s\n" "${DIM}" "${SSH_BASE[*]}" "${RESET}"
+  "${SSH_BASE[@]}" sudo rm -f /var/www/html/index.html
+  printf "%s$ %s test ! -f /var/www/html/index.html%s\n" "${DIM}" "${SSH_BASE[*]}" "${RESET}"
+  "${SSH_BASE[@]}" test ! -f /var/www/html/index.html
+  ok "guest content removed after snapshot"
+  record_pass "Break guest content"
+
+  run_capture "Stop before restore" "${BIN_PATH}" down
+  run_capture "Restore snapshot" "${BIN_PATH}" restore "${INSTANCE_NAME}" "${SNAPSHOT_NAME}"
+  section "Switch restored host ssh port"
+  rewrite_ssh_port "${POSITIVE_DIR}" "${RESTORE_SSH_PORT}"
+  cat "${POSITIVE_DIR}/yeast.yaml"
+  active_ssh_port="${RESTORE_SSH_PORT}"
+  SSH_BASE=(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p "${active_ssh_port}" "${INSTANCE_USER}@127.0.0.1")
+  record_pass "Switch restored host ssh port"
+  run_capture "Start restored VM" "${BIN_PATH}" up
+
+  section "Verify restored content"
+  printf "%s$ %s curl -fsS http://127.0.0.1%s\n" "${DIM}" "${SSH_BASE[*]}" "${RESET}"
+  RESTORED_PAGE="$("${SSH_BASE[@]}" curl -fsS http://127.0.0.1)"
+  printf "%s\n" "${RESTORED_PAGE}"
+  assert_contains "${RESTORED_PAGE}" "${PROVISION_SENTINEL_TWO}" "restored guest serves snapshotted content"
+  record_pass "Restore"
+
+  run_capture "Stop before snapshot delete" "${BIN_PATH}" down
+  run_capture "Delete snapshot" "${BIN_PATH}" delete-snapshot "${INSTANCE_NAME}" "${SNAPSHOT_NAME}"
+
+  SNAPSHOTS_AFTER_DELETE="$("${BIN_PATH}" snapshots "${INSTANCE_NAME}")"
+  section "Snapshots after delete"
+  printf "%s\n" "${SNAPSHOTS_AFTER_DELETE}"
+  if [[ "${SNAPSHOTS_AFTER_DELETE}" == *"${SNAPSHOT_NAME}"* ]]; then
+    fail "snapshot list still contains deleted snapshot ${SNAPSHOT_NAME}"
+  fi
+  ok "snapshot deleted from list"
+  record_pass "Delete snapshot"
 
   run_capture "Destroy VM" "${BIN_PATH}" destroy
   FINAL_STATUS_JSON="$("${BIN_PATH}" status --json)"
@@ -566,7 +671,9 @@ print_summary() {
   printf "%sWorkdir:%s %s\n" "${BOLD}" "${RESET}" "${WORKDIR}"
   printf "%sMode:%s %s\n" "${BOLD}" "${RESET}" "${TEST_MODE}"
   printf "%sRequested ssh_port:%s %s\n" "${BOLD}" "${RESET}" "${INSTANCE_SSH_PORT}"
+  printf "%sRestored ssh_port:%s %s\n" "${BOLD}" "${RESET}" "${RESTORE_SSH_PORT}"
   printf "%sExpected hostname:%s %s\n" "${BOLD}" "${RESET}" "${INSTANCE_HOSTNAME}"
+  printf "%sSnapshot name:%s %s\n" "${BOLD}" "${RESET}" "${SNAPSHOT_NAME}"
   printf "\n"
   printf "%sManual smoke test results%s\n" "${BOLD}" "${RESET}"
   printf "%s\n" "${RESULTS[@]}"

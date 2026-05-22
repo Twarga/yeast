@@ -3455,7 +3455,7 @@ Completion notes:
 
 ### V0.4-T10: Add snapshot smoke coverage and release notes
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3474,6 +3474,12 @@ Definition of done:
 - smoke script validates snapshot create/list/restore/delete on one real VM
 - release notes describe snapshot limits honestly
 - docs stay explicit that multi-VM reset is still later work
+
+Completion notes:
+
+- Extended the smoke script positive/full path to cover stopped-VM snapshot create, list, break, restore, and delete on the provisioned Caddy example VM.
+- Rewrote the manual test tutorial for the `v0.4.0` candidate so it matches the new snapshot loop and stopped-VM restore constraints.
+- Added `docs/release-notes-v0.4.0.md` and updated `CHANGELOG.md` with the narrow snapshot/reset scope and current limits.
 
 ## M13: Private Networking
 

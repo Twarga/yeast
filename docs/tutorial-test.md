@@ -1,6 +1,6 @@
-# Yeast v0.3.0 Manual Test Tutorial
+# Yeast v0.4.0 Manual Test Tutorial
 
-This is the real host manual test for the current `v0.3.0` candidate.
+This is the real host manual test for the current `v0.4.0` candidate.
 
 It assumes:
 
@@ -29,7 +29,11 @@ That script now proves:
 - `disk_size`, `hostname`, and `ssh_port`
 - provisioning during `yeast up`
 - `yeast provision` reruns
-- Caddy serving content inside the guest
+- stopped-VM snapshot create
+- snapshot list
+- stopped-VM restore
+- snapshot delete
+- Caddy serving content inside the guest before and after restore
 - negative-path JSON contracts for key config and state failures
 
 ### Smoke Script Modes
@@ -40,15 +44,15 @@ TEST_MODE=positive ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
 TEST_MODE=negative ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
 ```
 
-- `full`: lifecycle + provisioning + negative-path suite
-- `positive`: only the real VM and provisioning path
+- `full`: lifecycle + provisioning + snapshot loop + negative-path suite
+- `positive`: only the real VM, provisioning, and snapshot path
 - `negative`: only error-path contract checks, no VM boot
 
 The rest of this document is the same flow, but broken into explicit manual steps.
 
 ## 0. What This Test Proves
 
-This test proves that the current `v0.3.0` candidate can:
+This test proves that the current `v0.4.0` candidate can:
 
 - run on a real Linux host
 - detect host requirements with `doctor`
@@ -63,14 +67,18 @@ This test proves that the current `v0.3.0` candidate can:
 - honor explicit `ssh_port`
 - install and run Caddy inside the guest
 - rerun provisioning with `yeast provision`
-- stop and restart the VM cleanly
+- create a stopped-VM snapshot
+- list snapshots
+- restore a stopped VM from a snapshot
+- delete a snapshot
 - destroy runtime state cleanly
 - classify common invalid-input and bad-state failures with stable JSON error codes
 
 This does not test:
 
-- snapshots
-- restore
+- project-wide snapshot/restore
+- live snapshots
+- live restore
 - private networking
 - guest exec/copy/logs beyond provisioning
 - templates
@@ -118,10 +126,10 @@ $BIN version
 Expected:
 
 ```text
-v0.3.0-test
+v0.4.0-test
 ```
 
-If you do not see `v0.3.0-test`, stop and check which binary you are running.
+If you do not see `v0.4.0-test`, stop and check which binary you are running.
 
 ## 3. Host Requirements
 
@@ -161,8 +169,8 @@ If any blocker appears, fix that before going further.
 ## 5. Create A Fresh Test Project
 
 ```fish
-mkdir -p /tmp/yeast-v030-test
-cd /tmp/yeast-v030-test
+mkdir -p /tmp/yeast-v040-test
+cd /tmp/yeast-v040-test
 rm -rf .yeast yeast.yaml site
 mkdir -p site
 ```
@@ -187,7 +195,7 @@ printf '%s\n' \
 '<!doctype html>' \
 '<html lang="en">' \
 '  <body>' \
-'    <h1>Yeast v0.3 provisioning works.</h1>' \
+'    <h1>Yeast v0.4 provisioning works.</h1>' \
 '  </body>' \
 '</html>' > site/index.html
 ```
@@ -202,7 +210,7 @@ printf '%s\n' \
 '}' > site/Caddyfile
 ```
 
-## 8. Replace The Config With A Real v0.3.0 Test Case
+## 8. Replace The Config With A Real v0.4.0 Test Case
 
 ```fish
 printf '%s\n' \
@@ -246,7 +254,7 @@ This config specifically tests:
 - `hostname`
 - `ssh_port`
 - `provision.packages`
-- `provision.files` for user-writable guest paths
+- `provision.files`
 - `provision.shell`
 
 ## 9. Pull The Ubuntu Image
@@ -306,7 +314,7 @@ Expected:
 - `hostname` returns `caddy-lab`
 - `whoami` returns `yeast`
 - `systemctl is-active caddy` returns `active`
-- `curl` output contains `Yeast v0.3 provisioning works.`
+- `curl` output contains `Yeast v0.4 provisioning works.`
 
 Exit the guest:
 
@@ -363,23 +371,59 @@ Expected:
 - instance still exists
 - status is `stopped`
 
-## 15. Start It Again
+## 15. Snapshot The Provisioned VM
+
+Snapshots in `v0.4` are stopped-VM only.
 
 ```fish
-$BIN up
-$BIN status
-$BIN status --json
+$BIN snapshot web clean --description "Provisioned reset baseline"
+$BIN snapshots web
 ```
 
 Expected:
 
-- starts successfully again
-- still uses `2205`
-- JSON still shows `ProvisioningStatus` as `provisioned`
+- snapshot command succeeds
+- snapshot list contains `clean`
+- snapshot list includes the description
 
-## 16. Recheck The Served Content After Restart
+## 16. Break The Guest
+
+Start the VM again and remove the served page:
 
 ```fish
+$BIN up
+$BIN ssh web
+```
+
+Inside the guest:
+
+```bash
+sudo rm -f /var/www/html/index.html
+test ! -f /var/www/html/index.html
+exit
+```
+
+Expected:
+
+- the file is gone inside the guest
+
+## 17. Restore The Snapshot
+
+```fish
+$BIN down
+$BIN restore web clean
+```
+
+If the same `ssh_port` immediately reports a host bind conflict on your machine after restore, change it before the next boot:
+
+```fish
+sed -i 's/ssh_port: 2205/ssh_port: 2206/' yeast.yaml
+```
+
+Then continue:
+
+```fish
+$BIN up
 $BIN ssh web
 ```
 
@@ -392,9 +436,23 @@ exit
 
 Expected:
 
-- the page still contains `Yeast reprovisioned content.`
+- the page is back
+- output contains `Yeast reprovisioned content.`
 
-## 17. Destroy The Project
+## 18. Delete The Snapshot
+
+```fish
+$BIN down
+$BIN delete-snapshot web clean
+$BIN snapshots web
+```
+
+Expected:
+
+- delete succeeds
+- snapshot list no longer contains `clean`
+
+## 19. Destroy The Project
 
 ```fish
 $BIN destroy
@@ -406,7 +464,7 @@ Expected:
 - no tracked instances remain
 - project runtime state is cleaned up
 
-## 18. Negative Contract Checks
+## 20. Negative Contract Checks
 
 The full smoke script also verifies:
 
@@ -428,7 +486,7 @@ Run that with:
 TEST_MODE=negative ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
 ```
 
-## 19. Pass Criteria
+## 21. Pass Criteria
 
 Call this manual test a pass only if all of these are true:
 
@@ -442,18 +500,20 @@ Call this manual test a pass only if all of these are true:
 - Caddy is active
 - guest HTTP content matches the provisioned file
 - `yeast provision web` updates guest content
-- `down` works
-- restart works
+- `yeast snapshot web clean` works while stopped
+- `yeast snapshots web` lists the snapshot
+- `yeast restore web clean` restores the snapshotted content
+- `yeast delete-snapshot web clean` removes the snapshot
 - `destroy` works
-- `status --json` reports `provisioned`
+- `status --json` reports `provisioned` before final teardown
 
-## 20. Failure Notes Template
+## 22. Failure Notes Template
 
 If anything fails, capture:
 
 - command you ran
 - exact output
-- whether failure is before boot, during boot, during provisioning, during SSH, or after restart
+- whether failure is before boot, during boot, during provisioning, during SSH, during snapshot, or during restore
 
 Use this format:
 
@@ -471,17 +531,18 @@ Notes:
 <anything unusual>
 ```
 
-## 21. Final Release Decision
+## 23. Final Release Decision
 
-If this full manual test passes on your Linux/KVM host, then `v0.3.0` is in good shape to release.
+If this full manual test passes on your Linux/KVM host, then `v0.4.0` is in good shape to release.
 
 If it fails on:
 
 - boot
 - provisioning
 - SSH
-- served content
-- rerun provisioning
-- restart
+- snapshot create
+- restore
+- snapshot delete
+- served content after restore
 
 then do not release yet. Fix the failure first.

@@ -7,6 +7,55 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-22
+
+### Summary
+
+Yeast v0.4.0 adds the first narrow snapshot and reset workflow to the local VM engine. It can now snapshot a stopped VM, list stored snapshots, restore a stopped VM back to a saved disk state, and delete old snapshots.
+
+This release intentionally keeps the model conservative. Snapshot create and restore are stopped-VM only, per-instance only, and disk-copy based. That is enough for the first single-VM reset workflows, but not yet enough for multi-machine lab reset.
+
+### Added
+
+- `yeast snapshot <instance> <name>`.
+- `yeast snapshots <instance>`.
+- `yeast restore <instance> <name>`.
+- `yeast delete-snapshot <instance> <name>`.
+- Snapshot metadata in project state:
+  - `name`
+  - `created_at`
+  - `description`
+  - `disk_path`
+  - `source_disk_size`
+- QEMU runtime snapshot file helpers for create, restore, and delete.
+- Snapshot app workflows and tests.
+- Snapshot CLI human output and JSON renderer coverage.
+- Reset walkthrough in `examples/caddy-single-vm`.
+- `docs/release-notes-v0.4.0.md`.
+
+### Changed
+
+- Quickstart now includes the first stopped-VM snapshot and restore loop.
+- Known limitations now describe shipped snapshot support instead of treating snapshots as future work.
+- The manual smoke script now covers snapshot create, list, break, restore, and delete on one real VM.
+
+### Verification
+
+- `go test ./... -count=1`
+- `git diff --check`
+- `bash -n scripts/manual-smoke.sh`
+
+### Known Limitations
+
+- Snapshot create is stopped-VM only.
+- Restore is stopped-VM only.
+- Snapshot scope is one instance at a time.
+- Immediate reuse of the same host `ssh_port` after restore can still be flaky on some Linux hosts with QEMU user-mode forwarding.
+- Project-wide snapshot/restore is not implemented yet.
+- Live snapshots and live restore are not supported.
+- Multi-VM atomic reset is not supported.
+- Private VM-to-VM networking is still not implemented.
+
 ## [0.3.0] - 2026-05-18
 
 ### Summary
