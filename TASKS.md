@@ -3398,7 +3398,7 @@ Completion notes:
 
 ### V0.4-T8: Add CLI commands for snapshot workflows
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3419,6 +3419,12 @@ Definition of done:
 - commands exist for snapshot, restore, list, and delete
 - human output is readable
 - JSON output uses existing success/error envelopes
+
+Completion notes:
+
+- Added `yeast snapshot`, `yeast restore`, `yeast snapshots`, and `yeast delete-snapshot` commands.
+- Registered the snapshot commands in the root CLI and kept argument contracts strict with positional instance/name pairs.
+- Added human renderers and renderer tests for snapshot create, restore, list, and delete output while reusing the existing JSON envelope path.
 
 ### V0.4-T9: Add single-VM reset demo docs
 

@@ -31,6 +31,14 @@ func RenderHuman(w io.Writer, command string, data any) error {
 		return renderStatus(w, theme, value)
 	case app.ProvisionResult:
 		return renderProvision(w, theme, value)
+	case app.SnapshotResult:
+		return renderSnapshot(w, theme, value)
+	case app.RestoreResult:
+		return renderRestore(w, theme, value)
+	case app.SnapshotsResult:
+		return renderSnapshots(w, theme, value)
+	case app.DeleteSnapshotResult:
+		return renderDeleteSnapshot(w, theme, value)
 	case app.DownResult:
 		return renderDown(w, theme, value)
 	case app.DestroyResult:
@@ -201,6 +209,58 @@ func renderProvision(w io.Writer, theme humanTheme, value app.ProvisionResult) e
 	}
 	if value.Instance.LastError != "" {
 		lines = append(lines, keyValue(theme, "last_error", value.Instance.LastError))
+	}
+	return writeBlock(w, theme, lines)
+}
+
+func renderSnapshot(w io.Writer, theme humanTheme, value app.SnapshotResult) error {
+	lines := []string{
+		theme.Success.Render("OK") + " " + theme.Title.Render("Snapshot created"),
+		keyValue(theme, "instance", value.Instance),
+		keyValue(theme, "snapshot", value.Snapshot.Name),
+		keyValue(theme, "path", value.Snapshot.DiskPath),
+		keyValue(theme, "created_at", value.Snapshot.CreatedAt.Format("2006-01-02 15:04:05 MST")),
+	}
+	if value.Snapshot.Description != "" {
+		lines = append(lines, keyValue(theme, "description", value.Snapshot.Description))
+	}
+	return writeBlock(w, theme, lines)
+}
+
+func renderRestore(w io.Writer, theme humanTheme, value app.RestoreResult) error {
+	lines := []string{
+		theme.Success.Render("OK") + " " + theme.Title.Render("Snapshot restored"),
+		keyValue(theme, "instance", value.Instance),
+		keyValue(theme, "snapshot", value.Snapshot.Name),
+		keyValue(theme, "path", value.Snapshot.DiskPath),
+	}
+	return writeBlock(w, theme, lines)
+}
+
+func renderSnapshots(w io.Writer, theme humanTheme, value app.SnapshotsResult) error {
+	rows := [][]string{{"NAME", "CREATED", "DESCRIPTION", "PATH"}}
+	for _, snapshot := range value.Snapshots {
+		rows = append(rows, []string{
+			snapshot.Name,
+			snapshot.CreatedAt.Format("2006-01-02 15:04:05 MST"),
+			snapshot.Description,
+			snapshot.DiskPath,
+		})
+	}
+
+	lines := []string{
+		theme.Title.Render("Instance snapshots"),
+		keyValue(theme, "instance", value.Instance),
+	}
+	lines = append(lines, renderRows(theme, rows)...)
+	return writeBlock(w, theme, lines)
+}
+
+func renderDeleteSnapshot(w io.Writer, theme humanTheme, value app.DeleteSnapshotResult) error {
+	lines := []string{
+		theme.Success.Render("OK") + " " + theme.Title.Render("Snapshot deleted"),
+		keyValue(theme, "instance", value.Instance),
+		keyValue(theme, "snapshot", value.Snapshot),
 	}
 	return writeBlock(w, theme, lines)
 }

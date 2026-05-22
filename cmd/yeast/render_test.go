@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+	"time"
 	"yeast/internal/app"
+	"yeast/internal/state"
 )
 
 func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
@@ -74,6 +76,55 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 					SSHPort:            2222,
 					ProvisionLogPath:   "/tmp/provision.log",
 				},
+			},
+		},
+		{
+			name:    "snapshot",
+			command: "snapshot",
+			data: app.SnapshotResult{
+				ProjectID: "proj_123",
+				Instance:  "web",
+				Snapshot: state.SnapshotState{
+					Name:      "clean",
+					CreatedAt: time.Date(2026, 5, 22, 10, 30, 0, 0, time.UTC),
+					DiskPath:  "/tmp/web/snapshots/clean.qcow2",
+				},
+			},
+		},
+		{
+			name:    "restore",
+			command: "restore",
+			data: app.RestoreResult{
+				ProjectID: "proj_123",
+				Instance:  "web",
+				Snapshot: state.SnapshotState{
+					Name:     "clean",
+					DiskPath: "/tmp/web/snapshots/clean.qcow2",
+				},
+			},
+		},
+		{
+			name:    "snapshots",
+			command: "snapshots",
+			data: app.SnapshotsResult{
+				ProjectID: "proj_123",
+				Instance:  "web",
+				Snapshots: []state.SnapshotState{
+					{
+						Name:      "clean",
+						CreatedAt: time.Date(2026, 5, 22, 10, 30, 0, 0, time.UTC),
+						DiskPath:  "/tmp/web/snapshots/clean.qcow2",
+					},
+				},
+			},
+		},
+		{
+			name:    "delete-snapshot",
+			command: "delete-snapshot",
+			data: app.DeleteSnapshotResult{
+				ProjectID: "proj_123",
+				Instance:  "web",
+				Snapshot:  "clean",
 			},
 		},
 		{
