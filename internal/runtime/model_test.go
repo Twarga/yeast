@@ -19,9 +19,11 @@ func TestNetworkPlanExpressesManagementAndLabNetworks(t *testing.T) {
 				SSHPort: 2222,
 			},
 			Lab: &LabNetworkPlan{
-				Name: "lab",
-				CIDR: cidr,
-				IPv4: ipv4,
+				Name:          "lab",
+				CIDR:          cidr,
+				IPv4:          ipv4,
+				InterfaceName: "yeastlab0",
+				MACAddress:    "52:54:00:aa:bb:cc",
 			},
 		},
 	}
@@ -43,5 +45,11 @@ func TestNetworkPlanExpressesManagementAndLabNetworks(t *testing.T) {
 	}
 	if plan.Networks.Lab.IPv4 != ipv4 {
 		t.Fatalf("unexpected lab network ipv4: %s", plan.Networks.Lab.IPv4)
+	}
+	if plan.Networks.Lab.InterfaceName != "yeastlab0" {
+		t.Fatalf("unexpected lab network interface name: %q", plan.Networks.Lab.InterfaceName)
+	}
+	if plan.Networks.Lab.MACAddress != "52:54:00:aa:bb:cc" {
+		t.Fatalf("unexpected lab network mac address: %q", plan.Networks.Lab.MACAddress)
 	}
 }

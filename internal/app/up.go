@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"net"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"sort"
@@ -25,6 +27,7 @@ const (
 	defaultReadinessTimeout = 2 * time.Minute
 	defaultBootstrapTimeout = 5 * time.Minute
 	defaultManagementHost   = "127.0.0.1"
+	defaultLabInterfaceName = "yeastlab0"
 	firstManagementSSHPort  = 2222
 	managementStartAttempts = 3
 )
@@ -174,11 +177,28 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
+		labNetworkPlan, err := buildLabNetworkPlan(cfg, instance, metadata.ID)
+		if err != nil {
+			return UpResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("build lab network plan for %s: %v", instance.Name, err), err)
+		}
+		var networkConfig string
+		if labNetworkPlan != nil {
+			networkConfig, err = s.renderNetworkConfig(cloudinit.NetworkConfigInput{
+				InterfaceName: labNetworkPlan.InterfaceName,
+				MACAddress:    labNetworkPlan.MACAddress,
+				IPv4:          labNetworkPlan.IPv4,
+				CIDR:          labNetworkPlan.CIDR,
+			})
+			if err != nil {
+				return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+			}
+		}
 		seedResult, err := s.createSeedISO(ctx, cloudinit.SeedInput{
-			InstanceName: instance.Name,
-			RuntimeDir:   runtimeDir,
-			UserData:     userData,
-			MetaData:     metaData,
+			InstanceName:  instance.Name,
+			RuntimeDir:    runtimeDir,
+			UserData:      userData,
+			MetaData:      metaData,
+			NetworkConfig: networkConfig,
 		})
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
@@ -201,6 +221,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 					SSHHost: defaultManagementHost,
 					SSHPort: sshPort,
 				},
+				Lab: labNetworkPlan,
 			},
 		}
 
@@ -296,6 +317,66 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		return result.Instances[i].Name < result.Instances[j].Name
 	})
 	return result, nil
+}
+
+func buildLabNetworkPlan(cfg *config.Config, instance config.Instance, projectID string) (*rtm.LabNetworkPlan, error) {
+	if len(instance.Networks) == 0 {
+		return nil, nil
+	}
+
+	attachment := instance.Networks[0]
+	if strings.TrimSpace(attachment.Name) == "" {
+		return nil, fmt.Errorf("network name is required")
+	}
+
+	var selected *config.Network
+	for i := range cfg.Networks {
+		if cfg.Networks[i].Name == attachment.Name {
+			selected = &cfg.Networks[i]
+			break
+		}
+	}
+	if selected == nil {
+		return nil, fmt.Errorf("unknown network %q", attachment.Name)
+	}
+
+	cidr, err := netip.ParsePrefix(strings.TrimSpace(selected.CIDR))
+	if err != nil {
+		return nil, fmt.Errorf("parse cidr %q: %w", selected.CIDR, err)
+	}
+	ipv4, err := netip.ParseAddr(strings.TrimSpace(attachment.IPv4))
+	if err != nil {
+		return nil, fmt.Errorf("parse ipv4 %q: %w", attachment.IPv4, err)
+	}
+	if !cidr.Contains(ipv4) {
+		return nil, fmt.Errorf("ipv4 %s is outside cidr %s", ipv4, cidr)
+	}
+
+	return &rtm.LabNetworkPlan{
+		Name:          selected.Name,
+		CIDR:          cidr,
+		IPv4:          ipv4,
+		InterfaceName: defaultLabInterfaceName,
+		MACAddress:    deriveLabMACAddress(projectID, instance.Name, selected.Name),
+	}, nil
+}
+
+func deriveLabMACAddress(projectID, instanceName, networkName string) string {
+	hash := fnv.New32a()
+	_, _ = hash.Write([]byte(projectID))
+	_, _ = hash.Write([]byte("|"))
+	_, _ = hash.Write([]byte(instanceName))
+	_, _ = hash.Write([]byte("|"))
+	_, _ = hash.Write([]byte(networkName))
+	sum := hash.Sum32()
+
+	return fmt.Sprintf(
+		"52:54:%02x:%02x:%02x:%02x",
+		byte(sum>>24),
+		byte(sum>>16),
+		byte(sum>>8),
+		byte(sum),
+	)
 }
 
 func (s *Service) startWithManagementPortRetry(ctx context.Context, plan rtm.MachinePlan, sshPort int, instanceName string) (rtm.RuntimeInstance, error) {

@@ -3667,7 +3667,7 @@ Completion notes:
 
 ### V0.5-T6: Wire private network planning into `yeast up`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3684,6 +3684,20 @@ Definition of done:
 - `yeast up` passes private network config into runtime and cloud-init
 - current single-VM projects still behave the same
 - multi-VM config builds and boots through the app layer
+
+Completion notes:
+
+- Added lab network planning in `yeast up` from:
+  - project network CIDR
+  - instance network attachment name
+  - instance static IPv4
+- Derived deterministic first-pass lab NIC details:
+  - interface name: `yeastlab0`
+  - MAC address from project id + instance + network name
+- Wired the same lab NIC details into:
+  - runtime network plan for QEMU
+  - cloud-init `network-config` seed content
+- Added app-level coverage proving the lab network data reaches both runtime and seed generation while existing single-VM projects remain unaffected.
 
 ### V0.5-T7: Expose private network details in `yeast status`
 

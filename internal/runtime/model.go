@@ -33,9 +33,11 @@ type ManagementNetworkPlan struct {
 }
 
 type LabNetworkPlan struct {
-	Name string
-	CIDR netip.Prefix
-	IPv4 netip.Addr
+	Name          string
+	CIDR          netip.Prefix
+	IPv4          netip.Addr
+	InterfaceName string
+	MACAddress    string
 }
 
 type SnapshotPlan struct {

@@ -37,6 +37,12 @@ func BuildCommandArgs(plan runtime.MachinePlan) ([]string, error) {
 		if strings.TrimSpace(plan.Networks.Lab.Name) == "" {
 			return nil, fmt.Errorf("lab network name is required")
 		}
+		if strings.TrimSpace(plan.Networks.Lab.InterfaceName) == "" {
+			return nil, fmt.Errorf("lab network interface name is required")
+		}
+		if strings.TrimSpace(plan.Networks.Lab.MACAddress) == "" {
+			return nil, fmt.Errorf("lab network mac address is required")
+		}
 		if !plan.Networks.Lab.CIDR.IsValid() {
 			return nil, fmt.Errorf("lab network cidr is required")
 		}
@@ -61,7 +67,7 @@ func BuildCommandArgs(plan runtime.MachinePlan) ([]string, error) {
 	if plan.Networks.Lab != nil {
 		args = append(args,
 			"-netdev", buildLabNetdevArg(plan.RuntimeDir, *plan.Networks.Lab),
-			"-device", "virtio-net-pci,netdev=lab0",
+			"-device", buildLabDeviceArg(*plan.Networks.Lab),
 		)
 	}
 	args = append(args, "-nographic")
@@ -92,6 +98,10 @@ func buildManagementNetdevArg(host string, port int) string {
 func buildLabNetdevArg(runtimeDir string, lab runtime.LabNetworkPlan) string {
 	group, port := deriveLabMulticast(filepath.Clean(filepath.Dir(runtimeDir)), lab.Name)
 	return fmt.Sprintf("socket,id=lab0,mcast=%s:%d", group, port)
+}
+
+func buildLabDeviceArg(lab runtime.LabNetworkPlan) string {
+	return fmt.Sprintf("virtio-net-pci,netdev=lab0,mac=%s", lab.MACAddress)
 }
 
 func deriveLabMulticast(projectScope string, networkName string) (string, int) {

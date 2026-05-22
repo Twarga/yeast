@@ -68,9 +68,11 @@ func TestBuildCommandArgsIncludesLabNetworkFlags(t *testing.T) {
 				SSHPort: 2222,
 			},
 			Lab: &runtime.LabNetworkPlan{
-				Name: "lab",
-				CIDR: netip.MustParsePrefix("10.10.10.0/24"),
-				IPv4: netip.MustParseAddr("10.10.10.20"),
+				Name:          "lab",
+				CIDR:          netip.MustParsePrefix("10.10.10.0/24"),
+				IPv4:          netip.MustParseAddr("10.10.10.20"),
+				InterfaceName: "yeastlab0",
+				MACAddress:    "52:54:00:aa:bb:cc",
 			},
 		},
 	}
@@ -91,7 +93,7 @@ func TestBuildCommandArgsIncludesLabNetworkFlags(t *testing.T) {
 		"-netdev", "user,id=mgmt0,hostfwd=tcp:127.0.0.1:2222-:22",
 		"-device", "virtio-net-pci,netdev=mgmt0",
 		"-netdev", wantLabNetdev,
-		"-device", "virtio-net-pci,netdev=lab0",
+		"-device", "virtio-net-pci,netdev=lab0,mac=52:54:00:aa:bb:cc",
 		"-nographic",
 	}
 	if !reflect.DeepEqual(got, want) {
@@ -214,9 +216,11 @@ func TestBuildCommandArgsRejectsMissingFields(t *testing.T) {
 						SSHPort: 2222,
 					},
 					Lab: &runtime.LabNetworkPlan{
-						Name: "lab",
-						CIDR: netip.MustParsePrefix("10.10.10.0/24"),
-						IPv4: netip.MustParseAddr("10.20.20.20"),
+						Name:          "lab",
+						CIDR:          netip.MustParsePrefix("10.10.10.0/24"),
+						IPv4:          netip.MustParseAddr("10.20.20.20"),
+						InterfaceName: "yeastlab0",
+						MACAddress:    "52:54:00:aa:bb:cc",
 					},
 				},
 			},

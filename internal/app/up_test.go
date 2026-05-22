@@ -132,6 +132,105 @@ instances:
 	}
 }
 
+func TestUpBuildsLabNetworkPlanAndSeedConfig(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.discoverSSHKey = func() (string, error) { return "ssh-ed25519 AAAATEST", nil }
+	service.managementPortAvailable = func(port int) bool { return true }
+	service.renderUserData = func(input cloudinit.UserDataInput) (string, error) {
+		return "#cloud-config\nhostname: web-lab\n", nil
+	}
+	service.renderMetaData = func(input cloudinit.MetaDataInput) (string, error) {
+		return "instance-id: web-lab\nlocal-hostname: web-lab\n", nil
+	}
+
+	var gotNetworkConfig cloudinit.NetworkConfigInput
+	service.renderNetworkConfig = func(input cloudinit.NetworkConfigInput) (string, error) {
+		gotNetworkConfig = input
+		return "version: 2\nethernets: {}\n", nil
+	}
+
+	var gotSeedInput cloudinit.SeedInput
+	service.createSeedISO = func(ctx context.Context, input cloudinit.SeedInput) (cloudinit.SeedResult, error) {
+		gotSeedInput = input
+		return cloudinit.SeedResult{
+			UserDataPath:      filepath.Join(input.RuntimeDir, "user-data"),
+			MetaDataPath:      filepath.Join(input.RuntimeDir, "meta-data"),
+			NetworkConfigPath: filepath.Join(input.RuntimeDir, "network-config"),
+			ISOPath:           filepath.Join(input.RuntimeDir, "seed.iso"),
+			Builder:           "genisoimage",
+		}, nil
+	}
+
+	fakeRuntime := &fakeRuntime{}
+	service.runtime = fakeRuntime
+	service.waitForTCP = func(ctx context.Context, options guest.ReadinessOptions) error { return nil }
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root, Now: time.Date(2026, 5, 16, 12, 0, 0, 0, time.UTC)}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+
+	configPath := filepath.Join(root, ConfigFileName)
+	configContent := `version: 1
+networks:
+  - name: lab
+    cidr: 10.10.10.0/24
+instances:
+  - name: web
+    hostname: web-lab
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    ssh_port: 2205
+    networks:
+      - name: lab
+        ipv4: 10.10.10.10
+`
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	imagePath := filepath.Join(yeastHome, "cache", "images", "ubuntu-24.04", "image.qcow2")
+	if err := os.MkdirAll(filepath.Dir(imagePath), 0755); err != nil {
+		t.Fatalf("create image cache dir: %v", err)
+	}
+	if err := os.WriteFile(imagePath, []byte("image"), 0644); err != nil {
+		t.Fatalf("write cached image: %v", err)
+	}
+
+	if _, err := service.Up(context.Background(), UpOptions{ProjectRoot: root, ReadinessTimeout: 5 * time.Second}); err != nil {
+		t.Fatalf("Up returned error: %v", err)
+	}
+
+	if gotNetworkConfig.InterfaceName != "yeastlab0" {
+		t.Fatalf("unexpected lab interface name: %q", gotNetworkConfig.InterfaceName)
+	}
+	if gotNetworkConfig.IPv4.String() != "10.10.10.10" {
+		t.Fatalf("unexpected lab ipv4: %s", gotNetworkConfig.IPv4)
+	}
+	if gotNetworkConfig.CIDR.String() != "10.10.10.0/24" {
+		t.Fatalf("unexpected lab cidr: %s", gotNetworkConfig.CIDR)
+	}
+	if gotNetworkConfig.MACAddress == "" {
+		t.Fatal("expected lab mac address")
+	}
+	if gotSeedInput.NetworkConfig == "" {
+		t.Fatal("expected seed input network-config content")
+	}
+	if fakeRuntime.startPlan.Networks.Lab == nil {
+		t.Fatal("expected lab network plan on runtime start")
+	}
+	if fakeRuntime.startPlan.Networks.Lab.InterfaceName != gotNetworkConfig.InterfaceName {
+		t.Fatalf("runtime/network-config interface mismatch: %q vs %q", fakeRuntime.startPlan.Networks.Lab.InterfaceName, gotNetworkConfig.InterfaceName)
+	}
+	if fakeRuntime.startPlan.Networks.Lab.MACAddress != gotNetworkConfig.MACAddress {
+		t.Fatalf("runtime/network-config mac mismatch: %q vs %q", fakeRuntime.startPlan.Networks.Lab.MACAddress, gotNetworkConfig.MACAddress)
+	}
+}
+
 func TestUpRunsProvisioningInDocumentedOrder(t *testing.T) {
 	service, root := newUpServiceWithCachedImage(t)
 	service.runtime = &fakeRuntime{}

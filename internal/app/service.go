@@ -22,6 +22,7 @@ type Service struct {
 	discoverSSHKey          func() (string, error)
 	renderUserData          func(input cloudinit.UserDataInput) (string, error)
 	renderMetaData          func(input cloudinit.MetaDataInput) (string, error)
+	renderNetworkConfig     func(input cloudinit.NetworkConfigInput) (string, error)
 	createSeedISO           func(ctx context.Context, input cloudinit.SeedInput) (cloudinit.SeedResult, error)
 	waitForTCP              func(ctx context.Context, options guest.ReadinessOptions) error
 	sshAddress              func(host string, port int) (string, error)
@@ -41,6 +42,7 @@ func NewService() *Service {
 		discoverSSHKey:          cloudinit.DiscoverAuthorizedKey,
 		renderUserData:          cloudinit.RenderUserData,
 		renderMetaData:          cloudinit.RenderMetaData,
+		renderNetworkConfig:     cloudinit.RenderNetworkConfig,
 		createSeedISO:           cloudinit.CreateSeedISO,
 		waitForTCP:              guest.WaitForTCP,
 		sshAddress:              guest.SSHAddress,
