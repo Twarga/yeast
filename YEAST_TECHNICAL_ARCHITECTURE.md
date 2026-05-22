@@ -1012,6 +1012,47 @@ Architecture rule:
 
 Do not mix management access and lab traffic conceptually.
 
+`v0.5` first supported scope:
+
+- one project-level private lab network only
+- one static IPv4 per attached instance on that lab network
+- management SSH remains on the current user-mode host-forwarded path
+- all instances may still omit private networking entirely
+
+First config shape:
+
+```yaml
+version: 1
+networks:
+  - name: lab
+    cidr: 10.10.10.0/24
+instances:
+  - name: attacker
+    image: ubuntu-24.04
+    networks:
+      - name: lab
+        ipv4: 10.10.10.10
+  - name: target
+    image: ubuntu-24.04
+    networks:
+      - name: lab
+        ipv4: 10.10.10.20
+```
+
+Non-goals for `v0.5`:
+
+- no bridge mode
+- no DHCP
+- no multiple private networks per project
+- no multiple NIC roles beyond `management` and one `lab`
+- no GUI topology editing
+
+Implementation rule:
+
+- cloud-init renders the guest-side static lab address
+- runtime layer attaches the extra lab NIC/backend
+- status should expose the configured lab address separately from management SSH
+
 ## 16. Snapshot Architecture
 
 `v0.4` snapshot scope is intentionally conservative.

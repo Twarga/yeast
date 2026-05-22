@@ -58,13 +58,19 @@ Raw `user_data` still fully replaces Yeast-generated cloud-init.
 
 Yeast uses QEMU user-mode networking with SSH port forwarding for management.
 
-It does not yet support:
+The planned `v0.5` first pass is intentionally narrow:
 
-- private VM-to-VM networks
-- static lab IPs
+- one project-level private lab network
+- one static IPv4 per attached instance
+- management SSH stays separate from lab traffic
+
+It still does not support:
+
 - bridge mode config in `yeast.yaml`
+- DHCP for lab guests
 - custom port forwarding rules
 - multi-network lab topologies
+- multiple private networks in one project
 
 ## Snapshot Limits
 

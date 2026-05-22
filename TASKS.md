@@ -3502,7 +3502,7 @@ Release target:
 
 ### V0.5-T1: Lock the v0.5 networking contract
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3528,6 +3528,12 @@ Definition of done:
   - no DHCP
   - no multiple private networks yet
   - no GUI topology tooling
+
+Completion notes:
+
+- Locked the first `v0.5` networking scope as one project-level private lab network with per-instance static IPv4.
+- Made the management-vs-lab split explicit in architecture and implementation docs.
+- Documented the intentional non-goals for the first pass: no bridge mode, no DHCP, and no multi-network topologies yet.
 
 ### V0.5-T2: Add config schema and validation for project networks
 

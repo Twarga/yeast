@@ -605,14 +605,19 @@ Features:
 - static IPs
 - management vs lab network separation
 
+Execution contract:
+
+- `v0.5` supports one project-level private lab network in the first pass
+- instances can attach to that network with one static IPv4
+- management SSH remains on the current host-forwarded path and is not replaced by the lab network
+- cloud-init renders the guest-side static lab address
+- bridge mode, DHCP, and multiple private networks are explicitly out of scope for the first pass
+
 Definition of done:
 
 - attacker VM can reach target VM on private network.
 - Yeast can still control both VMs.
-
-Blocked by:
-
-- networking technical experiment
+- status exposes the configured lab IP clearly
 
 ## 19. Post-v0.1 Milestone 14: Guest Control
 
