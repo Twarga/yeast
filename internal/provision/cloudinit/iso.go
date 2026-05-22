@@ -13,22 +13,24 @@ import (
 var ErrNoISOBuilder = errors.New("no supported ISO builder found")
 
 type SeedInput struct {
-	InstanceName string
-	RuntimeDir   string
-	UserData     string
-	MetaData     string
+	InstanceName  string
+	RuntimeDir    string
+	UserData      string
+	MetaData      string
+	NetworkConfig string
 }
 
 type SeedResult struct {
-	UserDataPath string
-	MetaDataPath string
-	ISOPath      string
-	Builder      string
+	UserDataPath      string
+	MetaDataPath      string
+	NetworkConfigPath string
+	ISOPath           string
+	Builder           string
 }
 
 type isoBuilder struct {
 	Name      string
-	BuildArgs func(outputPath, userDataPath, metaDataPath string) []string
+	BuildArgs func(outputPath, userDataPath, metaDataPath, networkConfigPath string) []string
 }
 
 var (
@@ -56,6 +58,7 @@ func CreateSeedISO(ctx context.Context, input SeedInput) (SeedResult, error) {
 
 	userDataPath := filepath.Join(input.RuntimeDir, "user-data")
 	metaDataPath := filepath.Join(input.RuntimeDir, "meta-data")
+	networkConfigPath := filepath.Join(input.RuntimeDir, "network-config")
 	isoPath := filepath.Join(input.RuntimeDir, "seed.iso")
 
 	if err := writeFileAtomic(userDataPath, []byte(ensureTrailingNewline(input.UserData))); err != nil {
@@ -64,26 +67,35 @@ func CreateSeedISO(ctx context.Context, input SeedInput) (SeedResult, error) {
 	if err := writeFileAtomic(metaDataPath, []byte(ensureTrailingNewline(input.MetaData))); err != nil {
 		return SeedResult{}, fmt.Errorf("write meta-data: %w", err)
 	}
+	if strings.TrimSpace(input.NetworkConfig) != "" {
+		if err := writeFileAtomic(networkConfigPath, []byte(ensureTrailingNewline(input.NetworkConfig))); err != nil {
+			return SeedResult{}, fmt.Errorf("write network-config: %w", err)
+		}
+	} else {
+		_ = os.Remove(networkConfigPath)
+	}
 
 	builder, err := discoverISOBuilder()
 	if err != nil {
 		return SeedResult{
-			UserDataPath: userDataPath,
-			MetaDataPath: metaDataPath,
-			ISOPath:      isoPath,
+			UserDataPath:      userDataPath,
+			MetaDataPath:      metaDataPath,
+			NetworkConfigPath: networkConfigPath,
+			ISOPath:           isoPath,
 		}, err
 	}
 
-	args := builder.BuildArgs(isoPath, userDataPath, metaDataPath)
+	args := builder.BuildArgs(isoPath, userDataPath, metaDataPath, networkConfigPath)
 	if err := runISOCommand(ctx, builder.Name, args...); err != nil {
 		return SeedResult{}, fmt.Errorf("create seed ISO with %s: %w", builder.Name, err)
 	}
 
 	return SeedResult{
-		UserDataPath: userDataPath,
-		MetaDataPath: metaDataPath,
-		ISOPath:      isoPath,
-		Builder:      builder.Name,
+		UserDataPath:      userDataPath,
+		MetaDataPath:      metaDataPath,
+		NetworkConfigPath: networkConfigPath,
+		ISOPath:           isoPath,
+		Builder:           builder.Name,
 	}, nil
 }
 
@@ -91,8 +103,8 @@ func discoverISOBuilder() (isoBuilder, error) {
 	builders := []isoBuilder{
 		{
 			Name: "genisoimage",
-			BuildArgs: func(outputPath, userDataPath, metaDataPath string) []string {
-				return []string{
+			BuildArgs: func(outputPath, userDataPath, metaDataPath, networkConfigPath string) []string {
+				args := []string{
 					"-output", outputPath,
 					"-volid", "cidata",
 					"-joliet",
@@ -100,12 +112,18 @@ func discoverISOBuilder() (isoBuilder, error) {
 					userDataPath,
 					metaDataPath,
 				}
+				if strings.TrimSpace(networkConfigPath) != "" {
+					if _, err := os.Stat(networkConfigPath); err == nil {
+						args = append(args, networkConfigPath)
+					}
+				}
+				return args
 			},
 		},
 		{
 			Name: "mkisofs",
-			BuildArgs: func(outputPath, userDataPath, metaDataPath string) []string {
-				return []string{
+			BuildArgs: func(outputPath, userDataPath, metaDataPath, networkConfigPath string) []string {
+				args := []string{
 					"-output", outputPath,
 					"-volid", "cidata",
 					"-joliet",
@@ -113,6 +131,12 @@ func discoverISOBuilder() (isoBuilder, error) {
 					userDataPath,
 					metaDataPath,
 				}
+				if strings.TrimSpace(networkConfigPath) != "" {
+					if _, err := os.Stat(networkConfigPath); err == nil {
+						args = append(args, networkConfigPath)
+					}
+				}
+				return args
 			},
 		},
 	}

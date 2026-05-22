@@ -3635,7 +3635,7 @@ Completion notes:
 
 ### V0.5-T5: Add guest-side private address bootstrap through cloud-init
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3653,6 +3653,17 @@ Definition of done:
 - cloud-init network config renders static IPv4 for the private lab NIC
 - instances boot with the configured lab address
 - existing management SSH remains reachable
+
+Completion notes:
+
+- Added a dedicated cloud-init `network-config` renderer for the first private lab NIC instead of overloading `user-data`.
+- Rendered a static IPv4 config using cloud-init network v2 format with:
+  - deterministic interface name
+  - MAC-based match
+  - no DHCP on the lab NIC
+  - one static IPv4 address from the configured CIDR
+- Extended the seed ISO builder so `network-config` is written and included when present.
+- Added focused tests for the rendered network config and ISO inclusion path.
 
 ### V0.5-T6: Wire private network planning into `yeast up`
 

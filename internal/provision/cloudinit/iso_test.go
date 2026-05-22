@@ -35,10 +35,11 @@ func TestCreateSeedISOWritesInputsAndInvokesBuilder(t *testing.T) {
 
 	root := t.TempDir()
 	result, err := CreateSeedISO(context.Background(), SeedInput{
-		InstanceName: "web",
-		RuntimeDir:   filepath.Join(root, "instances", "web"),
-		UserData:     "#cloud-config\nhostname: web\n",
-		MetaData:     "instance-id: web\nlocal-hostname: web\n",
+		InstanceName:  "web",
+		RuntimeDir:    filepath.Join(root, "instances", "web"),
+		UserData:      "#cloud-config\nhostname: web\n",
+		MetaData:      "instance-id: web\nlocal-hostname: web\n",
+		NetworkConfig: "version: 2\nethernets: {}\n",
 	})
 	if err != nil {
 		t.Fatalf("CreateSeedISO returned error: %v", err)
@@ -54,6 +55,7 @@ func TestCreateSeedISOWritesInputsAndInvokesBuilder(t *testing.T) {
 		"-rock",
 		filepath.Join(root, "instances", "web", "user-data"),
 		filepath.Join(root, "instances", "web", "meta-data"),
+		filepath.Join(root, "instances", "web", "network-config"),
 	}
 	if !reflect.DeepEqual(gotArgs, wantArgs) {
 		t.Fatalf("unexpected args:\n got: %#v\nwant: %#v", gotArgs, wantArgs)
@@ -77,6 +79,13 @@ func TestCreateSeedISOWritesInputsAndInvokesBuilder(t *testing.T) {
 
 	if result.ISOPath != filepath.Join(root, "instances", "web", "seed.iso") {
 		t.Fatalf("unexpected iso path: %q", result.ISOPath)
+	}
+	networkConfig, err := os.ReadFile(result.NetworkConfigPath)
+	if err != nil {
+		t.Fatalf("read network-config: %v", err)
+	}
+	if string(networkConfig) != "version: 2\nethernets: {}\n" {
+		t.Fatalf("unexpected network-config content: %q", string(networkConfig))
 	}
 }
 
