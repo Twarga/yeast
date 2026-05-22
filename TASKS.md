@@ -3605,7 +3605,7 @@ Completion notes:
 
 ### V0.5-T4: Add QEMU network command building for one private lab network
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3624,6 +3624,14 @@ Definition of done:
   - one private lab network backend
 - generated runtime command is test-covered
 - no bridge mode yet
+
+Completion notes:
+
+- Kept the existing user-mode management network path unchanged for SSH forwarding.
+- Added a second optional QEMU NIC/backend for the first private lab network.
+- Used a rootless project-scoped multicast socket backend derived from the project runtime path and network name so instances in the same project share one isolated lab segment without bridge mode.
+- Added command-layer validation for lab network CIDR and per-instance IPv4 membership.
+- Extended QEMU command tests to cover the extra lab NIC/backend and stable multicast derivation.
 
 ### V0.5-T5: Add guest-side private address bootstrap through cloud-init
 

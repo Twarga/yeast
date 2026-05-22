@@ -2,6 +2,8 @@ package qemu
 
 import (
 	"fmt"
+	"hash/fnv"
+	"net/netip"
 	"path/filepath"
 	"strings"
 	"yeast/internal/runtime"
@@ -31,6 +33,20 @@ func BuildCommandArgs(plan runtime.MachinePlan) ([]string, error) {
 	if strings.TrimSpace(plan.Networks.Management.SSHHost) == "" {
 		return nil, fmt.Errorf("management ssh host is required")
 	}
+	if plan.Networks.Lab != nil {
+		if strings.TrimSpace(plan.Networks.Lab.Name) == "" {
+			return nil, fmt.Errorf("lab network name is required")
+		}
+		if !plan.Networks.Lab.CIDR.IsValid() {
+			return nil, fmt.Errorf("lab network cidr is required")
+		}
+		if !plan.Networks.Lab.IPv4.IsValid() || !plan.Networks.Lab.IPv4.Is4() {
+			return nil, fmt.Errorf("lab network ipv4 must be a valid IPv4 address")
+		}
+		if !plan.Networks.Lab.CIDR.Contains(plan.Networks.Lab.IPv4) {
+			return nil, fmt.Errorf("lab network ipv4 %s is outside cidr %s", plan.Networks.Lab.IPv4, plan.Networks.Lab.CIDR)
+		}
+	}
 
 	args := []string{
 		"-enable-kvm",
@@ -41,8 +57,14 @@ func BuildCommandArgs(plan runtime.MachinePlan) ([]string, error) {
 		"-drive", buildSeedDriveArg(plan.SeedImagePath),
 		"-netdev", buildManagementNetdevArg(plan.Networks.Management.SSHHost, plan.Networks.Management.SSHPort),
 		"-device", "virtio-net-pci,netdev=mgmt0",
-		"-nographic",
 	}
+	if plan.Networks.Lab != nil {
+		args = append(args,
+			"-netdev", buildLabNetdevArg(plan.RuntimeDir, *plan.Networks.Lab),
+			"-device", "virtio-net-pci,netdev=lab0",
+		)
+	}
+	args = append(args, "-nographic")
 
 	return args, nil
 }
@@ -65,4 +87,29 @@ func buildSeedDriveArg(path string) string {
 
 func buildManagementNetdevArg(host string, port int) string {
 	return fmt.Sprintf("user,id=mgmt0,hostfwd=tcp:%s:%d-:22", host, port)
+}
+
+func buildLabNetdevArg(runtimeDir string, lab runtime.LabNetworkPlan) string {
+	group, port := deriveLabMulticast(filepath.Clean(filepath.Dir(runtimeDir)), lab.Name)
+	return fmt.Sprintf("socket,id=lab0,mcast=%s:%d", group, port)
+}
+
+func deriveLabMulticast(projectScope string, networkName string) (string, int) {
+	hash := fnv.New32a()
+	_, _ = hash.Write([]byte(projectScope))
+	_, _ = hash.Write([]byte("|"))
+	_, _ = hash.Write([]byte(networkName))
+	sum := hash.Sum32()
+
+	third := byte((sum >> 8) & 0xff)
+	fourth := byte(sum & 0xff)
+	if third == 0 {
+		third = 1
+	}
+	if fourth == 0 {
+		fourth = 1
+	}
+	group := netip.AddrFrom4([4]byte{239, 192, third, fourth})
+	port := 10000 + int(sum%40000)
+	return group.String(), port
 }
