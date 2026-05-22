@@ -15,8 +15,10 @@ func TestNetworkPlanExpressesManagementAndLabNetworks(t *testing.T) {
 		Name: "web",
 		Networks: NetworkPlan{
 			Management: ManagementNetworkPlan{
-				SSHHost: "127.0.0.1",
-				SSHPort: 2222,
+				SSHHost:       "127.0.0.1",
+				SSHPort:       2222,
+				InterfaceName: "yeastmgmt0",
+				MACAddress:    "52:54:00:11:22:33",
 			},
 			Lab: &LabNetworkPlan{
 				Name:          "lab",
@@ -33,6 +35,12 @@ func TestNetworkPlanExpressesManagementAndLabNetworks(t *testing.T) {
 	}
 	if plan.Networks.Management.SSHPort != 2222 {
 		t.Fatalf("unexpected management ssh port: %d", plan.Networks.Management.SSHPort)
+	}
+	if plan.Networks.Management.InterfaceName != "yeastmgmt0" {
+		t.Fatalf("unexpected management interface name: %q", plan.Networks.Management.InterfaceName)
+	}
+	if plan.Networks.Management.MACAddress != "52:54:00:11:22:33" {
+		t.Fatalf("unexpected management mac address: %q", plan.Networks.Management.MACAddress)
 	}
 	if plan.Networks.Lab == nil {
 		t.Fatal("expected lab network plan")

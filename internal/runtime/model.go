@@ -28,8 +28,10 @@ type NetworkPlan struct {
 }
 
 type ManagementNetworkPlan struct {
-	SSHHost string
-	SSHPort int
+	SSHHost       string
+	SSHPort       int
+	InterfaceName string
+	MACAddress    string
 }
 
 type LabNetworkPlan struct {

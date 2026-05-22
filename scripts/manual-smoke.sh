@@ -2,7 +2,7 @@
 set -euo pipefail
 
 BIN_PATH="${1:-}"
-WORKDIR="${WORKDIR:-/tmp/yeast-v040-test}"
+WORKDIR="${WORKDIR:-/tmp/yeast-v050-test}"
 IMAGE_NAME="${IMAGE_NAME:-ubuntu-24.04}"
 INSTANCE_NAME="${INSTANCE_NAME:-web}"
 INSTANCE_HOSTNAME="${INSTANCE_HOSTNAME:-caddy-lab}"
@@ -12,6 +12,16 @@ INSTANCE_CPUS="${INSTANCE_CPUS:-1}"
 INSTANCE_DISK_SIZE="${INSTANCE_DISK_SIZE:-20G}"
 INSTANCE_SSH_PORT="${INSTANCE_SSH_PORT:-2205}"
 RESTORE_SSH_PORT="${RESTORE_SSH_PORT:-$((INSTANCE_SSH_PORT + 1))}"
+ATTACKER_NAME="${ATTACKER_NAME:-attacker}"
+TARGET_NAME="${TARGET_NAME:-target}"
+ATTACKER_HOSTNAME="${ATTACKER_HOSTNAME:-attacker-lab}"
+TARGET_HOSTNAME="${TARGET_HOSTNAME:-target-lab}"
+ATTACKER_SSH_PORT="${ATTACKER_SSH_PORT:-2305}"
+TARGET_SSH_PORT="${TARGET_SSH_PORT:-2306}"
+LAB_NETWORK_NAME="${LAB_NETWORK_NAME:-lab}"
+LAB_CIDR="${LAB_CIDR:-10.10.10.0/24}"
+ATTACKER_LAB_IP="${ATTACKER_LAB_IP:-10.10.10.10}"
+TARGET_LAB_IP="${TARGET_LAB_IP:-10.10.10.20}"
 TEST_MODE="${TEST_MODE:-full}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -19,6 +29,7 @@ PROVISION_SENTINEL_ONE="Yeast v0.4 provisioning works."
 PROVISION_SENTINEL_TWO="Yeast reprovisioned content."
 SNAPSHOT_NAME="${SNAPSHOT_NAME:-clean}"
 SNAPSHOT_DESCRIPTION="${SNAPSHOT_DESCRIPTION:-Provisioned reset baseline}"
+SSH_RETRY_CONNECT_TIMEOUT="${SSH_RETRY_CONNECT_TIMEOUT:-5}"
 
 if [[ -z "${BIN_PATH}" ]]; then
   echo "usage: $0 /absolute/or/relative/path/to/yeast-binary" >&2
@@ -55,6 +66,7 @@ fi
 RESULTS=()
 PORT_VALUE=""
 POSITIVE_DIR="${WORKDIR}/happy-path"
+NETWORK_DIR="${WORKDIR}/network-path"
 NEGATIVE_ROOT="${WORKDIR}/negative-cases"
 
 section() {
@@ -157,6 +169,44 @@ run_capture_with_port_retry() {
   done
 }
 
+run_ssh_capture_with_retry() {
+  local label="$1"
+  local attempts="$2"
+  shift 2
+
+  printf "\n%s==> %s%s\n" "${BLUE}${BOLD}" "${label}" "${RESET}" >&2
+
+  local output=""
+  local stderr_file=""
+  local status=0
+  local attempt=1
+  stderr_file="$(mktemp)"
+  while (( attempt <= attempts )); do
+    printf "%s$ %s%s\n" "${DIM}" "$*" "${RESET}" >&2
+    set +e
+    output="$("$@" 2>"${stderr_file}")"
+    status=$?
+    set -e
+    if [[ -s "${stderr_file}" ]]; then
+      cat "${stderr_file}" >&2
+      : >"${stderr_file}"
+    fi
+    if [[ ${status} -eq 0 ]]; then
+      rm -f "${stderr_file}"
+      printf "%s" "${output}"
+      return 0
+    fi
+    if (( attempt < attempts )); then
+      printf "%s[warn]%s %s\n" "${YELLOW}" "${RESET}" "${label}: ssh command not ready yet, retrying (${attempt}/${attempts})" >&2
+      sleep 1
+      ((attempt++))
+      continue
+    fi
+    fail "${label}: ssh command failed after ${attempts} attempts"
+  done
+  rm -f "${stderr_file}"
+}
+
 write_config() {
   local target_dir="$1"
   cat >"${target_dir}/yeast.yaml" <<EOF
@@ -189,11 +239,58 @@ instances:
 EOF
 }
 
+write_network_config() {
+  local target_dir="$1"
+  cat >"${target_dir}/yeast.yaml" <<EOF
+version: 1
+networks:
+  - name: ${LAB_NETWORK_NAME}
+    cidr: ${LAB_CIDR}
+instances:
+  - name: ${ATTACKER_NAME}
+    hostname: ${ATTACKER_HOSTNAME}
+    image: ${IMAGE_NAME}
+    memory: ${INSTANCE_MEMORY}
+    cpus: ${INSTANCE_CPUS}
+    ssh_port: ${ATTACKER_SSH_PORT}
+    user: ${INSTANCE_USER}
+    sudo: nopasswd
+    networks:
+      - name: ${LAB_NETWORK_NAME}
+        ipv4: ${ATTACKER_LAB_IP}
+  - name: ${TARGET_NAME}
+    hostname: ${TARGET_HOSTNAME}
+    image: ${IMAGE_NAME}
+    memory: ${INSTANCE_MEMORY}
+    cpus: ${INSTANCE_CPUS}
+    ssh_port: ${TARGET_SSH_PORT}
+    user: ${INSTANCE_USER}
+    sudo: nopasswd
+    networks:
+      - name: ${LAB_NETWORK_NAME}
+        ipv4: ${TARGET_LAB_IP}
+EOF
+}
+
 prepare_caddy_example() {
   local target_dir="$1"
   mkdir -p "${target_dir}/site"
   cp "${REPO_ROOT}/examples/caddy-single-vm/site/index.html" "${target_dir}/site/index.html"
   cp "${REPO_ROOT}/examples/caddy-single-vm/site/Caddyfile" "${target_dir}/site/Caddyfile"
+}
+
+ssh_args_for_port() {
+  local port="$1"
+  printf '%s\n' \
+    ssh \
+    -o "BatchMode=yes" \
+    -o "ConnectTimeout=${SSH_RETRY_CONNECT_TIMEOUT}" \
+    -o "ConnectionAttempts=1" \
+    -o "LogLevel=ERROR" \
+    -o "StrictHostKeyChecking=no" \
+    -o "UserKnownHostsFile=/dev/null" \
+    -p "${port}" \
+    "${INSTANCE_USER}@127.0.0.1"
 }
 
 write_file() {
@@ -426,7 +523,7 @@ run_positive_suite() {
   local active_ssh_port="${INSTANCE_SSH_PORT}"
 
   section "Direct SSH checks"
-  SSH_BASE=(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p "${active_ssh_port}" "${INSTANCE_USER}@127.0.0.1")
+  mapfile -t SSH_BASE < <(ssh_args_for_port "${active_ssh_port}")
   printf "%s$ %s hostname%s\n" "${DIM}" "${SSH_BASE[*]}" "${RESET}"
   HOSTNAME_OUTPUT="$("${SSH_BASE[@]}" hostname)"
   printf "%s\n" "${HOSTNAME_OUTPUT}"
@@ -525,7 +622,7 @@ EOF
   rewrite_ssh_port "${POSITIVE_DIR}" "${RESTORE_SSH_PORT}"
   cat "${POSITIVE_DIR}/yeast.yaml"
   active_ssh_port="${RESTORE_SSH_PORT}"
-  SSH_BASE=(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p "${active_ssh_port}" "${INSTANCE_USER}@127.0.0.1")
+  mapfile -t SSH_BASE < <(ssh_args_for_port "${active_ssh_port}")
   record_pass "Switch restored host ssh port"
   run_capture "Start restored VM" "${BIN_PATH}" up
 
@@ -558,6 +655,74 @@ EOF
     warn "status json still contains instance data after destroy"
   fi
   record_pass "Destroy"
+}
+
+run_network_suite() {
+  section "Prepare two-VM lab project"
+  rm -rf "${NETWORK_DIR}"
+  mkdir -p "${NETWORK_DIR}"
+  cd "${NETWORK_DIR}"
+  ok "using ${NETWORK_DIR}"
+
+  run_capture "Init two-VM lab" "${BIN_PATH}" init
+
+  section "Write v0.5.0 network config"
+  write_network_config "${NETWORK_DIR}"
+  cat "${NETWORK_DIR}/yeast.yaml"
+  record_pass "Write network config"
+
+  run_capture "Start two-VM lab" "${BIN_PATH}" up
+
+  NETWORK_STATUS_TEXT="$("${BIN_PATH}" status)"
+  section "Two-VM status"
+  printf "%s\n" "${NETWORK_STATUS_TEXT}"
+  assert_contains "${NETWORK_STATUS_TEXT}" "${ATTACKER_NAME}" "status includes attacker"
+  assert_contains "${NETWORK_STATUS_TEXT}" "${TARGET_NAME}" "status includes target"
+  assert_contains "${NETWORK_STATUS_TEXT}" "${ATTACKER_LAB_IP}" "status includes attacker lab ip"
+  assert_contains "${NETWORK_STATUS_TEXT}" "${TARGET_LAB_IP}" "status includes target lab ip"
+  record_pass "Two-VM status"
+
+  NETWORK_STATUS_JSON="$("${BIN_PATH}" status --json)"
+  section "Two-VM status JSON"
+  printf "%s\n" "${NETWORK_STATUS_JSON}"
+  assert_contains "${NETWORK_STATUS_JSON}" "\"LabIP\":\"${ATTACKER_LAB_IP}\"" "status json includes attacker lab ip"
+  assert_contains "${NETWORK_STATUS_JSON}" "\"LabIP\":\"${TARGET_LAB_IP}\"" "status json includes target lab ip"
+  record_pass "Two-VM status JSON"
+
+  local attacker_ssh=()
+  local target_ssh=()
+  mapfile -t attacker_ssh < <(ssh_args_for_port "${ATTACKER_SSH_PORT}")
+  mapfile -t target_ssh < <(ssh_args_for_port "${TARGET_SSH_PORT}")
+
+  section "Guest-side lab NIC checks"
+  local attacker_hostname
+  attacker_hostname="$(run_ssh_capture_with_retry "Attacker hostname" 5 "${attacker_ssh[@]}" hostname)"
+  if [[ "${attacker_hostname}" != "${ATTACKER_HOSTNAME}" ]]; then
+    fail "unexpected attacker hostname ${attacker_hostname}"
+  fi
+  local target_hostname
+  target_hostname="$(run_ssh_capture_with_retry "Target hostname" 5 "${target_ssh[@]}" hostname)"
+  if [[ "${target_hostname}" != "${TARGET_HOSTNAME}" ]]; then
+    fail "unexpected target hostname ${target_hostname}"
+  fi
+  local attacker_addr
+  attacker_addr="$(run_ssh_capture_with_retry "Attacker lab NIC" 5 "${attacker_ssh[@]}" ip -4 addr show yeastlab0)"
+  assert_contains "${attacker_addr}" "${ATTACKER_LAB_IP}" "attacker guest has lab ip"
+  local target_addr
+  target_addr="$(run_ssh_capture_with_retry "Target lab NIC" 5 "${target_ssh[@]}" ip -4 addr show yeastlab0)"
+  assert_contains "${target_addr}" "${TARGET_LAB_IP}" "target guest has lab ip"
+  record_pass "Guest-side lab NIC checks"
+
+  section "Guest-to-guest lab TCP reachability"
+  run_ssh_capture_with_retry "Attacker reaches target over lab network" 5 "${attacker_ssh[@]}" bash -lc "echo > /dev/tcp/${TARGET_LAB_IP}/22"
+  ok "attacker reaches target SSH over lab network"
+  run_ssh_capture_with_retry "Target reaches attacker over lab network" 5 "${target_ssh[@]}" bash -lc "echo > /dev/tcp/${ATTACKER_LAB_IP}/22"
+  ok "target reaches attacker SSH over lab network"
+  record_pass "Guest-to-guest lab TCP reachability"
+
+  run_capture "Stop two-VM lab" "${BIN_PATH}" down
+  run_capture "Destroy two-VM lab" "${BIN_PATH}" destroy
+  record_pass "Destroy two-VM lab"
 }
 
 run_negative_suite() {
@@ -650,6 +815,69 @@ run_negative_suite() {
   run_expect_json_error_in_dir "Up rejects duplicate requested ssh_port values" "invalid_argument" \
     "${dir}" "${BIN_PATH}" up --json
 
+  dir="$(new_case_dir "up-invalid-network-cidr")"
+  init_case_project "${dir}"
+  write_file "${dir}/yeast.yaml" \
+    'version: 1' \
+    'networks:' \
+    '  - name: lab' \
+    '    cidr: bad-cidr' \
+    'instances:' \
+    '  - name: web' \
+    '    image: ubuntu-24.04'
+  run_expect_json_error_in_dir "Up rejects invalid network cidr" "invalid_argument" \
+    "${dir}" "${BIN_PATH}" up --json
+
+  dir="$(new_case_dir "up-unknown-network-reference")"
+  init_case_project "${dir}"
+  write_file "${dir}/yeast.yaml" \
+    'version: 1' \
+    'instances:' \
+    '  - name: web' \
+    '    image: ubuntu-24.04' \
+    '    networks:' \
+    '      - name: lab' \
+    '        ipv4: 10.10.10.10'
+  run_expect_json_error_in_dir "Up rejects unknown network reference" "invalid_argument" \
+    "${dir}" "${BIN_PATH}" up --json
+
+  dir="$(new_case_dir "up-invalid-network-ipv4")"
+  init_case_project "${dir}"
+  write_file "${dir}/yeast.yaml" \
+    'version: 1' \
+    'networks:' \
+    '  - name: lab' \
+    '    cidr: 10.10.10.0/24' \
+    'instances:' \
+    '  - name: web' \
+    '    image: ubuntu-24.04' \
+    '    networks:' \
+    '      - name: lab' \
+    '        ipv4: not-an-ip'
+  run_expect_json_error_in_dir "Up rejects invalid network ipv4" "invalid_argument" \
+    "${dir}" "${BIN_PATH}" up --json
+
+  dir="$(new_case_dir "up-duplicate-network-ipv4")"
+  init_case_project "${dir}"
+  write_file "${dir}/yeast.yaml" \
+    'version: 1' \
+    'networks:' \
+    '  - name: lab' \
+    '    cidr: 10.10.10.0/24' \
+    'instances:' \
+    '  - name: attacker' \
+    '    image: ubuntu-24.04' \
+    '    networks:' \
+    '      - name: lab' \
+    '        ipv4: 10.10.10.10' \
+    '  - name: target' \
+    '    image: ubuntu-24.04' \
+    '    networks:' \
+    '      - name: lab' \
+    '        ipv4: 10.10.10.10'
+  run_expect_json_error_in_dir "Up rejects duplicate network ipv4 values" "invalid_argument" \
+    "${dir}" "${BIN_PATH}" up --json
+
   dir="$(new_case_dir "up-missing-provision-source")"
   init_case_project "${dir}"
   write_file "${dir}/yeast.yaml" \
@@ -673,6 +901,7 @@ print_summary() {
   printf "%sRequested ssh_port:%s %s\n" "${BOLD}" "${RESET}" "${INSTANCE_SSH_PORT}"
   printf "%sRestored ssh_port:%s %s\n" "${BOLD}" "${RESET}" "${RESTORE_SSH_PORT}"
   printf "%sExpected hostname:%s %s\n" "${BOLD}" "${RESET}" "${INSTANCE_HOSTNAME}"
+  printf "%sLab network:%s %s (%s, %s)\n" "${BOLD}" "${RESET}" "${LAB_NETWORK_NAME}" "${ATTACKER_LAB_IP}" "${TARGET_LAB_IP}"
   printf "%sSnapshot name:%s %s\n" "${BOLD}" "${RESET}" "${SNAPSHOT_NAME}"
   printf "\n"
   printf "%sManual smoke test results%s\n" "${BOLD}" "${RESET}"
@@ -692,6 +921,7 @@ mkdir -p "${WORKDIR}"
 
 if [[ "${TEST_MODE}" == "full" || "${TEST_MODE}" == "positive" ]]; then
   run_positive_suite
+  run_network_suite
 fi
 
 if [[ "${TEST_MODE}" == "full" || "${TEST_MODE}" == "negative" ]]; then

@@ -107,7 +107,7 @@ V0.4-T7: Add snapshot deletion and list commands in app layer.
 | C1 | Charm CLI Experience | Polished terminal UX without breaking JSON | [x] |
 | M11 | Provisioning | Packages/files/shell after v0.1 | [x] |
 | M12 | Snapshots And Reset | Lab reset capability | [~] |
-| M13 | Private Networking | Multi-VM lab networking | [~] |
+| M13 | Private Networking | Multi-VM lab networking | [x] |
 | M14 | Guest Control | exec/copy/logs/inspect | [-] |
 | M15 | LabsBackery Contract | CLI/JSON lab integration | [-] |
 
@@ -2690,7 +2690,7 @@ These milestones are ordered by dependency. Do not pull features forward from la
 
 ## M11: Provisioning
 
-Status: [~]
+Status: [x]
 
 Do not start until:
 
@@ -3760,7 +3760,7 @@ Completion notes:
 
 ### V0.5-T9: Add networking smoke coverage and release notes
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3779,6 +3779,25 @@ Definition of done:
 - smoke path proves two VMs can boot and reach each other on the private network
 - release notes describe networking limits honestly
 - docs stay explicit that bridge mode and multi-network topologies are later work
+
+Completion notes:
+
+- Expanded the manual smoke suite to cover the first full `v0.5` networking loop:
+  - two-VM project init
+  - private lab network boot
+  - per-instance `LAB IP` status checks
+  - guest-side NIC verification
+  - guest-to-guest SSH reachability over the lab network
+  - existing negative JSON contract checks
+- Updated the manual test tutorial for the `v0.5.0` candidate and added `docs/release-notes-v0.5.0.md`.
+- Updated `CHANGELOG.md` for the `v0.5.0` scope.
+- Fixed two real networking issues found by host smoke:
+  - made the management NIC explicit in cloud-init with deterministic MAC + DHCP so lab `network-config` no longer destabilizes management SSH
+  - bound the rootless QEMU multicast lab backend to loopback so same-host guests actually share the private lab bus reliably
+- Verified the full host smoke flow end to end with:
+  - single-VM provisioning + snapshot/restore
+  - two-VM private networking
+  - negative config/error scenarios
 
 ## M14: Guest Control
 

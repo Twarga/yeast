@@ -22,8 +22,10 @@ func TestBuildCommandArgsIncludesExpectedRuntimeFlags(t *testing.T) {
 		},
 		Networks: runtime.NetworkPlan{
 			Management: runtime.ManagementNetworkPlan{
-				SSHHost: "127.0.0.1",
-				SSHPort: 2222,
+				SSHHost:       "127.0.0.1",
+				SSHPort:       2222,
+				InterfaceName: "yeastmgmt0",
+				MACAddress:    "52:54:00:11:22:33",
 			},
 		},
 	}
@@ -41,7 +43,7 @@ func TestBuildCommandArgsIncludesExpectedRuntimeFlags(t *testing.T) {
 		"-drive", "file=/runtime/web/disk.qcow2,if=virtio,format=qcow2",
 		"-drive", "file=/runtime/web/seed.iso,if=virtio,media=cdrom,readonly=on",
 		"-netdev", "user,id=mgmt0,hostfwd=tcp:127.0.0.1:2222-:22",
-		"-device", "virtio-net-pci,netdev=mgmt0",
+		"-device", "virtio-net-pci,netdev=mgmt0,mac=52:54:00:11:22:33",
 		"-nographic",
 	}
 	if !reflect.DeepEqual(got, want) {
@@ -64,8 +66,10 @@ func TestBuildCommandArgsIncludesLabNetworkFlags(t *testing.T) {
 		},
 		Networks: runtime.NetworkPlan{
 			Management: runtime.ManagementNetworkPlan{
-				SSHHost: "127.0.0.1",
-				SSHPort: 2222,
+				SSHHost:       "127.0.0.1",
+				SSHPort:       2222,
+				InterfaceName: "yeastmgmt0",
+				MACAddress:    "52:54:00:11:22:33",
 			},
 			Lab: &runtime.LabNetworkPlan{
 				Name:          "lab",
@@ -91,7 +95,7 @@ func TestBuildCommandArgsIncludesLabNetworkFlags(t *testing.T) {
 		"-drive", "file=/runtime/proj/instances/target/disk.qcow2,if=virtio,format=qcow2",
 		"-drive", "file=/runtime/proj/instances/target/seed.iso,if=virtio,media=cdrom,readonly=on",
 		"-netdev", "user,id=mgmt0,hostfwd=tcp:127.0.0.1:2222-:22",
-		"-device", "virtio-net-pci,netdev=mgmt0",
+		"-device", "virtio-net-pci,netdev=mgmt0,mac=52:54:00:11:22:33",
 		"-netdev", wantLabNetdev,
 		"-device", "virtio-net-pci,netdev=lab0,mac=52:54:00:aa:bb:cc",
 		"-nographic",
@@ -114,8 +118,10 @@ func TestBuildCommandReturnsBinaryAndArgs(t *testing.T) {
 		},
 		Networks: runtime.NetworkPlan{
 			Management: runtime.ManagementNetworkPlan{
-				SSHHost: "127.0.0.1",
-				SSHPort: 2201,
+				SSHHost:       "127.0.0.1",
+				SSHPort:       2201,
+				InterfaceName: "yeastmgmt0",
+				MACAddress:    "52:54:00:11:22:33",
 			},
 		},
 	}
@@ -150,8 +156,10 @@ func TestBuildCommandArgsRejectsMissingFields(t *testing.T) {
 				SeedImagePath: "/runtime/web/seed.iso",
 				Networks: runtime.NetworkPlan{
 					Management: runtime.ManagementNetworkPlan{
-						SSHHost: "127.0.0.1",
-						SSHPort: 2222,
+						SSHHost:       "127.0.0.1",
+						SSHPort:       2222,
+						InterfaceName: "yeastmgmt0",
+						MACAddress:    "52:54:00:11:22:33",
 					},
 				},
 			},
@@ -165,8 +173,10 @@ func TestBuildCommandArgsRejectsMissingFields(t *testing.T) {
 				SeedImagePath: "/runtime/web/seed.iso",
 				Networks: runtime.NetworkPlan{
 					Management: runtime.ManagementNetworkPlan{
-						SSHHost: "127.0.0.1",
-						SSHPort: 2222,
+						SSHHost:       "127.0.0.1",
+						SSHPort:       2222,
+						InterfaceName: "yeastmgmt0",
+						MACAddress:    "52:54:00:11:22:33",
 					},
 				},
 			},
@@ -182,8 +192,10 @@ func TestBuildCommandArgsRejectsMissingFields(t *testing.T) {
 				},
 				Networks: runtime.NetworkPlan{
 					Management: runtime.ManagementNetworkPlan{
-						SSHHost: "127.0.0.1",
-						SSHPort: 2222,
+						SSHHost:       "127.0.0.1",
+						SSHPort:       2222,
+						InterfaceName: "yeastmgmt0",
+						MACAddress:    "52:54:00:11:22:33",
 					},
 				},
 			},
@@ -212,8 +224,10 @@ func TestBuildCommandArgsRejectsMissingFields(t *testing.T) {
 				},
 				Networks: runtime.NetworkPlan{
 					Management: runtime.ManagementNetworkPlan{
-						SSHHost: "127.0.0.1",
-						SSHPort: 2222,
+						SSHHost:       "127.0.0.1",
+						SSHPort:       2222,
+						InterfaceName: "yeastmgmt0",
+						MACAddress:    "52:54:00:11:22:33",
 					},
 					Lab: &runtime.LabNetworkPlan{
 						Name:          "lab",

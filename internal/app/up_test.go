@@ -205,16 +205,22 @@ instances:
 		t.Fatalf("Up returned error: %v", err)
 	}
 
-	if gotNetworkConfig.InterfaceName != "yeastlab0" {
-		t.Fatalf("unexpected lab interface name: %q", gotNetworkConfig.InterfaceName)
+	if gotNetworkConfig.ManagementInterfaceName != "yeastmgmt0" {
+		t.Fatalf("unexpected management interface name: %q", gotNetworkConfig.ManagementInterfaceName)
 	}
-	if gotNetworkConfig.IPv4.String() != "10.10.10.10" {
-		t.Fatalf("unexpected lab ipv4: %s", gotNetworkConfig.IPv4)
+	if gotNetworkConfig.ManagementMACAddress == "" {
+		t.Fatal("expected management mac address")
 	}
-	if gotNetworkConfig.CIDR.String() != "10.10.10.0/24" {
-		t.Fatalf("unexpected lab cidr: %s", gotNetworkConfig.CIDR)
+	if gotNetworkConfig.LabInterfaceName != "yeastlab0" {
+		t.Fatalf("unexpected lab interface name: %q", gotNetworkConfig.LabInterfaceName)
 	}
-	if gotNetworkConfig.MACAddress == "" {
+	if gotNetworkConfig.LabIPv4.String() != "10.10.10.10" {
+		t.Fatalf("unexpected lab ipv4: %s", gotNetworkConfig.LabIPv4)
+	}
+	if gotNetworkConfig.LabCIDR.String() != "10.10.10.0/24" {
+		t.Fatalf("unexpected lab cidr: %s", gotNetworkConfig.LabCIDR)
+	}
+	if gotNetworkConfig.LabMACAddress == "" {
 		t.Fatal("expected lab mac address")
 	}
 	if gotSeedInput.NetworkConfig == "" {
@@ -223,11 +229,17 @@ instances:
 	if fakeRuntime.startPlan.Networks.Lab == nil {
 		t.Fatal("expected lab network plan on runtime start")
 	}
-	if fakeRuntime.startPlan.Networks.Lab.InterfaceName != gotNetworkConfig.InterfaceName {
-		t.Fatalf("runtime/network-config interface mismatch: %q vs %q", fakeRuntime.startPlan.Networks.Lab.InterfaceName, gotNetworkConfig.InterfaceName)
+	if fakeRuntime.startPlan.Networks.Management.InterfaceName != gotNetworkConfig.ManagementInterfaceName {
+		t.Fatalf("runtime/network-config management interface mismatch: %q vs %q", fakeRuntime.startPlan.Networks.Management.InterfaceName, gotNetworkConfig.ManagementInterfaceName)
 	}
-	if fakeRuntime.startPlan.Networks.Lab.MACAddress != gotNetworkConfig.MACAddress {
-		t.Fatalf("runtime/network-config mac mismatch: %q vs %q", fakeRuntime.startPlan.Networks.Lab.MACAddress, gotNetworkConfig.MACAddress)
+	if fakeRuntime.startPlan.Networks.Management.MACAddress != gotNetworkConfig.ManagementMACAddress {
+		t.Fatalf("runtime/network-config management mac mismatch: %q vs %q", fakeRuntime.startPlan.Networks.Management.MACAddress, gotNetworkConfig.ManagementMACAddress)
+	}
+	if fakeRuntime.startPlan.Networks.Lab.InterfaceName != gotNetworkConfig.LabInterfaceName {
+		t.Fatalf("runtime/network-config lab interface mismatch: %q vs %q", fakeRuntime.startPlan.Networks.Lab.InterfaceName, gotNetworkConfig.LabInterfaceName)
+	}
+	if fakeRuntime.startPlan.Networks.Lab.MACAddress != gotNetworkConfig.LabMACAddress {
+		t.Fatalf("runtime/network-config lab mac mismatch: %q vs %q", fakeRuntime.startPlan.Networks.Lab.MACAddress, gotNetworkConfig.LabMACAddress)
 	}
 
 	metadata, err := project.LoadMetadata(root)

@@ -27,6 +27,7 @@ const (
 	defaultReadinessTimeout = 2 * time.Minute
 	defaultBootstrapTimeout = 5 * time.Minute
 	defaultManagementHost   = "127.0.0.1"
+	defaultManagementNIC    = "yeastmgmt0"
 	defaultLabInterfaceName = "yeastlab0"
 	firstManagementSSHPort  = 2222
 	managementStartAttempts = 3
@@ -184,10 +185,12 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		var networkConfig string
 		if labNetworkPlan != nil {
 			networkConfig, err = s.renderNetworkConfig(cloudinit.NetworkConfigInput{
-				InterfaceName: labNetworkPlan.InterfaceName,
-				MACAddress:    labNetworkPlan.MACAddress,
-				IPv4:          labNetworkPlan.IPv4,
-				CIDR:          labNetworkPlan.CIDR,
+				ManagementInterfaceName: defaultManagementNIC,
+				ManagementMACAddress:    deriveManagementMACAddress(metadata.ID, instance.Name),
+				LabInterfaceName:        labNetworkPlan.InterfaceName,
+				LabMACAddress:           labNetworkPlan.MACAddress,
+				LabIPv4:                 labNetworkPlan.IPv4,
+				LabCIDR:                 labNetworkPlan.CIDR,
 			})
 			if err != nil {
 				return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
@@ -218,8 +221,10 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			},
 			Networks: rtm.NetworkPlan{
 				Management: rtm.ManagementNetworkPlan{
-					SSHHost: defaultManagementHost,
-					SSHPort: sshPort,
+					SSHHost:       defaultManagementHost,
+					SSHPort:       sshPort,
+					InterfaceName: defaultManagementNIC,
+					MACAddress:    deriveManagementMACAddress(metadata.ID, instance.Name),
 				},
 				Lab: labNetworkPlan,
 			},
@@ -365,6 +370,14 @@ func buildLabNetworkPlan(cfg *config.Config, instance config.Instance, projectID
 }
 
 func deriveLabMACAddress(projectID, instanceName, networkName string) string {
+	return deriveMACAddress(projectID, instanceName, networkName)
+}
+
+func deriveManagementMACAddress(projectID, instanceName string) string {
+	return deriveMACAddress(projectID, instanceName, "management")
+}
+
+func deriveMACAddress(projectID, instanceName, networkName string) string {
 	hash := fnv.New32a()
 	_, _ = hash.Write([]byte(projectID))
 	_, _ = hash.Write([]byte("|"))

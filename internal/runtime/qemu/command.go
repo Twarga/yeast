@@ -33,6 +33,12 @@ func BuildCommandArgs(plan runtime.MachinePlan) ([]string, error) {
 	if strings.TrimSpace(plan.Networks.Management.SSHHost) == "" {
 		return nil, fmt.Errorf("management ssh host is required")
 	}
+	if strings.TrimSpace(plan.Networks.Management.InterfaceName) == "" {
+		return nil, fmt.Errorf("management network interface name is required")
+	}
+	if strings.TrimSpace(plan.Networks.Management.MACAddress) == "" {
+		return nil, fmt.Errorf("management network mac address is required")
+	}
 	if plan.Networks.Lab != nil {
 		if strings.TrimSpace(plan.Networks.Lab.Name) == "" {
 			return nil, fmt.Errorf("lab network name is required")
@@ -62,7 +68,7 @@ func BuildCommandArgs(plan runtime.MachinePlan) ([]string, error) {
 		"-drive", buildDiskDriveArg(plan.Disk.DiskPath),
 		"-drive", buildSeedDriveArg(plan.SeedImagePath),
 		"-netdev", buildManagementNetdevArg(plan.Networks.Management.SSHHost, plan.Networks.Management.SSHPort),
-		"-device", "virtio-net-pci,netdev=mgmt0",
+		"-device", buildManagementDeviceArg(plan.Networks.Management),
 	}
 	if plan.Networks.Lab != nil {
 		args = append(args,
@@ -95,9 +101,13 @@ func buildManagementNetdevArg(host string, port int) string {
 	return fmt.Sprintf("user,id=mgmt0,hostfwd=tcp:%s:%d-:22", host, port)
 }
 
+func buildManagementDeviceArg(management runtime.ManagementNetworkPlan) string {
+	return fmt.Sprintf("virtio-net-pci,netdev=mgmt0,mac=%s", management.MACAddress)
+}
+
 func buildLabNetdevArg(runtimeDir string, lab runtime.LabNetworkPlan) string {
 	group, port := deriveLabMulticast(filepath.Clean(filepath.Dir(runtimeDir)), lab.Name)
-	return fmt.Sprintf("socket,id=lab0,mcast=%s:%d", group, port)
+	return fmt.Sprintf("socket,id=lab0,mcast=%s:%d,localaddr=127.0.0.1", group, port)
 }
 
 func buildLabDeviceArg(lab runtime.LabNetworkPlan) string {

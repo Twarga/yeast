@@ -7,6 +7,58 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-22
+
+### Summary
+
+Yeast v0.5.0 adds the first narrow private lab networking slice to the local VM engine. It can now attach instances to one project-level private network, assign static lab IPv4 addresses, keep management SSH separate from lab traffic, and show `LAB IP` in status output.
+
+This is intentionally the first step, not the final networking model. It is enough for simple attacker/target workflows, but not yet enough for bridge mode, DHCP, or multi-network lab topologies.
+
+### Added
+
+- Project-level private lab network config in `yeast.yaml`.
+- Per-instance static lab network attachments with:
+  - `name`
+  - `ipv4`
+- Validation for:
+  - one project network in `v0.5`
+  - valid CIDR
+  - valid static IPv4
+  - duplicate lab IPv4 rejection
+  - unknown network reference rejection
+- Runtime network model for management SSH and one private lab network.
+- QEMU command support for a second private lab NIC/backend.
+- Cloud-init `network-config` generation for the lab NIC.
+- `LAB IP` in `yeast status` human and JSON output.
+- `examples/two-vm-lab`.
+- `docs/release-notes-v0.5.0.md`.
+
+### Changed
+
+- `yeast up` now plans and persists configured private lab network state.
+- Quickstart and README now include the first two-VM attacker/target lab flow.
+- Known limitations now document shipped `v0.5` networking support instead of treating it as future work.
+- The manual smoke suite now covers both:
+  - the single-VM provisioning/reset loop
+  - the two-VM private lab loop
+
+### Verification
+
+- `go test ./... -count=1`
+- `git diff --check`
+- `bash -n scripts/manual-smoke.sh`
+- `TEST_MODE=negative ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64`
+
+### Known Limitations
+
+- one project-level private lab network only
+- no bridge mode
+- no DHCP
+- no multiple private networks
+- no multi-network topology support
+- guest-to-guest validation is still manual from inside the VMs
+
 ## [0.4.0] - 2026-05-22
 
 ### Summary

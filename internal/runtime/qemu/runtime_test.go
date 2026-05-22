@@ -56,8 +56,10 @@ func TestRuntimeStartCreatesLogAndReleasesHandle(t *testing.T) {
 		},
 		Networks: rtm.NetworkPlan{
 			Management: rtm.ManagementNetworkPlan{
-				SSHHost: "127.0.0.1",
-				SSHPort: 2222,
+				SSHHost:       "127.0.0.1",
+				SSHPort:       2222,
+				InterfaceName: "yeastmgmt0",
+				MACAddress:    "52:54:00:11:22:33",
 			},
 		},
 	}
