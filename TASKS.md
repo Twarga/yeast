@@ -107,7 +107,7 @@ V0.4-T7: Add snapshot deletion and list commands in app layer.
 | C1 | Charm CLI Experience | Polished terminal UX without breaking JSON | [x] |
 | M11 | Provisioning | Packages/files/shell after v0.1 | [x] |
 | M12 | Snapshots And Reset | Lab reset capability | [~] |
-| M13 | Private Networking | Multi-VM lab networking | [-] |
+| M13 | Private Networking | Multi-VM lab networking | [~] |
 | M14 | Guest Control | exec/copy/logs/inspect | [-] |
 | M15 | LabsBackery Contract | CLI/JSON lab integration | [-] |
 
@@ -3483,19 +3483,222 @@ Completion notes:
 
 ## M13: Private Networking
 
-Status: [-]
+Status: [~]
 
-Do not start until:
+Goal:
+
+Add the first real multi-VM networking model so Yeast can run simple lab topologies with predictable private addresses while keeping management SSH separate.
+
+Key constraints:
+
+- keep management SSH on the current host-forwarded path
+- add one explicit private lab network model first
+- prefer a narrow Linux-only implementation over premature abstraction
+- no bridge mode or multi-network complexity in the first pass
+
+Release target:
+
+- `v0.5.0`
+
+### V0.5-T1: Lock the v0.5 networking contract
+
+Status: [ ]
+
+Dependencies:
 
 - M12 complete
-- private network experiment complete
 
-Core tasks later:
+Files:
 
-- networks config
-- management vs lab network
-- static IPs
-- two-VM lab
+- `YEAST_TECHNICAL_ARCHITECTURE.md`
+- `YEAST_V2_IMPLEMENTATION_PLAN.md`
+- `docs/known-limitations.md`
+- `TASKS.md`
+
+Definition of done:
+
+- management network vs lab network responsibilities are explicit
+- first supported config shape is explicit
+- first supported scope is explicit:
+  - one project-level private network
+  - per-instance static IPv4 on that network
+  - management SSH still separate
+- non-goals are explicit:
+  - no bridge mode yet
+  - no DHCP
+  - no multiple private networks yet
+  - no GUI topology tooling
+
+### V0.5-T2: Add config schema and validation for project networks
+
+Status: [ ]
+
+Dependencies:
+
+- V0.5-T1
+
+Files:
+
+- `internal/config/model.go`
+- `internal/config/validate.go`
+- `internal/config/defaults.go` if needed
+- tests
+- `TASKS.md`
+
+Definition of done:
+
+- `yeast.yaml` can declare one private network
+- instances can opt into that network with a static IPv4
+- invalid CIDR or invalid IPs fail validation
+- duplicate IPs fail validation
+
+### V0.5-T3: Add runtime network model types
+
+Status: [ ]
+
+Dependencies:
+
+- V0.5-T2
+
+Files:
+
+- `internal/runtime/model.go`
+- `internal/runtime/runtime.go`
+- related tests
+- `TASKS.md`
+
+Definition of done:
+
+- runtime plan can express:
+  - management SSH forwarding
+  - one named lab network
+  - per-instance static IPv4 on that network
+- model stays independent from QEMU flag formatting
+
+### V0.5-T4: Add QEMU network command building for one private lab network
+
+Status: [ ]
+
+Dependencies:
+
+- V0.5-T3
+
+Files:
+
+- `internal/runtime/qemu/*`
+- related tests
+- `TASKS.md`
+
+Definition of done:
+
+- QEMU command builder can attach instances to:
+  - existing management path
+  - one private lab network backend
+- generated runtime command is test-covered
+- no bridge mode yet
+
+### V0.5-T5: Add guest-side private address bootstrap through cloud-init
+
+Status: [ ]
+
+Dependencies:
+
+- V0.5-T2
+- V0.5-T4
+
+Files:
+
+- `internal/provision/cloudinit/*`
+- related tests
+- `TASKS.md`
+
+Definition of done:
+
+- cloud-init network config renders static IPv4 for the private lab NIC
+- instances boot with the configured lab address
+- existing management SSH remains reachable
+
+### V0.5-T6: Wire private network planning into `yeast up`
+
+Status: [ ]
+
+Dependencies:
+
+- V0.5-T5
+
+Files:
+
+- `internal/app/up.go`
+- related tests
+- `TASKS.md`
+
+Definition of done:
+
+- `yeast up` passes private network config into runtime and cloud-init
+- current single-VM projects still behave the same
+- multi-VM config builds and boots through the app layer
+
+### V0.5-T7: Expose private network details in `yeast status`
+
+Status: [ ]
+
+Dependencies:
+
+- V0.5-T6
+
+Files:
+
+- `internal/app/status.go`
+- renderers/tests if needed
+- `TASKS.md`
+
+Definition of done:
+
+- status output exposes per-instance lab IP when configured
+- JSON output includes the same data cleanly
+
+### V0.5-T8: Add two-VM example lab docs
+
+Status: [ ]
+
+Dependencies:
+
+- V0.5-T7
+
+Files:
+
+- `examples/*`
+- `docs/quickstart.md`
+- `docs/known-limitations.md`
+- `README.md`
+- `TASKS.md`
+
+Definition of done:
+
+- one example shows two VMs on one private network
+- docs explain management SSH vs lab traffic clearly
+
+### V0.5-T9: Add networking smoke coverage and release notes
+
+Status: [ ]
+
+Dependencies:
+
+- V0.5-T8
+
+Files:
+
+- `scripts/manual-smoke.sh`
+- `docs/tutorial-test.md`
+- `docs/release-notes-v0.5.0.md`
+- `CHANGELOG.md`
+- `TASKS.md`
+
+Definition of done:
+
+- smoke path proves two VMs can boot and reach each other on the private network
+- release notes describe networking limits honestly
+- docs stay explicit that bridge mode and multi-network topologies are later work
 
 ## M14: Guest Control
 
