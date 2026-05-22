@@ -1,6 +1,6 @@
 # Yeast Known Limitations
 
-This document describes Yeast `v0.4` limits.
+This document describes Yeast `v0.5` limits.
 
 Yeast is intentionally narrow right now. The goal is a reliable local VM core before adding LabsBackery, MCP, cloud, advanced networking, and richer guest-control workflows.
 
@@ -56,21 +56,23 @@ Raw `user_data` still fully replaces Yeast-generated cloud-init.
 
 ## Networking Limits
 
-Yeast uses QEMU user-mode networking with SSH port forwarding for management.
-
-The planned `v0.5` first pass is intentionally narrow:
+Yeast `v0.5` now supports the first narrow private lab network:
 
 - one project-level private lab network
 - one static IPv4 per attached instance
 - management SSH stays separate from lab traffic
+- `yeast status` exposes the configured `LAB IP`
 
-It still does not support:
+Current limits:
 
-- bridge mode config in `yeast.yaml`
-- DHCP for lab guests
-- custom port forwarding rules
-- multi-network lab topologies
-- multiple private networks in one project
+- management still uses QEMU user-mode networking with host port forwarding
+- bridge mode config in `yeast.yaml` is not supported
+- DHCP for lab guests is not supported
+- custom port forwarding rules are not supported
+- multiple private networks in one project are not supported
+- multi-network lab topologies are not supported
+- the current guest-side lab NIC shape is one deterministic interface (`yeastlab0`) only
+- deeper guest-to-guest validation is still manual from inside the VMs
 
 ## Snapshot Limits
 

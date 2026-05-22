@@ -1,8 +1,8 @@
 # Yeast Quickstart
 
-This guide gets one Ubuntu VM running with Yeast `v0.4`, shows the first provisioning workflow, and then walks through the first stopped-VM snapshot/restore loop.
+This guide gets one Ubuntu VM running with Yeast `v0.5`, shows the provisioning and stopped-VM reset flow, and then points to the first two-VM private lab example.
 
-Yeast is still Linux-first and QEMU/KVM-first. `v0.4` adds per-instance snapshots and restore, but private lab networking and templates are still out of scope.
+Yeast is still Linux-first and QEMU/KVM-first. `v0.5` adds the first narrow private lab network: one project-level network, one static IPv4 per attached instance, and management SSH kept separate from lab traffic.
 
 ## 1. Check The Host
 
@@ -155,7 +155,32 @@ yeast down
 yeast delete-snapshot web clean
 ```
 
-## 12. Destroy Runtime Files
+## 12. First Two-VM Private Lab
+
+The first `v0.5` networking example is:
+
+```text
+examples/two-vm-lab
+```
+
+It shows:
+
+- one project-level private lab network
+- two VMs on that network
+- separate management SSH ports
+- visible `LAB IP` values in `yeast status`
+
+Management SSH still uses host-forwarded ports such as `127.0.0.1:2205`. The private lab network is separate guest-to-guest traffic inside the VMs.
+
+Typical verification:
+
+```bash
+yeast ssh attacker
+ip addr show yeastlab0
+ping -c 2 10.10.10.20
+```
+
+## 13. Destroy Runtime Files
 
 ```bash
 yeast destroy

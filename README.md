@@ -15,7 +15,7 @@ Fast project-based virtual machines with cloud-init, trusted base images, post-b
 ![Go](https://img.shields.io/badge/go-1.25+-cyan.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 ![Runtime](https://img.shields.io/badge/runtime-QEMU%2FKVM-6f42c1.svg)
-![State](https://img.shields.io/badge/status-v0.4%20in%20progress-8a6d3b.svg)
+![State](https://img.shields.io/badge/status-v0.5%20in%20progress-8a6d3b.svg)
 
 [Website](https://twarga.github.io/yeast/) · [Quick Start](#quick-start) · [Current Scope](#current-scope) · [Commands](#commands) · [Examples](#examples) · [Architecture](#architecture) · [Limits](#current-limits)
 
@@ -48,9 +48,9 @@ The important constraint is still simple: **keep the core small and reliable bef
 
 ## Current Scope
 
-Yeast `v0.4` is still intentionally narrow. It now covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, and keep the base product understandable.
+Yeast `v0.5` is still intentionally narrow. It now covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, and attach one private lab network while keeping management SSH separate and understandable.
 
-| Area | v0.3 status |
+| Area | v0.5 status |
 |---|---|
 | Host support | Linux only |
 | Runtime | QEMU + KVM |
@@ -62,7 +62,8 @@ Yeast `v0.4` is still intentionally narrow. It now covers one complete loop: boo
 | Automation | Stable `--json` output for core non-interactive commands |
 | Provisioning | Packages, files, shell, and `yeast provision` |
 | Reset | Stopped-VM snapshot, list, restore, and delete |
-| Examples | Single-VM Ubuntu and Caddy provisioning/reset examples |
+| Private networking | One project-level lab network with static per-instance IPv4 |
+| Examples | Single-VM Ubuntu, Caddy provisioning/reset, and first two-VM lab example |
 
 ### What works now
 
@@ -82,15 +83,17 @@ Yeast `v0.4` is still intentionally narrow. It now covers one complete loop: boo
 - `yeast down`
 - `yeast destroy`
 - `yeast version`
+- first private lab network with per-instance `LAB IP`
 
-### What is not in v0.3 yet
+### What is not in v0.5 yet
 
-- snapshots and restore
-- multi-VM private lab networking
 - guest exec/copy/logs
 - templates
 - daemon or web API
 - Twarga Cloud features
+- multiple private networks
+- bridge mode
+- DHCP lab guests
 
 ---
 
@@ -242,7 +245,22 @@ yeast restore web clean
 yeast up
 ```
 
-### 11. Stop or remove
+### 11. Try the first two-VM lab
+
+Reference example:
+
+```text
+examples/two-vm-lab
+```
+
+That example shows:
+
+- `attacker` and `target` VMs
+- separate management SSH ports
+- one private lab network
+- static lab IPs visible in `yeast status`
+
+### 12. Stop or remove
 
 ```bash
 yeast down

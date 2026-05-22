@@ -3728,7 +3728,7 @@ Completion notes:
 
 ### V0.5-T8: Add two-VM example lab docs
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3746,6 +3746,17 @@ Definition of done:
 
 - one example shows two VMs on one private network
 - docs explain management SSH vs lab traffic clearly
+
+Completion notes:
+
+- Added `examples/two-vm-lab` with:
+  - one project-level private lab network
+  - `attacker` and `target` instances
+  - separate management SSH ports
+  - static lab IPs
+- Updated the quickstart to point at the first two-VM private lab flow.
+- Updated known limitations to reflect actual `v0.5` networking support and current constraints.
+- Updated the README current scope and examples so `v0.5` now clearly includes the first private lab network slice.
 
 ### V0.5-T9: Add networking smoke coverage and release notes
 
