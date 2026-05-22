@@ -56,12 +56,12 @@ func (r *Runtime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.RuntimeI
 	}
 
 	return rtm.RuntimeInstance{
-		Name:              plan.Name,
-		RuntimeDir:        plan.RuntimeDir,
-		LogPath:           plan.LogPath,
-		PID:               proc.PID(),
-		ManagementNetwork: plan.ManagementNetwork,
-		StartedAt:         time.Now().UTC(),
+		Name:       plan.Name,
+		RuntimeDir: plan.RuntimeDir,
+		LogPath:    plan.LogPath,
+		PID:        proc.PID(),
+		Networks:   plan.Networks,
+		StartedAt:  time.Now().UTC(),
 	}, nil
 }
 

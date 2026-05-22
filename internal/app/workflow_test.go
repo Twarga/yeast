@@ -150,12 +150,12 @@ func (f *workflowRuntime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.
 	}
 	f.running[f.nextPID] = true
 	return rtm.RuntimeInstance{
-		Name:              plan.Name,
-		RuntimeDir:        plan.RuntimeDir,
-		LogPath:           plan.LogPath,
-		PID:               f.nextPID,
-		ManagementNetwork: plan.ManagementNetwork,
-		StartedAt:         time.Now().UTC(),
+		Name:       plan.Name,
+		RuntimeDir: plan.RuntimeDir,
+		LogPath:    plan.LogPath,
+		PID:        f.nextPID,
+		Networks:   plan.Networks,
+		StartedAt:  time.Now().UTC(),
 	}, nil
 }
 

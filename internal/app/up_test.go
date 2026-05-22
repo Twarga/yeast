@@ -448,8 +448,8 @@ func TestUpRetriesHostForwardConflictBeforeFailing(t *testing.T) {
 		if startAttempts < 3 {
 			return os.WriteFile(plan.LogPath, []byte(fmt.Sprintf(
 				"qemu-system-x86_64: -netdev user,id=mgmt0,hostfwd=tcp:127.0.0.1:%d-:22: Could not set up host forwarding rule 'tcp:127.0.0.1:%d-:22'\n",
-				plan.ManagementNetwork.ManagementSSHPort,
-				plan.ManagementNetwork.ManagementSSHPort,
+				plan.Networks.Management.SSHPort,
+				plan.Networks.Management.SSHPort,
 			)), 0644)
 		}
 		return os.WriteFile(plan.LogPath, []byte("booted cleanly\n"), 0644)
@@ -821,12 +821,12 @@ func (f *fakeRuntime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.Runt
 		}
 	}
 	return rtm.RuntimeInstance{
-		Name:              plan.Name,
-		RuntimeDir:        plan.RuntimeDir,
-		LogPath:           plan.LogPath,
-		PID:               4242,
-		ManagementNetwork: plan.ManagementNetwork,
-		StartedAt:         time.Now().UTC(),
+		Name:       plan.Name,
+		RuntimeDir: plan.RuntimeDir,
+		LogPath:    plan.LogPath,
+		PID:        4242,
+		Networks:   plan.Networks,
+		StartedAt:  time.Now().UTC(),
 	}, nil
 }
 

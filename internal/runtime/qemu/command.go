@@ -25,8 +25,11 @@ func BuildCommandArgs(plan runtime.MachinePlan) ([]string, error) {
 	if strings.TrimSpace(plan.SeedImagePath) == "" {
 		return nil, fmt.Errorf("seed image path is required")
 	}
-	if plan.ManagementNetwork.ManagementSSHPort <= 0 {
+	if plan.Networks.Management.SSHPort <= 0 {
 		return nil, fmt.Errorf("management ssh port must be greater than zero")
+	}
+	if strings.TrimSpace(plan.Networks.Management.SSHHost) == "" {
+		return nil, fmt.Errorf("management ssh host is required")
 	}
 
 	args := []string{
@@ -36,7 +39,7 @@ func BuildCommandArgs(plan runtime.MachinePlan) ([]string, error) {
 		"-smp", fmt.Sprintf("%d", plan.CPUs),
 		"-drive", buildDiskDriveArg(plan.Disk.DiskPath),
 		"-drive", buildSeedDriveArg(plan.SeedImagePath),
-		"-netdev", buildManagementNetdevArg(plan.ManagementNetwork.ManagementSSHPort),
+		"-netdev", buildManagementNetdevArg(plan.Networks.Management.SSHHost, plan.Networks.Management.SSHPort),
 		"-device", "virtio-net-pci,netdev=mgmt0",
 		"-nographic",
 	}
@@ -60,6 +63,6 @@ func buildSeedDriveArg(path string) string {
 	return fmt.Sprintf("file=%s,if=virtio,media=cdrom,readonly=on", filepath.Clean(path))
 }
 
-func buildManagementNetdevArg(port int) string {
-	return fmt.Sprintf("user,id=mgmt0,hostfwd=tcp:127.0.0.1:%d-:22", port)
+func buildManagementNetdevArg(host string, port int) string {
+	return fmt.Sprintf("user,id=mgmt0,hostfwd=tcp:%s:%d-:22", host, port)
 }

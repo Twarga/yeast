@@ -54,8 +54,11 @@ func TestRuntimeStartCreatesLogAndReleasesHandle(t *testing.T) {
 		Disk: rtm.DiskPlan{
 			DiskPath: filepath.Join(root, "instances", "web", "disk.qcow2"),
 		},
-		ManagementNetwork: rtm.NetworkOptions{
-			ManagementSSHPort: 2222,
+		Networks: rtm.NetworkPlan{
+			Management: rtm.ManagementNetworkPlan{
+				SSHHost: "127.0.0.1",
+				SSHPort: 2222,
+			},
 		},
 	}
 

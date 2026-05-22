@@ -1,16 +1,19 @@
 package runtime
 
-import "time"
+import (
+	"net/netip"
+	"time"
+)
 
 type MachinePlan struct {
-	Name              string
-	RuntimeDir        string
-	LogPath           string
-	MemoryMiB         int
-	CPUs              int
-	Disk              DiskPlan
-	SeedImagePath     string
-	ManagementNetwork NetworkOptions
+	Name          string
+	RuntimeDir    string
+	LogPath       string
+	MemoryMiB     int
+	CPUs          int
+	Disk          DiskPlan
+	SeedImagePath string
+	Networks      NetworkPlan
 }
 
 type DiskPlan struct {
@@ -19,8 +22,20 @@ type DiskPlan struct {
 	Size          string
 }
 
-type NetworkOptions struct {
-	ManagementSSHPort int
+type NetworkPlan struct {
+	Management ManagementNetworkPlan
+	Lab        *LabNetworkPlan
+}
+
+type ManagementNetworkPlan struct {
+	SSHHost string
+	SSHPort int
+}
+
+type LabNetworkPlan struct {
+	Name string
+	CIDR netip.Prefix
+	IPv4 netip.Addr
 }
 
 type SnapshotPlan struct {
@@ -29,12 +44,12 @@ type SnapshotPlan struct {
 }
 
 type RuntimeInstance struct {
-	Name              string
-	RuntimeDir        string
-	LogPath           string
-	PID               int
-	ManagementNetwork NetworkOptions
-	StartedAt         time.Time
+	Name       string
+	RuntimeDir string
+	LogPath    string
+	PID        int
+	Networks   NetworkPlan
+	StartedAt  time.Time
 }
 
 type ProcessState string

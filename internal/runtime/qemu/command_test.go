@@ -19,8 +19,11 @@ func TestBuildCommandArgsIncludesExpectedRuntimeFlags(t *testing.T) {
 		Disk: runtime.DiskPlan{
 			DiskPath: "/runtime/web/disk.qcow2",
 		},
-		ManagementNetwork: runtime.NetworkOptions{
-			ManagementSSHPort: 2222,
+		Networks: runtime.NetworkPlan{
+			Management: runtime.ManagementNetworkPlan{
+				SSHHost: "127.0.0.1",
+				SSHPort: 2222,
+			},
 		},
 	}
 
@@ -56,8 +59,11 @@ func TestBuildCommandReturnsBinaryAndArgs(t *testing.T) {
 		Disk: runtime.DiskPlan{
 			DiskPath: "/runtime/db/disk.qcow2",
 		},
-		ManagementNetwork: runtime.NetworkOptions{
-			ManagementSSHPort: 2201,
+		Networks: runtime.NetworkPlan{
+			Management: runtime.ManagementNetworkPlan{
+				SSHHost: "127.0.0.1",
+				SSHPort: 2201,
+			},
 		},
 	}
 
@@ -89,8 +95,11 @@ func TestBuildCommandArgsRejectsMissingFields(t *testing.T) {
 					DiskPath: "/runtime/web/disk.qcow2",
 				},
 				SeedImagePath: "/runtime/web/seed.iso",
-				ManagementNetwork: runtime.NetworkOptions{
-					ManagementSSHPort: 2222,
+				Networks: runtime.NetworkPlan{
+					Management: runtime.ManagementNetworkPlan{
+						SSHHost: "127.0.0.1",
+						SSHPort: 2222,
+					},
 				},
 			},
 		},
@@ -101,8 +110,11 @@ func TestBuildCommandArgsRejectsMissingFields(t *testing.T) {
 				MemoryMiB:     1024,
 				CPUs:          1,
 				SeedImagePath: "/runtime/web/seed.iso",
-				ManagementNetwork: runtime.NetworkOptions{
-					ManagementSSHPort: 2222,
+				Networks: runtime.NetworkPlan{
+					Management: runtime.ManagementNetworkPlan{
+						SSHHost: "127.0.0.1",
+						SSHPort: 2222,
+					},
 				},
 			},
 		},
@@ -115,8 +127,11 @@ func TestBuildCommandArgsRejectsMissingFields(t *testing.T) {
 				Disk: runtime.DiskPlan{
 					DiskPath: "/runtime/web/disk.qcow2",
 				},
-				ManagementNetwork: runtime.NetworkOptions{
-					ManagementSSHPort: 2222,
+				Networks: runtime.NetworkPlan{
+					Management: runtime.ManagementNetworkPlan{
+						SSHHost: "127.0.0.1",
+						SSHPort: 2222,
+					},
 				},
 			},
 		},

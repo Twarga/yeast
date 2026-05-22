@@ -196,8 +196,11 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 				DiskPath:      filepath.Join(runtimeDir, "disk.qcow2"),
 				Size:          instance.DiskSize,
 			},
-			ManagementNetwork: rtm.NetworkOptions{
-				ManagementSSHPort: sshPort,
+			Networks: rtm.NetworkPlan{
+				Management: rtm.ManagementNetworkPlan{
+					SSHHost: defaultManagementHost,
+					SSHPort: sshPort,
+				},
 			},
 		}
 

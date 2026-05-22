@@ -3573,7 +3573,7 @@ Completion notes:
 
 ### V0.5-T3: Add runtime network model types
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3593,6 +3593,15 @@ Definition of done:
   - one named lab network
   - per-instance static IPv4 on that network
 - model stays independent from QEMU flag formatting
+
+Completion notes:
+
+- Replaced the old runtime `ManagementNetwork` placeholder with a semantic `NetworkPlan`.
+- Added:
+  - `ManagementNetworkPlan` for SSH host/port forwarding intent
+  - optional `LabNetworkPlan` for one named lab network with CIDR and per-instance IPv4
+- Switched the QEMU runtime and app test fakes to carry the new model without adding lab-network QEMU flags yet.
+- Added runtime model coverage proving one machine plan can express both management forwarding and one private lab address.
 
 ### V0.5-T4: Add QEMU network command building for one private lab network
 
