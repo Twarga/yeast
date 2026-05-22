@@ -43,6 +43,9 @@ func TestLoadInvalidYAML(t *testing.T) {
 func TestLoadValidYAML(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "yeast.yaml")
 	raw := `version: 1
+networks:
+  - name: lab
+    cidr: 10.10.10.0/24
 provision:
   packages:
     - caddy
@@ -58,6 +61,9 @@ instances:
     ssh_port: 2205
     user: yeast
     sudo: none
+    networks:
+      - name: lab
+        ipv4: 10.10.10.10
     env:
       APP_ENV: dev
     provision:
@@ -83,6 +89,12 @@ instances:
 	}
 	if cfg.Provision == nil {
 		t.Fatal("expected top-level provision to load")
+	}
+	if len(cfg.Networks) != 1 {
+		t.Fatalf("expected 1 project network, got %d", len(cfg.Networks))
+	}
+	if cfg.Networks[0].Name != "lab" || cfg.Networks[0].CIDR != "10.10.10.0/24" {
+		t.Fatalf("expected project network lab/10.10.10.0/24, got %#v", cfg.Networks[0])
 	}
 	if len(cfg.Provision.Packages) != 1 || cfg.Provision.Packages[0] != "caddy" {
 		t.Fatalf("expected top-level provision packages to load, got %#v", cfg.Provision.Packages)
@@ -115,6 +127,12 @@ instances:
 	}
 	if instance.Sudo != "none" {
 		t.Fatalf("expected sudo none, got %q", instance.Sudo)
+	}
+	if len(instance.Networks) != 1 {
+		t.Fatalf("expected 1 instance network attachment, got %d", len(instance.Networks))
+	}
+	if instance.Networks[0].Name != "lab" || instance.Networks[0].IPv4 != "10.10.10.10" {
+		t.Fatalf("expected instance network lab/10.10.10.10, got %#v", instance.Networks[0])
 	}
 	if instance.Env["APP_ENV"] != "dev" {
 		t.Fatalf("expected env APP_ENV=dev, got %q", instance.Env["APP_ENV"])

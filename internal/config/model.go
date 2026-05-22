@@ -20,14 +20,18 @@ type Instance struct {
 	Env      map[string]string `yaml:"env,omitempty"`
 	UserData string            `yaml:"user_data,omitempty"`
 
-	// Reserved for later milestones.
-	Networks  []string         `yaml:"networks,omitempty"`
-	Provision *ProvisionConfig `yaml:"provision,omitempty"`
+	Networks  []InstanceNetwork `yaml:"networks,omitempty"`
+	Provision *ProvisionConfig  `yaml:"provision,omitempty"`
 }
 
 type Network struct {
 	Name string `yaml:"name"`
 	CIDR string `yaml:"cidr,omitempty"`
+}
+
+type InstanceNetwork struct {
+	Name string `yaml:"name"`
+	IPv4 string `yaml:"ipv4,omitempty"`
 }
 
 type ProvisionConfig struct {

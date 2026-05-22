@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"math"
+	"net"
 	"regexp"
 	"strconv"
 	"strings"
@@ -31,8 +32,32 @@ func Validate(cfg *Config) error {
 	if err := validateProvision("top-level provision", cfg.Provision); err != nil {
 		return err
 	}
+	networkByName := make(map[string]net.IPNet, len(cfg.Networks))
+	if len(cfg.Networks) > 1 {
+		return fmt.Errorf("at most one project network is supported in v0.5")
+	}
+	for _, network := range cfg.Networks {
+		if strings.TrimSpace(network.Name) == "" {
+			return fmt.Errorf("network name cannot be empty")
+		}
+		if !instanceNamePattern.MatchString(network.Name) || strings.Contains(network.Name, "..") {
+			return fmt.Errorf("network name %q is invalid", network.Name)
+		}
+		if strings.TrimSpace(network.CIDR) == "" {
+			return fmt.Errorf("network %s must define a cidr", network.Name)
+		}
+		_, parsedCIDR, err := net.ParseCIDR(strings.TrimSpace(network.CIDR))
+		if err != nil {
+			return fmt.Errorf("network %s has invalid cidr %q", network.Name, network.CIDR)
+		}
+		if parsedCIDR.IP.To4() == nil {
+			return fmt.Errorf("network %s must use an IPv4 cidr", network.Name)
+		}
+		networkByName[network.Name] = *parsedCIDR
+	}
 
 	seen := make(map[string]struct{}, len(cfg.Instances))
+	usedNetworkIPs := make(map[string]string)
 	for _, instance := range cfg.Instances {
 		if instance.Name == "" {
 			return fmt.Errorf("instance name cannot be empty")
@@ -86,12 +111,63 @@ func Validate(cfg *Config) error {
 				return fmt.Errorf("instance %s env %q contains newline", instance.Name, key)
 			}
 		}
+		if len(instance.Networks) > 1 {
+			return fmt.Errorf("instance %s can attach to at most one private network in v0.5", instance.Name)
+		}
+		seenInstanceNetworks := make(map[string]struct{}, len(instance.Networks))
+		for _, attachment := range instance.Networks {
+			if strings.TrimSpace(attachment.Name) == "" {
+				return fmt.Errorf("instance %s network name cannot be empty", instance.Name)
+			}
+			if _, exists := seenInstanceNetworks[attachment.Name]; exists {
+				return fmt.Errorf("instance %s attaches network %q more than once", instance.Name, attachment.Name)
+			}
+			seenInstanceNetworks[attachment.Name] = struct{}{}
+
+			networkCIDR, exists := networkByName[attachment.Name]
+			if !exists {
+				return fmt.Errorf("instance %s references unknown network %q", instance.Name, attachment.Name)
+			}
+			if strings.TrimSpace(attachment.IPv4) == "" {
+				return fmt.Errorf("instance %s network %q must define ipv4", instance.Name, attachment.Name)
+			}
+			ip := net.ParseIP(strings.TrimSpace(attachment.IPv4))
+			if ip == nil || ip.To4() == nil {
+				return fmt.Errorf("instance %s network %q has invalid ipv4 %q", instance.Name, attachment.Name, attachment.IPv4)
+			}
+			if !networkCIDR.Contains(ip) {
+				return fmt.Errorf("instance %s network %q ipv4 %q is outside cidr %s", instance.Name, attachment.Name, attachment.IPv4, networkCIDR.String())
+			}
+			ipv4 := ip.To4()
+			if ipv4.Equal(networkCIDR.IP.To4()) || isBroadcastIPv4(networkCIDR, ipv4) {
+				return fmt.Errorf("instance %s network %q ipv4 %q is reserved in cidr %s", instance.Name, attachment.Name, attachment.IPv4, networkCIDR.String())
+			}
+			key := attachment.Name + "|" + ipv4.String()
+			if previous, exists := usedNetworkIPs[key]; exists {
+				return fmt.Errorf("instance %s network %q ipv4 %q is already used by instance %s", instance.Name, attachment.Name, attachment.IPv4, previous)
+			}
+			usedNetworkIPs[key] = instance.Name
+		}
 		if err := validateProvision(fmt.Sprintf("instance %s provision", instance.Name), instance.Provision); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func isBroadcastIPv4(network net.IPNet, ip net.IP) bool {
+	networkIP := network.IP.To4()
+	mask := net.IP(network.Mask).To4()
+	if networkIP == nil || mask == nil || ip == nil {
+		return false
+	}
+
+	broadcast := make(net.IP, net.IPv4len)
+	for i := 0; i < net.IPv4len; i++ {
+		broadcast[i] = networkIP[i] | ^mask[i]
+	}
+	return ip.Equal(broadcast)
 }
 
 func validateProvision(label string, provision *ProvisionConfig) error {

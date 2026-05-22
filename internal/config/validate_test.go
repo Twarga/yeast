@@ -24,6 +24,17 @@ func validConfig() *Config {
 	}
 }
 
+func validNetworkedConfig() *Config {
+	cfg := validConfig()
+	cfg.Networks = []Network{
+		{Name: "lab", CIDR: "10.10.10.0/24"},
+	}
+	cfg.Instances[0].Networks = []InstanceNetwork{
+		{Name: "lab", IPv4: "10.10.10.10"},
+	}
+	return cfg
+}
+
 func TestValidateRejectsUnsupportedVersion(t *testing.T) {
 	cfg := validConfig()
 	cfg.Version = 2
@@ -142,6 +153,12 @@ func TestValidateAcceptsValidConfig(t *testing.T) {
 	}
 }
 
+func TestValidateAcceptsValidProjectNetwork(t *testing.T) {
+	if err := Validate(validNetworkedConfig()); err != nil {
+		t.Fatalf("expected valid network config, got %v", err)
+	}
+}
+
 func TestValidateAcceptsProvisionConfig(t *testing.T) {
 	cfg := validConfig()
 	cfg.Provision = &ProvisionConfig{
@@ -211,5 +228,85 @@ func TestValidateRejectsEmptyProvisionShellCommand(t *testing.T) {
 
 	if err := Validate(cfg); err == nil {
 		t.Fatal("expected empty provision shell command error")
+	}
+}
+
+func TestValidateRejectsTooManyProjectNetworks(t *testing.T) {
+	cfg := validConfig()
+	cfg.Networks = []Network{
+		{Name: "lab-a", CIDR: "10.10.10.0/24"},
+		{Name: "lab-b", CIDR: "10.20.20.0/24"},
+	}
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected too many project networks error")
+	}
+}
+
+func TestValidateRejectsInvalidProjectNetworkCIDR(t *testing.T) {
+	cfg := validConfig()
+	cfg.Networks = []Network{{Name: "lab", CIDR: "not-a-cidr"}}
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected invalid project network cidr error")
+	}
+}
+
+func TestValidateRejectsUnknownInstanceNetwork(t *testing.T) {
+	cfg := validConfig()
+	cfg.Instances[0].Networks = []InstanceNetwork{{Name: "lab", IPv4: "10.10.10.10"}}
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected unknown instance network error")
+	}
+}
+
+func TestValidateRejectsInvalidInstanceNetworkIPv4(t *testing.T) {
+	cfg := validNetworkedConfig()
+	cfg.Instances[0].Networks[0].IPv4 = "bad-ip"
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected invalid instance network ipv4 error")
+	}
+}
+
+func TestValidateRejectsInstanceNetworkIPv4OutsideCIDR(t *testing.T) {
+	cfg := validNetworkedConfig()
+	cfg.Instances[0].Networks[0].IPv4 = "10.99.99.10"
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected instance network ipv4 outside cidr error")
+	}
+}
+
+func TestValidateRejectsDuplicateInstanceNetworkIPv4(t *testing.T) {
+	cfg := validNetworkedConfig()
+	cfg.Instances = append(cfg.Instances, Instance{
+		Name:   "db",
+		Image:  "ubuntu-24.04",
+		Memory: 1024,
+		CPUs:   1,
+		User:   "yeast",
+		Sudo:   "none",
+		Networks: []InstanceNetwork{
+			{Name: "lab", IPv4: "10.10.10.10"},
+		},
+	})
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected duplicate instance network ipv4 error")
+	}
+}
+
+func TestValidateRejectsMultipleInstanceNetworkAttachments(t *testing.T) {
+	cfg := validConfig()
+	cfg.Networks = []Network{{Name: "lab", CIDR: "10.10.10.0/24"}}
+	cfg.Instances[0].Networks = []InstanceNetwork{
+		{Name: "lab", IPv4: "10.10.10.10"},
+		{Name: "lab", IPv4: "10.10.10.11"},
+	}
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected too many instance network attachments error")
 	}
 }

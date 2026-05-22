@@ -3537,7 +3537,7 @@ Completion notes:
 
 ### V0.5-T2: Add config schema and validation for project networks
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3557,6 +3557,19 @@ Definition of done:
 - instances can opt into that network with a static IPv4
 - invalid CIDR or invalid IPs fail validation
 - duplicate IPs fail validation
+
+Completion notes:
+
+- Replaced the old placeholder `Instance.Networks []string` with structured per-instance network attachments using `name` and `ipv4`.
+- Added validation for the first `v0.5` contract:
+  - at most one project network
+  - required IPv4 CIDR on that project network
+  - at most one private network attachment per instance
+  - attachment must reference a declared network
+  - required static IPv4 per attachment
+  - IPv4 must be inside the declared CIDR
+  - duplicate instance IPv4s on the same network fail validation
+- Extended loader coverage so YAML parsing matches the locked architecture shape.
 
 ### V0.5-T3: Add runtime network model types
 
