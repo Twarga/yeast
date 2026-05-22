@@ -21,6 +21,7 @@ type StatusInstanceResult struct {
 	PID                int
 	ManagementIP       string
 	SSHPort            int
+	LabIP              string
 	RuntimeDir         string
 	ProvisionLogPath   string
 	ProvisioningStatus state.ProvisioningStatus
@@ -95,6 +96,7 @@ func (s *Service) Status(ctx context.Context, options StatusOptions) (StatusResu
 			PID:                instance.PID,
 			ManagementIP:       instance.ManagementIP,
 			SSHPort:            instance.SSHPort,
+			LabIP:              instance.LabIP,
 			RuntimeDir:         instance.RuntimeDir,
 			ProvisionLogPath:   instance.ProvisionLogPath,
 			ProvisioningStatus: instance.ProvisioningStatus,

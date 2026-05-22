@@ -3701,7 +3701,7 @@ Completion notes:
 
 ### V0.5-T7: Expose private network details in `yeast status`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3717,6 +3717,14 @@ Definition of done:
 
 - status output exposes per-instance lab IP when configured
 - JSON output includes the same data cleanly
+
+Completion notes:
+
+- Added `lab_ip` to instance state as desired-state networking metadata.
+- `yeast up` now persists the configured lab IP when a private lab network is attached.
+- `yeast status` now returns the lab IP in both app results and JSON output.
+- Human status rendering now shows a `LAB IP` column while keeping `-` for instances without private lab networking.
+- Added focused app/output/render tests for persistence and display.
 
 ### V0.5-T8: Add two-VM example lab docs
 

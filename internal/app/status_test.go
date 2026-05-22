@@ -84,6 +84,7 @@ func TestStatusReconcilesDeadProcessesAndSavesState(t *testing.T) {
 		PID:                3333,
 		ManagementIP:       "127.0.0.1",
 		SSHPort:            2222,
+		LabIP:              "10.10.10.10",
 		ProvisionLogPath:   filepath.Join(yeastHome, "projects", metadata.ID, "instances", "web", "provision.log"),
 		ProvisioningStatus: state.ProvisioningStatusNotStarted,
 	}
@@ -101,6 +102,9 @@ func TestStatusReconcilesDeadProcessesAndSavesState(t *testing.T) {
 	if result.Instances[0].PID != 0 || result.Instances[0].SSHPort != 0 {
 		t.Fatalf("expected pid and ssh port cleared, got %#v", result.Instances[0])
 	}
+	if result.Instances[0].LabIP != "10.10.10.10" {
+		t.Fatalf("expected lab ip to remain visible, got %#v", result.Instances[0])
+	}
 	if result.Instances[0].ProvisionLogPath == "" {
 		t.Fatalf("expected provision log path to remain set, got %#v", result.Instances[0])
 	}
@@ -114,6 +118,56 @@ func TestStatusReconcilesDeadProcessesAndSavesState(t *testing.T) {
 	}
 	if reloaded.Instances["web"].Status != "stopped" {
 		t.Fatalf("expected saved state to be reconciled, got %#v", reloaded.Instances["web"])
+	}
+	if reloaded.Instances["web"].LabIP != "10.10.10.10" {
+		t.Fatalf("expected lab ip to remain in saved state, got %#v", reloaded.Instances["web"])
+	}
+}
+
+func TestStatusIncludesConfiguredLabIP(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.runtime = &fakeStatusRuntime{
+		states: map[int]rtm.ProcessState{
+			200: rtm.ProcessStateRunning,
+		},
+	}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root, Now: time.Date(2026, 5, 16, 12, 0, 0, 0, time.UTC)}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+
+	current := state.New(metadata.ID)
+	current.Instances["web"] = state.InstanceState{
+		Status:       "running",
+		PID:          200,
+		ManagementIP: "127.0.0.1",
+		SSHPort:      2222,
+		LabIP:        "10.10.10.10",
+	}
+	if err := state.Save(paths.StateFile, current); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	result, err := service.Status(context.Background(), StatusOptions{ProjectRoot: root})
+	if err != nil {
+		t.Fatalf("Status returned error: %v", err)
+	}
+	if len(result.Instances) != 1 {
+		t.Fatalf("expected 1 instance, got %d", len(result.Instances))
+	}
+	if result.Instances[0].LabIP != "10.10.10.10" {
+		t.Fatalf("expected lab ip in status result, got %#v", result.Instances[0])
 	}
 }
 

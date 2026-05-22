@@ -229,6 +229,18 @@ instances:
 	if fakeRuntime.startPlan.Networks.Lab.MACAddress != gotNetworkConfig.MACAddress {
 		t.Fatalf("runtime/network-config mac mismatch: %q vs %q", fakeRuntime.startPlan.Networks.Lab.MACAddress, gotNetworkConfig.MACAddress)
 	}
+
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	loaded, err := state.Load(filepath.Join(yeastHome, "projects", metadata.ID, "state.json"), metadata.ID)
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+	if loaded.Instances["web"].LabIP != "10.10.10.10" {
+		t.Fatalf("expected lab ip persisted in state, got %#v", loaded.Instances["web"])
+	}
 }
 
 func TestUpRunsProvisioningInDocumentedOrder(t *testing.T) {

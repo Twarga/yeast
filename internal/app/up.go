@@ -260,6 +260,9 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			ProvisioningStatus: state.ProvisioningStatusNotStarted,
 			LastError:          "",
 		}
+		if labNetworkPlan != nil {
+			instanceState.LabIP = labNetworkPlan.IPv4.String()
+		}
 		if hadPreviousState && len(previousState.Snapshots) > 0 {
 			instanceState.Snapshots = previousState.Snapshots
 		}

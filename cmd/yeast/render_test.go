@@ -60,7 +60,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 			data: app.StatusResult{
 				ProjectID: "proj_123",
 				Instances: []app.StatusInstanceResult{
-					{Name: "web", Status: "running", SSHPort: 2222},
+					{Name: "web", Status: "running", SSHPort: 2222, LabIP: "10.10.10.10"},
 				},
 			},
 		},

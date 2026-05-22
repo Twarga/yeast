@@ -185,13 +185,17 @@ func renderStatus(w io.Writer, theme humanTheme, value app.StatusResult) error {
 	instances := append([]app.StatusInstanceResult(nil), value.Instances...)
 	sort.Slice(instances, func(i, j int) bool { return instances[i].Name < instances[j].Name })
 
-	rows := [][]string{{"NAME", "STATUS", "SSH"}}
+	rows := [][]string{{"NAME", "STATUS", "SSH", "LAB IP"}}
 	for _, instance := range instances {
 		ssh := "-"
 		if instance.SSHPort > 0 {
 			ssh = fmt.Sprintf("127.0.0.1:%d", instance.SSHPort)
 		}
-		rows = append(rows, []string{instance.Name, instance.Status, ssh})
+		labIP := "-"
+		if instance.LabIP != "" {
+			labIP = instance.LabIP
+		}
+		rows = append(rows, []string{instance.Name, instance.Status, ssh, labIP})
 	}
 
 	lines := []string{theme.Title.Render("Project status")}
