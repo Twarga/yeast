@@ -1,6 +1,6 @@
 # caddy-single-vm
 
-Single-VM provisioning example for Yeast `v0.3`.
+Single-VM provisioning and reset example for Yeast `v0.4`.
 
 What this example does:
 
@@ -9,10 +9,10 @@ What this example does:
 - copies site files into the guest user home
 - installs them into Caddy-owned paths during shell provisioning
 - enables and restarts the `caddy` service
+- supports a stopped-VM snapshot and restore loop after provisioning
 
 What this example does not do:
 
-- snapshots or restore
 - private networking
 - multi-VM topologies
 - guest exec/copy/logs beyond provisioning
@@ -58,6 +58,49 @@ To rerun provisioning after editing files:
 yeast provision web
 ```
 
+## Reset Loop
+
+Stop the VM before snapshot or restore. `v0.4` does not support live snapshots or live restore.
+
+Create a clean baseline:
+
+```bash
+yeast down
+yeast snapshot web clean --description "Provisioned Caddy baseline"
+yeast snapshots web
+```
+
+Break the guest, then stop it again:
+
+```bash
+yeast up
+yeast ssh web
+sudo rm -f /var/www/html/index.html
+exit
+yeast down
+```
+
+Restore the clean baseline and boot again:
+
+```bash
+yeast restore web clean
+yeast up
+yeast ssh web
+curl http://127.0.0.1
+```
+
+Expected result after restore:
+
+- the Caddy site responds again from the restored disk state
+- `yeast snapshots web` still lists `clean`
+
+Delete the snapshot when you no longer need it:
+
+```bash
+yeast down
+yeast delete-snapshot web clean
+```
+
 To stop or remove the VM:
 
 ```bash
@@ -70,4 +113,5 @@ yeast destroy
 - this example assumes Ubuntu or Debian package management because package provisioning currently uses `apt-get`
 - file sources are resolved relative to the project root
 - privileged destination writes are handled through shell provisioning in `v0.3`
-- service verification is still manual in `v0.3`
+- snapshot create and restore are stopped-VM only in `v0.4`
+- service verification is still manual in `v0.4`

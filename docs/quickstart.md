@@ -1,8 +1,8 @@
 # Yeast Quickstart
 
-This guide gets one Ubuntu VM running with Yeast `v0.3` and then shows the first provisioning workflow.
+This guide gets one Ubuntu VM running with Yeast `v0.4`, shows the first provisioning workflow, and then walks through the first stopped-VM snapshot/restore loop.
 
-Yeast is still Linux-first and QEMU/KVM-first. `v0.3` adds post-boot provisioning, but snapshots, private lab networking, and templates are still out of scope.
+Yeast is still Linux-first and QEMU/KVM-first. `v0.4` adds per-instance snapshots and restore, but private lab networking and templates are still out of scope.
 
 ## 1. Check The Host
 
@@ -116,7 +116,46 @@ yeast down
 
 This stops tracked running VMs but keeps runtime files and disks.
 
-## 9. Destroy Runtime Files
+## 9. Create A Snapshot
+
+Snapshots in `v0.4` are stopped-VM only. Create the baseline after provisioning has finished and the VM is stopped.
+
+```bash
+yeast snapshot web clean --description "Provisioned baseline"
+yeast snapshots web
+```
+
+This stores a snapshot copy under the project runtime directory and records metadata in state.
+
+## 10. Restore A Snapshot
+
+Bring the VM back up, change something, stop it again, then restore:
+
+```bash
+yeast up
+yeast ssh web
+# make a change inside the VM
+exit
+yeast down
+yeast restore web clean
+```
+
+After restore, boot the VM again:
+
+```bash
+yeast up
+```
+
+## 11. Delete A Snapshot
+
+When you no longer need the stored baseline:
+
+```bash
+yeast down
+yeast delete-snapshot web clean
+```
+
+## 12. Destroy Runtime Files
 
 ```bash
 yeast destroy
@@ -136,12 +175,19 @@ yeast status --json
 
 `yeast ssh` is interactive and should not be used as a JSON workflow.
 
-## First Provisioning Demo
+## First Provisioning And Reset Demo
 
-The reference `v0.3` demo is:
+The reference `v0.4` demo is:
 
 ```text
 examples/caddy-single-vm
 ```
+
+It covers:
+
+- package/file/shell provisioning
+- manual verification inside the guest
+- stopped-VM snapshot create
+- break-and-restore reset flow
 
 It installs Caddy, copies a static page, writes a Caddyfile, and starts the service.

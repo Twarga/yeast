@@ -1,8 +1,8 @@
 # Yeast Known Limitations
 
-This document describes Yeast `v0.3` limits.
+This document describes Yeast `v0.4` limits.
 
-Yeast is intentionally narrow right now. The goal is a reliable local VM core before adding LabsBackery, MCP, cloud, snapshots, and advanced provisioning.
+Yeast is intentionally narrow right now. The goal is a reliable local VM core before adding LabsBackery, MCP, cloud, advanced networking, and richer guest-control workflows.
 
 ## Platform Limits
 
@@ -68,18 +68,26 @@ It does not yet support:
 
 ## Snapshot Limits
 
-Snapshots and restore are not implemented yet.
+Yeast `v0.4` now supports the first narrow reset loop:
 
-This means Yeast `v0.3` is not yet enough for full resettable cybersecurity labs. LabsBackery needs snapshot/reset support before serious classroom use.
+- per-instance snapshot create
+- per-instance snapshot list
+- per-instance restore
+- per-instance snapshot delete
+- snapshot metadata tracked in state
 
-The planned `v0.4` scope is intentionally narrow:
+Current limits:
 
-- stopped-VM snapshot create only
-- stopped-VM restore only
-- per-instance snapshot metadata tracked in state
-- project-wide snapshot/restore as a sequential loop
+- snapshot create is stopped-VM only
+- restore is stopped-VM only
+- project-wide snapshot/restore is not implemented yet
+- snapshot storage is full disk-copy based; there is no deduplication
+- live snapshots are not supported
+- live restore is not supported
+- memory-state snapshots are not supported
+- multi-VM atomic reset is not supported
 
-It will not try to ship live snapshots, live restore, or multi-VM atomic reset in the first pass.
+This is enough for the first single-VM reset workflows, but still not enough for full multi-machine classroom lab reset.
 
 ## Guest Control Limits
 

@@ -15,7 +15,7 @@ Fast project-based virtual machines with cloud-init, trusted base images, post-b
 ![Go](https://img.shields.io/badge/go-1.25+-cyan.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 ![Runtime](https://img.shields.io/badge/runtime-QEMU%2FKVM-6f42c1.svg)
-![State](https://img.shields.io/badge/status-v0.3%20in%20progress-8a6d3b.svg)
+![State](https://img.shields.io/badge/status-v0.4%20in%20progress-8a6d3b.svg)
 
 [Website](https://twarga.github.io/yeast/) · [Quick Start](#quick-start) · [Current Scope](#current-scope) · [Commands](#commands) · [Examples](#examples) · [Architecture](#architecture) · [Limits](#current-limits)
 
@@ -48,7 +48,7 @@ The important constraint is still simple: **keep the core small and reliable bef
 
 ## Current Scope
 
-Yeast `v0.3` is still intentionally narrow. It now covers one complete loop: boot a VM, provision it into something useful, rerun provisioning, and keep the base product understandable.
+Yeast `v0.4` is still intentionally narrow. It now covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, and keep the base product understandable.
 
 | Area | v0.3 status |
 |---|---|
@@ -61,7 +61,8 @@ Yeast `v0.3` is still intentionally narrow. It now covers one complete loop: boo
 | State | Project-scoped state with locking and reconciliation |
 | Automation | Stable `--json` output for core non-interactive commands |
 | Provisioning | Packages, files, shell, and `yeast provision` |
-| Examples | Single-VM Ubuntu and Caddy provisioning examples |
+| Reset | Stopped-VM snapshot, list, restore, and delete |
+| Examples | Single-VM Ubuntu and Caddy provisioning/reset examples |
 
 ### What works now
 
@@ -72,6 +73,10 @@ Yeast `v0.3` is still intentionally narrow. It now covers one complete loop: boo
 - `yeast up`
 - post-boot provisioning during `yeast up`
 - `yeast provision [instance]`
+- `yeast snapshot <instance> <name>`
+- `yeast restore <instance> <name>`
+- `yeast snapshots <instance>`
+- `yeast delete-snapshot <instance> <name>`
 - `yeast status`
 - `yeast ssh [instance]`
 - `yeast down`
@@ -217,10 +222,31 @@ yeast ssh web
 yeast provision web
 ```
 
-### 9. Stop or remove
+### 9. Create a stopped-VM snapshot
 
 ```bash
 yeast down
+yeast snapshot web clean --description "Provisioned baseline"
+yeast snapshots web
+```
+
+### 10. Restore that snapshot later
+
+```bash
+yeast up
+yeast ssh web
+# change something inside the guest
+exit
+yeast down
+yeast restore web clean
+yeast up
+```
+
+### 11. Stop or remove
+
+```bash
+yeast down
+yeast delete-snapshot web clean
 yeast destroy
 ```
 
@@ -233,7 +259,7 @@ yeast destroy
 If the repository is reachable over HTTPS:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.2.0/install.sh | YEAST_REF=v0.2.0 bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.3.0/install.sh | YEAST_REF=v0.3.0 bash
 ```
 
 If you already cloned the repo:

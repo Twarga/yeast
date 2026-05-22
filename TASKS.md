@@ -3428,7 +3428,7 @@ Completion notes:
 
 ### V0.4-T9: Add single-VM reset demo docs
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3446,6 +3446,12 @@ Definition of done:
 
 - one example shows provision -> snapshot -> modify -> restore
 - docs explain stopped-VM restore expectations clearly
+
+Completion notes:
+
+- Extended the `examples/caddy-single-vm` walkthrough to cover the stopped-VM snapshot, break, restore, and delete loop.
+- Updated `docs/quickstart.md` so the main guided workflow now includes snapshot create, restore, and delete after provisioning.
+- Updated `docs/known-limitations.md` and `README.md` to reflect that `v0.4` now has narrow single-instance snapshot support with stopped-VM-only constraints.
 
 ### V0.4-T10: Add snapshot smoke coverage and release notes
 
