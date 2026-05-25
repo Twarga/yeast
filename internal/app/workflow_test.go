@@ -32,6 +32,7 @@ func TestAppWorkflowsRunWithoutQEMUUsingFakeRuntime(t *testing.T) {
 			Builder:      "fake",
 		}, nil
 	}
+	service.provisionTransport = fakeBootstrapTransport(t)
 	service.waitForTCP = func(ctx context.Context, options guest.ReadinessOptions) error { return nil }
 
 	fakeRuntime := &workflowRuntime{

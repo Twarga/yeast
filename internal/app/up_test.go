@@ -56,6 +56,7 @@ func TestUpStartsInstanceAndSavesState(t *testing.T) {
 
 	fakeRuntime := &fakeRuntime{}
 	service.runtime = fakeRuntime
+	service.provisionTransport = fakeBootstrapTransport(t)
 	service.waitForTCP = func(ctx context.Context, options guest.ReadinessOptions) error {
 		if options.Address != "127.0.0.1:2205" {
 			t.Fatalf("unexpected readiness address: %q", options.Address)
@@ -167,6 +168,7 @@ func TestUpBuildsLabNetworkPlanAndSeedConfig(t *testing.T) {
 
 	fakeRuntime := &fakeRuntime{}
 	service.runtime = fakeRuntime
+	service.provisionTransport = fakeBootstrapTransport(t)
 	service.waitForTCP = func(ctx context.Context, options guest.ReadinessOptions) error { return nil }
 
 	if _, err := service.Init(InitOptions{ProjectRoot: root, Now: time.Date(2026, 5, 16, 12, 0, 0, 0, time.UTC)}); err != nil {
@@ -933,6 +935,7 @@ func newUpServiceWithCachedImage(t *testing.T) (*Service, string) {
 	service.createSeedISO = func(ctx context.Context, input cloudinit.SeedInput) (cloudinit.SeedResult, error) {
 		return cloudinit.SeedResult{ISOPath: filepath.Join(input.RuntimeDir, "seed.iso")}, nil
 	}
+	service.provisionTransport = fakeBootstrapTransport(t)
 	service.waitForTCP = func(ctx context.Context, options guest.ReadinessOptions) error { return nil }
 	service.managementPortAvailable = func(port int) bool { return true }
 
@@ -948,6 +951,19 @@ func newUpServiceWithCachedImage(t *testing.T) (*Service, string) {
 	}
 
 	return service, root
+}
+
+func fakeBootstrapTransport(t *testing.T) provssh.FakeTransport {
+	t.Helper()
+
+	return provssh.FakeTransport{
+		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
+			if request.Command != "cloud-init status --wait" {
+				t.Fatalf("unexpected provisioning command without explicit test transport: %q", request.Command)
+			}
+			return provssh.RunResult{Stdout: "done\n", ExitCode: 0, Duration: time.Millisecond}, nil
+		},
+	}
 }
 
 type fakeRuntime struct {
