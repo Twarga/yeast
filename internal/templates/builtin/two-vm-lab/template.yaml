@@ -1,0 +1,8 @@
+name: two-vm-lab
+title: Two VM Lab
+description: Attacker and target Ubuntu VMs connected by a private lab network.
+category: lab
+version: "1"
+files:
+  - yeast.yaml
+  - README.md

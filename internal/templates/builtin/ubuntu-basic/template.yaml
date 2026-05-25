@@ -1,0 +1,8 @@
+name: ubuntu-basic
+title: Ubuntu Basic
+description: Minimal Ubuntu VM starter for testing the Yeast lifecycle.
+category: vm
+version: "1"
+files:
+  - yeast.yaml
+  - README.md

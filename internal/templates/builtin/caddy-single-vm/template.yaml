@@ -1,0 +1,10 @@
+name: caddy-single-vm
+title: Caddy Single VM
+description: Ubuntu VM with Caddy provisioning and a small static site.
+category: app
+version: "1"
+files:
+  - yeast.yaml
+  - README.md
+  - site/Caddyfile
+  - site/index.html

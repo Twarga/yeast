@@ -4175,7 +4175,7 @@ Completion notes:
 
 ### V0.7-T2: Add built-in template catalog and metadata model
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4194,6 +4194,17 @@ Definition of done:
 - built-in templates can be listed from app/internal code
 - metadata includes name, title, description, category, and included files
 - tests cover deterministic ordering and missing/corrupt metadata behavior
+
+Completion notes:
+
+- Added `internal/templates` with a template metadata model and validation.
+- Added embedded built-in metadata for:
+  - `ubuntu-basic`
+  - `caddy-single-vm`
+  - `two-vm-lab`
+- Added catalog helpers for sorted built-in listing, name listing, and lookup.
+- Added local template metadata loading for the next materialization task.
+- Added tests for deterministic ordering, lookup, corrupt metadata, missing metadata, unsafe paths, and duplicate file entries.
 
 ### V0.7-T3: Add template materialization service
 
