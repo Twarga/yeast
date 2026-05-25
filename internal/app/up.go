@@ -537,13 +537,6 @@ func resolveProvisionPlan(projectRoot string, plan provision.Plan) (provision.Pl
 
 func (s *Service) runProvisionPlan(ctx context.Context, instance config.Instance, sshPort int, logPath string, plan provision.Plan) (provision.Result, error) {
 	result := provision.NewResult(logPath)
-	if plan.Empty() {
-		result.Status = state.ProvisioningStatusReady
-		if err := writeProvisionLog(logPath, result); err != nil {
-			return result, err
-		}
-		return result, nil
-	}
 
 	transport := s.provisionTransport
 	if transport == nil {
@@ -578,6 +571,14 @@ func (s *Service) runProvisionPlan(ctx context.Context, instance config.Instance
 			return result, WrapError(ErrorCodeInternal, writeErr.Error(), writeErr)
 		}
 		return result, WrapError(ErrorCodePrecondition, fmt.Sprintf("wait for cloud-init bootstrap: %v", err), err)
+	}
+
+	if plan.Empty() {
+		result.Status = state.ProvisioningStatusReady
+		if err := writeProvisionLog(logPath, result); err != nil {
+			return result, err
+		}
+		return result, nil
 	}
 
 	appendPackageResult := func(pkgResult provssh.PackageResult, err error) {

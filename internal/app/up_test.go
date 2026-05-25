@@ -521,6 +521,40 @@ instances:
 	}
 }
 
+func TestUpWaitsForBootstrapEvenWithoutProvisionPlan(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.runtime = &fakeRuntime{}
+	service.sleep = func(time.Duration) {}
+
+	runCalls := 0
+	service.provisionTransport = provssh.FakeTransport{
+		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
+			runCalls++
+			if request.Command != "cloud-init status --wait" {
+				t.Fatalf("unexpected command for empty provision plan: %q", request.Command)
+			}
+			return provssh.RunResult{Stdout: "done\n", ExitCode: 0, Duration: time.Millisecond}, nil
+		},
+	}
+
+	configContent := `version: 1
+instances:
+  - name: web
+    image: ubuntu-24.04
+    ssh_port: 2205
+`
+	if err := os.WriteFile(filepath.Join(root, ConfigFileName), []byte(configContent), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	if _, err := service.Up(context.Background(), UpOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Up returned error: %v", err)
+	}
+	if runCalls != 1 {
+		t.Fatalf("expected bootstrap wait even without provision plan, got %d run calls", runCalls)
+	}
+}
+
 func TestUpClassifiesExternallyBoundRequestedSSHPort(t *testing.T) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
