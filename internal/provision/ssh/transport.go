@@ -12,6 +12,7 @@ import (
 type Transport interface {
 	Run(ctx context.Context, request RunRequest) (RunResult, error)
 	Upload(ctx context.Context, request UploadRequest) error
+	Download(ctx context.Context, request DownloadRequest) error
 }
 
 type Runner interface {
@@ -34,6 +35,15 @@ type RunResult struct {
 }
 
 type UploadRequest struct {
+	User        string
+	Host        string
+	Port        int
+	Source      string
+	Destination string
+	Timeout     time.Duration
+}
+
+type DownloadRequest struct {
 	User        string
 	Host        string
 	Port        int
@@ -114,6 +124,33 @@ func (t *LocalTransport) Upload(ctx context.Context, request UploadRequest) erro
 	return err
 }
 
+func (t *LocalTransport) Download(ctx context.Context, request DownloadRequest) error {
+	if err := validateDownloadRequest(request); err != nil {
+		return err
+	}
+	runner := t.runner
+	if runner == nil {
+		runner = OSRunner{}
+	}
+
+	runCtx := ctx
+	cancel := func() {}
+	if request.Timeout > 0 {
+		runCtx, cancel = context.WithTimeout(ctx, request.Timeout)
+	}
+	defer cancel()
+
+	args := []string{
+		"-P", strconv.Itoa(request.Port),
+		"-o", "StrictHostKeyChecking=no",
+		"-o", "UserKnownHostsFile=/dev/null",
+		fmt.Sprintf("%s@%s:%s", request.User, request.Host, request.Source),
+		request.Destination,
+	}
+	_, err := runner.Run(runCtx, "scp", args)
+	return err
+}
+
 type OSRunner struct{}
 
 func (OSRunner) Run(ctx context.Context, command string, args []string) (CommandResult, error) {
@@ -170,6 +207,25 @@ func validateRunRequest(request RunRequest) error {
 }
 
 func validateUploadRequest(request UploadRequest) error {
+	if request.User == "" {
+		return fmt.Errorf("user is required")
+	}
+	if request.Host == "" {
+		return fmt.Errorf("host is required")
+	}
+	if request.Port <= 0 {
+		return fmt.Errorf("port must be greater than zero")
+	}
+	if request.Source == "" {
+		return fmt.Errorf("source is required")
+	}
+	if request.Destination == "" {
+		return fmt.Errorf("destination is required")
+	}
+	return nil
+}
+
+func validateDownloadRequest(request DownloadRequest) error {
 	if request.User == "" {
 		return fmt.Errorf("user is required")
 	}

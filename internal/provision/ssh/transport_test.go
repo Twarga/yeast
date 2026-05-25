@@ -92,6 +92,37 @@ func TestLocalTransportUploadBuildsSCPInvocation(t *testing.T) {
 	}
 }
 
+func TestLocalTransportDownloadBuildsSCPInvocation(t *testing.T) {
+	runner := &stubRunner{}
+	transport := NewLocalTransportWithRunner(runner)
+
+	err := transport.Download(context.Background(), DownloadRequest{
+		User:        "yeast",
+		Host:        "127.0.0.1",
+		Port:        2205,
+		Source:      "/srv/site/index.html",
+		Destination: "./index.html",
+	})
+	if err != nil {
+		t.Fatalf("Download returned error: %v", err)
+	}
+
+	if runner.command != "scp" {
+		t.Fatalf("expected scp command, got %q", runner.command)
+	}
+
+	wantArgs := []string{
+		"-P", "2205",
+		"-o", "StrictHostKeyChecking=no",
+		"-o", "UserKnownHostsFile=/dev/null",
+		"yeast@127.0.0.1:/srv/site/index.html",
+		"./index.html",
+	}
+	if !reflect.DeepEqual(runner.args, wantArgs) {
+		t.Fatalf("unexpected scp args:\n got: %#v\nwant: %#v", runner.args, wantArgs)
+	}
+}
+
 func TestLocalTransportRunValidatesRequest(t *testing.T) {
 	transport := NewLocalTransportWithRunner(&stubRunner{})
 
@@ -115,6 +146,21 @@ func TestLocalTransportUploadValidatesRequest(t *testing.T) {
 		Port:        2205,
 		Source:      "",
 		Destination: "/srv/site",
+	})
+	if err == nil {
+		t.Fatal("expected validation error")
+	}
+}
+
+func TestLocalTransportDownloadValidatesRequest(t *testing.T) {
+	transport := NewLocalTransportWithRunner(&stubRunner{})
+
+	err := transport.Download(context.Background(), DownloadRequest{
+		User:        "yeast",
+		Host:        "127.0.0.1",
+		Port:        2205,
+		Source:      "",
+		Destination: "./artifact.txt",
 	})
 	if err == nil {
 		t.Fatal("expected validation error")
@@ -169,5 +215,8 @@ func TestFakeTransportHooks(t *testing.T) {
 	}
 	if err := transport.Upload(context.Background(), UploadRequest{Destination: "/srv/site"}); err != nil {
 		t.Fatalf("Upload returned error: %v", err)
+	}
+	if err := transport.Download(context.Background(), DownloadRequest{Destination: "./site"}); err != nil {
+		t.Fatalf("Download returned error: %v", err)
 	}
 }

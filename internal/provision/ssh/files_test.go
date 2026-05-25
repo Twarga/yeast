@@ -9,11 +9,13 @@ import (
 )
 
 type scriptedTransport struct {
-	runRequests    []RunRequest
-	uploadRequests []UploadRequest
-	runResults     []RunResult
-	runErrors      []error
-	uploadErrors   []error
+	runRequests      []RunRequest
+	uploadRequests   []UploadRequest
+	downloadRequests []DownloadRequest
+	runResults       []RunResult
+	runErrors        []error
+	uploadErrors     []error
+	downloadErrors   []error
 }
 
 func (s *scriptedTransport) Run(ctx context.Context, request RunRequest) (RunResult, error) {
@@ -35,6 +37,15 @@ func (s *scriptedTransport) Upload(ctx context.Context, request UploadRequest) e
 	index := len(s.uploadRequests) - 1
 	if index < len(s.uploadErrors) {
 		return s.uploadErrors[index]
+	}
+	return nil
+}
+
+func (s *scriptedTransport) Download(ctx context.Context, request DownloadRequest) error {
+	s.downloadRequests = append(s.downloadRequests, request)
+	index := len(s.downloadRequests) - 1
+	if index < len(s.downloadErrors) {
+		return s.downloadErrors[index]
 	}
 	return nil
 }

@@ -3947,7 +3947,7 @@ Completed:
 
 ### V0.6-T4: Add `copy` workflow in the app layer
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3968,6 +3968,16 @@ Definition of done:
 - one target instance at a time
 - local path validation is explicit
 - failures map to stable app errors
+
+Completed:
+
+- Added `Service.Copy` for both `to_guest` and `from_guest` directions.
+- Extended the SSH transport with `Download` so guest -> host copy stays on the same transport surface as upload and exec.
+- Added explicit local path validation:
+  - upload source must resolve to an existing local file
+  - download destination parent directory must already exist
+- SSH transport/setup failures map to stable app errors.
+- Added focused tests for upload, download, invalid direction, invalid local paths, and transport failure classification.
 
 ### V0.6-T5: Add `inspect` and `logs` workflows in the app layer
 
