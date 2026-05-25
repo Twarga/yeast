@@ -133,6 +133,7 @@ cmd/
     exec.go
     copy.go
     logs.go
+    inspect.go
 
 internal/
   app/
@@ -145,6 +146,7 @@ internal/
     snapshot.go
     restore.go
     exec.go
+    templates.go
     results.go
     errors.go
 
@@ -202,6 +204,12 @@ internal/
     copy.go
     logs.go
     readiness.go
+
+  templates/
+    catalog.go
+    metadata.go
+    materialize.go
+    local.go
 
   output/
     events.go
@@ -1153,7 +1161,56 @@ v0.6 first-pass contract:
 - Guest control remains non-interactive; `yeast ssh` is still the interactive path.
 - No log-follow streaming, health-check framework, or MCP protocol layer is added in `v0.6`.
 
-## 18. Output And Events Architecture
+## 18. Template Architecture
+
+Templates should be normal project starters, not a second execution engine.
+
+The app layer should expose two template workflows:
+
+- list available templates
+- initialize a project from a template
+
+Supported v0.7 template sources:
+
+- built-in templates shipped with Yeast
+- local filesystem template directories
+
+Template directory shape:
+
+```text
+template.yaml
+yeast.yaml
+optional-project-files/
+```
+
+`template.yaml` should describe the starter:
+
+```text
+name
+title
+description
+category
+version
+files
+```
+
+Materialization rules:
+
+- copy template files into an empty/uninitialized project directory
+- create `.yeast/project.json` exactly like normal `yeast init`
+- reject path traversal and unsafe destination paths
+- do not overwrite an existing `yeast.yaml`
+- do not hide generated files from the user
+
+Non-goals for v0.7:
+
+- remote template downloads
+- template registries
+- update/sync behavior
+- complex variable rendering
+- LabsBackery-specific packaging
+
+## 19. Output And Events Architecture
 
 Application workflows should emit events.
 
@@ -1211,7 +1268,7 @@ Important rule:
 
 Human output is presentation. JSON output is contract.
 
-## 19. LabsBackery Integration Architecture
+## 20. LabsBackery Integration Architecture
 
 Early integration:
 
@@ -1244,7 +1301,7 @@ LabsBackery -> Yeast daemon/API
 
 Only build this when CLI/JSON becomes limiting.
 
-## 20. Yeast MCP Integration Architecture
+## 21. Yeast MCP Integration Architecture
 
 Yeast MCP should sit above Yeast.
 
@@ -1285,7 +1342,7 @@ MCP should decide:
 
 Yeast should expose enough structure for MCP to be safe.
 
-## 21. Error Handling Architecture
+## 22. Error Handling Architecture
 
 Errors should be product-level, not raw random strings.
 
@@ -1320,7 +1377,7 @@ This helps:
 - Yeast MCP
 - future docs
 
-## 22. Security Architecture
+## 23. Security Architecture
 
 Local v1 security rules:
 
@@ -1344,7 +1401,7 @@ Cloud trust model is separate and much stricter.
 
 Do not design Twarga Cloud security from local assumptions.
 
-## 23. Testing Architecture
+## 24. Testing Architecture
 
 Test layers:
 
@@ -1371,7 +1428,7 @@ host-dependent tests
 manual release checklist
 ```
 
-## 24. Migration From Current Code
+## 25. Migration From Current Code
 
 Current code should be treated as prototype/reference.
 
@@ -1404,7 +1461,7 @@ implement clean v2 modules
 port small utilities only when understood
 ```
 
-## 25. Architecture Decisions
+## 26. Architecture Decisions
 
 Decision 1:
 
@@ -1470,7 +1527,7 @@ Reason:
 
 Daemon adds security and lifecycle complexity too early.
 
-## 26. Open Architecture Questions
+## 27. Open Architecture Questions
 
 These need experiments or deeper design before implementation:
 
@@ -1484,7 +1541,7 @@ These need experiments or deeper design before implementation:
 - whether state should store runtime paths or derive them
 - whether `.yeast/project.json` should be created by `init` only or lazily
 
-## 27. Architecture Summary
+## 28. Architecture Summary
 
 Yeast v2 should be structured as:
 
@@ -1513,7 +1570,7 @@ The most important architecture decision is separation:
 - MCP does not bypass Yeast.
 - Cloud waits until local engine is strong.
 
-## 28. Next File
+## 29. Next File
 
 After architecture, create:
 

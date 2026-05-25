@@ -1,6 +1,6 @@
 # Yeast Known Limitations
 
-This document describes Yeast `v0.6` limits.
+This document describes Yeast `v0.7` planning limits and the shipped `v0.6` behavior.
 
 Yeast is intentionally narrow right now. The goal is a reliable local VM core before adding LabsBackery, MCP, cloud, advanced networking, and richer guest-control workflows.
 
@@ -115,6 +115,25 @@ Current limits:
 - `inspect` is state-based and does not yet expose deeper guest health or service details
 - no log streaming/follow mode yet
 - no service health checks yet
+
+## Template Limits
+
+Yeast `v0.7` will add the first narrow template surface:
+
+- `yeast init --list-templates`
+- `yeast init --template <name-or-path>`
+- built-in templates
+- local filesystem templates
+
+Current planned limits:
+
+- templates are project starters only
+- generated projects are normal editable Yeast projects
+- no remote template downloads
+- no template registry/search/update workflow
+- no complex variable engine
+- no hidden provisioning bundles outside normal `yeast.yaml`
+- no LabsBackery-specific package format yet
 
 ## UI And Integration Limits
 

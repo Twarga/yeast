@@ -108,7 +108,8 @@ After v0.1:
 - Milestone 12: snapshots/reset
 - Milestone 13: private networking
 - Milestone 14: guest control
-- Milestone 15: LabsBackery integration contract
+- Milestone 15: templates
+- Milestone 16: LabsBackery integration contract
 
 This document focuses mainly on the v2 foundation through v0.1, then outlines the next milestones.
 
@@ -659,7 +660,48 @@ v0.6 contract:
   - MCP-specific protocol shaping
   - multi-instance fanout execution
 
-## 20. Post-v0.1 Milestone 15: LabsBackery Contract
+## 20. Post-v0.1 Milestone 15: Templates
+
+Goal:
+
+Make common Yeast environments reusable.
+
+Features:
+
+- `yeast init --list-templates`
+- `yeast init --template <name-or-path>`
+- built-in starter templates
+- local filesystem templates
+- template metadata
+- normal editable output projects
+
+v0.7 contract:
+
+- Templates are project starters only. They copy files into a project at init time.
+- A generated project is a normal Yeast project with `yeast.yaml` and optional files/assets.
+- The first template shape is:
+  - `template.yaml` for metadata
+  - `yeast.yaml` for desired VM config
+  - optional extra project files such as `site/index.html` or `site/Caddyfile`
+- Built-in templates are shipped with Yeast and can be listed without network access.
+- Local templates are directories on disk and are resolved by path.
+- Non-goals for `v0.7`:
+  - remote template downloads
+  - template registry/search/update
+  - complex variable rendering
+  - hidden provisioning bundles outside normal `yeast.yaml`
+  - LabsBackery-specific lab packaging
+
+Definition of done:
+
+- A user can list built-in templates.
+- A user can initialize an Ubuntu starter template.
+- A user can initialize a Caddy single-VM template.
+- A user can initialize a two-VM lab template.
+- A user can initialize from a local template directory.
+- The generated projects can run through the existing lifecycle.
+
+## 21. Post-v0.1 Milestone 16: LabsBackery Contract
 
 Goal:
 
@@ -677,7 +719,7 @@ Definition of done:
 
 - LabsBackery can start, inspect, reset, and destroy one lab through Yeast.
 
-## 21. What To Build First
+## 22. What To Build First
 
 The first implementation task after this plan is:
 

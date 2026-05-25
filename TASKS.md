@@ -80,13 +80,13 @@ YEAST_FEEDBACK_LOG.md
 Current phase:
 
 ```text
-v0.4.0 snapshots and reset.
+v0.7.0 templates.
 ```
 
 Next task:
 
 ```text
-V0.4-T7: Add snapshot deletion and list commands in app layer.
+V0.7-T2: Add built-in template catalog and metadata model.
 ```
 
 ## 5. Milestone Overview
@@ -108,8 +108,9 @@ V0.4-T7: Add snapshot deletion and list commands in app layer.
 | M11 | Provisioning | Packages/files/shell after v0.1 | [x] |
 | M12 | Snapshots And Reset | Lab reset capability | [~] |
 | M13 | Private Networking | Multi-VM lab networking | [x] |
-| M14 | Guest Control | exec/copy/logs/inspect | [~] |
-| M15 | LabsBackery Contract | CLI/JSON lab integration | [-] |
+| M14 | Guest Control | exec/copy/logs/inspect | [x] |
+| M15 | Templates | Reusable project starters | [~] |
+| M16 | LabsBackery Contract | CLI/JSON lab integration | [-] |
 
 ---
 
@@ -4110,13 +4111,209 @@ Completed:
 - Added `docs/release-notes-v0.6.0.md`.
 - Added a draft `0.6.0` changelog entry.
 
-## M15: LabsBackery Contract
+## M15: Templates
+
+Status: [~]
+
+Goal:
+
+Make common Yeast environments reusable so users can start from known-good project shapes instead of rewriting `yeast.yaml`, provisioning files, and example assets by hand.
+
+Key constraints:
+
+- keep templates as project starters, not hidden runtime behavior
+- generated projects must remain normal editable Yeast projects
+- built-in templates come first so v0.7 is useful without remote trust problems
+- local filesystem templates come second for user/team reuse
+- remote templates, registries, update workflows, and complex variables are deferred
+- do not add LabsBackery-specific commands in this milestone
+
+Release target:
+
+- `v0.7.0`
+
+### V0.7-T1: Lock the v0.7 template contract
+
+Status: [x]
+
+Dependencies:
+
+- M14 complete
+
+Files:
+
+- `YEAST_TECHNICAL_ARCHITECTURE.md`
+- `YEAST_V2_IMPLEMENTATION_PLAN.md`
+- `docs/known-limitations.md`
+- `TASKS.md`
+
+Definition of done:
+
+- v0.7 template scope is explicit
+- first command surface is explicit:
+  - `yeast init --template <name-or-path>`
+  - `yeast init --list-templates`
+- supported template sources are explicit:
+  - built-in templates
+  - local directory templates
+- template content contract is explicit:
+  - `template.yaml` metadata
+  - `yeast.yaml`
+  - optional project files/assets
+- deferred scope is explicit:
+  - no remote template downloads
+  - no template registry
+  - no template update/sync
+  - no complex variable engine
+
+Completion notes:
+
+- Added the v0.7 template milestone to the execution checklist and moved LabsBackery contract to the next milestone.
+- Locked the first template command surface around `yeast init --template` and `yeast init --list-templates`.
+- Chose built-in and local directory templates for v0.7; remote templates and registries remain deferred.
+- Locked the template shape as metadata plus normal project files, with generated output remaining fully editable.
+
+### V0.7-T2: Add built-in template catalog and metadata model
+
+Status: [ ]
+
+Dependencies:
+
+- V0.7-T1
+
+Files:
+
+- `internal/templates/*`
+- `templates/*` or embedded template assets
+- tests
+- `TASKS.md`
+
+Definition of done:
+
+- template metadata type exists
+- built-in templates can be listed from app/internal code
+- metadata includes name, title, description, category, and included files
+- tests cover deterministic ordering and missing/corrupt metadata behavior
+
+### V0.7-T3: Add template materialization service
+
+Status: [ ]
+
+Dependencies:
+
+- V0.7-T2
+
+Files:
+
+- `internal/templates/*`
+- `internal/app/init.go`
+- tests
+- `TASKS.md`
+
+Definition of done:
+
+- built-in template files can be copied into a new project directory
+- local template directories can be copied into a new project directory
+- existing project conflict behavior stays conservative
+- path traversal and unsafe destination paths are rejected
+- generated project receives normal `.yeast/project.json`
+
+### V0.7-T4: Add `init --template` and `init --list-templates`
+
+Status: [ ]
+
+Dependencies:
+
+- V0.7-T3
+
+Files:
+
+- `cmd/yeast/init.go`
+- `internal/output/*`
+- tests
+- `TASKS.md`
+
+Definition of done:
+
+- `yeast init --list-templates` renders human output and JSON output
+- `yeast init --template caddy-single-vm` creates a normal project
+- `yeast init --template ./path/to/template` works for local templates
+- missing template names return stable `not_found` errors
+
+### V0.7-T5: Add official built-in templates
+
+Status: [ ]
+
+Dependencies:
+
+- V0.7-T4
+
+Files:
+
+- `templates/*`
+- `examples/*` if reused
+- tests
+- `TASKS.md`
+
+Definition of done:
+
+- built-in `ubuntu-basic` template exists
+- built-in `caddy-single-vm` template exists
+- built-in `two-vm-lab` template exists
+- templates match currently supported v0.6 features
+- templates do not rely on future snapshot automation, events, MCP, or cloud behavior
+
+### V0.7-T6: Add template docs and smoke coverage
+
+Status: [ ]
+
+Dependencies:
+
+- V0.7-T5
+
+Files:
+
+- `README.md`
+- `docs/quickstart.md`
+- `docs/config-reference.md`
+- `docs/tutorial-test.md`
+- `scripts/manual-smoke.sh`
+- `TASKS.md`
+
+Definition of done:
+
+- docs show how to list and initialize templates
+- smoke test proves at least one built-in template can initialize and run
+- docs explain local template shape
+- limitations explain deferred remote template behavior
+
+### V0.7-T7: Add v0.7 release notes
+
+Status: [ ]
+
+Dependencies:
+
+- V0.7-T6
+
+Files:
+
+- `docs/release-notes-v0.7.0.md`
+- `CHANGELOG.md`
+- `TASKS.md`
+
+Definition of done:
+
+- release notes match shipped template behavior
+- limitations are honest
+- changelog contains a draft v0.7.0 entry
+
+## M16: LabsBackery Contract
 
 Status: [-]
 
 Do not start until:
 
-- M11-M14 enough for one lab
+- M11-M15 enough for one lab
 
 Core tasks later:
 
