@@ -30,6 +30,8 @@ PROVISION_SENTINEL_TWO="Yeast reprovisioned content."
 SNAPSHOT_NAME="${SNAPSHOT_NAME:-clean}"
 SNAPSHOT_DESCRIPTION="${SNAPSHOT_DESCRIPTION:-Provisioned reset baseline}"
 SSH_RETRY_CONNECT_TIMEOUT="${SSH_RETRY_CONNECT_TIMEOUT:-5}"
+GUEST_CONTROL_UPLOAD_FILE="${GUEST_CONTROL_UPLOAD_FILE:-guest-control-upload.txt}"
+GUEST_CONTROL_UPLOAD_SENTINEL="${GUEST_CONTROL_UPLOAD_SENTINEL:-guest control upload works}"
 
 if [[ -z "${BIN_PATH}" ]]; then
   echo "usage: $0 /absolute/or/relative/path/to/yeast-binary" >&2
@@ -553,6 +555,54 @@ run_positive_suite() {
   printf "%s\n" "${CADDY_PAGE}"
   assert_contains "${CADDY_PAGE}" "${PROVISION_SENTINEL_ONE}" "caddy serves initial provisioned content"
   record_pass "Direct SSH checks"
+
+  section "Guest control commands"
+
+  EXEC_JSON="$("${BIN_PATH}" --json exec "${INSTANCE_NAME}" -- whoami)"
+  printf "%s\n" "${EXEC_JSON}"
+  if [[ "$(json_extract "data.Instance" "${EXEC_JSON}")" != "${INSTANCE_NAME}" ]]; then
+    fail "exec json did not report instance ${INSTANCE_NAME}"
+  fi
+  if [[ "$(json_extract "data.Run.ExitCode" "${EXEC_JSON}")" != "0" ]]; then
+    fail "exec json did not report exit code 0"
+  fi
+  if [[ "$(json_extract "data.Run.Stdout" "${EXEC_JSON}")" != "${INSTANCE_USER}" ]]; then
+    fail "exec json did not report stdout ${INSTANCE_USER}"
+  fi
+  ok "exec returns structured result"
+
+  printf '%s\n' "${GUEST_CONTROL_UPLOAD_SENTINEL}" > "${POSITIVE_DIR}/${GUEST_CONTROL_UPLOAD_FILE}"
+  run_capture "Copy host file to guest" \
+    "${BIN_PATH}" copy "${INSTANCE_NAME}" --to-guest "./${GUEST_CONTROL_UPLOAD_FILE}" "/home/${INSTANCE_USER}/${GUEST_CONTROL_UPLOAD_FILE}"
+
+  EXEC_CAT_JSON="$("${BIN_PATH}" --json exec "${INSTANCE_NAME}" -- cat "/home/${INSTANCE_USER}/${GUEST_CONTROL_UPLOAD_FILE}")"
+  printf "%s\n" "${EXEC_CAT_JSON}"
+  assert_contains "${EXEC_CAT_JSON}" "${GUEST_CONTROL_UPLOAD_SENTINEL}" "copied host file is readable in guest"
+
+  mkdir -p "${POSITIVE_DIR}/downloads"
+  run_capture "Copy guest file to host" \
+    "${BIN_PATH}" copy "${INSTANCE_NAME}" --from-guest "/home/${INSTANCE_USER}/${GUEST_CONTROL_UPLOAD_FILE}" "./downloads/copied-back.txt"
+  COPIED_BACK_CONTENT="$(cat "${POSITIVE_DIR}/downloads/copied-back.txt")"
+  if [[ "${COPIED_BACK_CONTENT}" != "${GUEST_CONTROL_UPLOAD_SENTINEL}" ]]; then
+    fail "copied-back guest file content mismatch"
+  fi
+  ok "guest file copied back to host"
+
+  INSPECT_JSON="$("${BIN_PATH}" --json inspect "${INSTANCE_NAME}")"
+  printf "%s\n" "${INSPECT_JSON}"
+  if [[ "$(json_extract "data.Instance.Name" "${INSPECT_JSON}")" != "${INSTANCE_NAME}" ]]; then
+    fail "inspect json did not report instance ${INSTANCE_NAME}"
+  fi
+  if [[ "$(json_extract "data.Instance.ProvisioningStatus" "${INSPECT_JSON}")" != "provisioned" ]]; then
+    fail "inspect json did not report provisioned status"
+  fi
+  ok "inspect returns instance detail"
+
+  LOGS_JSON="$("${BIN_PATH}" --json logs "${INSTANCE_NAME}" --tail 20)"
+  printf "%s\n" "${LOGS_JSON}"
+  assert_contains "${LOGS_JSON}" "vm.log" "logs json includes vm log path"
+  ok "logs exposes vm log access"
+  record_pass "Guest control commands"
 
   section "Update content and rerun provisioning"
   cat >"${POSITIVE_DIR}/site/index.html" <<EOF

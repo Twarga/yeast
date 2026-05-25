@@ -4048,7 +4048,7 @@ Completed:
 
 ### V0.6-T7: Add guest-control smoke coverage
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4067,6 +4067,16 @@ Definition of done:
   - `yeast copy` can move at least one file in each direction
   - `yeast logs` exposes VM log access
   - `yeast inspect` returns expected machine details
+
+Completed:
+
+- Expanded `scripts/manual-smoke.sh` positive flow to validate:
+  - structured `yeast exec` output
+  - host -> guest copy
+  - guest -> host copy
+  - `yeast inspect --json`
+  - `yeast logs --json --tail`
+- Full real-host smoke passed against a fresh local `v0.6` binary while preserving the existing lifecycle, provisioning, snapshot, networking, and negative JSON checks.
 
 ### V0.6-T8: Add guest-control docs and release notes
 
