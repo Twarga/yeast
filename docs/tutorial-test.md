@@ -1,6 +1,6 @@
-# Yeast v0.5.0 Manual Test Tutorial
+# Yeast v0.6.0 Manual Test Tutorial
 
-This is the real host manual test for the current `v0.5.0` candidate.
+This is the real host manual test for the current `v0.6.0` candidate.
 
 It assumes:
 
@@ -31,6 +31,10 @@ That script now proves:
 - lifecycle path
 - `disk_size`, `hostname`, and `ssh_port`
 - provisioning during `yeast up`
+- `yeast exec`
+- `yeast copy` in both directions
+- `yeast inspect`
+- `yeast logs`
 - `yeast provision` reruns
 - stopped-VM snapshot create/list/restore/delete
 - two-VM private lab boot
@@ -54,7 +58,7 @@ TEST_MODE=negative ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
 - `positive`: only the real VM and lab workflows
 - `negative`: only error-path contract checks
 
-## What v0.5.0 Proves
+## What v0.6.0 Proves
 
 This candidate can now:
 
@@ -65,6 +69,9 @@ This candidate can now:
 - assign one static lab IPv4 per attached guest
 - keep management SSH separate from lab traffic
 - expose `LAB IP` in status output
+- run one-shot commands inside the guest
+- move files in and out of the guest
+- expose VM runtime logs and detailed instance state
 
 This still does not prove:
 
@@ -102,6 +109,11 @@ Validate inside the guest:
 
 Then validate:
 
+- `yeast exec web -- whoami`
+- `yeast copy web --to-guest ./artifact.txt /home/yeast/artifact.txt`
+- `yeast copy web --from-guest /home/yeast/artifact.txt ./artifact-out.txt`
+- `yeast inspect web`
+- `yeast logs web --tail 20`
 - `yeast provision web`
 - `yeast down`
 - `yeast snapshot web clean`
@@ -156,9 +168,10 @@ What this proves:
 
 ## Pass Criteria
 
-Call `v0.5.0` ready only if all of these hold:
+Call `v0.6.0` ready only if all of these hold:
 
 - single-VM provisioning/reset smoke passes
+- guest-control smoke passes for exec/copy/logs/inspect
 - two-VM private lab smoke passes
 - `LAB IP` appears in both human and JSON status
 - guest-to-guest lab TCP reachability works

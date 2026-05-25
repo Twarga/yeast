@@ -1,8 +1,8 @@
 # Yeast Quickstart
 
-This guide gets one Ubuntu VM running with Yeast `v0.5`, shows the provisioning and stopped-VM reset flow, and then points to the first two-VM private lab example.
+This guide gets one Ubuntu VM running with Yeast `v0.6`, shows the provisioning and stopped-VM reset flow, proves the first guest-control commands, and then points to the first two-VM private lab example.
 
-Yeast is still Linux-first and QEMU/KVM-first. `v0.5` adds the first narrow private lab network: one project-level network, one static IPv4 per attached instance, and management SSH kept separate from lab traffic.
+Yeast is still Linux-first and QEMU/KVM-first. `v0.6` keeps the narrow `v0.5` private lab network and adds the first SSH-backed guest-control commands: `exec`, `copy`, `logs`, and `inspect`.
 
 ## 1. Check The Host
 
@@ -155,9 +155,43 @@ yeast down
 yeast delete-snapshot web clean
 ```
 
-## 12. First Two-VM Private Lab
+## 12. First Guest-Control Commands
 
-The first `v0.5` networking example is:
+Run one command inside the guest:
+
+```bash
+yeast exec web -- whoami
+```
+
+Copy a file into the guest:
+
+```bash
+yeast copy web --to-guest ./artifact.txt /home/yeast/artifact.txt
+```
+
+Copy a file back out:
+
+```bash
+yeast copy web --from-guest /home/yeast/artifact.txt ./artifact-out.txt
+```
+
+Inspect one instance:
+
+```bash
+yeast inspect web
+```
+
+Read the VM runtime log:
+
+```bash
+yeast logs web --tail 20
+```
+
+`yeast ssh` is still the interactive terminal flow. The new `v0.6` commands are for one-shot operations and structured automation.
+
+## 13. First Two-VM Private Lab
+
+The first `v0.5+` networking example is:
 
 ```text
 examples/two-vm-lab
@@ -180,7 +214,7 @@ ip addr show yeastlab0
 ping -c 2 10.10.10.20
 ```
 
-## 13. Destroy Runtime Files
+## 14. Destroy Runtime Files
 
 ```bash
 yeast destroy

@@ -3801,7 +3801,7 @@ Completion notes:
 
 ## M14: Guest Control
 
-Status: [~]
+Status: [x]
 
 Goal:
 
@@ -4080,7 +4080,7 @@ Completed:
 
 ### V0.6-T8: Add guest-control docs and release notes
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4101,6 +4101,14 @@ Definition of done:
 - docs explain the new commands clearly
 - current v0.6 limits are explicit
 - release notes match shipped behavior
+
+Completed:
+
+- Updated README current scope, quickstart, and command inventory for `exec`, `copy`, `logs`, and `inspect`.
+- Updated quickstart and manual test docs to include the first guest-control workflow.
+- Updated known limitations with the actual `v0.6` guest-control constraints.
+- Added `docs/release-notes-v0.6.0.md`.
+- Added a draft `0.6.0` changelog entry.
 
 ## M15: LabsBackery Contract
 

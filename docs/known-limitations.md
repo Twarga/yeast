@@ -1,6 +1,6 @@
 # Yeast Known Limitations
 
-This document describes Yeast `v0.5` limits.
+This document describes Yeast `v0.6` limits.
 
 Yeast is intentionally narrow right now. The goal is a reliable local VM core before adding LabsBackery, MCP, cloud, advanced networking, and richer guest-control workflows.
 
@@ -99,22 +99,20 @@ This is enough for the first single-VM reset workflows, but still not enough for
 
 ## Guest Control Limits
 
-Yeast supports interactive SSH and provisioning-time SSH automation.
-
-It does not yet support:
+Yeast `v0.6` now supports the first narrow guest-control surface:
 
 - `yeast exec`
 - `yeast copy`
 - `yeast logs`
 - `yeast inspect`
-- service health checks
 
-These are required later for Yeast MCP and richer LabsBackery workflows.
-
-The `v0.6` target is narrow:
+Current limits:
 
 - SSH-backed only
 - one selected instance per command
+- `copy` is file-oriented only; recursive directory sync is not implemented
+- `logs` reads the VM runtime log file and does not stream/follow
+- `inspect` is state-based and does not yet expose deeper guest health or service details
 - no log streaming/follow mode yet
 - no service health checks yet
 

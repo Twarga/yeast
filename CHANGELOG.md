@@ -7,6 +7,49 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.6.0] - Draft
+
+### Summary
+
+Yeast v0.6.0 adds the first guest-control surface to the local VM engine. It can now run one-shot commands inside guests, copy files in both directions, expose VM runtime logs, and return a structured inspect view for one instance.
+
+This release stays intentionally narrow. Guest control is SSH-backed only, one instance at a time, with no log streaming, no directory sync, and no service health checks yet.
+
+### Added
+
+- `yeast exec [instance] -- <command...>`.
+- `yeast copy <instance> --to-guest <source> <destination>`.
+- `yeast copy <instance> --from-guest <source> <destination>`.
+- `yeast logs <instance> [--tail N]`.
+- `yeast inspect <instance>`.
+- Shared guest-control result models for exec, copy, inspect, and logs.
+- SSH transport download support for guest -> host copy.
+- Human and JSON output coverage for the guest-control commands.
+- `docs/release-notes-v0.6.0.md`.
+
+### Changed
+
+- README, quickstart, and manual test docs now describe guest control as a shipped `v0.6` feature.
+- Known limitations now document the real guest-control limits instead of treating the surface as future work.
+- The full smoke suite now proves exec, copy, inspect, and logs on a real VM alongside the existing lifecycle, provisioning, snapshot, networking, and negative JSON checks.
+
+### Verification
+
+- `go test ./internal/app -run 'Test(Inspect|Logs|TailLogContent|GuestControlResultShapes|Exec|Copy|ShellQuoteCommand)' -count=1`
+- `go test ./cmd/yeast ./internal/output -count=1`
+- `go test ./internal/provision/ssh -count=1`
+- `git diff --check`
+- `bash -n scripts/manual-smoke.sh`
+- `INSTANCE_SSH_PORT=3045 RESTORE_SSH_PORT=3046 ATTACKER_SSH_PORT=3105 TARGET_SSH_PORT=3106 TEST_MODE=full ./scripts/manual-smoke.sh /tmp/yeast-v060-smoke`
+
+### Known Limitations
+
+- SSH-backed only
+- one selected instance per command
+- no recursive directory copy/sync
+- no log streaming/follow mode
+- no service health checks yet
+
 ## [0.5.0] - 2026-05-22
 
 ### Summary

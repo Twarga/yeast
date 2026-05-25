@@ -15,7 +15,7 @@ Fast project-based virtual machines with cloud-init, trusted base images, post-b
 ![Go](https://img.shields.io/badge/go-1.25+-cyan.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 ![Runtime](https://img.shields.io/badge/runtime-QEMU%2FKVM-6f42c1.svg)
-![State](https://img.shields.io/badge/status-v0.5%20in%20progress-8a6d3b.svg)
+![State](https://img.shields.io/badge/status-v0.6%20in%20progress-8a6d3b.svg)
 
 [Website](https://twarga.github.io/yeast/) · [Quick Start](#quick-start) · [Current Scope](#current-scope) · [Commands](#commands) · [Examples](#examples) · [Architecture](#architecture) · [Limits](#current-limits)
 
@@ -48,9 +48,9 @@ The important constraint is still simple: **keep the core small and reliable bef
 
 ## Current Scope
 
-Yeast `v0.5` is still intentionally narrow. It now covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, and attach one private lab network while keeping management SSH separate and understandable.
+Yeast `v0.6` is still intentionally narrow. It now covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, and operate inside the guest through a first SSH-backed control surface.
 
-| Area | v0.5 status |
+| Area | v0.6 status |
 |---|---|
 | Host support | Linux only |
 | Runtime | QEMU + KVM |
@@ -63,6 +63,7 @@ Yeast `v0.5` is still intentionally narrow. It now covers one complete loop: boo
 | Provisioning | Packages, files, shell, and `yeast provision` |
 | Reset | Stopped-VM snapshot, list, restore, and delete |
 | Private networking | One project-level lab network with static per-instance IPv4 |
+| Guest control | `exec`, `copy`, `logs`, and `inspect` |
 | Examples | Single-VM Ubuntu, Caddy provisioning/reset, and first two-VM lab example |
 
 ### What works now
@@ -79,15 +80,19 @@ Yeast `v0.5` is still intentionally narrow. It now covers one complete loop: boo
 - `yeast snapshots <instance>`
 - `yeast delete-snapshot <instance> <name>`
 - `yeast status`
+- `yeast exec [instance] -- <command...>`
+- `yeast copy <instance> --to-guest <source> <destination>`
+- `yeast copy <instance> --from-guest <source> <destination>`
+- `yeast logs <instance>`
+- `yeast inspect <instance>`
 - `yeast ssh [instance]`
 - `yeast down`
 - `yeast destroy`
 - `yeast version`
 - first private lab network with per-instance `LAB IP`
 
-### What is not in v0.5 yet
+### What is not in v0.6 yet
 
-- guest exec/copy/logs
 - templates
 - daemon or web API
 - Twarga Cloud features
@@ -245,7 +250,17 @@ yeast restore web clean
 yeast up
 ```
 
-### 11. Try the first two-VM lab
+### 11. Use guest control
+
+```bash
+yeast exec web -- whoami
+yeast copy web --to-guest ./artifact.txt /home/yeast/artifact.txt
+yeast copy web --from-guest /home/yeast/artifact.txt ./artifact-out.txt
+yeast inspect web
+yeast logs web --tail 20
+```
+
+### 12. Try the first two-VM lab
 
 Reference example:
 
@@ -260,7 +275,7 @@ That example shows:
 - one private lab network
 - static lab IPs visible in `yeast status`
 
-### 12. Stop or remove
+### 13. Stop or remove
 
 ```bash
 yeast down
@@ -340,6 +355,10 @@ Then log out and back in before your first `yeast up`.
 | `yeast up` | Start all instances in the project |
 | `yeast provision [instance]` | Rerun post-boot provisioning for a running instance |
 | `yeast status` | Show tracked instance state |
+| `yeast exec [instance] -- <command...>` | Run one command inside a running instance |
+| `yeast copy <instance> ...` | Copy a file to or from a running instance |
+| `yeast logs <instance>` | Read the VM runtime log for one instance |
+| `yeast inspect <instance>` | Show detailed state for one instance |
 | `yeast ssh [instance]` | Open SSH into a running instance |
 | `yeast down` | Stop tracked running instances |
 | `yeast destroy` | Stop and remove tracked runtime data |
@@ -354,6 +373,10 @@ These commands support machine-readable output:
 - `pull`
 - `up`
 - `status`
+- `exec`
+- `copy`
+- `logs`
+- `inspect`
 - `down`
 - `destroy`
 - `version`
@@ -370,7 +393,7 @@ yeast status --json
 
 ## Config
 
-Current `v0.3` example:
+Current `v0.6` example:
 
 ```yaml
 version: 1
@@ -412,7 +435,8 @@ instances:
 - `env` is rendered into the guest bootstrap profile script
 - `provision` now supports packages, files, and shell steps during `yeast up` and `yeast provision`
 - file provision `source` paths are resolved relative to the project root unless they are absolute
-- `networks` still exists in the config model for future milestones but is not active yet
+- one project-level private lab `networks` block is active in `v0.5+`
+- guest-control commands in `v0.6` are SSH-backed only and operate on one selected instance at a time
 
 ---
 
