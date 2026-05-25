@@ -65,6 +65,104 @@ func TestInitWritesStarterConfig(t *testing.T) {
 	}
 }
 
+func TestInitFromBuiltinTemplate(t *testing.T) {
+	root := t.TempDir()
+	service := NewService()
+
+	result, err := service.Init(InitOptions{
+		ProjectRoot: root,
+		Template:    "caddy-single-vm",
+		Now:         time.Date(2026, 5, 16, 12, 0, 0, 0, time.UTC),
+	})
+	if err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	if result.Template != "caddy-single-vm" {
+		t.Fatalf("expected template in result, got %q", result.Template)
+	}
+	if result.ProjectID == "" {
+		t.Fatal("expected project id")
+	}
+	for _, file := range []string{"yeast.yaml", "README.md", "site/Caddyfile", "site/index.html"} {
+		if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(file))); err != nil {
+			t.Fatalf("expected template file %s to exist: %v", file, err)
+		}
+	}
+	raw, err := os.ReadFile(filepath.Join(root, "yeast.yaml"))
+	if err != nil {
+		t.Fatalf("read template config: %v", err)
+	}
+	if !strings.Contains(string(raw), "caddy") {
+		t.Fatalf("expected caddy template config, got:\n%s", string(raw))
+	}
+	if _, err := project.LoadMetadata(root); err != nil {
+		t.Fatalf("expected project metadata: %v", err)
+	}
+}
+
+func TestInitFromLocalTemplate(t *testing.T) {
+	templateDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(templateDir, "template.yaml"), []byte(`name: local-sample
+title: Local Sample
+description: Local reusable project starter.
+category: app
+version: "1"
+files:
+  - yeast.yaml
+  - assets/message.txt
+`), 0644); err != nil {
+		t.Fatalf("write local template metadata: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(templateDir, "yeast.yaml"), []byte("version: 1\ninstances:\n  - name: web\n    image: ubuntu-24.04\n"), 0644); err != nil {
+		t.Fatalf("write local config: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(templateDir, "assets"), 0755); err != nil {
+		t.Fatalf("mkdir local assets: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(templateDir, "assets", "message.txt"), []byte("hello\n"), 0644); err != nil {
+		t.Fatalf("write local asset: %v", err)
+	}
+
+	root := t.TempDir()
+	service := NewService()
+	result, err := service.Init(InitOptions{ProjectRoot: root, Template: templateDir})
+	if err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	if result.Template != "local-sample" {
+		t.Fatalf("expected local template in result, got %q", result.Template)
+	}
+	raw, err := os.ReadFile(filepath.Join(root, "assets", "message.txt"))
+	if err != nil {
+		t.Fatalf("read local asset: %v", err)
+	}
+	if string(raw) != "hello\n" {
+		t.Fatalf("unexpected local asset: %q", string(raw))
+	}
+}
+
+func TestInitFromMissingTemplate(t *testing.T) {
+	root := t.TempDir()
+	service := NewService()
+
+	_, err := service.Init(InitOptions{ProjectRoot: root, Template: "does-not-exist"})
+	assertInitAppErrorCode(t, err, ErrorCodeNotFound)
+}
+
+func TestInitTemplateConflictMapsToConflict(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "README.md"), []byte("existing\n"), 0644); err != nil {
+		t.Fatalf("write existing README: %v", err)
+	}
+	service := NewService()
+
+	_, err := service.Init(InitOptions{ProjectRoot: root, Template: "ubuntu-basic"})
+	assertInitAppErrorCode(t, err, ErrorCodeConflict)
+	if !strings.Contains(err.Error(), "template output already exists") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestInitFailsClearlyWhenRepeated(t *testing.T) {
 	root := t.TempDir()
 	service := NewService()

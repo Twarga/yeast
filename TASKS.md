@@ -4208,7 +4208,7 @@ Completion notes:
 
 ### V0.7-T3: Add template materialization service
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4228,6 +4228,14 @@ Definition of done:
 - existing project conflict behavior stays conservative
 - path traversal and unsafe destination paths are rejected
 - generated project receives normal `.yeast/project.json`
+
+Completion notes:
+
+- Embedded the current official example project files as built-in template payloads.
+- Added `templates.Materialize` to copy declared template files into an empty destination without overwriting existing files.
+- Added local template file materialization using the same metadata contract.
+- Extended `Service.Init` with internal template selection so `init` can create normal project metadata after template files are copied.
+- Added tests for built-in materialization, local materialization, output conflicts, missing local files, built-in init, local init, missing templates, and conflict classification.
 
 ### V0.7-T4: Add `init --template` and `init --list-templates`
 

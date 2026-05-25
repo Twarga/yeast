@@ -7,7 +7,7 @@ import (
 	"sort"
 )
 
-//go:embed builtin/*/template.yaml
+//go:embed builtin/*/template.yaml builtin/*/yeast.yaml builtin/*/README.md builtin/*/site/*
 var builtinFS embed.FS
 
 type SourceType string

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"time"
 	"yeast/internal/project"
+	"yeast/internal/templates"
 )
 
 const ConfigFileName = "yeast.yaml"
@@ -17,6 +18,7 @@ var writeConfigFileAtomic = writeFileAtomic
 type InitOptions struct {
 	ProjectRoot string
 	Now         time.Time
+	Template    string
 }
 
 type InitResult struct {
@@ -24,6 +26,7 @@ type InitResult struct {
 	ConfigPath   string
 	MetadataPath string
 	ProjectID    string
+	Template     string
 	Created      bool
 }
 
@@ -64,17 +67,56 @@ func (s *Service) Init(options InitOptions) (InitResult, error) {
 		return result, WrapError(ErrorCodeInternal, fmt.Sprintf("inspect project metadata %s: %v", metadataPath, err), err)
 	}
 
+	if options.Template != "" {
+		template, err := resolveInitTemplate(options.Template)
+		if err != nil {
+			return result, err
+		}
+		if _, err := templates.Materialize(template, templates.MaterializeOptions{Destination: absoluteRoot}); err != nil {
+			if errors.Is(err, templates.ErrOutputExists) {
+				return result, WrapError(ErrorCodeConflict, err.Error(), err)
+			}
+			return result, WrapError(ErrorCodeInternal, err.Error(), err)
+		}
+		result.Template = template.Metadata.Name
+	} else {
+		if err := writeConfigFileAtomic(configPath, []byte(defaultConfig())); err != nil {
+			return result, WrapError(ErrorCodeInternal, err.Error(), err)
+		}
+	}
+
 	metadata, err := project.EnsureMetadata(absoluteRoot, now)
 	if err != nil {
-		return result, WrapError(ErrorCodeInternal, err.Error(), err)
-	}
-	if err := writeConfigFileAtomic(configPath, []byte(defaultConfig())); err != nil {
 		return result, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
 	result.ProjectID = metadata.ID
 	result.Created = true
 	return result, nil
+}
+
+func resolveInitTemplate(value string) (templates.Template, error) {
+	if looksLikePath(value) {
+		template, err := templates.LoadLocal(value)
+		if err != nil {
+			return templates.Template{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
+		}
+		return template, nil
+	}
+
+	template, ok, err := templates.LookupBuiltin(value)
+	if err != nil {
+		return templates.Template{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	if !ok {
+		cause := fmt.Errorf("template %q was not found", value)
+		return templates.Template{}, WrapError(ErrorCodeNotFound, cause.Error(), cause)
+	}
+	return template, nil
+}
+
+func looksLikePath(value string) bool {
+	return filepath.IsAbs(value) || value == "." || value == ".." || filepath.Dir(value) != "."
 }
 
 func defaultConfig() string {

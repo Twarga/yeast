@@ -1,0 +1,9 @@
+version: 1
+instances:
+  - name: web
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    disk_size: 20G
+    user: yeast
+    sudo: none

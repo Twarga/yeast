@@ -1,0 +1,27 @@
+version: 1
+networks:
+  - name: lab
+    cidr: 10.10.10.0/24
+instances:
+  - name: attacker
+    hostname: attacker-lab
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    ssh_port: 2205
+    user: yeast
+    sudo: nopasswd
+    networks:
+      - name: lab
+        ipv4: 10.10.10.10
+  - name: target
+    hostname: target-lab
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    ssh_port: 2206
+    user: yeast
+    sudo: nopasswd
+    networks:
+      - name: lab
+        ipv4: 10.10.10.20
