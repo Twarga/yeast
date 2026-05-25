@@ -3981,7 +3981,7 @@ Completed:
 
 ### V0.6-T5: Add `inspect` and `logs` workflows in the app layer
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3998,6 +3998,14 @@ Definition of done:
 - inspect returns useful runtime details for one instance
 - logs returns the VM log path/content surface defined for v0.6
 - app errors are stable for missing instance/log files
+
+Completed:
+
+- Added `Service.Inspect` to return one-instance runtime/status details plus snapshot metadata summary.
+- Added `Service.Logs` to expose the per-instance VM runtime log at `runtimeDir/vm.log`.
+- `logs` supports optional line-tail behavior for compact reads.
+- Missing instance maps to `not_found`; missing VM log maps to `not_found`; missing runtime directory maps to `internal`.
+- Added focused tests for inspect details, snapshot summaries, log reads, missing logs, and tail behavior.
 
 ### V0.6-T6: Add CLI commands for guest control
 
