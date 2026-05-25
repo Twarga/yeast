@@ -111,6 +111,13 @@ It does not yet support:
 
 These are required later for Yeast MCP and richer LabsBackery workflows.
 
+The `v0.6` target is narrow:
+
+- SSH-backed only
+- one selected instance per command
+- no log streaming/follow mode yet
+- no service health checks yet
+
 ## UI And Integration Limits
 
 - No daemon.

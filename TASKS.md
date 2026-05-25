@@ -108,7 +108,7 @@ V0.4-T7: Add snapshot deletion and list commands in app layer.
 | M11 | Provisioning | Packages/files/shell after v0.1 | [x] |
 | M12 | Snapshots And Reset | Lab reset capability | [~] |
 | M13 | Private Networking | Multi-VM lab networking | [x] |
-| M14 | Guest Control | exec/copy/logs/inspect | [-] |
+| M14 | Guest Control | exec/copy/logs/inspect | [~] |
 | M15 | LabsBackery Contract | CLI/JSON lab integration | [-] |
 
 ---
@@ -3801,19 +3801,238 @@ Completion notes:
 
 ## M14: Guest Control
 
-Status: [-]
+Status: [~]
 
-Do not start until:
+Goal:
 
-- M13 complete or needed by provisioning/MCP
+Add the first real guest-control surface so users and later automation can run commands, move files, inspect runtime details, and read logs without dropping to manual SSH every time.
 
-Core tasks later:
+Key constraints:
 
-- exec
-- copy
-- logs
-- inspect
-- structured result
+- reuse the existing SSH transport instead of building a second remote-control path
+- keep command behavior explicit and instance-scoped
+- return structured stdout/stderr/exit-code data
+- keep interactive SSH (`yeast ssh`) separate from non-interactive guest control
+- do not add MCP-specific protocol concerns in this milestone
+
+Release target:
+
+- `v0.6.0`
+
+### V0.6-T1: Lock the v0.6 guest-control contract
+
+Status: [x]
+
+Dependencies:
+
+- M13 complete
+
+Files:
+
+- `YEAST_TECHNICAL_ARCHITECTURE.md`
+- `YEAST_V2_IMPLEMENTATION_PLAN.md`
+- `docs/known-limitations.md`
+- `TASKS.md`
+
+Definition of done:
+
+- command surface is explicit:
+  - `yeast exec`
+  - `yeast copy`
+  - `yeast logs`
+  - `yeast inspect`
+- result contract is explicit:
+  - command
+  - exit_code
+  - stdout
+  - stderr
+  - started_at
+  - finished_at
+  - duration
+  - timed_out
+- scope limits are explicit:
+  - SSH-backed only
+  - one-instance targeting first
+  - no streaming/log-follow mode yet
+  - no service health checks yet
+
+Completion notes:
+
+- Replaced the placeholder `M14` block with a real `v0.6.0` task sequence.
+- Locked the first guest-control surface as:
+  - `yeast exec`
+  - `yeast copy`
+  - `yeast logs`
+  - `yeast inspect`
+- Locked the execution/result contract for `exec` around structured stdout/stderr/exit-code metadata.
+- Documented first-pass limits clearly:
+  - SSH-backed only
+  - one selected instance per command
+  - no log streaming
+  - no health-check framework yet
+
+### V0.6-T2: Add guest-control app/result models
+
+Status: [ ]
+
+Dependencies:
+
+- V0.6-T1
+
+Files:
+
+- `internal/app/*`
+- `internal/guest/*` or shared result types if needed
+- tests
+- `TASKS.md`
+
+Definition of done:
+
+- app-layer result types exist for:
+  - exec
+  - copy
+  - inspect
+  - logs
+- result shape matches the locked contract
+- tests cover JSON-friendly fields and zero-value behavior
+
+### V0.6-T3: Add `exec` workflow in the app layer
+
+Status: [ ]
+
+Dependencies:
+
+- V0.6-T2
+
+Files:
+
+- `internal/app/*`
+- related tests
+- `TASKS.md`
+
+Definition of done:
+
+- app service can select one running instance
+- command runs over SSH
+- stdout/stderr/exit code are returned cleanly
+- not-running or not-found targets map to stable app errors
+
+### V0.6-T4: Add `copy` workflow in the app layer
+
+Status: [ ]
+
+Dependencies:
+
+- V0.6-T2
+
+Files:
+
+- `internal/app/*`
+- `internal/guest/*` if needed
+- tests
+- `TASKS.md`
+
+Definition of done:
+
+- app layer supports:
+  - host -> guest copy
+  - guest -> host copy
+- one target instance at a time
+- local path validation is explicit
+- failures map to stable app errors
+
+### V0.6-T5: Add `inspect` and `logs` workflows in the app layer
+
+Status: [ ]
+
+Dependencies:
+
+- V0.6-T2
+
+Files:
+
+- `internal/app/*`
+- tests
+- `TASKS.md`
+
+Definition of done:
+
+- inspect returns useful runtime details for one instance
+- logs returns the VM log path/content surface defined for v0.6
+- app errors are stable for missing instance/log files
+
+### V0.6-T6: Add CLI commands for guest control
+
+Status: [ ]
+
+Dependencies:
+
+- V0.6-T3
+- V0.6-T4
+- V0.6-T5
+
+Files:
+
+- `cmd/yeast/*`
+- `internal/output/*`
+- tests
+- `TASKS.md`
+
+Definition of done:
+
+- CLI commands exist:
+  - `yeast exec`
+  - `yeast copy`
+  - `yeast logs`
+  - `yeast inspect`
+- human and JSON output both work
+- target selection rules are consistent with `yeast ssh`
+
+### V0.6-T7: Add guest-control smoke coverage
+
+Status: [ ]
+
+Dependencies:
+
+- V0.6-T6
+
+Files:
+
+- `scripts/manual-smoke.sh`
+- tests if needed
+- `TASKS.md`
+
+Definition of done:
+
+- smoke path proves:
+  - `yeast exec` can run a command in guest
+  - `yeast copy` can move at least one file in each direction
+  - `yeast logs` exposes VM log access
+  - `yeast inspect` returns expected machine details
+
+### V0.6-T8: Add guest-control docs and release notes
+
+Status: [ ]
+
+Dependencies:
+
+- V0.6-T7
+
+Files:
+
+- `README.md`
+- `docs/quickstart.md`
+- `docs/known-limitations.md`
+- `docs/tutorial-test.md`
+- `docs/release-notes-v0.6.0.md`
+- `CHANGELOG.md`
+- `TASKS.md`
+
+Definition of done:
+
+- docs explain the new commands clearly
+- current v0.6 limits are explicit
+- release notes match shipped behavior
 
 ## M15: LabsBackery Contract
 

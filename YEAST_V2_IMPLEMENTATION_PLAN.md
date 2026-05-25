@@ -638,6 +638,27 @@ Definition of done:
 - Yeast can run a command in VM and return stdout/stderr/exit code.
 - File copy works both directions.
 
+v0.6 contract:
+
+- SSH-backed guest control only.
+- First pass is one-instance targeting per command.
+- `yeast ssh` stays the interactive shell path.
+- `yeast exec`, `yeast copy`, `yeast logs`, and `yeast inspect` are non-interactive control primitives.
+- The structured result contract for command execution is:
+  - `command`
+  - `exit_code`
+  - `stdout`
+  - `stderr`
+  - `started_at`
+  - `finished_at`
+  - `duration`
+  - `timed_out`
+- Non-goals for `v0.6`:
+  - log streaming/follow mode
+  - service health checks
+  - MCP-specific protocol shaping
+  - multi-instance fanout execution
+
 ## 20. Post-v0.1 Milestone 15: LabsBackery Contract
 
 Goal:

@@ -1144,6 +1144,15 @@ timed_out
 
 This is critical for Yeast MCP.
 
+v0.6 first-pass contract:
+
+- `yeast exec` runs one explicit command against one selected instance.
+- `yeast copy` supports host->guest and guest->host transfer for one selected instance.
+- `yeast logs` exposes the VM runtime log surface already written by Yeast.
+- `yeast inspect` exposes useful runtime and state details for one selected instance.
+- Guest control remains non-interactive; `yeast ssh` is still the interactive path.
+- No log-follow streaming, health-check framework, or MCP protocol layer is added in `v0.6`.
+
 ## 18. Output And Events Architecture
 
 Application workflows should emit events.
