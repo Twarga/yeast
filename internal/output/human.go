@@ -29,6 +29,14 @@ func RenderHuman(w io.Writer, command string, data any) error {
 		return renderUp(w, theme, value)
 	case app.StatusResult:
 		return renderStatus(w, theme, value)
+	case app.ExecResult:
+		return renderExec(w, theme, value)
+	case app.CopyResult:
+		return renderCopy(w, theme, value)
+	case app.InspectResult:
+		return renderInspect(w, theme, value)
+	case app.LogsResult:
+		return renderLogs(w, theme, value)
 	case app.ProvisionResult:
 		return renderProvision(w, theme, value)
 	case app.SnapshotResult:
@@ -217,6 +225,71 @@ func renderProvision(w io.Writer, theme humanTheme, value app.ProvisionResult) e
 	return writeBlock(w, theme, lines)
 }
 
+func renderExec(w io.Writer, theme humanTheme, value app.ExecResult) error {
+	lines := []string{
+		theme.Success.Render("OK") + " " + theme.Title.Render("Command finished"),
+		keyValue(theme, "instance", value.Instance),
+		keyValue(theme, "command", value.Run.Command),
+		keyValue(theme, "exit_code", fmt.Sprintf("%d", value.Run.ExitCode)),
+		keyValue(theme, "duration", value.Run.Duration.String()),
+	}
+	if value.Run.TimedOut {
+		lines = append(lines, keyValue(theme, "timed_out", "true"))
+	}
+	if value.Run.Stdout != "" {
+		lines = append(lines, "", theme.Label.Render("stdout:"), indentBlock(value.Run.Stdout))
+	}
+	if value.Run.Stderr != "" {
+		lines = append(lines, "", theme.Label.Render("stderr:"), indentBlock(value.Run.Stderr))
+	}
+	return writeBlock(w, theme, lines)
+}
+
+func renderCopy(w io.Writer, theme humanTheme, value app.CopyResult) error {
+	lines := []string{
+		theme.Success.Render("OK") + " " + theme.Title.Render("Copy finished"),
+		keyValue(theme, "instance", value.Instance),
+		keyValue(theme, "direction", string(value.Direction)),
+		keyValue(theme, "source", value.Source),
+		keyValue(theme, "destination", value.Destination),
+		keyValue(theme, "duration", value.Duration.String()),
+	}
+	return writeBlock(w, theme, lines)
+}
+
+func renderInspect(w io.Writer, theme humanTheme, value app.InspectResult) error {
+	lines := []string{
+		theme.Title.Render("Instance inspect"),
+		keyValue(theme, "name", value.Instance.Name),
+		keyValue(theme, "status", value.Instance.Status),
+		keyValue(theme, "ssh", sshAddress(value.Instance.SSHPort)),
+		keyValue(theme, "lab_ip", dashIfEmpty(value.Instance.LabIP)),
+		keyValue(theme, "runtime_dir", dashIfEmpty(value.Instance.RuntimeDir)),
+		keyValue(theme, "provision_log", dashIfEmpty(value.Instance.ProvisionLogPath)),
+		keyValue(theme, "provision_status", string(value.Instance.ProvisioningStatus)),
+		keyValue(theme, "snapshot_count", fmt.Sprintf("%d", value.SnapshotCount)),
+	}
+	if value.Instance.LastError != "" {
+		lines = append(lines, keyValue(theme, "last_error", value.Instance.LastError))
+	}
+	if len(value.SnapshotNames) > 0 {
+		lines = append(lines, "", theme.Label.Render("snapshots:"), "  "+theme.Value.Render(strings.Join(value.SnapshotNames, ", ")))
+	}
+	return writeBlock(w, theme, lines)
+}
+
+func renderLogs(w io.Writer, theme humanTheme, value app.LogsResult) error {
+	lines := []string{
+		theme.Title.Render("Instance logs"),
+		keyValue(theme, "instance", value.Instance),
+		keyValue(theme, "path", value.LogPath),
+	}
+	if value.Content != "" {
+		lines = append(lines, "", theme.Label.Render("content:"), indentBlock(value.Content))
+	}
+	return writeBlock(w, theme, lines)
+}
+
 func renderSnapshot(w io.Writer, theme humanTheme, value app.SnapshotResult) error {
 	lines := []string{
 		theme.Success.Render("OK") + " " + theme.Title.Render("Snapshot created"),
@@ -307,6 +380,31 @@ func actionFields[T instanceAction](instance T) (string, string) {
 
 func keyValue(theme humanTheme, key, value string) string {
 	return fmt.Sprintf("  %s %s", theme.Label.Render(key+":"), theme.Value.Render(value))
+}
+
+func dashIfEmpty(value string) string {
+	if value == "" {
+		return "-"
+	}
+	return value
+}
+
+func sshAddress(port int) string {
+	if port <= 0 {
+		return "-"
+	}
+	return fmt.Sprintf("127.0.0.1:%d", port)
+}
+
+func indentBlock(value string) string {
+	lines := strings.Split(strings.TrimSuffix(value, "\n"), "\n")
+	if len(lines) == 1 && lines[0] == "" {
+		return "  "
+	}
+	for i, line := range lines {
+		lines[i] = "  " + line
+	}
+	return strings.Join(lines, "\n")
 }
 
 func doctorBadge(theme humanTheme, status app.CheckStatus) string {

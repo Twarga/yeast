@@ -79,6 +79,65 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 			},
 		},
 		{
+			name:    "exec",
+			command: "exec",
+			data: app.ExecResult{
+				ProjectID: "proj_123",
+				Instance:  "web",
+				Run: app.GuestCommandResult{
+					Command:    "whoami",
+					ExitCode:   0,
+					Stdout:     "yeast\n",
+					Stderr:     "",
+					StartedAt:  time.Date(2026, 5, 25, 11, 0, 0, 0, time.UTC),
+					FinishedAt: time.Date(2026, 5, 25, 11, 0, 0, 200000000, time.UTC),
+					Duration:   200 * time.Millisecond,
+				},
+			},
+		},
+		{
+			name:    "copy",
+			command: "copy",
+			data: app.CopyResult{
+				ProjectID:   "proj_123",
+				Instance:    "web",
+				Direction:   app.CopyToGuest,
+				Source:      "/tmp/site.txt",
+				Destination: "/home/yeast/site.txt",
+				StartedAt:   time.Date(2026, 5, 25, 11, 1, 0, 0, time.UTC),
+				FinishedAt:  time.Date(2026, 5, 25, 11, 1, 1, 0, time.UTC),
+				Duration:    time.Second,
+			},
+		},
+		{
+			name:    "inspect",
+			command: "inspect",
+			data: app.InspectResult{
+				ProjectID: "proj_123",
+				Instance: app.StatusInstanceResult{
+					Name:               "web",
+					Status:             "running",
+					SSHPort:            2222,
+					LabIP:              "10.10.10.10",
+					RuntimeDir:         "/tmp/web",
+					ProvisionLogPath:   "/tmp/web/provision.log",
+					ProvisioningStatus: state.ProvisioningStatusReady,
+				},
+				SnapshotNames: []string{"clean"},
+				SnapshotCount: 1,
+			},
+		},
+		{
+			name:    "logs",
+			command: "logs",
+			data: app.LogsResult{
+				ProjectID: "proj_123",
+				Instance:  "web",
+				LogPath:   "/tmp/web/vm.log",
+				Content:   "booted\n",
+			},
+		},
+		{
 			name:    "snapshot",
 			command: "snapshot",
 			data: app.SnapshotResult{

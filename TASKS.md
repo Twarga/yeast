@@ -4009,7 +4009,7 @@ Completed:
 
 ### V0.6-T6: Add CLI commands for guest control
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4033,6 +4033,18 @@ Definition of done:
   - `yeast inspect`
 - human and JSON output both work
 - target selection rules are consistent with `yeast ssh`
+
+Completed:
+
+- Added CLI commands:
+  - `yeast exec [instance] -- <command...>`
+  - `yeast copy <instance> --to-guest <source> <destination>`
+  - `yeast copy <instance> --from-guest <source> <destination>`
+  - `yeast logs <instance> [--tail N]`
+  - `yeast inspect <instance>`
+- Added human renderers for `exec`, `copy`, `logs`, and `inspect`.
+- JSON success rendering works through the existing generic envelope for all guest-control result types.
+- Added focused render tests in `cmd/yeast` and `internal/output`.
 
 ### V0.6-T7: Add guest-control smoke coverage
 
