@@ -3873,7 +3873,7 @@ Completion notes:
 
 ### V0.6-T2: Add guest-control app/result models
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3895,6 +3895,26 @@ Definition of done:
   - logs
 - result shape matches the locked contract
 - tests cover JSON-friendly fields and zero-value behavior
+
+Completion notes:
+
+- Added shared guest-control app/result models for:
+  - `ExecResult`
+  - `CopyResult`
+  - `InspectResult`
+  - `LogsResult`
+- Added a shared `GuestCommandResult` contract with:
+  - command
+  - exit code
+  - stdout
+  - stderr
+  - timestamps
+  - duration
+  - timeout flag
+- Added focused tests covering:
+  - stable command-string rendering
+  - local-path normalization for copy workflows
+  - result-shape field expectations for later JSON rendering
 
 ### V0.6-T3: Add `exec` workflow in the app layer
 
