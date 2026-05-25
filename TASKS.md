@@ -3918,7 +3918,7 @@ Completion notes:
 
 ### V0.6-T3: Add `exec` workflow in the app layer
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -3936,6 +3936,14 @@ Definition of done:
 - command runs over SSH
 - stdout/stderr/exit code are returned cleanly
 - not-running or not-found targets map to stable app errors
+
+Completed:
+
+- Added `Service.Exec` with one-instance target selection and SSH-backed command execution.
+- Return contract preserves `stdout`, `stderr`, `exit_code`, timestamps, duration, and timeout state.
+- Remote non-zero command exits return structured results without surfacing an app error.
+- SSH transport/setup failures map to stable app errors.
+- Added focused tests for success, remote non-zero exit, timeout, missing command, and SSH failure classification.
 
 ### V0.6-T4: Add `copy` workflow in the app layer
 
