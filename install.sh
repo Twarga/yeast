@@ -2,9 +2,10 @@
 set -euo pipefail
 
 YEAST_REPO_URL="${YEAST_REPO_URL:-https://github.com/Twarga/yeast.git}"
-YEAST_REF="${YEAST_REF:-main}"
+YEAST_REF="${YEAST_REF:-v0.9.0}"
 YEAST_INSTALL_DIR="${YEAST_INSTALL_DIR:-/usr/local/bin}"
 YEAST_BIN_PATH="${YEAST_INSTALL_DIR}/yeast"
+YEAST_EXPECTED_VERSION="${YEAST_EXPECTED_VERSION:-}"
 YEAST_INSTALL_VERBOSE="${YEAST_INSTALL_VERBOSE:-0}"
 YEAST_KEEP_LOGS="${YEAST_KEEP_LOGS:-0}"
 YEAST_MIN_GO_VERSION="${YEAST_MIN_GO_VERSION:-1.25.0}"
@@ -531,18 +532,56 @@ clone_source() {
 
 build_source() {
   local go_bin
+  local version
   ensure_go_toolchain
   go_bin="$(resolve_go_bin || true)"
   [[ -n "${go_bin}" ]] || die "failed to resolve Go toolchain after installation"
+  version="$(expected_install_version || true)"
+  [[ -n "${version}" ]] || version="0.0.0-dev"
   (
     cd "${SRC_DIR}"
-    "${go_bin}" build -o "${WORKDIR}/yeast" ./cmd/yeast
+    "${go_bin}" build \
+      -trimpath \
+      -ldflags "-s -w -X yeast/internal/app.Version=${version}" \
+      -o "${WORKDIR}/yeast" \
+      ./cmd/yeast
   )
+}
+
+expected_install_version() {
+  if [[ -n "${YEAST_EXPECTED_VERSION}" ]]; then
+    printf '%s' "${YEAST_EXPECTED_VERSION}"
+    return 0
+  fi
+  if [[ "${YEAST_REF}" =~ ^v[0-9]+[.][0-9]+[.][0-9]+([-+][A-Za-z0-9._-]+)?$ ]]; then
+    printf '%s' "${YEAST_REF}"
+    return 0
+  fi
+  return 1
 }
 
 install_binary() {
   need_root install -d "${YEAST_INSTALL_DIR}"
   need_root install -m 0755 "${WORKDIR}/yeast" "${YEAST_BIN_PATH}"
+}
+
+verify_installed_binary() {
+  local actual
+  local expected
+
+  if ! [[ -x "${YEAST_BIN_PATH}" ]]; then
+    die "installed binary is missing or not executable: ${YEAST_BIN_PATH}"
+  fi
+
+  actual="$("${YEAST_BIN_PATH}" version 2>/dev/null || true)"
+  [[ -n "${actual}" ]] || die "installed binary did not print a version"
+
+  expected="$(expected_install_version || true)"
+  if [[ -n "${expected}" && "${actual}" != "${expected}" ]]; then
+    die "installed Yeast version mismatch: expected ${expected}, got ${actual}"
+  fi
+
+  info "Installed Yeast version: ${actual}"
 }
 
 ensure_user_paths() {
@@ -655,6 +694,7 @@ main() {
   run_required_step "Cloning repository" clone_source
   run_required_step "Building CLI binary" build_source
   run_required_step "Installing yeast binary" install_binary
+  run_required_step "Verifying installed yeast binary" verify_installed_binary
 
   section "Configuring User Environment"
   run_required_step "Creating Yeast directories" ensure_user_paths

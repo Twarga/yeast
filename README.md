@@ -314,7 +314,7 @@ yeast destroy
 If the repository is reachable over HTTPS:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.3.0/install.sh | YEAST_REF=v0.3.0 bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
 ```
 
 If you already cloned the repo:
@@ -330,6 +330,7 @@ The installer attempts to:
 - install Go for source build flow
 - clone and build Yeast
 - install `yeast` into `/usr/local/bin`
+- verify the installed binary version
 - create the Yeast cache directory
 - generate an SSH key if needed
 - add the user to the `kvm` group when possible

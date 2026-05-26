@@ -4866,7 +4866,7 @@ Completion notes:
 
 ### V1.0-T5: Harden installer and upgrade path
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4881,6 +4881,14 @@ Definition of done:
 - installer behavior is documented for common Linux families
 - failure messages are actionable
 - shell syntax checks pass
+
+Completion notes:
+
+- Changed installer default `YEAST_REF` from `main` to the current stable release tag `v0.9.0`.
+- Kept explicit `YEAST_REF` support for tags, branches, and commits.
+- Added version injection during installer builds using the semantic `YEAST_REF` or `YEAST_EXPECTED_VERSION`.
+- Added installed binary verification after install, including exact version matching for semantic release refs.
+- Updated installation docs and README install snippet to describe stable default install, explicit refs, version verification, supported package managers, and upgrade behavior.
 
 ### V1.0-T6: Expand release smoke coverage
 
