@@ -1,21 +1,23 @@
 # caddy-single-vm
 
-Single-VM provisioning and reset example for Yeast `v0.4`.
+Single-VM provisioning starter template for Yeast `v0.7`.
 
-What this example does:
+What this template does:
 
 - boots one Ubuntu 24.04 VM
 - installs `caddy`
 - copies site files into the guest user home
 - installs them into Caddy-owned paths during shell provisioning
 - enables and restarts the `caddy` service
-- supports a stopped-VM snapshot and restore loop after provisioning
+- leaves you with a normal project that can use snapshot/restore after provisioning
 
-What this example does not do:
+What this template does not do:
 
 - private networking
 - multi-VM topologies
-- guest exec/copy/logs beyond provisioning
+- automatic snapshot creation
+- hidden health checks
+- MCP, cloud, or LabsBackery-specific behavior
 
 ## Files
 
@@ -25,16 +27,10 @@ What this example does not do:
 
 ## Run
 
-Create a fresh project directory first. `yeast init` creates the project metadata and starter config.
-
 ```bash
 mkdir my-caddy-demo
 cd my-caddy-demo
-yeast init
-cp /path/to/yeast/examples/caddy-single-vm/yeast.yaml ./yeast.yaml
-mkdir -p site
-cp /path/to/yeast/examples/caddy-single-vm/site/index.html ./site/index.html
-cp /path/to/yeast/examples/caddy-single-vm/site/Caddyfile ./site/Caddyfile
+yeast init --template caddy-single-vm
 ```
 
 Then run:
@@ -114,4 +110,5 @@ yeast destroy
 - file sources are resolved relative to the project root
 - privileged destination writes are handled through shell provisioning in `v0.3`
 - snapshot create and restore are stopped-VM only in `v0.4`
-- service verification is still manual in `v0.4`
+- service verification is still manual
+- generated template projects are normal editable Yeast projects

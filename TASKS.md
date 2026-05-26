@@ -4269,7 +4269,7 @@ Completion notes:
 
 ### V0.7-T5: Add official built-in templates
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4289,6 +4289,16 @@ Definition of done:
 - built-in `two-vm-lab` template exists
 - templates match currently supported v0.6 features
 - templates do not rely on future snapshot automation, events, MCP, or cloud behavior
+
+Completion notes:
+
+- Updated built-in template READMEs so they document `yeast init --template <name>` instead of old manual copy workflows.
+- Kept the official built-ins scoped to current supported behavior:
+  - `ubuntu-basic`
+  - `caddy-single-vm`
+  - `two-vm-lab`
+- Added tests proving every official built-in materializes into a valid Yeast project.
+- Added guard tests to keep built-ins from introducing future-scope files such as MCP, cloud, events, or LabsBackery-specific package files.
 
 ### V0.7-T6: Add template docs and smoke coverage
 

@@ -1,8 +1,8 @@
 # two-vm-lab
 
-Minimal attacker/target private-network example for Yeast `v0.5`.
+Minimal attacker/target private-network starter template for Yeast `v0.7`.
 
-What this example does:
+What this template does:
 
 - boots two Ubuntu 24.04 VMs
 - keeps normal management SSH on host-forwarded ports
@@ -11,13 +11,14 @@ What this example does:
   - `attacker` -> `10.10.10.10`
   - `target` -> `10.10.10.20`
 
-What this example does not do:
+What this template does not do:
 
 - bridge mode
 - DHCP
 - multiple private networks
-- guest exec/copy/logs commands
-- automatic cross-guest validation from the CLI
+- automatic cross-guest validation during `yeast up`
+- automatic snapshot baselines
+- LabsBackery-specific lab packaging
 
 ## Files
 
@@ -25,13 +26,10 @@ What this example does not do:
 
 ## Run
 
-Create a fresh project directory first. `yeast init` creates the project metadata and starter config.
-
 ```bash
 mkdir my-two-vm-lab
 cd my-two-vm-lab
-yeast init
-cp /path/to/yeast/examples/two-vm-lab/yeast.yaml ./yeast.yaml
+yeast init --template two-vm-lab
 ```
 
 Then run:
@@ -86,3 +84,4 @@ yeast destroy
 - Yeast still uses user-mode SSH forwarding for management
 - the private lab NIC is separate from that management path
 - the first pass supports exactly one project-level private lab network
+- generated template projects are normal editable Yeast projects
