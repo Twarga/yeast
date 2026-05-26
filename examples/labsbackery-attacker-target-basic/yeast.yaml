@@ -1,0 +1,32 @@
+version: 1
+networks:
+  - name: lab
+    cidr: 10.20.30.0/24
+instances:
+  - name: attacker
+    hostname: attacker-lab
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    disk_size: 20G
+    user: yeast
+    sudo: nopasswd
+    networks:
+      - name: lab
+        ipv4: 10.20.30.10
+  - name: target
+    hostname: target-lab
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    disk_size: 20G
+    user: yeast
+    sudo: nopasswd
+    networks:
+      - name: lab
+        ipv4: 10.20.30.20
+    provision:
+      files:
+        - source: ./files/target/flag.txt
+          destination: /home/yeast/labsbackery-target.txt
+          permissions: "0644"

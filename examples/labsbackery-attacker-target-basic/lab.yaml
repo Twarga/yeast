@@ -1,0 +1,40 @@
+schema: labsbakery.lab.v1
+id: attacker-target-basic
+title: Attacker Target Basic
+summary: Practice using a browser terminal to inspect two Yeast-backed VMs on one private lab network.
+version: "1"
+author: TwargaOps
+tags:
+  - linux
+  - networking
+  - labsbakery
+  - beginner
+engine:
+  type: yeast
+  min_version: v0.8.0
+  schema_version: yeast.v1
+topology:
+  nodes:
+    - id: attacker
+      instance: attacker
+      role: attacker
+      x: 120
+      y: 160
+    - id: target
+      instance: target
+      role: target
+      x: 520
+      y: 160
+  networks:
+    - id: lab
+      name: lab
+      cidr: 10.20.30.0/24
+      nodes:
+        - attacker
+        - target
+scenario:
+  instructions: scenario/instructions.md
+  checks: scenario/checks.yaml
+baseline:
+  name: clean
+  description: Clean attacker/target baseline

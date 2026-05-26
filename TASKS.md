@@ -4664,7 +4664,7 @@ Completion notes:
 
 ### V0.9-T5: Build one LabsBakery-ready example lab
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4678,6 +4678,15 @@ Definition of done:
 - target has a simple service or file for validation
 - lab can start, status, snapshot, reset, and destroy through Yeast
 - full smoke or documented manual test proves the workflow
+
+Completion notes:
+
+- Added `examples/labsbackery-attacker-target-basic`.
+- Included `template.yaml`, `yeast.yaml`, `lab.yaml`, scenario instructions, scenario checks, and a target marker file.
+- The example defines attacker/target VMs on one private lab network with static IPs.
+- The target provisions `/home/yeast/labsbackery-target.txt` as the validation file.
+- README documents init, start/status, checks through `yeast exec`, baseline snapshots, reset, and cleanup.
+- Added a test that materializes the example as a local template and validates the generated `yeast.yaml`.
 
 ### V0.9-T6: Add v0.9 release notes
 

@@ -1,0 +1,12 @@
+name: attacker-target-basic
+title: Attacker Target Basic
+description: LabsBakery-ready attacker and target starter lab for Yeast.
+category: lab
+version: "1"
+files:
+  - yeast.yaml
+  - lab.yaml
+  - README.md
+  - files/target/flag.txt
+  - scenario/instructions.md
+  - scenario/checks.yaml

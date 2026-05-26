@@ -473,12 +473,14 @@ Current repo examples:
 - [examples/ubuntu-basic](examples/ubuntu-basic/README.md)
 - [examples/caddy-single-vm](examples/caddy-single-vm/README.md)
 - [examples/two-vm-lab](examples/two-vm-lab/README.md)
+- [examples/labsbackery-attacker-target-basic](examples/labsbackery-attacker-target-basic/README.md)
 
 The templates and examples are intentionally small:
 
 - `ubuntu-basic` keeps the lifecycle-only path minimal
 - `caddy-single-vm` shows provisioning with packages, files, and shell
 - `two-vm-lab` shows the first private lab network
+- `labsbackery-attacker-target-basic` shows the first Yeast-backed LabsBakery lab package convention
 
 They exist to prove the current shipped paths cleanly.
 

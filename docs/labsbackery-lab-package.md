@@ -356,7 +356,7 @@ Do not add these to Yeast for this convention:
 The first package that should be built from this convention is:
 
 ```text
-attacker-target-basic/
+examples/labsbackery-attacker-target-basic/
   template.yaml
   yeast.yaml
   lab.yaml
