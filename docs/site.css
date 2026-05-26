@@ -250,6 +250,37 @@ code {
   font-weight: 500;
 }
 
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 12px;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.copy-btn:hover {
+  background: rgba(245,174,61,0.12);
+  border-color: rgba(245,174,61,0.25);
+  color: var(--amber);
+}
+
+.copy-btn.copied {
+  background: var(--green-soft);
+  border-color: rgba(70,211,155,0.3);
+  color: var(--green);
+}
+
+.copy-btn svg { display: block; }
+
 .term-body {
   padding: 22px 24px;
   overflow-x: auto;

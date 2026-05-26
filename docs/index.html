@@ -19,7 +19,7 @@
       <a class="logo" href="#" aria-label="Yeast home">
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="2" y="2" width="24" height="24" rx="6" stroke="#f5ae3d" stroke-width="2.5"/>
-          <path d="M9 20V8l5 6 5-6v12" stroke="#f5ae3d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 8l6 8 6-8M14 16v6" stroke="#f5ae3d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span>yeast</span>
       </a>
@@ -53,15 +53,32 @@
           <span class="dot yellow"></span>
           <span class="dot green"></span>
           <span class="term-title">bash</span>
+          <button class="copy-btn" onclick="copyInstall(this)" aria-label="Copy install command">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span>Copy</span>
+          </button>
         </div>
-        <pre class="term-body"><code><span class="c"># Install in one command</span>
-<span class="p">$</span> <span class="c">curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.7.0/install.sh | YEAST_REF=v0.7.0 bash</span>
-
-<span class="c"># Or build from source</span>
-<span class="p">$</span> <span class="c">git clone https://github.com/Twarga/yeast.git && cd yeast</span>
-<span class="p">$</span> <span class="c">go build -o yeast ./cmd/yeast && sudo mv yeast /usr/local/bin/</span></code></pre>
+        <pre class="term-body"><code id="install-cmd"><span class="p">$</span> <span class="c">curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.7.0/install.sh | YEAST_REF=v0.7.0 bash</span></code></pre>
       </div>
     </section>
+
+    <script>
+      async function copyInstall(btn) {
+        const text = "curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.7.0/install.sh | YEAST_REF=v0.7.0 bash";
+        try {
+          await navigator.clipboard.writeText(text);
+          const span = btn.querySelector('span');
+          const original = span.textContent;
+          span.textContent = 'Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => { span.textContent = original; btn.classList.remove('copied'); }, 1500);
+        } catch (e) {
+          const span = btn.querySelector('span');
+          span.textContent = 'Failed';
+          setTimeout(() => { span.textContent = 'Copy'; }, 1500);
+        }
+      }
+    </script>
 
     <!-- Config reveal -->
     <section class="config-section" id="config">
@@ -212,7 +229,7 @@
       <div class="footer-brand">
         <svg width="20" height="20" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="2" y="2" width="24" height="24" rx="6" stroke="#f5ae3d" stroke-width="2.5"/>
-          <path d="M9 20V8l5 6 5-6v12" stroke="#f5ae3d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 8l6 8 6-8M14 16v6" stroke="#f5ae3d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span>yeast</span>
       </div>
