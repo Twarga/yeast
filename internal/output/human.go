@@ -21,6 +21,8 @@ func RenderHuman(w io.Writer, command string, data any) error {
 		return err
 	case app.InitResult:
 		return renderInit(w, theme, value)
+	case app.TemplateListResult:
+		return renderTemplateList(w, theme, value)
 	case app.PullResult:
 		return renderPull(w, theme, value)
 	case app.DoctorResult:
@@ -138,6 +140,25 @@ func renderInit(w io.Writer, theme humanTheme, value app.InitResult) error {
 		keyValue(theme, "metadata", value.MetadataPath),
 		keyValue(theme, "project", value.ProjectID),
 	}
+	if value.Template != "" {
+		lines = append(lines, keyValue(theme, "template", value.Template))
+	}
+	return writeBlock(w, theme, lines)
+}
+
+func renderTemplateList(w io.Writer, theme humanTheme, value app.TemplateListResult) error {
+	rows := [][]string{{"NAME", "CATEGORY", "SOURCE", "DESCRIPTION"}}
+	for _, template := range value.Templates {
+		rows = append(rows, []string{
+			template.Name,
+			template.Category,
+			template.Source,
+			template.Description,
+		})
+	}
+
+	lines := []string{theme.Title.Render("Project templates")}
+	lines = append(lines, renderRows(theme, rows)...)
 	return writeBlock(w, theme, lines)
 }
 

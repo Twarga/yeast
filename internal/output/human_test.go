@@ -41,6 +41,42 @@ func TestRenderHumanInitResult(t *testing.T) {
 	}
 }
 
+func TestRenderHumanTemplateListResult(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+	err := RenderHuman(&buf, "init", app.TemplateListResult{
+		Templates: []app.TemplateSummary{
+			{
+				Name:        "caddy-single-vm",
+				Description: "Ubuntu VM with Caddy provisioning.",
+				Category:    "app",
+				Source:      "builtin",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("RenderHuman returned error: %v", err)
+	}
+
+	got := stripANSI(buf.String())
+	for _, want := range []string{
+		"Project templates",
+		"NAME",
+		"CATEGORY",
+		"SOURCE",
+		"DESCRIPTION",
+		"caddy-single-vm",
+		"app",
+		"builtin",
+		"Ubuntu VM with Caddy provisioning.",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, got)
+		}
+	}
+}
+
 func TestRenderHumanStatusResult(t *testing.T) {
 	t.Parallel()
 

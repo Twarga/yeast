@@ -4239,7 +4239,7 @@ Completion notes:
 
 ### V0.7-T4: Add `init --template` and `init --list-templates`
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4258,6 +4258,14 @@ Definition of done:
 - `yeast init --template caddy-single-vm` creates a normal project
 - `yeast init --template ./path/to/template` works for local templates
 - missing template names return stable `not_found` errors
+
+Completion notes:
+
+- Added `Service.ListTemplates` and JSON-friendly template summary results.
+- Added `yeast init --list-templates`.
+- Added `yeast init --template <name-or-path>`.
+- Added human template-list rendering and JSON success coverage.
+- Added CLI tests proving template listing and `caddy-single-vm` project creation.
 
 ### V0.7-T5: Add official built-in templates
 

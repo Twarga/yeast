@@ -7,15 +7,29 @@ import (
 )
 
 func newInitCmd(service *app.Service) *cobra.Command {
-	return &cobra.Command{
+	var templateName string
+	var listTemplates bool
+
+	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize a Yeast project",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			result, err := service.Init(app.InitOptions{})
+			if listTemplates {
+				result, err := service.ListTemplates()
+				if err != nil {
+					return err
+				}
+				return renderCommandOutput(cmd.OutOrStdout(), "init", result)
+			}
+
+			result, err := service.Init(app.InitOptions{Template: templateName})
 			if err != nil {
 				return err
 			}
 			return renderCommandOutput(cmd.OutOrStdout(), "init", result)
 		},
 	}
+	cmd.Flags().StringVar(&templateName, "template", "", "Initialize from a built-in template name or local template directory")
+	cmd.Flags().BoolVar(&listTemplates, "list-templates", false, "List available built-in templates")
+	return cmd
 }

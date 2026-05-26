@@ -22,6 +22,22 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 				ConfigPath:   "/tmp/yeast.yaml",
 				MetadataPath: "/tmp/.yeast/project.json",
 				ProjectID:    "proj_123",
+				Template:     "ubuntu-basic",
+			},
+		},
+		{
+			name:    "template-list",
+			command: "init",
+			data: app.TemplateListResult{
+				Templates: []app.TemplateSummary{
+					{
+						Name:        "ubuntu-basic",
+						Title:       "Ubuntu Basic",
+						Description: "Minimal Ubuntu VM starter.",
+						Category:    "vm",
+						Source:      "builtin",
+					},
+				},
 			},
 		},
 		{
