@@ -4473,7 +4473,7 @@ Completion notes:
 
 ### V0.8-T4: Add lifecycle event model
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4484,6 +4484,14 @@ Definition of done:
 - event envelope is defined
 - event names are documented
 - app workflows can emit events without coupling to human output
+
+Completion notes:
+
+- Added `app.Event`, `app.EventName`, `app.EventSink`, and `app.NewEvent`.
+- Added initial stable event names for project/config/image/disk/cloud-init/start/SSH/provision/snapshot/restore/instance/workflow progress.
+- Added `output.RenderJSONEvent` for JSON Lines event rendering.
+- Documented the event envelope and initial event names in `docs/json-contract.md`.
+- Added tests that lock event envelope fields and event name strings.
 
 ### V0.8-T5: Add `--events` output path for long-running commands
 

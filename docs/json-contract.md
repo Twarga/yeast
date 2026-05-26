@@ -236,3 +236,62 @@ The following fields are the first stable `yeast.v1` integration surface for Lab
   ]
 }
 ```
+
+## Event Envelope
+
+Lifecycle events use JSON Lines. Each event is one JSON object followed by a newline.
+
+Event output uses this envelope:
+
+```json
+{
+  "schema_version": "yeast.v1",
+  "type": "event",
+  "name": "ssh.ready",
+  "command": "up",
+  "project_id": "proj_...",
+  "instance": "web",
+  "message": "SSH is ready",
+  "time": "2026-05-26T12:00:00Z",
+  "data": {
+    "ssh_port": 2222
+  }
+}
+```
+
+Fields:
+
+- `schema_version`: JSON contract version.
+- `type`: always `event`.
+- `name`: stable machine-readable event name.
+- `command`: command that emitted the event.
+- `project_id`: project id when known.
+- `instance`: instance name when the event belongs to one instance.
+- `message`: optional human-readable event summary.
+- `time`: event timestamp.
+- `data`: optional event-specific structured data.
+
+## Initial Event Names
+
+Initial lifecycle event names:
+
+- `project.loaded`
+- `config.validated`
+- `image.ready`
+- `disk.ready`
+- `cloud_init.generated`
+- `vm.starting`
+- `ssh.waiting`
+- `ssh.ready`
+- `provision.started`
+- `provision.finished`
+- `snapshot.created`
+- `restore.started`
+- `restore.finished`
+- `instance.ready`
+- `instance.stopped`
+- `instance.destroyed`
+- `workflow.completed`
+- `workflow.failed`
+
+These names are intentionally generic. LabsBakery can map them to UI progress without learning QEMU internals.
