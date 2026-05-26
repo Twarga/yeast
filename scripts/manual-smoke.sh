@@ -484,9 +484,9 @@ run_template_suite() {
   section "List built-in templates"
   TEMPLATE_LIST_JSON="$("${BIN_PATH}" init --list-templates --json)"
   printf "%s\n" "${TEMPLATE_LIST_JSON}"
-  assert_contains "${TEMPLATE_LIST_JSON}" '"Name":"ubuntu-basic"' "template list includes ubuntu-basic"
-  assert_contains "${TEMPLATE_LIST_JSON}" '"Name":"caddy-single-vm"' "template list includes caddy-single-vm"
-  assert_contains "${TEMPLATE_LIST_JSON}" '"Name":"two-vm-lab"' "template list includes two-vm-lab"
+  assert_contains "${TEMPLATE_LIST_JSON}" '"name":"ubuntu-basic"' "template list includes ubuntu-basic"
+  assert_contains "${TEMPLATE_LIST_JSON}" '"name":"caddy-single-vm"' "template list includes caddy-single-vm"
+  assert_contains "${TEMPLATE_LIST_JSON}" '"name":"two-vm-lab"' "template list includes two-vm-lab"
   record_pass "List built-in templates"
 
   section "Initialize built-in Caddy template"
