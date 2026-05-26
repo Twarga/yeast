@@ -4365,13 +4365,31 @@ Status: [-]
 Do not start until:
 
 - M11-M15 enough for one lab
+- M15 / v0.8 stable JSON and events are complete enough for UI integration
+
+Planning reference:
+
+- `docs/labsbackery-plan.md`
 
 Core tasks later:
 
-- JSON contract
-- lab lifecycle commands
-- test lab
-- LabsBackery integration notes
+- Inspect old LabsBackery as reference only.
+- Extract the old lab model, terminal workflow, reset workflow, and UI expectations.
+- Map old LabsBackery concepts to current Yeast primitives.
+- Define the first LabsBackery lab integration target.
+- Define the LabsBackery-to-Yeast JSON contract.
+- Define required lifecycle event names for UI progress.
+- Define terminal connection requirements.
+- Define reset/baseline snapshot requirements.
+- Build one test lab that Yeast can start, provision, snapshot, reset, and destroy.
+- Write LabsBackery integration notes.
+
+Do not do in Yeast:
+
+- do not copy old LabsBackery code into Yeast
+- do not add LabsBackery-specific product state to Yeast
+- do not add cloud, billing, teams, courses, or RBAC here
+- do not start LabsBackery implementation before v0.8 JSON/events are stable
 
 ---
 
