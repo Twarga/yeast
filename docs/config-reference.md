@@ -18,8 +18,17 @@ instances:
 
 ```yaml
 version: 1
+networks:
+  - name: lab
+    cidr: 10.10.10.0/24
+provision:
+  packages:
+    - curl
+  shell:
+    - echo "project provisioning complete" >/tmp/project-ready
 instances:
   - name: web
+    hostname: web-lab
     image: ubuntu-24.04
     memory: 1024
     cpus: 1
@@ -30,34 +39,60 @@ instances:
     env:
       APP_ENV: development
       LOG_LEVEL: debug
+    networks:
+      - name: lab
+        ipv4: 10.10.10.20
+    provision:
+      files:
+        - source: ./site
+          destination: /srv/site
+          permissions: "0644"
+      shell:
+        - echo "instance provisioning complete" >/tmp/instance-ready
 ```
 
 ## Top-Level Fields
 
-| Field | Required | Description |
-|---|---:|---|
-| `version` | yes | Config schema version. Must be `1`. |
-| `instances` | yes | List of VMs in the project. Must contain at least one instance. |
-| `networks` | no | One project-level private lab network for current v0.5+ networking. |
-| `provision` | no | Provisioning config shared across instances. Runs before instance-level provisioning during `yeast up` and `yeast provision`. |
+| Field | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `version` | integer | yes | none | Config schema version. Must be `1`. |
+| `instances` | list | yes | none | List of VMs in the project. Must contain at least one instance. |
+| `networks` | list | no | empty | Project-level private lab networks. v1 supports at most one project network. |
+| `provision` | object | no | empty | Provisioning config shared across instances. Runs before instance-level provisioning during `yeast up` and `yeast provision`. |
 
 ## Instance Fields
 
-| Field | Required | Default | Description |
-|---|---:|---|---|
-| `name` | yes | none | Instance name. Must be path-safe. |
-| `hostname` | no | instance `name` | Guest hostname rendered into cloud-init. |
-| `image` | yes | none | Trusted image name, such as `ubuntu-24.04`. |
-| `memory` | no | `512` | Memory in MiB. Must be at least `128`. |
-| `cpus` | no | `1` | Number of virtual CPUs. Must be at least `1`. |
-| `disk_size` | no | empty | Optional overlay disk size, such as `20G`. |
-| `ssh_port` | no | auto from `2222` | Optional host SSH port forwarding override. |
-| `user` | no | `yeast` | Linux user created by cloud-init. |
-| `sudo` | no | `none` | Sudo policy: `none`, `password`, or `nopasswd`. |
-| `env` | no | empty | Environment values rendered into the guest profile script. |
-| `user_data` | no | empty | Raw cloud-init user-data override. |
-| `networks` | no | empty | Per-instance attachment to the current project lab network. |
-| `provision` | no | empty | Instance-specific provisioning config. Runs after top-level provisioning during `yeast up` and `yeast provision`. |
+| Field | Type | Required | Default | Description |
+|---|---|---:|---|---|
+| `name` | string | yes | none | Instance name. Must be path-safe. |
+| `hostname` | string | no | instance `name` | Guest hostname rendered into cloud-init. |
+| `image` | string | yes | none | Trusted image name, such as `ubuntu-24.04`. |
+| `memory` | integer | no | `512` | Memory in MiB. Must be at least `128`. |
+| `cpus` | integer | no | `1` | Number of virtual CPUs. Must be at least `1`. |
+| `disk_size` | string | no | empty | Optional overlay disk size, such as `20G`. |
+| `ssh_port` | integer | no | auto from `2222` | Optional host SSH port forwarding override. |
+| `user` | string | no | `yeast` | Linux user created by cloud-init. |
+| `sudo` | string | no | `none` | Sudo policy: `none`, `password`, or `nopasswd`. |
+| `env` | map | no | empty | Environment values rendered into the guest profile script. |
+| `user_data` | string | no | empty | Raw cloud-init user-data override. |
+| `networks` | list | no | empty | Per-instance attachment to the current project lab network. v1 supports at most one attachment per instance. |
+| `provision` | object | no | empty | Instance-specific provisioning config. Runs after top-level provisioning during `yeast up` and `yeast provision`. |
+
+## Defaults
+
+Yeast applies these defaults after validation:
+
+| Field | Default |
+|---|---|
+| `memory` | `512` |
+| `cpus` | `1` |
+| `hostname` | instance `name` |
+| `user` | `yeast` |
+| `sudo` | `none` |
+
+`ssh_port` has no static config default. If omitted, Yeast allocates a host SSH forwarding port starting at `2222`.
+
+`disk_size` has no config default. If omitted, Yeast creates the overlay disk without an explicit resize request.
 
 ## Supported Images
 
@@ -142,9 +177,61 @@ Rules:
 - must not collide with another requested or already-running Yeast instance port in the same project run
 - if tracked state already uses a different SSH port for the same instance, Yeast fails instead of silently switching it
 
+## Private Lab Networking
+
+The v1 config schema supports one project-level private lab network and one attachment per instance.
+
+Example:
+
+```yaml
+version: 1
+networks:
+  - name: lab
+    cidr: 10.10.10.0/24
+instances:
+  - name: attacker
+    image: ubuntu-24.04
+    networks:
+      - name: lab
+        ipv4: 10.10.10.10
+  - name: target
+    image: ubuntu-24.04
+    networks:
+      - name: lab
+        ipv4: 10.10.10.20
+```
+
+### Project network fields
+
+| Field | Type | Required | Description |
+|---|---|---:|---|
+| `name` | string | yes | Network identity referenced by instances. Uses the same safe-name rule as instance names. |
+| `cidr` | string | yes | IPv4 CIDR for the private lab network. |
+
+### Instance network attachment fields
+
+| Field | Type | Required | Description |
+|---|---|---:|---|
+| `name` | string | yes | Existing project network name. |
+| `ipv4` | string | yes | Static guest IPv4 address inside the project network CIDR. |
+
+Rules:
+
+- v1 supports at most one project network
+- v1 supports at most one network attachment per instance
+- project network `name` cannot be empty, unsafe, or contain `..`
+- project network `cidr` must be valid IPv4 CIDR
+- instance attachment `name` must reference a defined project network
+- instance attachment `ipv4` must be valid IPv4
+- instance attachment `ipv4` must be inside the network CIDR
+- instance attachment `ipv4` cannot be the network address or broadcast address
+- instance attachment `ipv4` cannot duplicate another instance attachment on the same network
+
+Networking is intentionally narrow in v1. Multiple private networks, bridge mode, DHCP lab guests, and router/firewall appliance modeling are future LabsBakery/Yeast work.
+
 ## Provisioning Schema
 
-Yeast now accepts provisioning config in the schema. During `v0.3.0`, this config becomes the contract for post-boot provisioning.
+Yeast accepts provisioning config in the schema for post-boot provisioning.
 
 Provisioning can appear:
 
@@ -195,7 +282,7 @@ Rules:
 - list of shell commands
 - entries cannot be empty after trimming whitespace
 
-Provisioning behavior in `v0.3`:
+Provisioning behavior:
 
 - top-level steps run before instance-level steps
 - `packages`, `files`, and `shell` run post-boot over SSH
@@ -303,11 +390,38 @@ Yeast rejects:
 - empty instance lists
 - duplicate instance names
 - unsafe instance names
+- unsafe hostnames
 - missing images
 - memory below `128`
 - CPU count below `1`
 - invalid disk sizes
+- invalid SSH ports outside `1` through `65535`
 - invalid Linux usernames
 - invalid sudo values
 - env keys that are unsafe for shell export
 - env values containing newlines
+- more than one project network
+- empty or unsafe network names
+- missing, invalid, or non-IPv4 network CIDRs
+- more than one network attachment per instance
+- unknown instance network references
+- missing, invalid, out-of-CIDR, reserved, or duplicate instance network IPv4 addresses
+- empty provision packages
+- provision package names containing newlines
+- missing provision file sources or destinations
+- provision file sources or destinations containing newlines
+- invalid provision file permissions
+- empty provision shell commands
+
+## Out Of Scope For The v1 Config
+
+The following are not supported config fields in v1:
+
+- multiple private networks
+- bridge-mode network definitions
+- DHCP lab guest definitions
+- router, firewall, or appliance simulation fields
+- remote image registry definitions
+- remote template registry definitions
+- cloud worker placement fields
+- LabsBakery scenario scoring fields inside `yeast.yaml`

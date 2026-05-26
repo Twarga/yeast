@@ -252,6 +252,24 @@ func TestValidateRejectsInvalidProjectNetworkCIDR(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsMissingProjectNetworkCIDR(t *testing.T) {
+	cfg := validConfig()
+	cfg.Networks = []Network{{Name: "lab"}}
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected missing project network cidr error")
+	}
+}
+
+func TestValidateRejectsIPv6ProjectNetworkCIDR(t *testing.T) {
+	cfg := validConfig()
+	cfg.Networks = []Network{{Name: "lab", CIDR: "fd00::/64"}}
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected ipv6 project network cidr error")
+	}
+}
+
 func TestValidateRejectsUnknownInstanceNetwork(t *testing.T) {
 	cfg := validConfig()
 	cfg.Instances[0].Networks = []InstanceNetwork{{Name: "lab", IPv4: "10.10.10.10"}}
@@ -267,6 +285,22 @@ func TestValidateRejectsInvalidInstanceNetworkIPv4(t *testing.T) {
 
 	if err := Validate(cfg); err == nil {
 		t.Fatal("expected invalid instance network ipv4 error")
+	}
+}
+
+func TestValidateRejectsReservedInstanceNetworkIPv4(t *testing.T) {
+	tests := []string{"10.10.10.0", "10.10.10.255"}
+
+	for _, ip := range tests {
+		ip := ip
+		t.Run(ip, func(t *testing.T) {
+			cfg := validNetworkedConfig()
+			cfg.Instances[0].Networks[0].IPv4 = ip
+
+			if err := Validate(cfg); err == nil {
+				t.Fatalf("expected reserved instance network ipv4 error for %s", ip)
+			}
+		})
 	}
 }
 

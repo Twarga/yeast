@@ -4817,7 +4817,7 @@ Completion notes:
 
 ### V1.0-T3: Freeze config reference
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4830,6 +4830,14 @@ Definition of done:
 - current examples use only documented fields
 - invalid config tests cover important validation errors
 - docs clearly mark unsupported future fields as out of scope
+
+Completion notes:
+
+- Expanded `docs/config-reference.md` with a v1 full example covering networks, provisioning, env, defaults, and instance overrides.
+- Added required/type/default tables for top-level and instance fields.
+- Added explicit defaults, private lab networking, project network fields, instance network attachment fields, validation rules, and v1 out-of-scope config fields.
+- Removed stale `v0.3` provisioning wording from the reference.
+- Added validation tests for missing/IPv6 project network CIDR and reserved network/broadcast instance IPv4 values.
 
 ### V1.0-T4: Freeze JSON and event contract
 
