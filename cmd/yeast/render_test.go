@@ -347,6 +347,59 @@ func TestRenderCommandErrorJSON(t *testing.T) {
 	}
 }
 
+func TestEventSinkRequiresJSON(t *testing.T) {
+	previousJSON := outputJSON
+	previousEvents := outputEvents
+	outputJSON = false
+	outputEvents = true
+	defer func() {
+		outputJSON = previousJSON
+		outputEvents = previousEvents
+	}()
+
+	_, err := eventSink(&bytes.Buffer{})
+	if err == nil {
+		t.Fatal("expected --events without --json to fail")
+	}
+}
+
+func TestEventSinkRendersJSONLine(t *testing.T) {
+	previousJSON := outputJSON
+	previousEvents := outputEvents
+	outputJSON = true
+	outputEvents = true
+	defer func() {
+		outputJSON = previousJSON
+		outputEvents = previousEvents
+	}()
+
+	var buf bytes.Buffer
+	sink, err := eventSink(&buf)
+	if err != nil {
+		t.Fatalf("eventSink returned error: %v", err)
+	}
+	if sink == nil {
+		t.Fatal("expected event sink")
+	}
+
+	sink(app.NewEvent("up", app.EventSSHReady, app.EventOptions{
+		ProjectID: "proj_123",
+		Instance:  "web",
+	}))
+
+	lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
+	if len(lines) != 1 {
+		t.Fatalf("expected one json line, got %d: %q", len(lines), buf.String())
+	}
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(lines[0]), &payload); err != nil {
+		t.Fatalf("unmarshal event: %v", err)
+	}
+	if payload["type"] != "event" || payload["name"] != "ssh.ready" {
+		t.Fatalf("unexpected event payload: %#v", payload)
+	}
+}
+
 func TestWriteDocsIndex(t *testing.T) {
 	t.Parallel()
 

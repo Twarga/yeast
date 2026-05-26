@@ -19,6 +19,7 @@ type ProvisionOptions struct {
 	ProjectRoot      string
 	Target           string
 	ReadinessTimeout time.Duration
+	Events           EventSink
 }
 
 type ProvisionInstanceResult struct {
@@ -52,6 +53,10 @@ func (s *Service) Provision(ctx context.Context, options ProvisionOptions) (Prov
 		}
 		return ProvisionResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+	emitEvent(options.Events, "provision", EventProjectLoaded, EventOptions{
+		ProjectID: metadata.ID,
+		Message:   "Project metadata loaded",
+	})
 
 	yeastHome, err := s.resolveYeastHome()
 	if err != nil {
@@ -122,6 +127,11 @@ func (s *Service) Provision(ctx context.Context, options ProvisionOptions) (Prov
 	if err != nil {
 		return ProvisionResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("resolve provision plan for %s: %v", selectedName, err), err)
 	}
+	emitEvent(options.Events, "provision", EventProvisionStarted, EventOptions{
+		ProjectID: metadata.ID,
+		Instance:  selectedName,
+		Message:   "Provisioning started",
+	})
 
 	instanceState := selectedState
 	if instanceState.ProvisionLogPath == "" {
@@ -162,12 +172,25 @@ func (s *Service) Provision(ctx context.Context, options ProvisionOptions) (Prov
 		}
 		return ProvisionResult{}, WrapError(ErrorCodeProvisioning, fmt.Sprintf("provision instance %s: %v", selectedName, err), err)
 	}
+	emitEvent(options.Events, "provision", EventProvisionFinished, EventOptions{
+		ProjectID: metadata.ID,
+		Instance:  selectedName,
+		Message:   "Provisioning finished",
+		Data: map[string]any{
+			"status": string(instanceState.ProvisioningStatus),
+		},
+	})
 
 	currentState.Instances[selectedName] = instanceState
 	if err := state.Save(paths.StateFile, currentState); err != nil {
 		return ProvisionResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
+	emitEvent(options.Events, "provision", EventWorkflowCompleted, EventOptions{
+		ProjectID: metadata.ID,
+		Instance:  selectedName,
+		Message:   "Workflow completed",
+	})
 	return ProvisionResult{
 		ProjectID: metadata.ID,
 		Instance: ProvisionInstanceResult{

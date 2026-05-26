@@ -36,6 +36,7 @@ const (
 type UpOptions struct {
 	ProjectRoot      string
 	ReadinessTimeout time.Duration
+	Events           EventSink
 }
 
 type UpInstanceResult struct {
@@ -67,6 +68,10 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		}
 		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+	emitEvent(options.Events, "up", EventProjectLoaded, EventOptions{
+		ProjectID: metadata.ID,
+		Message:   "Project metadata loaded",
+	})
 
 	yeastHome, err := s.resolveYeastHome()
 	if err != nil {
@@ -93,6 +98,13 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		}
 		return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
 	}
+	emitEvent(options.Events, "up", EventConfigValidated, EventOptions{
+		ProjectID: metadata.ID,
+		Message:   "Config loaded and validated",
+		Data: map[string]any{
+			"instances": len(cfg.Instances),
+		},
+	})
 
 	currentState, err := state.Load(paths.StateFile, metadata.ID)
 	if err != nil {
@@ -144,6 +156,15 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			message := fmt.Sprintf("image %s not found in cache at %s: run `yeast pull %s`", image.Name, cachePaths.ImageFile, image.Name)
 			return UpResult{}, WrapError(ErrorCodeNotFound, message, err)
 		}
+		emitEvent(options.Events, "up", EventImageReady, EventOptions{
+			ProjectID: metadata.ID,
+			Instance:  instance.Name,
+			Message:   "Image is available",
+			Data: map[string]any{
+				"image": image.Name,
+				"path":  cachePaths.ImageFile,
+			},
+		})
 
 		runtimeDir, err := paths.InstanceDir(instance.Name)
 		if err != nil {
@@ -233,7 +254,20 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		if _, err := s.runtime.PrepareDisk(ctx, plan); err != nil {
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
+		emitEvent(options.Events, "up", EventDiskReady, EventOptions{
+			ProjectID: metadata.ID,
+			Instance:  instance.Name,
+			Message:   "Disk is ready",
+			Data: map[string]any{
+				"disk_path": plan.Disk.DiskPath,
+			},
+		})
 
+		emitEvent(options.Events, "up", EventVMStarting, EventOptions{
+			ProjectID: metadata.ID,
+			Instance:  instance.Name,
+			Message:   "Starting VM",
+		})
 		started, err := s.startWithManagementPortRetry(ctx, plan, sshPort, instance.Name)
 		if err != nil {
 			return UpResult{}, err
@@ -253,6 +287,15 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			message := fmt.Sprintf("wait for ssh readiness for %s: %v", instance.Name, err)
 			return UpResult{}, WrapError(ErrorCodePrecondition, message, err)
 		}
+		emitEvent(options.Events, "up", EventSSHReady, EventOptions{
+			ProjectID: metadata.ID,
+			Instance:  instance.Name,
+			Message:   "SSH is ready",
+			Data: map[string]any{
+				"ssh_address": address,
+				"ssh_port":    sshPort,
+			},
+		})
 
 		previousState, hadPreviousState := currentState.Instances[instance.Name]
 		instanceState := state.InstanceState{
@@ -282,6 +325,11 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			instanceState.ProvisioningStatus = state.ProvisioningStatusReady
 		} else {
 			instanceState.ProvisioningStatus = state.ProvisioningStatusRunning
+			emitEvent(options.Events, "up", EventProvisionStarted, EventOptions{
+				ProjectID: metadata.ID,
+				Instance:  instance.Name,
+				Message:   "Provisioning started",
+			})
 		}
 		currentState.Instances[instance.Name] = instanceState
 		if err := state.Save(paths.StateFile, currentState); err != nil {
@@ -304,6 +352,14 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			}
 			return UpResult{}, WrapError(ErrorCodeProvisioning, fmt.Sprintf("provision instance %s: %v", instance.Name, err), err)
 		}
+		emitEvent(options.Events, "up", EventProvisionFinished, EventOptions{
+			ProjectID: metadata.ID,
+			Instance:  instance.Name,
+			Message:   "Provisioning finished",
+			Data: map[string]any{
+				"status": string(instanceState.ProvisioningStatus),
+			},
+		})
 		currentState.Instances[instance.Name] = instanceState
 
 		result.Instances = append(result.Instances, UpInstanceResult{
@@ -311,6 +367,11 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			Status:     "running",
 			SSHAddress: address,
 			SSHPort:    sshPort,
+		})
+		emitEvent(options.Events, "up", EventInstanceReady, EventOptions{
+			ProjectID: metadata.ID,
+			Instance:  instance.Name,
+			Message:   "Instance is ready",
 		})
 	}
 
@@ -323,6 +384,10 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 
 	sort.Slice(result.Instances, func(i, j int) bool {
 		return result.Instances[i].Name < result.Instances[j].Name
+	})
+	emitEvent(options.Events, "up", EventWorkflowCompleted, EventOptions{
+		ProjectID: metadata.ID,
+		Message:   "Workflow completed",
 	})
 	return result, nil
 }

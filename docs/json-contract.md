@@ -241,6 +241,14 @@ The following fields are the first stable `yeast.v1` integration surface for Lab
 
 Lifecycle events use JSON Lines. Each event is one JSON object followed by a newline.
 
+Use `--json --events` to enable event streaming. `--events` is intentionally tied to JSON output so event lines are not mixed with human terminal rendering.
+
+Initial commands with event streaming:
+
+- `yeast up --json --events`
+- `yeast provision [instance] --json --events`
+- `yeast restore <instance> <name> --json --events`
+
 Event output uses this envelope:
 
 ```json

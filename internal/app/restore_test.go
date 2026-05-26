@@ -38,6 +38,39 @@ func TestRestoreReplacesStoppedInstanceDiskFromSnapshot(t *testing.T) {
 	}
 }
 
+func TestRestoreEmitsLifecycleEvents(t *testing.T) {
+	service, root, metadata, _ := newRestoreServiceWithStoppedSnapshot(t)
+
+	events := make([]Event, 0)
+	_, err := service.Restore(context.Background(), RestoreOptions{
+		ProjectRoot: root,
+		Target:      "web",
+		Name:        "clean",
+		Events: func(event Event) {
+			events = append(events, event)
+		},
+	})
+	if err != nil {
+		t.Fatalf("Restore returned error: %v", err)
+	}
+
+	got := eventNames(events)
+	want := []EventName{
+		EventProjectLoaded,
+		EventRestoreStarted,
+		EventRestoreFinished,
+		EventWorkflowCompleted,
+	}
+	if strings.Join(eventNamesToStrings(got), "\n") != strings.Join(eventNamesToStrings(want), "\n") {
+		t.Fatalf("unexpected events:\n got: %#v\nwant: %#v", got, want)
+	}
+	for _, event := range events {
+		if event.ProjectID != metadata.ID {
+			t.Fatalf("unexpected event project id: %#v", event)
+		}
+	}
+}
+
 func TestRestoreRequiresStoppedInstance(t *testing.T) {
 	service, root, metadata, _ := newRestoreServiceWithStoppedSnapshot(t)
 

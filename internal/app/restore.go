@@ -15,6 +15,7 @@ type RestoreOptions struct {
 	ProjectRoot string
 	Target      string
 	Name        string
+	Events      EventSink
 }
 
 type RestoreResult struct {
@@ -46,6 +47,10 @@ func (s *Service) Restore(ctx context.Context, options RestoreOptions) (RestoreR
 		}
 		return RestoreResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+	emitEvent(options.Events, "restore", EventProjectLoaded, EventOptions{
+		ProjectID: metadata.ID,
+		Message:   "Project metadata loaded",
+	})
 	yeastHome, err := s.resolveYeastHome()
 	if err != nil {
 		return RestoreResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
@@ -82,6 +87,15 @@ func (s *Service) Restore(ctx context.Context, options RestoreOptions) (RestoreR
 	}
 
 	diskPath := filepath.Join(instance.RuntimeDir, "disk.qcow2")
+	emitEvent(options.Events, "restore", EventRestoreStarted, EventOptions{
+		ProjectID: metadata.ID,
+		Instance:  options.Target,
+		Message:   "Restore started",
+		Data: map[string]any{
+			"snapshot":  options.Name,
+			"disk_path": diskPath,
+		},
+	})
 	if err := s.runtime.RestoreSnapshot(ctx, rtm.SnapshotPlan{
 		InstanceDiskPath: diskPath,
 		SnapshotPath:     snapshot.DiskPath,
@@ -94,6 +108,19 @@ func (s *Service) Restore(ctx context.Context, options RestoreOptions) (RestoreR
 		}
 		return RestoreResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+	emitEvent(options.Events, "restore", EventRestoreFinished, EventOptions{
+		ProjectID: metadata.ID,
+		Instance:  options.Target,
+		Message:   "Restore finished",
+		Data: map[string]any{
+			"snapshot": options.Name,
+		},
+	})
+	emitEvent(options.Events, "restore", EventWorkflowCompleted, EventOptions{
+		ProjectID: metadata.ID,
+		Instance:  options.Target,
+		Message:   "Workflow completed",
+	})
 
 	return RestoreResult{
 		ProjectID: metadata.ID,

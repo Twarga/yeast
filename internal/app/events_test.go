@@ -85,3 +85,19 @@ func TestNewEventBuildsStableEnvelope(t *testing.T) {
 		t.Fatalf("expected name ssh.ready in JSON, got %#v", payload)
 	}
 }
+
+func eventNames(events []Event) []EventName {
+	names := make([]EventName, 0, len(events))
+	for _, event := range events {
+		names = append(names, event.Name)
+	}
+	return names
+}
+
+func eventNamesToStrings(names []EventName) []string {
+	values := make([]string, 0, len(names))
+	for _, name := range names {
+		values = append(values, string(name))
+	}
+	return values
+}

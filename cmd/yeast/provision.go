@@ -18,7 +18,12 @@ func newProvisionCmd(service *app.Service) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			events, err := eventSink(cmd.OutOrStdout())
+			if err != nil {
+				return err
+			}
 			options := app.ProvisionOptions{}
+			options.Events = events
 			if len(args) == 1 {
 				options.Target = args[0]
 			}

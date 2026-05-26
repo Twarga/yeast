@@ -4495,7 +4495,7 @@ Completion notes:
 
 ### V0.8-T5: Add `--events` output path for long-running commands
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4506,6 +4506,14 @@ Definition of done:
 - `up`, `provision`, and `restore` can stream machine-readable events
 - events remain separate from human rendering
 - JSON/event behavior is tested
+
+Completion notes:
+
+- Added global `--events` flag.
+- Required `--events` to be used with `--json` so machine events do not mix with human output.
+- Wired JSON Lines events into `up`, `provision`, and `restore`.
+- Added CLI event sink tests and app-level provision/restore event emission tests.
+- Documented `--json --events` usage in `docs/json-contract.md`.
 
 ---
 

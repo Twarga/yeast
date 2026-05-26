@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"yeast/internal/app"
 	"yeast/internal/output"
 )
 
@@ -21,4 +22,16 @@ func renderCommandError(w io.Writer, err error) error {
 		return fmt.Errorf("render json error: %w", renderErr)
 	}
 	return nil
+}
+
+func eventSink(w io.Writer) (app.EventSink, error) {
+	if !outputEvents {
+		return nil, nil
+	}
+	if !outputJSON {
+		return nil, fmt.Errorf("--events requires --json")
+	}
+	return func(event app.Event) {
+		_ = output.RenderJSONEvent(w, event)
+	}, nil
 }

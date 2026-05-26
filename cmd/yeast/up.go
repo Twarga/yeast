@@ -12,7 +12,11 @@ func newUpCmd(service *app.Service) *cobra.Command {
 		Use:   "up",
 		Short: "Start the VMs described by the current project",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			result, err := service.Up(context.Background(), app.UpOptions{})
+			events, err := eventSink(cmd.OutOrStdout())
+			if err != nil {
+				return err
+			}
+			result, err := service.Up(context.Background(), app.UpOptions{Events: events})
 			if err != nil {
 				return err
 			}

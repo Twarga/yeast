@@ -39,6 +39,13 @@ type Event struct {
 
 type EventSink func(Event)
 
+func emitEvent(sink EventSink, command string, name EventName, options EventOptions) {
+	if sink == nil {
+		return
+	}
+	sink(NewEvent(command, name, options))
+}
+
 func NewEvent(command string, name EventName, options EventOptions) Event {
 	now := options.Now
 	if now.IsZero() {

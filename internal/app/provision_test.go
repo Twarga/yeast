@@ -114,6 +114,50 @@ func TestProvisionMarksFailureAndPreservesRunningInstance(t *testing.T) {
 	}
 }
 
+func TestProvisionEmitsLifecycleEvents(t *testing.T) {
+	service, root, metadata := newProvisionServiceWithRunningInstance(t)
+
+	service.provisionTransport = provssh.FakeTransport{
+		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
+			return provssh.RunResult{Stdout: "ok\n", ExitCode: 0, Duration: time.Millisecond}, nil
+		},
+		UploadFunc: func(ctx context.Context, request provssh.UploadRequest) error {
+			return nil
+		},
+	}
+
+	events := make([]Event, 0)
+	_, err := service.Provision(context.Background(), ProvisionOptions{
+		ProjectRoot: root,
+		Target:      "web",
+		Events: func(event Event) {
+			events = append(events, event)
+		},
+	})
+	if err != nil {
+		t.Fatalf("Provision returned error: %v", err)
+	}
+
+	got := eventNames(events)
+	want := []EventName{
+		EventProjectLoaded,
+		EventProvisionStarted,
+		EventProvisionFinished,
+		EventWorkflowCompleted,
+	}
+	if strings.Join(eventNamesToStrings(got), "\n") != strings.Join(eventNamesToStrings(want), "\n") {
+		t.Fatalf("unexpected events:\n got: %#v\nwant: %#v", got, want)
+	}
+	for _, event := range events {
+		if event.ProjectID != metadata.ID {
+			t.Fatalf("unexpected event project id: %#v", event)
+		}
+		if event.SchemaVersion != "yeast.v1" || event.Type != "event" {
+			t.Fatalf("unexpected event envelope: %#v", event)
+		}
+	}
+}
+
 func TestProvisionRequiresReachableRunningInstance(t *testing.T) {
 	service, root, _ := newProvisionServiceWithRunningInstance(t)
 	service.waitForTCP = func(ctx context.Context, options guest.ReadinessOptions) error {
