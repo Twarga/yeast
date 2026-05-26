@@ -24,6 +24,9 @@ func TestRenderJSONSuccess(t *testing.T) {
 	if got["ok"] != true {
 		t.Fatalf("expected ok=true, got %#v", got["ok"])
 	}
+	if got["schema_version"] != SchemaVersion {
+		t.Fatalf("unexpected schema_version: %#v", got["schema_version"])
+	}
 	if got["command"] != "version" {
 		t.Fatalf("unexpected command: %#v", got["command"])
 	}
@@ -44,6 +47,9 @@ func TestRenderJSONError(t *testing.T) {
 	}
 	if got["ok"] != false {
 		t.Fatalf("expected ok=false, got %#v", got["ok"])
+	}
+	if got["schema_version"] != SchemaVersion {
+		t.Fatalf("unexpected schema_version: %#v", got["schema_version"])
 	}
 	errorBody, ok := got["error"].(map[string]any)
 	if !ok {

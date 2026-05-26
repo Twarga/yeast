@@ -1,14 +1,18 @@
 package output
 
+const SchemaVersion = "yeast.v1"
+
 type SuccessEnvelope struct {
-	OK      bool   `json:"ok"`
-	Command string `json:"command"`
-	Data    any    `json:"data,omitempty"`
+	OK            bool   `json:"ok"`
+	SchemaVersion string `json:"schema_version"`
+	Command       string `json:"command"`
+	Data          any    `json:"data,omitempty"`
 }
 
 type ErrorEnvelope struct {
-	OK    bool      `json:"ok"`
-	Error ErrorBody `json:"error"`
+	OK            bool      `json:"ok"`
+	SchemaVersion string    `json:"schema_version"`
+	Error         ErrorBody `json:"error"`
 }
 
 type ErrorBody struct {

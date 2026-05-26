@@ -6,8 +6,9 @@ func TestSuccessEnvelopeDefaults(t *testing.T) {
 	t.Parallel()
 
 	envelope := SuccessEnvelope{
-		OK:      true,
-		Command: "up",
+		OK:            true,
+		SchemaVersion: SchemaVersion,
+		Command:       "up",
 		Data: map[string]any{
 			"project_id": "proj_123",
 		},
@@ -19,13 +20,17 @@ func TestSuccessEnvelopeDefaults(t *testing.T) {
 	if envelope.Command != "up" {
 		t.Fatalf("unexpected command: %q", envelope.Command)
 	}
+	if envelope.SchemaVersion != SchemaVersion {
+		t.Fatalf("unexpected schema version: %q", envelope.SchemaVersion)
+	}
 }
 
 func TestErrorEnvelopeDefaults(t *testing.T) {
 	t.Parallel()
 
 	envelope := ErrorEnvelope{
-		OK: false,
+		OK:            false,
+		SchemaVersion: SchemaVersion,
 		Error: ErrorBody{
 			Code:    "invalid_argument",
 			Message: "missing project root",
@@ -37,5 +42,8 @@ func TestErrorEnvelopeDefaults(t *testing.T) {
 	}
 	if envelope.Error.Code != "invalid_argument" {
 		t.Fatalf("unexpected code: %q", envelope.Error.Code)
+	}
+	if envelope.SchemaVersion != SchemaVersion {
+		t.Fatalf("unexpected schema version: %q", envelope.SchemaVersion)
 	}
 }

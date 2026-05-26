@@ -10,9 +10,10 @@ func RenderJSONSuccess(w io.Writer, command string, data any) error {
 	encoder := json.NewEncoder(w)
 	encoder.SetEscapeHTML(false)
 	return encoder.Encode(SuccessEnvelope{
-		OK:      true,
-		Command: command,
-		Data:    data,
+		OK:            true,
+		SchemaVersion: SchemaVersion,
+		Command:       command,
+		Data:          data,
 	})
 }
 
@@ -21,7 +22,8 @@ func RenderJSONError(w io.Writer, err error) error {
 	encoder := json.NewEncoder(w)
 	encoder.SetEscapeHTML(false)
 	return encoder.Encode(ErrorEnvelope{
-		OK: false,
+		OK:            false,
+		SchemaVersion: SchemaVersion,
 		Error: ErrorBody{
 			Code:    string(normalized.Code),
 			Message: normalized.Message,

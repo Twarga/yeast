@@ -4393,6 +4393,99 @@ Do not do in Yeast:
 
 ---
 
+# V0.8: Stable JSON And Events
+
+Goal:
+
+Make Yeast dependable as an engine for LabsBakery, Yeast MCP, scripts, and future UIs.
+
+## V0.8 Tasks
+
+### V0.8-T1: Add versioned JSON envelope
+
+Status: [x]
+
+Files:
+
+- `internal/output/schemas.go`
+- `internal/output/json.go`
+- `internal/output/json_test.go`
+- `internal/output/schemas_test.go`
+- `docs/json-contract.md`
+- `TASKS.md`
+
+Definition of done:
+
+- success JSON includes `schema_version`
+- error JSON includes `schema_version`
+- schema version value is centralized
+- tests lock the envelope field
+- docs describe the JSON contract
+
+Completion notes:
+
+- Added `output.SchemaVersion` with current value `yeast.v1`.
+- Added `schema_version` to success and error JSON envelopes.
+- Updated JSON envelope tests to assert the versioned contract.
+- Added `docs/json-contract.md` with the initial v0.8 JSON contract.
+
+### V0.8-T2: Document and harden standard error codes
+
+Status: [ ]
+
+Dependencies:
+
+- V0.8-T1
+
+Definition of done:
+
+- error codes are documented
+- app errors cover timeout/runtime/provisioning/guest categories where needed
+- tests verify representative command failures return expected codes
+
+### V0.8-T3: Lock command-specific JSON data shapes
+
+Status: [ ]
+
+Dependencies:
+
+- V0.8-T1
+
+Definition of done:
+
+- core command JSON outputs have tests for required fields
+- docs list stable fields for status, inspect, exec, copy, logs, snapshots, and template listing
+
+### V0.8-T4: Add lifecycle event model
+
+Status: [ ]
+
+Dependencies:
+
+- V0.8-T1
+
+Definition of done:
+
+- event envelope is defined
+- event names are documented
+- app workflows can emit events without coupling to human output
+
+### V0.8-T5: Add `--events` output path for long-running commands
+
+Status: [ ]
+
+Dependencies:
+
+- V0.8-T4
+
+Definition of done:
+
+- `up`, `provision`, and `restore` can stream machine-readable events
+- events remain separate from human rendering
+- JSON/event behavior is tested
+
+---
+
 # Final v0.1 Success State
 
 Yeast v2 v0.1 is complete when a fresh Linux user can:
