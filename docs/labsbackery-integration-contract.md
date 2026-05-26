@@ -236,6 +236,7 @@ Required fields:
 
 - `management_ip`
 - `ssh_port`
+- `user`
 - `name`
 
 Current default guest user:
@@ -244,7 +245,7 @@ Current default guest user:
 yeast
 ```
 
-Until Yeast exposes `user` in status/inspect JSON, LabsBakery should read the configured user from its baked `yeast.yaml` or template metadata.
+LabsBakery should use the `user` value from `status --json` or `inspect --json` when opening browser terminals.
 
 LabsBakery should not run `yeast ssh` for browser terminals because `yeast ssh` is an interactive human command. Use an SSH library or backend PTY bridge pointed at the host/port from Yeast JSON.
 
@@ -339,7 +340,6 @@ This target proves the full engine path without cloud hosting, auth, billing, ma
 
 These are possible Yeast improvements found by the contract. Add them only when they are generic engine improvements:
 
-- expose configured guest `user` in `status --json` and `inspect --json`
 - add project-level snapshot/reset helpers if per-instance reset becomes too repetitive
 - add event coverage for `down` and `destroy` if LabsBakery needs progress for those actions
 - document a first lab package/template folder convention

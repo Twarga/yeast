@@ -84,10 +84,10 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 			data: app.StatusResult{
 				ProjectID: "proj_123",
 				Instances: []app.StatusInstanceResult{
-					{Name: "web", Status: "running", SSHPort: 2222, LabIP: "10.10.10.10"},
+					{Name: "web", Status: "running", SSHPort: 2222, User: "yeast", LabIP: "10.10.10.10"},
 				},
 			},
-			requiredKeys: []string{"project_id", "instances", "instances.0.name", "instances.0.ssh_port", "instances.0.lab_ip"},
+			requiredKeys: []string{"project_id", "instances", "instances.0.name", "instances.0.ssh_port", "instances.0.user", "instances.0.lab_ip"},
 		},
 		{
 			name:    "provision",
@@ -146,6 +146,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 					Name:               "web",
 					Status:             "running",
 					SSHPort:            2222,
+					User:               "yeast",
 					LabIP:              "10.10.10.10",
 					RuntimeDir:         "/tmp/web",
 					ProvisionLogPath:   "/tmp/web/provision.log",
@@ -154,7 +155,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 				SnapshotNames: []string{"clean"},
 				SnapshotCount: 1,
 			},
-			requiredKeys: []string{"project_id", "instance", "instance.name", "instance.provisioning_status", "snapshot_names", "snapshot_count"},
+			requiredKeys: []string{"project_id", "instance", "instance.name", "instance.user", "instance.provisioning_status", "snapshot_names", "snapshot_count"},
 		},
 		{
 			name:    "logs",

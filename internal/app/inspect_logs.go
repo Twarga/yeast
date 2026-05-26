@@ -48,6 +48,7 @@ func (s *Service) Inspect(ctx context.Context, options InspectOptions) (InspectR
 			PID:                instance.PID,
 			ManagementIP:       instance.ManagementIP,
 			SSHPort:            instance.SSHPort,
+			User:               instance.User,
 			LabIP:              instance.LabIP,
 			RuntimeDir:         instance.RuntimeDir,
 			ProvisionLogPath:   instance.ProvisionLogPath,

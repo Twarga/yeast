@@ -153,6 +153,7 @@ func TestStatusIncludesConfiguredLabIP(t *testing.T) {
 		PID:          200,
 		ManagementIP: "127.0.0.1",
 		SSHPort:      2222,
+		User:         "yeast",
 		LabIP:        "10.10.10.10",
 	}
 	if err := state.Save(paths.StateFile, current); err != nil {
@@ -168,6 +169,9 @@ func TestStatusIncludesConfiguredLabIP(t *testing.T) {
 	}
 	if result.Instances[0].LabIP != "10.10.10.10" {
 		t.Fatalf("expected lab ip in status result, got %#v", result.Instances[0])
+	}
+	if result.Instances[0].User != "yeast" {
+		t.Fatalf("expected user in status result, got %#v", result.Instances[0])
 	}
 }
 

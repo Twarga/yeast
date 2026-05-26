@@ -21,6 +21,7 @@ type StatusInstanceResult struct {
 	PID                int                      `json:"pid"`
 	ManagementIP       string                   `json:"management_ip,omitempty"`
 	SSHPort            int                      `json:"ssh_port,omitempty"`
+	User               string                   `json:"user,omitempty"`
 	LabIP              string                   `json:"lab_ip,omitempty"`
 	RuntimeDir         string                   `json:"runtime_dir,omitempty"`
 	ProvisionLogPath   string                   `json:"provision_log_path,omitempty"`
@@ -96,6 +97,7 @@ func (s *Service) Status(ctx context.Context, options StatusOptions) (StatusResu
 			PID:                instance.PID,
 			ManagementIP:       instance.ManagementIP,
 			SSHPort:            instance.SSHPort,
+			User:               instance.User,
 			LabIP:              instance.LabIP,
 			RuntimeDir:         instance.RuntimeDir,
 			ProvisionLogPath:   instance.ProvisionLogPath,

@@ -26,6 +26,9 @@ func TestInspectReturnsInstanceDetailsAndSnapshots(t *testing.T) {
 	if result.Instance.Name != "web" || result.Instance.RuntimeDir != runtimeDir {
 		t.Fatalf("unexpected inspect instance: %#v", result.Instance)
 	}
+	if result.Instance.User != "yeast" {
+		t.Fatalf("expected inspect user yeast, got %#v", result.Instance)
+	}
 	if result.SnapshotCount != 2 {
 		t.Fatalf("unexpected snapshot count: %d", result.SnapshotCount)
 	}
@@ -152,6 +155,7 @@ func newInspectLogsServiceWithState(t *testing.T) (*Service, string, project.Met
 		PID:                4242,
 		SSHPort:            2205,
 		ManagementIP:       "127.0.0.1",
+		User:               "yeast",
 		LabIP:              "10.10.10.20",
 		RuntimeDir:         runtimeDir,
 		ProvisionLogPath:   filepath.Join(runtimeDir, "provision.log"),

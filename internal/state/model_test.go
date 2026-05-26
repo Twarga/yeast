@@ -13,6 +13,7 @@ func TestStateJSONRoundTrip(t *testing.T) {
 		PID:          1234,
 		ManagementIP: "127.0.0.1",
 		SSHPort:      2222,
+		User:         "yeast",
 		RuntimeDir:   "/home/twarga/.yeast/projects/proj_0123456789abcdef01234567/instances/web",
 		Snapshots: map[string]SnapshotState{
 			"clean": {
@@ -63,6 +64,9 @@ func TestStateJSONRoundTrip(t *testing.T) {
 	}
 	if instance.SSHPort != 2222 {
 		t.Fatalf("expected ssh port 2222, got %d", instance.SSHPort)
+	}
+	if instance.User != "yeast" {
+		t.Fatalf("expected user yeast, got %q", instance.User)
 	}
 	if instance.RuntimeDir == "" {
 		t.Fatal("expected runtime dir to survive round trip")

@@ -24,6 +24,7 @@ type InstanceState struct {
 	PID                int                      `json:"pid,omitempty"`
 	ManagementIP       string                   `json:"management_ip,omitempty"`
 	SSHPort            int                      `json:"ssh_port,omitempty"`
+	User               string                   `json:"user,omitempty"`
 	LabIP              string                   `json:"lab_ip,omitempty"`
 	RuntimeDir         string                   `json:"runtime_dir,omitempty"`
 	Snapshots          map[string]SnapshotState `json:"snapshots,omitempty"`

@@ -4596,7 +4596,7 @@ Completion notes:
 
 ### V0.9-T2: Expose guest user in status and inspect JSON
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4609,6 +4609,13 @@ Definition of done:
 - JSON contract docs include the new optional/stable field
 - tests lock the field names
 - manual smoke can assert terminal connection info without reading `yeast.yaml`
+
+Completion notes:
+
+- Added `user` to instance state and status/inspect result JSON.
+- Set `user` from the normalized instance config during `yeast up`.
+- Updated JSON contract docs and the LabsBakery integration contract terminal guidance.
+- Updated unit tests and manual smoke assertions for `status --json` and `inspect --json`.
 
 ### V0.9-T3: Add event coverage for stop/destroy workflows
 

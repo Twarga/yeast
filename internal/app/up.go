@@ -303,6 +303,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			PID:                started.PID,
 			ManagementIP:       defaultManagementHost,
 			SSHPort:            sshPort,
+			User:               instance.User,
 			RuntimeDir:         runtimeDir,
 			ProvisionLogPath:   filepath.Join(runtimeDir, "provision.log"),
 			ProvisioningStatus: state.ProvisioningStatusNotStarted,

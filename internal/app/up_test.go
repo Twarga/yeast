@@ -126,7 +126,7 @@ instances:
 		t.Fatalf("read state file: %v", err)
 	}
 	content := string(raw)
-	for _, want := range []string{`"status": "running"`, `"ssh_port": 2205`, `"runtime_dir": "`, `"provisioning_status": "provisioned"`, `"provision_log_path": "`} {
+	for _, want := range []string{`"status": "running"`, `"ssh_port": 2205`, `"user": "yeast"`, `"runtime_dir": "`, `"provisioning_status": "provisioned"`, `"provision_log_path": "`} {
 		if !strings.Contains(content, want) {
 			t.Fatalf("expected state content %q, got:\n%s", want, content)
 		}

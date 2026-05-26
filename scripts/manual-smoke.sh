@@ -543,6 +543,7 @@ run_positive_suite() {
   fi
   ok "status json reports ssh port ${PORT_VALUE}"
   assert_contains "${STATUS_JSON}" '"provisioning_status":"provisioned"' "status json reports provisioned state"
+  assert_contains "${STATUS_JSON}" "\"user\":\"${INSTANCE_USER}\"" "status json reports guest user"
   record_pass "Status JSON"
 
   local active_ssh_port="${INSTANCE_SSH_PORT}"
@@ -618,6 +619,9 @@ run_positive_suite() {
   fi
   if [[ "$(json_extract "data.instance.provisioning_status" "${INSPECT_JSON}")" != "provisioned" ]]; then
     fail "inspect json did not report provisioned status"
+  fi
+  if [[ "$(json_extract "data.instance.user" "${INSPECT_JSON}")" != "${INSTANCE_USER}" ]]; then
+    fail "inspect json did not report user ${INSTANCE_USER}"
   fi
   ok "inspect returns instance detail"
 
