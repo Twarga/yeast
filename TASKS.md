@@ -4715,6 +4715,256 @@ Completion notes:
 
 ---
 
+# V1.0: Stable Public Release
+
+Goal:
+
+Make Yeast stable enough for real users and dependent products to trust. v1.0 is not a feature-expansion milestone. It is a hardening, compatibility, documentation, release-quality, and end-to-end validation milestone for the core Yeast engine shipped across v0.1 through v0.9.
+
+Scope boundary:
+
+- Do not add Twarga Cloud.
+- Do not add a daemon or web API.
+- Do not add a LabsBakery web UI.
+- Do not add an AI/MCP server inside Yeast.
+- Do not add VirtualBox, Windows host support, or macOS host support.
+- Do not add a remote template registry.
+- Do not add advanced multi-network topology features beyond the current v0.5 model unless a v1-blocking bug is found.
+
+v1.0 should stabilize:
+
+- lifecycle commands
+- config schema
+- state behavior
+- provisioning behavior
+- snapshot/reset behavior
+- private lab networking behavior
+- guest control behavior
+- template behavior
+- JSON/events contract
+- examples
+- docs
+- installer and release artifacts
+
+## V1.0 Tasks
+
+### V1.0-T1: Audit v1 contract surface
+
+Status: [ ]
+
+Dependencies:
+
+- V0.9-T6
+
+Definition of done:
+
+- list all public CLI commands and flags that v1.0 promises to keep stable
+- list all public `yeast.yaml` fields that v1.0 promises to support
+- list all public JSON envelopes, data fields, error codes, and event names that v1.0 promises to keep stable
+- identify any current command, field, flag, or JSON shape that is too weak or inconsistent for v1.0
+- create or update one contract audit doc under `docs/`
+- do not change runtime behavior in this task unless only docs are wrong
+
+### V1.0-T2: Freeze command reference
+
+Status: [ ]
+
+Dependencies:
+
+- V1.0-T1
+
+Definition of done:
+
+- command reference exists and matches actual CLI behavior
+- every current command has purpose, syntax, flags, human behavior, JSON behavior, examples, and known limits
+- command reference includes:
+  - `doctor`
+  - `init`
+  - `pull`
+  - `up`
+  - `provision`
+  - `snapshot`
+  - `restore`
+  - `snapshots`
+  - `delete-snapshot`
+  - `status`
+  - `exec`
+  - `copy`
+  - `logs`
+  - `inspect`
+  - `ssh`
+  - `down`
+  - `destroy`
+  - `version`
+  - `docs`
+- tests or scripted checks verify command help still renders
+
+### V1.0-T3: Freeze config reference
+
+Status: [ ]
+
+Dependencies:
+
+- V1.0-T1
+
+Definition of done:
+
+- config reference documents every supported `yeast.yaml` field
+- config reference includes required/optional status, type, default, validation rule, and example
+- current examples use only documented fields
+- invalid config tests cover important validation errors
+- docs clearly mark unsupported future fields as out of scope
+
+### V1.0-T4: Freeze JSON and event contract
+
+Status: [ ]
+
+Dependencies:
+
+- V1.0-T1
+
+Definition of done:
+
+- `docs/json-contract.md` is complete enough for LabsBakery, scripts, and Yeast MCP
+- every JSON command output has documented fields
+- every standard error code is documented
+- every event name emitted by v1.0 workflows is documented
+- JSON compatibility guarantee is stated clearly
+- contract tests cover representative success and error envelopes
+
+### V1.0-T5: Harden installer and upgrade path
+
+Status: [ ]
+
+Dependencies:
+
+- V1.0-T1
+
+Definition of done:
+
+- installer installs latest stable release by default
+- installer supports explicit `YEAST_REF`
+- installer verifies required host dependencies
+- installer verifies downloaded or built binary version
+- installer behavior is documented for common Linux families
+- failure messages are actionable
+- shell syntax checks pass
+
+### V1.0-T6: Expand release smoke coverage
+
+Status: [ ]
+
+Dependencies:
+
+- V1.0-T1
+
+Definition of done:
+
+- manual smoke script covers the full current user loop
+- smoke modes are documented
+- smoke coverage includes:
+  - doctor
+  - init
+  - pull
+  - up
+  - status
+  - provisioning
+  - guest exec
+  - guest copy upload/download
+  - logs
+  - inspect
+  - snapshot
+  - restore
+  - private lab networking status
+  - template init
+  - LabsBakery example materialization
+  - down
+  - destroy
+  - negative JSON error cases
+- script stays optional for host-dependent VM checks
+
+### V1.0-T7: Run real-host v1 candidate validation
+
+Status: [ ]
+
+Dependencies:
+
+- V1.0-T2
+- V1.0-T3
+- V1.0-T4
+- V1.0-T5
+- V1.0-T6
+
+Definition of done:
+
+- run full automated Go test suite
+- run static checks
+- run installer path on the maintainer machine or documented supported Linux host
+- run full manual smoke on a real KVM host
+- run the Caddy example from template init through restore
+- run the two-VM lab example
+- run the LabsBakery attacker/target example at least through materialization and documented Yeast commands
+- record validation notes in a v1.0 release checklist doc
+
+### V1.0-T8: Refresh public docs and README for v1.0
+
+Status: [ ]
+
+Dependencies:
+
+- V1.0-T2
+- V1.0-T3
+- V1.0-T4
+- V1.0-T7
+
+Definition of done:
+
+- README current scope says v1.0
+- README quickstart is accurate for a new Linux user
+- README examples point to current examples
+- docs index links all important docs
+- known limitations are honest and current
+- LabsBakery integration docs reflect v1.0 as the minimum stable target
+- landing page content does not overpromise
+
+### V1.0-T9: Prepare v1.0 release notes and changelog
+
+Status: [ ]
+
+Dependencies:
+
+- V1.0-T8
+
+Definition of done:
+
+- `docs/release-notes-v1.0.0.md` exists
+- `CHANGELOG.md` contains v1.0.0 entry
+- release notes summarize the stable product, not only the last minor delta
+- release notes include install, upgrade, compatibility, limitations, and verification
+- release notes clearly state what remains out of scope
+
+### V1.0-T10: Build and publish v1.0.0
+
+Status: [ ]
+
+Dependencies:
+
+- V1.0-T9
+
+Definition of done:
+
+- build artifact created with version injection
+- binary reports `v1.0.0`
+- checksum verifies
+- final CI passes on `main`
+- tag `v1.0.0` exists
+- GitHub release exists
+- release assets include Linux amd64 binary and checksum
+- install command works against the released tag
+- `TASKS.md` records the release completion
+
+---
+
 # Final v0.1 Success State
 
 Yeast v2 v0.1 is complete when a fresh Linux user can:
