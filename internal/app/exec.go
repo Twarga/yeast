@@ -134,7 +134,7 @@ func (s *Service) Exec(ctx context.Context, options ExecOptions) (ExecResult, er
 		if runResult.ExitCode > 0 && runResult.ExitCode != 255 {
 			return result, nil
 		}
-		return ExecResult{}, WrapError(ErrorCodePrecondition, fmt.Sprintf("exec on instance %s: %v", selectedName, runErr), runErr)
+		return ExecResult{}, WrapError(ErrorCodeGuest, fmt.Sprintf("exec on instance %s: %v", selectedName, runErr), runErr)
 	}
 
 	return result, nil

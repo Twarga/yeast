@@ -170,7 +170,7 @@ func TestExecMarksTimeoutWithoutTransportErrorSurface(t *testing.T) {
 	}
 }
 
-func TestExecClassifiesTransportFailureAsPrecondition(t *testing.T) {
+func TestExecClassifiesTransportFailureAsGuestError(t *testing.T) {
 	root := t.TempDir()
 	yeastHome := filepath.Join(root, "yeast-home")
 
@@ -205,7 +205,7 @@ func TestExecClassifiesTransportFailureAsPrecondition(t *testing.T) {
 		GuestTargetOptions: GuestTargetOptions{ProjectRoot: root, Target: "web"},
 		Command:            []string{"whoami"},
 	})
-	assertAppErrorCode(t, err, ErrorCodePrecondition)
+	assertAppErrorCode(t, err, ErrorCodeGuest)
 }
 
 func TestExecRequiresCommand(t *testing.T) {

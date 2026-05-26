@@ -134,7 +134,7 @@ func (s *Service) Copy(ctx context.Context, options CopyOptions) (CopyResult, er
 	}
 	finishedAt := time.Now().UTC()
 	if err != nil {
-		return CopyResult{}, WrapError(ErrorCodePrecondition, fmt.Sprintf("copy on instance %s: %v", selectedName, err), err)
+		return CopyResult{}, WrapError(ErrorCodeGuest, fmt.Sprintf("copy on instance %s: %v", selectedName, err), err)
 	}
 
 	result := CopyResult{

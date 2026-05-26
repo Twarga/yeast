@@ -160,7 +160,7 @@ func TestCopyClassifiesTransportFailureAsPrecondition(t *testing.T) {
 		Destination:        "/tmp/site.txt",
 		Timeout:            time.Second,
 	})
-	assertAppErrorCode(t, err, ErrorCodePrecondition)
+	assertAppErrorCode(t, err, ErrorCodeGuest)
 }
 
 func prepareCopyProject(t *testing.T, service *Service, root, yeastHome string) {

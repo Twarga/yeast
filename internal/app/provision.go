@@ -160,7 +160,7 @@ func (s *Service) Provision(ctx context.Context, options ProvisionOptions) (Prov
 		if appErr.Code == ErrorCodeInternal {
 			return ProvisionResult{}, appErr
 		}
-		return ProvisionResult{}, WrapError(ErrorCodePrecondition, fmt.Sprintf("provision instance %s: %v", selectedName, err), err)
+		return ProvisionResult{}, WrapError(ErrorCodeProvisioning, fmt.Sprintf("provision instance %s: %v", selectedName, err), err)
 	}
 
 	currentState.Instances[selectedName] = instanceState

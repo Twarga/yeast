@@ -8,6 +8,10 @@ const (
 	ErrorCodeNotFound        ErrorCode = "not_found"
 	ErrorCodeConflict        ErrorCode = "conflict"
 	ErrorCodePrecondition    ErrorCode = "failed_precondition"
+	ErrorCodeTimeout         ErrorCode = "timeout"
+	ErrorCodeRuntime         ErrorCode = "runtime_error"
+	ErrorCodeProvisioning    ErrorCode = "provisioning_failed"
+	ErrorCodeGuest           ErrorCode = "guest_error"
 	ErrorCodeInternal        ErrorCode = "internal"
 )
 

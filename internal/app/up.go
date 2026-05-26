@@ -302,7 +302,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			if appErr.Code == ErrorCodeInternal {
 				return UpResult{}, appErr
 			}
-			return UpResult{}, WrapError(ErrorCodePrecondition, fmt.Sprintf("provision instance %s: %v", instance.Name, err), err)
+			return UpResult{}, WrapError(ErrorCodeProvisioning, fmt.Sprintf("provision instance %s: %v", instance.Name, err), err)
 		}
 		currentState.Instances[instance.Name] = instanceState
 

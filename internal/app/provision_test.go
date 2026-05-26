@@ -96,7 +96,7 @@ func TestProvisionMarksFailureAndPreservesRunningInstance(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected provisioning failure")
 	}
-	assertAppErrorCode(t, err, ErrorCodePrecondition)
+	assertAppErrorCode(t, err, ErrorCodeProvisioning)
 
 	loaded, err := state.Load(filepath.Join(root, "yeast-home", "projects", metadata.ID, "state.json"), metadata.ID)
 	if err != nil {

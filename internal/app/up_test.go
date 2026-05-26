@@ -447,7 +447,7 @@ instances:
 	if err == nil {
 		t.Fatal("expected provisioning failure")
 	}
-	assertAppErrorCode(t, err, ErrorCodePrecondition)
+	assertAppErrorCode(t, err, ErrorCodeProvisioning)
 	if fake.stopCalls != 0 {
 		t.Fatalf("expected instance to remain running after provisioning failure, got %d stop calls", fake.stopCalls)
 	}

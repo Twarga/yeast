@@ -75,10 +75,25 @@ Current codes:
 - `not_found`
 - `conflict`
 - `failed_precondition`
+- `timeout`
+- `runtime_error`
+- `provisioning_failed`
+- `guest_error`
 - `internal`
 - `unknown`
 
-More specific v0.8 codes may be added for timeouts, runtime failures, provisioning failures, and guest operation failures.
+Meanings:
+
+- `invalid_argument`: user input, flags, config, or command arguments are invalid.
+- `not_found`: a requested image, instance, template, snapshot, file, or log is missing.
+- `conflict`: the requested action conflicts with existing state.
+- `failed_precondition`: the project, host, instance, or state is not ready for the action.
+- `timeout`: an operation exceeded its configured or default timeout.
+- `runtime_error`: the VM runtime failed while preparing, starting, stopping, snapshotting, or destroying infrastructure.
+- `provisioning_failed`: provisioning ran but failed.
+- `guest_error`: an operation inside or against a guest failed, such as SSH exec or file copy.
+- `internal`: Yeast hit an unexpected internal failure.
+- `unknown`: a non-Yeast error reached the JSON renderer without classification.
 
 ## Compatibility Rule
 

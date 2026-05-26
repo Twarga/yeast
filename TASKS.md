@@ -4431,7 +4431,7 @@ Completion notes:
 
 ### V0.8-T2: Document and harden standard error codes
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4442,6 +4442,14 @@ Definition of done:
 - error codes are documented
 - app errors cover timeout/runtime/provisioning/guest categories where needed
 - tests verify representative command failures return expected codes
+
+Completion notes:
+
+- Added stable error code constants for `timeout`, `runtime_error`, `provisioning_failed`, and `guest_error`.
+- Locked error code string values with tests.
+- Classified failed guest exec/copy operations as `guest_error`.
+- Classified failed provisioning from `yeast provision` and `yeast up` as `provisioning_failed`.
+- Expanded `docs/json-contract.md` with the current error code catalog and meanings.
 
 ### V0.8-T3: Lock command-specific JSON data shapes
 

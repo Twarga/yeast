@@ -5,6 +5,29 @@ import (
 	"testing"
 )
 
+func TestErrorCodeValuesAreStable(t *testing.T) {
+	t.Parallel()
+
+	tests := map[ErrorCode]string{
+		ErrorCodeUnknown:         "unknown",
+		ErrorCodeInvalidArgument: "invalid_argument",
+		ErrorCodeNotFound:        "not_found",
+		ErrorCodeConflict:        "conflict",
+		ErrorCodePrecondition:    "failed_precondition",
+		ErrorCodeTimeout:         "timeout",
+		ErrorCodeRuntime:         "runtime_error",
+		ErrorCodeProvisioning:    "provisioning_failed",
+		ErrorCodeGuest:           "guest_error",
+		ErrorCodeInternal:        "internal",
+	}
+
+	for code, want := range tests {
+		if string(code) != want {
+			t.Fatalf("unexpected value for %s: got %q want %q", want, code, want)
+		}
+	}
+}
+
 func TestWrapErrorPreservesCodeAndCause(t *testing.T) {
 	t.Parallel()
 
