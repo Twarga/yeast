@@ -4302,7 +4302,7 @@ Completion notes:
 
 ### V0.7-T6: Add template docs and smoke coverage
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4323,6 +4323,14 @@ Definition of done:
 - smoke test proves at least one built-in template can initialize and run
 - docs explain local template shape
 - limitations explain deferred remote template behavior
+
+Completion notes:
+
+- Updated README, quickstart, config reference, manual test docs, and embedded terminal docs for v0.7 templates.
+- Added smoke coverage for `yeast init --list-templates`.
+- Updated the positive smoke path so the real Caddy VM flow starts from `yeast init --template caddy-single-vm`.
+- Added negative smoke coverage for missing template names returning `not_found`.
+- Verified the positive host smoke path through template init, Caddy provisioning, guest control, snapshot/restore, and two-VM networking.
 
 ### V0.7-T7: Add v0.7 release notes
 

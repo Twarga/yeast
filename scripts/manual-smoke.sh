@@ -69,6 +69,7 @@ RESULTS=()
 PORT_VALUE=""
 POSITIVE_DIR="${WORKDIR}/happy-path"
 NETWORK_DIR="${WORKDIR}/network-path"
+TEMPLATE_DIR="${WORKDIR}/template-path"
 NEGATIVE_ROOT="${WORKDIR}/negative-cases"
 
 section() {
@@ -479,6 +480,31 @@ PY
   sed -n 's/.*"id":"\([^"]*\)".*/\1/p' "${dir}/.yeast/project.json" | head -n1
 }
 
+run_template_suite() {
+  section "List built-in templates"
+  TEMPLATE_LIST_JSON="$("${BIN_PATH}" init --list-templates --json)"
+  printf "%s\n" "${TEMPLATE_LIST_JSON}"
+  assert_contains "${TEMPLATE_LIST_JSON}" '"Name":"ubuntu-basic"' "template list includes ubuntu-basic"
+  assert_contains "${TEMPLATE_LIST_JSON}" '"Name":"caddy-single-vm"' "template list includes caddy-single-vm"
+  assert_contains "${TEMPLATE_LIST_JSON}" '"Name":"two-vm-lab"' "template list includes two-vm-lab"
+  record_pass "List built-in templates"
+
+  section "Initialize built-in Caddy template"
+  rm -rf "${TEMPLATE_DIR}"
+  mkdir -p "${TEMPLATE_DIR}"
+  cd "${TEMPLATE_DIR}"
+  "${BIN_PATH}" init --template caddy-single-vm
+  for generated_file in yeast.yaml README.md site/Caddyfile site/index.html .yeast/project.json; do
+    if [[ ! -f "${TEMPLATE_DIR}/${generated_file}" ]]; then
+      fail "expected template file ${generated_file}"
+    fi
+  done
+  ok "template generated expected project files"
+  assert_contains "$(cat "${TEMPLATE_DIR}/yeast.yaml")" "caddy" "template config includes caddy provisioning"
+  assert_contains "$(cat "${TEMPLATE_DIR}/README.md")" "yeast init --template caddy-single-vm" "template README documents template init"
+  record_pass "Initialize built-in Caddy template"
+}
+
 run_positive_suite() {
   section "Prepare clean project"
   rm -rf "${POSITIVE_DIR}"
@@ -486,17 +512,14 @@ run_positive_suite() {
   cd "${POSITIVE_DIR}"
   ok "using ${POSITIVE_DIR}"
 
-  run_capture "Init" "${BIN_PATH}" init
-
-  section "Prepare Caddy example"
-  prepare_caddy_example "${POSITIVE_DIR}"
-  ok "copied example site assets"
-  record_pass "Prepare Caddy example"
-
-  section "Write v0.4.0 config"
-  write_config "${POSITIVE_DIR}"
+  run_capture "Init Caddy template" "${BIN_PATH}" init --template caddy-single-vm
+  if [[ "${INSTANCE_SSH_PORT}" != "2205" ]]; then
+    rewrite_ssh_port "${POSITIVE_DIR}" "${INSTANCE_SSH_PORT}"
+  fi
+  section "Generated v0.7.0 template config"
   cat "${POSITIVE_DIR}/yeast.yaml"
-  record_pass "Write config"
+  assert_contains "$(cat "${POSITIVE_DIR}/yeast.yaml")" "caddy" "generated template config includes caddy"
+  record_pass "Generated template config"
 
   run_capture "Pull image" "${BIN_PATH}" pull "${IMAGE_NAME}"
   run_capture "Start VM" "${BIN_PATH}" up
@@ -797,6 +820,10 @@ run_negative_suite() {
   run_expect_json_error "Pull rejects unsupported image" "invalid_argument" \
     "${BIN_PATH}" pull does-not-exist --json
 
+  dir="$(new_case_dir "init-missing-template")"
+  run_expect_json_error_in_dir "Init rejects missing template" "not_found" \
+    "${dir}" "${BIN_PATH}" init --template does-not-exist --json
+
   dir="$(new_case_dir "status-corrupt-metadata")"
   init_case_project "${dir}"
   write_file "${dir}/.yeast/project.json" '{"id":'
@@ -970,6 +997,7 @@ rm -rf "${WORKDIR}"
 mkdir -p "${WORKDIR}"
 
 if [[ "${TEST_MODE}" == "full" || "${TEST_MODE}" == "positive" ]]; then
+  run_template_suite
   run_positive_suite
   run_network_suite
 fi

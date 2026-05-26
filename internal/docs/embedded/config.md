@@ -1,6 +1,6 @@
 # Yeast Config
 
-Default v0.1 config:
+Minimal config:
 
 ```yaml
 version: 1
@@ -11,13 +11,24 @@ instances:
     cpus: 1
 ```
 
-Current v0.1 fields:
+Common fields:
 
 - `version`
 - `instances[].name`
 - `instances[].image`
 - `instances[].memory`
 - `instances[].cpus`
+- `instances[].disk_size`
+- `instances[].ssh_port`
+- `provision`
+- `networks`
+
+Templates are project starters, not a separate config schema:
+
+```bash
+yeast init --list-templates
+yeast init --template caddy-single-vm
+```
 
 Current supported images:
 

@@ -38,7 +38,7 @@ instances:
 |---|---:|---|
 | `version` | yes | Config schema version. Must be `1`. |
 | `instances` | yes | List of VMs in the project. Must contain at least one instance. |
-| `networks` | no | Reserved for future networking milestones. Not active in `v0.3`. |
+| `networks` | no | One project-level private lab network for current v0.5+ networking. |
 | `provision` | no | Provisioning config shared across instances. Runs before instance-level provisioning during `yeast up` and `yeast provision`. |
 
 ## Instance Fields
@@ -56,7 +56,7 @@ instances:
 | `sudo` | no | `none` | Sudo policy: `none`, `password`, or `nopasswd`. |
 | `env` | no | empty | Environment values rendered into the guest profile script. |
 | `user_data` | no | empty | Raw cloud-init user-data override. |
-| `networks` | no | empty | Reserved for future networking milestones. |
+| `networks` | no | empty | Per-instance attachment to the current project lab network. |
 | `provision` | no | empty | Instance-specific provisioning config. Runs after top-level provisioning during `yeast up` and `yeast provision`. |
 
 ## Supported Images
@@ -220,6 +220,51 @@ Idempotency expectations:
 - shell commands always run, so write them to be safe on reruns
 
 File source paths are resolved relative to the project root when they are not absolute.
+
+## Templates
+
+Templates are not a separate config schema. They are starter project directories copied by `yeast init`.
+
+List built-in templates:
+
+```bash
+yeast init --list-templates
+```
+
+Initialize from a built-in template:
+
+```bash
+yeast init --template caddy-single-vm
+```
+
+Initialize from a local template directory:
+
+```bash
+yeast init --template ../my-template
+```
+
+Current local template shape:
+
+```text
+template.yaml
+yeast.yaml
+optional-project-files/
+```
+
+`template.yaml` describes the starter:
+
+```yaml
+name: my-template
+title: My Template
+description: Reusable Yeast starter.
+category: app
+version: "1"
+files:
+  - yeast.yaml
+  - README.md
+```
+
+The listed files are copied into the new project. After initialization, generated files are normal editable project files.
 
 ## Sudo Modes
 

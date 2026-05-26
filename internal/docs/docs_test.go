@@ -39,7 +39,7 @@ func TestRenderWritesMarkdownForNonTerminal(t *testing.T) {
 	if err := Render(&buf, "tutorial-test"); err != nil {
 		t.Fatalf("Render returned error: %v", err)
 	}
-	if !strings.Contains(buf.String(), "# Yeast v0.1.0 Manual Test") {
+	if !strings.Contains(buf.String(), "# Yeast Manual Test") {
 		t.Fatalf("expected raw markdown output, got %q", buf.String())
 	}
 }

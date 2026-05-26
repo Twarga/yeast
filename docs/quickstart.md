@@ -1,8 +1,8 @@
 # Yeast Quickstart
 
-This guide gets one Ubuntu VM running with Yeast `v0.6`, shows the provisioning and stopped-VM reset flow, proves the first guest-control commands, and then points to the first two-VM private lab example.
+This guide gets one Ubuntu VM running with Yeast `v0.7`, shows the provisioning and stopped-VM reset flow, proves the first guest-control commands, and then points to the first two-VM private lab template.
 
-Yeast is still Linux-first and QEMU/KVM-first. `v0.6` keeps the narrow `v0.5` private lab network and adds the first SSH-backed guest-control commands: `exec`, `copy`, `logs`, and `inspect`.
+Yeast is still Linux-first and QEMU/KVM-first. `v0.7` keeps the narrow `v0.6` VM engine and adds project starters through `yeast init --template`.
 
 ## 1. Check The Host
 
@@ -39,7 +39,37 @@ This creates:
 
 The project metadata gives this folder a stable project ID. Runtime files are stored under `~/.yeast/projects/<project-id>/`.
 
-## 3. Pull A Trusted Image
+## 3. Or Start From A Template
+
+List built-in templates:
+
+```bash
+yeast init --list-templates
+```
+
+Create a Caddy project from a built-in template:
+
+```bash
+mkdir yeast-caddy-demo
+cd yeast-caddy-demo
+yeast init --template caddy-single-vm
+```
+
+Current built-ins:
+
+- `ubuntu-basic`
+- `caddy-single-vm`
+- `two-vm-lab`
+
+You can also initialize from a local template directory:
+
+```bash
+yeast init --template ../my-template
+```
+
+Templates are project starters. After initialization, `yeast.yaml` and generated files are normal editable project files.
+
+## 4. Pull A Trusted Image
 
 List supported images:
 
@@ -55,7 +85,7 @@ yeast pull ubuntu-24.04
 
 Yeast downloads the image into the shared image cache and verifies its SHA-256 checksum before storing it.
 
-## 4. Start The VM
+## 5. Start The VM
 
 ```bash
 yeast up
@@ -74,7 +104,7 @@ Yeast will:
 - run post-boot provisioning when the config contains `provision`
 - save runtime state
 
-## 5. Check Status
+## 6. Check Status
 
 ```bash
 yeast status
@@ -86,7 +116,7 @@ For scripts:
 yeast status --json
 ```
 
-## 6. SSH Into The VM
+## 7. SSH Into The VM
 
 ```bash
 yeast ssh web
@@ -94,7 +124,7 @@ yeast ssh web
 
 If the project has exactly one running VM, `yeast ssh` can be run without an instance name.
 
-## 7. Rerun Provisioning
+## 8. Rerun Provisioning
 
 If you edit provisioned files or shell commands and want to apply them again without recreating the VM:
 
@@ -108,7 +138,7 @@ yeast provision web
 - reruns the same merged project-level and instance-level plan as `yeast up`
 - does not recreate disks or reboot the guest by itself
 
-## 8. Stop The VM
+## 9. Stop The VM
 
 ```bash
 yeast down
@@ -116,7 +146,7 @@ yeast down
 
 This stops tracked running VMs but keeps runtime files and disks.
 
-## 9. Create A Snapshot
+## 10. Create A Snapshot
 
 Snapshots in `v0.4` are stopped-VM only. Create the baseline after provisioning has finished and the VM is stopped.
 
@@ -127,7 +157,7 @@ yeast snapshots web
 
 This stores a snapshot copy under the project runtime directory and records metadata in state.
 
-## 10. Restore A Snapshot
+## 11. Restore A Snapshot
 
 Bring the VM back up, change something, stop it again, then restore:
 
@@ -146,7 +176,7 @@ After restore, boot the VM again:
 yeast up
 ```
 
-## 11. Delete A Snapshot
+## 12. Delete A Snapshot
 
 When you no longer need the stored baseline:
 
@@ -155,7 +185,7 @@ yeast down
 yeast delete-snapshot web clean
 ```
 
-## 12. First Guest-Control Commands
+## 13. First Guest-Control Commands
 
 Run one command inside the guest:
 
@@ -189,12 +219,14 @@ yeast logs web --tail 20
 
 `yeast ssh` is still the interactive terminal flow. The new `v0.6` commands are for one-shot operations and structured automation.
 
-## 13. First Two-VM Private Lab
+## 14. First Two-VM Private Lab
 
-The first `v0.5+` networking example is:
+The first private networking template is:
 
-```text
-examples/two-vm-lab
+```bash
+mkdir yeast-two-vm-lab
+cd yeast-two-vm-lab
+yeast init --template two-vm-lab
 ```
 
 It shows:
@@ -214,7 +246,7 @@ ip addr show yeastlab0
 ping -c 2 10.10.10.20
 ```
 
-## 14. Destroy Runtime Files
+## 15. Destroy Runtime Files
 
 ```bash
 yeast destroy

@@ -1,14 +1,14 @@
-# Yeast v0.1.0 Manual Test
+# Yeast Manual Test
 
 Run this as a real client-side test:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.1.0/install.sh | YEAST_REF=v0.1.0 bash
 yeast version
 yeast doctor
-mkdir -p ~/yeast-v010-test
-cd ~/yeast-v010-test
-yeast init
+mkdir -p ~/yeast-template-test
+cd ~/yeast-template-test
+yeast init --list-templates
+yeast init --template ubuntu-basic
 yeast pull ubuntu-24.04
 yeast up
 yeast status
@@ -21,8 +21,8 @@ yeast destroy
 
 Pass criteria:
 
-- version is `v0.1.0`
 - doctor passes blockers
+- templates list successfully
 - Ubuntu image verifies
 - VM becomes reachable by SSH
 - `down` stops the VM

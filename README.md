@@ -15,7 +15,7 @@ Fast project-based virtual machines with cloud-init, trusted base images, post-b
 ![Go](https://img.shields.io/badge/go-1.25+-cyan.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 ![Runtime](https://img.shields.io/badge/runtime-QEMU%2FKVM-6f42c1.svg)
-![State](https://img.shields.io/badge/status-v0.6%20in%20progress-8a6d3b.svg)
+![State](https://img.shields.io/badge/status-v0.7%20templates-8a6d3b.svg)
 
 [Website](https://twarga.github.io/yeast/) · [Quick Start](#quick-start) · [Current Scope](#current-scope) · [Commands](#commands) · [Examples](#examples) · [Architecture](#architecture) · [Limits](#current-limits)
 
@@ -48,9 +48,9 @@ The important constraint is still simple: **keep the core small and reliable bef
 
 ## Current Scope
 
-Yeast `v0.6` is still intentionally narrow. It now covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, and operate inside the guest through a first SSH-backed control surface.
+Yeast `v0.7` is still intentionally narrow. It now covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, operate inside the guest through a first SSH-backed control surface, and start new projects from built-in or local templates.
 
-| Area | v0.6 status |
+| Area | v0.7 status |
 |---|---|
 | Host support | Linux only |
 | Runtime | QEMU + KVM |
@@ -64,12 +64,15 @@ Yeast `v0.6` is still intentionally narrow. It now covers one complete loop: boo
 | Reset | Stopped-VM snapshot, list, restore, and delete |
 | Private networking | One project-level lab network with static per-instance IPv4 |
 | Guest control | `exec`, `copy`, `logs`, and `inspect` |
+| Templates | Built-in `ubuntu-basic`, `caddy-single-vm`, and `two-vm-lab`; local template directories |
 | Examples | Single-VM Ubuntu, Caddy provisioning/reset, and first two-VM lab example |
 
 ### What works now
 
 - `yeast doctor`
 - `yeast init`
+- `yeast init --list-templates`
+- `yeast init --template <name-or-path>`
 - `yeast pull --list`
 - `yeast pull <image>`
 - `yeast up`
@@ -91,9 +94,10 @@ Yeast `v0.6` is still intentionally narrow. It now covers one complete loop: boo
 - `yeast version`
 - first private lab network with per-instance `LAB IP`
 
-### What is not in v0.6 yet
+### What is not in v0.7 yet
 
-- templates
+- remote template downloads or registry search/update
+- complex template variables
 - daemon or web API
 - Twarga Cloud features
 - multiple private networks
@@ -165,7 +169,14 @@ cd my-lab
 yeast init
 ```
 
-Default starter config:
+Or start from a built-in template:
+
+```bash
+yeast init --list-templates
+yeast init --template caddy-single-vm
+```
+
+Default starter config without a template:
 
 ```yaml
 version: 1
@@ -350,6 +361,8 @@ Then log out and back in before your first `yeast up`.
 |---|---|
 | `yeast doctor` | Check host readiness |
 | `yeast init` | Create `yeast.yaml` and project metadata |
+| `yeast init --list-templates` | List built-in project templates |
+| `yeast init --template <name-or-path>` | Create a project from a built-in or local template |
 | `yeast pull --list` | List supported trusted images |
 | `yeast pull <image>` | Download a trusted base image |
 | `yeast up` | Start all instances in the project |
@@ -393,7 +406,7 @@ yeast status --json
 
 ## Config
 
-Current `v0.6` example:
+Current `v0.7` example:
 
 ```yaml
 version: 1
@@ -437,21 +450,32 @@ instances:
 - file provision `source` paths are resolved relative to the project root unless they are absolute
 - one project-level private lab `networks` block is active in `v0.5+`
 - guest-control commands in `v0.6` are SSH-backed only and operate on one selected instance at a time
+- templates are project starters only; after `yeast init --template`, the generated files are normal editable project files
 
 ---
 
 ## Examples
 
-Current repo example:
+Built-in templates:
+
+```bash
+yeast init --list-templates
+yeast init --template ubuntu-basic
+yeast init --template caddy-single-vm
+yeast init --template two-vm-lab
+```
+
+Current repo examples:
 
 - [examples/ubuntu-basic](examples/ubuntu-basic/README.md)
 - [examples/caddy-single-vm](examples/caddy-single-vm/README.md)
+- [examples/two-vm-lab](examples/two-vm-lab/README.md)
 
-The examples are intentionally small:
+The templates and examples are intentionally small:
 
 - `ubuntu-basic` keeps the lifecycle-only path minimal
-- `caddy-single-vm` shows `v0.3` provisioning with packages, files, and shell
-- neither example covers networking topology or snapshots
+- `caddy-single-vm` shows provisioning with packages, files, and shell
+- `two-vm-lab` shows the first private lab network
 
 They exist to prove the current shipped paths cleanly.
 

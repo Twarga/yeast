@@ -1,6 +1,6 @@
-# Yeast v0.6.0 Manual Test Tutorial
+# Yeast v0.7.0 Manual Test Tutorial
 
-This is the real host manual test for the current `v0.6.0` candidate.
+This is the real host manual test for the current `v0.7.0` candidate.
 
 It assumes:
 
@@ -9,6 +9,7 @@ It assumes:
 - you want to validate both:
   - the single-VM provisioning/reset loop
   - the first two-VM private lab network
+  - built-in template listing and initialization
 
 Use the built binary directly:
 
@@ -28,6 +29,8 @@ TEST_MODE=full ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
 
 That script now proves:
 
+- `yeast init --list-templates`
+- `yeast init --template caddy-single-vm`
 - lifecycle path
 - `disk_size`, `hostname`, and `ssh_port`
 - provisioning during `yeast up`
@@ -45,6 +48,7 @@ That script now proves:
   - bad project/state
   - invalid network CIDR/IP/reference
   - duplicate private lab IPs
+  - missing templates
 
 ### Smoke Script Modes
 
@@ -58,10 +62,12 @@ TEST_MODE=negative ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
 - `positive`: only the real VM and lab workflows
 - `negative`: only error-path contract checks
 
-## What v0.6.0 Proves
+## What v0.7.0 Proves
 
 This candidate can now:
 
+- list built-in templates
+- initialize a normal editable project from a built-in template
 - boot and manage real QEMU/KVM guests
 - provision them after SSH readiness
 - snapshot and restore a stopped VM
@@ -75,21 +81,31 @@ This candidate can now:
 
 This still does not prove:
 
+- remote template downloads
+- template registries
+- complex template variables
 - bridge mode
 - DHCP
 - multiple private networks
 - multi-network topology editing
-- guest `exec` / `copy` / `logs`
 - LabsBackery / MCP / cloud worker flows
 
 ## Manual Flow
 
 If you want to run the same logic by hand instead of the smoke script, use these two reference examples:
 
-- `examples/caddy-single-vm`
-- `examples/two-vm-lab`
+- `yeast init --template caddy-single-vm`
+- `yeast init --template two-vm-lab`
 
 ### Single-VM flow
+
+Create the project:
+
+```fish
+mkdir -p /tmp/yeast-caddy-template-test
+cd /tmp/yeast-caddy-template-test
+yeast init --template caddy-single-vm
+```
 
 Run:
 
@@ -124,13 +140,15 @@ Then validate:
 
 ### Two-VM lab flow
 
-Use the example:
+Create the project:
 
-```text
-examples/two-vm-lab
+```fish
+mkdir -p /tmp/yeast-two-vm-template-test
+cd /tmp/yeast-two-vm-template-test
+yeast init --template two-vm-lab
 ```
 
-Start it:
+Then start it:
 
 ```fish
 yeast up
@@ -168,8 +186,9 @@ What this proves:
 
 ## Pass Criteria
 
-Call `v0.6.0` ready only if all of these hold:
+Call `v0.7.0` ready only if all of these hold:
 
+- template list/init smoke passes
 - single-VM provisioning/reset smoke passes
 - guest-control smoke passes for exec/copy/logs/inspect
 - two-VM private lab smoke passes

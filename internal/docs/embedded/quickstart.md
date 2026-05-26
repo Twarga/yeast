@@ -1,6 +1,6 @@
 # Yeast Quickstart
 
-Yeast v0.1 is Linux-first and QEMU/KVM-first.
+Yeast is Linux-first and QEMU/KVM-first.
 
 Core flow:
 
@@ -8,7 +8,7 @@ Core flow:
 yeast doctor
 mkdir yeast-ubuntu-basic
 cd yeast-ubuntu-basic
-yeast init
+yeast init --template ubuntu-basic
 yeast pull ubuntu-24.04
 yeast up
 yeast status
@@ -20,6 +20,7 @@ yeast destroy
 What Yeast handles:
 
 - project metadata
+- project templates
 - trusted image cache
 - cloud-init seed files
 - qcow2 overlay disk
@@ -28,3 +29,11 @@ What Yeast handles:
 - project state tracking
 
 Use `yeast status --json` for automation.
+
+Template commands:
+
+```bash
+yeast init --list-templates
+yeast init --template caddy-single-vm
+yeast init --template two-vm-lab
+```
