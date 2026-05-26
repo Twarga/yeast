@@ -4841,7 +4841,7 @@ Completion notes:
 
 ### V1.0-T4: Freeze JSON and event contract
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4855,6 +4855,14 @@ Definition of done:
 - every event name emitted by v1.0 workflows is documented
 - JSON compatibility guarantee is stated clearly
 - contract tests cover representative success and error envelopes
+
+Completion notes:
+
+- Updated `docs/json-contract.md` status for v1.0 stabilization.
+- Documented every current JSON-capable command data shape, including doctor, init, pull, up, provision, status, inspect, exec, copy, logs, snapshot, restore, snapshots, delete-snapshot, down, destroy, and version.
+- Explicitly documented that `ssh` is interactive and `docs` does not support `--json`.
+- Kept the `yeast.v1` compatibility rule, standard error codes, event-streaming commands, event envelope fields, and stable event names in one contract doc.
+- Tightened JSON renderer tests for representative fields that were previously omitted from assertions.
 
 ### V1.0-T5: Harden installer and upgrade path
 
