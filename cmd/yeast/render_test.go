@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 	"yeast/internal/app"
@@ -11,9 +13,10 @@ import (
 
 func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 	tests := []struct {
-		name    string
-		command string
-		data    any
+		name         string
+		command      string
+		data         any
+		requiredKeys []string
 	}{
 		{
 			name:    "init",
@@ -24,6 +27,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 				ProjectID:    "proj_123",
 				Template:     "ubuntu-basic",
 			},
+			requiredKeys: []string{"project_id", "config_path", "metadata_path", "template"},
 		},
 		{
 			name:    "template-list",
@@ -39,6 +43,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 					},
 				},
 			},
+			requiredKeys: []string{"templates", "templates.0.name", "templates.0.source"},
 		},
 		{
 			name:    "pull",
@@ -47,6 +52,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 				ImageName: "ubuntu-24.04",
 				ImagePath: "/tmp/cache/images/ubuntu-24.04/image.qcow2",
 			},
+			requiredKeys: []string{"image_name", "image_path"},
 		},
 		{
 			name:    "doctor",
@@ -59,6 +65,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 					{Name: "cache-directory", Status: app.CheckStatusWarning, Details: "missing"},
 				},
 			},
+			requiredKeys: []string{"checks", "checks.0.name", "blockers", "warnings"},
 		},
 		{
 			name:    "up",
@@ -69,6 +76,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 					{Name: "web", Status: "running", SSHAddress: "127.0.0.1:2222", SSHPort: 2222},
 				},
 			},
+			requiredKeys: []string{"project_id", "instances", "instances.0.name", "instances.0.ssh_port", "instances.0.ssh_address"},
 		},
 		{
 			name:    "status",
@@ -79,6 +87,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 					{Name: "web", Status: "running", SSHPort: 2222, LabIP: "10.10.10.10"},
 				},
 			},
+			requiredKeys: []string{"project_id", "instances", "instances.0.name", "instances.0.ssh_port", "instances.0.lab_ip"},
 		},
 		{
 			name:    "provision",
@@ -93,6 +102,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 					ProvisionLogPath:   "/tmp/provision.log",
 				},
 			},
+			requiredKeys: []string{"project_id", "instance", "instance.name", "instance.provisioning_status", "instance.provision_log_path"},
 		},
 		{
 			name:    "exec",
@@ -110,6 +120,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 					Duration:   200 * time.Millisecond,
 				},
 			},
+			requiredKeys: []string{"project_id", "instance", "run", "run.command", "run.exit_code", "run.stdout", "run.timed_out"},
 		},
 		{
 			name:    "copy",
@@ -124,6 +135,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 				FinishedAt:  time.Date(2026, 5, 25, 11, 1, 1, 0, time.UTC),
 				Duration:    time.Second,
 			},
+			requiredKeys: []string{"project_id", "instance", "direction", "source", "destination"},
 		},
 		{
 			name:    "inspect",
@@ -142,6 +154,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 				SnapshotNames: []string{"clean"},
 				SnapshotCount: 1,
 			},
+			requiredKeys: []string{"project_id", "instance", "instance.name", "instance.provisioning_status", "snapshot_names", "snapshot_count"},
 		},
 		{
 			name:    "logs",
@@ -152,6 +165,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 				LogPath:   "/tmp/web/vm.log",
 				Content:   "booted\n",
 			},
+			requiredKeys: []string{"project_id", "instance", "log_path", "content"},
 		},
 		{
 			name:    "snapshot",
@@ -165,6 +179,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 					DiskPath:  "/tmp/web/snapshots/clean.qcow2",
 				},
 			},
+			requiredKeys: []string{"project_id", "instance", "snapshot", "snapshot.name"},
 		},
 		{
 			name:    "restore",
@@ -177,6 +192,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 					DiskPath: "/tmp/web/snapshots/clean.qcow2",
 				},
 			},
+			requiredKeys: []string{"project_id", "instance", "snapshot", "snapshot.name"},
 		},
 		{
 			name:    "snapshots",
@@ -192,6 +208,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 					},
 				},
 			},
+			requiredKeys: []string{"project_id", "instance", "snapshots", "snapshots.0.name"},
 		},
 		{
 			name:    "delete-snapshot",
@@ -201,6 +218,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 				Instance:  "web",
 				Snapshot:  "clean",
 			},
+			requiredKeys: []string{"project_id", "instance", "snapshot"},
 		},
 		{
 			name:    "down",
@@ -211,6 +229,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 					{Name: "web", Status: "stopped"},
 				},
 			},
+			requiredKeys: []string{"project_id", "instances", "instances.0.name", "instances.0.status"},
 		},
 		{
 			name:    "destroy",
@@ -221,6 +240,7 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 					{Name: "web", Status: "destroyed"},
 				},
 			},
+			requiredKeys: []string{"project_id", "instances", "instances.0.name", "instances.0.status"},
 		},
 		{
 			name:    "version",
@@ -254,11 +274,43 @@ func TestRenderCommandOutputJSONForCoreCommands(t *testing.T) {
 			if payload["command"] != tt.command {
 				t.Fatalf("expected command %q, got %#v", tt.command, payload["command"])
 			}
-			if _, ok := payload["data"]; !ok {
+			data, ok := payload["data"]
+			if !ok {
 				t.Fatalf("expected data field, payload=%#v", payload)
+			}
+			if got := payload["schema_version"]; got != "yeast.v1" {
+				t.Fatalf("expected schema_version yeast.v1, got %#v", got)
+			}
+			for _, key := range tt.requiredKeys {
+				if !jsonPathExists(data, key) {
+					t.Fatalf("expected data key %q in payload: %#v", key, data)
+				}
 			}
 		})
 	}
+}
+
+func jsonPathExists(value any, path string) bool {
+	current := value
+	for _, token := range strings.Split(path, ".") {
+		switch typed := current.(type) {
+		case map[string]any:
+			next, ok := typed[token]
+			if !ok {
+				return false
+			}
+			current = next
+		case []any:
+			index, err := strconv.Atoi(token)
+			if err != nil || index < 0 || index >= len(typed) {
+				return false
+			}
+			current = typed[index]
+		default:
+			return false
+		}
+	}
+	return true
 }
 
 func TestRenderCommandErrorJSON(t *testing.T) {

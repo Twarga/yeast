@@ -18,9 +18,9 @@ type RestoreOptions struct {
 }
 
 type RestoreResult struct {
-	ProjectID string
-	Instance  string
-	Snapshot  state.SnapshotState
+	ProjectID string              `json:"project_id"`
+	Instance  string              `json:"instance"`
+	Snapshot  state.SnapshotState `json:"snapshot"`
 }
 
 func (s *Service) Restore(ctx context.Context, options RestoreOptions) (RestoreResult, error) {

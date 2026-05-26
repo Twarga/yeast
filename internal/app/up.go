@@ -39,15 +39,15 @@ type UpOptions struct {
 }
 
 type UpInstanceResult struct {
-	Name       string
-	Status     string
-	SSHAddress string
-	SSHPort    int
+	Name       string `json:"name"`
+	Status     string `json:"status"`
+	SSHAddress string `json:"ssh_address,omitempty"`
+	SSHPort    int    `json:"ssh_port,omitempty"`
 }
 
 type UpResult struct {
-	ProjectID string
-	Instances []UpInstanceResult
+	ProjectID string             `json:"project_id"`
+	Instances []UpInstanceResult `json:"instances"`
 }
 
 func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {

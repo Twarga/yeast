@@ -22,12 +22,12 @@ type InitOptions struct {
 }
 
 type InitResult struct {
-	ProjectRoot  string
-	ConfigPath   string
-	MetadataPath string
-	ProjectID    string
-	Template     string
-	Created      bool
+	ProjectRoot  string `json:"project_root"`
+	ConfigPath   string `json:"config_path"`
+	MetadataPath string `json:"metadata_path"`
+	ProjectID    string `json:"project_id"`
+	Template     string `json:"template,omitempty"`
+	Created      bool   `json:"created"`
 }
 
 func (s *Service) Init(options InitOptions) (InitResult, error) {

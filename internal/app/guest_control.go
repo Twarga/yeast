@@ -12,14 +12,14 @@ type GuestTargetOptions struct {
 }
 
 type GuestCommandResult struct {
-	Command    string
-	ExitCode   int
-	Stdout     string
-	Stderr     string
-	StartedAt  time.Time
-	FinishedAt time.Time
-	Duration   time.Duration
-	TimedOut   bool
+	Command    string        `json:"command"`
+	ExitCode   int           `json:"exit_code"`
+	Stdout     string        `json:"stdout"`
+	Stderr     string        `json:"stderr"`
+	StartedAt  time.Time     `json:"started_at"`
+	FinishedAt time.Time     `json:"finished_at"`
+	Duration   time.Duration `json:"duration"`
+	TimedOut   bool          `json:"timed_out"`
 }
 
 type ExecOptions struct {
@@ -29,9 +29,9 @@ type ExecOptions struct {
 }
 
 type ExecResult struct {
-	ProjectID string
-	Instance  string
-	Run       GuestCommandResult
+	ProjectID string             `json:"project_id"`
+	Instance  string             `json:"instance"`
+	Run       GuestCommandResult `json:"run"`
 }
 
 type CopyDirection string
@@ -50,14 +50,14 @@ type CopyOptions struct {
 }
 
 type CopyResult struct {
-	ProjectID   string
-	Instance    string
-	Direction   CopyDirection
-	Source      string
-	Destination string
-	StartedAt   time.Time
-	FinishedAt  time.Time
-	Duration    time.Duration
+	ProjectID   string        `json:"project_id"`
+	Instance    string        `json:"instance"`
+	Direction   CopyDirection `json:"direction"`
+	Source      string        `json:"source"`
+	Destination string        `json:"destination"`
+	StartedAt   time.Time     `json:"started_at"`
+	FinishedAt  time.Time     `json:"finished_at"`
+	Duration    time.Duration `json:"duration"`
 }
 
 type InspectOptions struct {
@@ -65,10 +65,10 @@ type InspectOptions struct {
 }
 
 type InspectResult struct {
-	ProjectID     string
-	Instance      StatusInstanceResult
-	SnapshotNames []string
-	SnapshotCount int
+	ProjectID     string               `json:"project_id"`
+	Instance      StatusInstanceResult `json:"instance"`
+	SnapshotNames []string             `json:"snapshot_names"`
+	SnapshotCount int                  `json:"snapshot_count"`
 }
 
 type LogsOptions struct {
@@ -77,10 +77,10 @@ type LogsOptions struct {
 }
 
 type LogsResult struct {
-	ProjectID string
-	Instance  string
-	LogPath   string
-	Content   string
+	ProjectID string `json:"project_id"`
+	Instance  string `json:"instance"`
+	LogPath   string `json:"log_path"`
+	Content   string `json:"content"`
 }
 
 func commandString(parts []string) string {

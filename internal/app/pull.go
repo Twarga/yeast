@@ -14,12 +14,12 @@ type PullOptions struct {
 }
 
 type PullResult struct {
-	List        bool
-	Images      []string
-	ImageName   string
-	ImagePath   string
-	ManifestURL string
-	SHA256      string
+	List        bool     `json:"list,omitempty"`
+	Images      []string `json:"images,omitempty"`
+	ImageName   string   `json:"image_name,omitempty"`
+	ImagePath   string   `json:"image_path,omitempty"`
+	ManifestURL string   `json:"manifest_url,omitempty"`
+	SHA256      string   `json:"sha256,omitempty"`
 }
 
 func (s *Service) Pull(options PullOptions) (PullResult, error) {

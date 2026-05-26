@@ -21,9 +21,9 @@ type SnapshotOptions struct {
 }
 
 type SnapshotResult struct {
-	ProjectID string
-	Instance  string
-	Snapshot  state.SnapshotState
+	ProjectID string              `json:"project_id"`
+	Instance  string              `json:"instance"`
+	Snapshot  state.SnapshotState `json:"snapshot"`
 }
 
 func (s *Service) Snapshot(ctx context.Context, options SnapshotOptions) (SnapshotResult, error) {

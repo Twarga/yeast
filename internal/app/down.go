@@ -18,13 +18,13 @@ type DownOptions struct {
 }
 
 type DownInstanceResult struct {
-	Name   string
-	Status string
+	Name   string `json:"name"`
+	Status string `json:"status"`
 }
 
 type DownResult struct {
-	ProjectID string
-	Instances []DownInstanceResult
+	ProjectID string               `json:"project_id"`
+	Instances []DownInstanceResult `json:"instances"`
 }
 
 func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, error) {

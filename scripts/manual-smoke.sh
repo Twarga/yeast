@@ -122,14 +122,14 @@ run_step() {
 extract_port_from_status_json() {
   local json="$1"
   if command -v python3 >/dev/null 2>&1; then
-    python3 -c 'import json,sys; data=json.load(sys.stdin); instances=data.get("data",{}).get("Instances",[]); print(instances[0].get("SSHPort","")) if instances else print("")' <<<"${json}"
+    python3 -c 'import json,sys; data=json.load(sys.stdin); instances=data.get("data",{}).get("instances",[]); print(instances[0].get("ssh_port","")) if instances else print("")' <<<"${json}"
     return
   fi
   if command -v jq >/dev/null 2>&1; then
-    jq -r '.data.Instances[0].SSHPort // empty' <<<"${json}"
+    jq -r '.data.instances[0].ssh_port // empty' <<<"${json}"
     return
   fi
-  printf "%s" "${json}" | sed -n 's/.*"SSHPort":\([0-9][0-9]*\).*/\1/p' | head -n1
+  printf "%s" "${json}" | sed -n 's/.*"ssh_port":\([0-9][0-9]*\).*/\1/p' | head -n1
 }
 
 run_capture() {
@@ -536,13 +536,13 @@ run_positive_suite() {
   printf "%s\n" "${STATUS_JSON}"
   PORT_VALUE="$(extract_port_from_status_json "${STATUS_JSON}")"
   if [[ -z "${PORT_VALUE}" ]]; then
-    fail "status json did not expose SSHPort"
+    fail "status json did not expose ssh_port"
   fi
   if [[ "${PORT_VALUE}" != "${INSTANCE_SSH_PORT}" ]]; then
-    fail "expected SSHPort ${INSTANCE_SSH_PORT}, got ${PORT_VALUE}"
+    fail "expected ssh_port ${INSTANCE_SSH_PORT}, got ${PORT_VALUE}"
   fi
   ok "status json reports ssh port ${PORT_VALUE}"
-  assert_contains "${STATUS_JSON}" '"ProvisioningStatus":"provisioned"' "status json reports provisioned state"
+  assert_contains "${STATUS_JSON}" '"provisioning_status":"provisioned"' "status json reports provisioned state"
   record_pass "Status JSON"
 
   local active_ssh_port="${INSTANCE_SSH_PORT}"
@@ -583,13 +583,13 @@ run_positive_suite() {
 
   EXEC_JSON="$("${BIN_PATH}" --json exec "${INSTANCE_NAME}" -- whoami)"
   printf "%s\n" "${EXEC_JSON}"
-  if [[ "$(json_extract "data.Instance" "${EXEC_JSON}")" != "${INSTANCE_NAME}" ]]; then
+  if [[ "$(json_extract "data.instance" "${EXEC_JSON}")" != "${INSTANCE_NAME}" ]]; then
     fail "exec json did not report instance ${INSTANCE_NAME}"
   fi
-  if [[ "$(json_extract "data.Run.ExitCode" "${EXEC_JSON}")" != "0" ]]; then
+  if [[ "$(json_extract "data.run.exit_code" "${EXEC_JSON}")" != "0" ]]; then
     fail "exec json did not report exit code 0"
   fi
-  if [[ "$(json_extract "data.Run.Stdout" "${EXEC_JSON}")" != "${INSTANCE_USER}" ]]; then
+  if [[ "$(json_extract "data.run.stdout" "${EXEC_JSON}")" != "${INSTANCE_USER}" ]]; then
     fail "exec json did not report stdout ${INSTANCE_USER}"
   fi
   ok "exec returns structured result"
@@ -613,10 +613,10 @@ run_positive_suite() {
 
   INSPECT_JSON="$("${BIN_PATH}" --json inspect "${INSTANCE_NAME}")"
   printf "%s\n" "${INSPECT_JSON}"
-  if [[ "$(json_extract "data.Instance.Name" "${INSPECT_JSON}")" != "${INSTANCE_NAME}" ]]; then
+  if [[ "$(json_extract "data.instance.name" "${INSPECT_JSON}")" != "${INSTANCE_NAME}" ]]; then
     fail "inspect json did not report instance ${INSTANCE_NAME}"
   fi
-  if [[ "$(json_extract "data.Instance.ProvisioningStatus" "${INSPECT_JSON}")" != "provisioned" ]]; then
+  if [[ "$(json_extract "data.instance.provisioning_status" "${INSPECT_JSON}")" != "provisioned" ]]; then
     fail "inspect json did not report provisioned status"
   fi
   ok "inspect returns instance detail"
@@ -660,7 +660,7 @@ EOF
   record_pass "Status after restart"
 
   STATUS_JSON_AFTER_RESTART="$("${BIN_PATH}" status --json)"
-  assert_contains "${STATUS_JSON_AFTER_RESTART}" '"ProvisioningStatus":"provisioned"' "status json after restart remains provisioned"
+  assert_contains "${STATUS_JSON_AFTER_RESTART}" '"provisioning_status":"provisioned"' "status json after restart remains provisioned"
 
   printf "%s$ %s curl -fsS http://127.0.0.1%s\n" "${DIM}" "${SSH_BASE[*]}" "${RESET}"
   RESTARTED_PAGE="$("${SSH_BASE[@]}" curl -fsS http://127.0.0.1)"
@@ -722,7 +722,7 @@ EOF
   FINAL_STATUS_JSON="$("${BIN_PATH}" status --json)"
   section "Final status JSON"
   printf "%s\n" "${FINAL_STATUS_JSON}"
-  if [[ "${FINAL_STATUS_JSON}" == *'"Instances":[]'* ]]; then
+  if [[ "${FINAL_STATUS_JSON}" == *'"instances":[]'* ]]; then
     ok "no instances remain after destroy"
   else
     warn "status json still contains instance data after destroy"
@@ -758,8 +758,8 @@ run_network_suite() {
   NETWORK_STATUS_JSON="$("${BIN_PATH}" status --json)"
   section "Two-VM status JSON"
   printf "%s\n" "${NETWORK_STATUS_JSON}"
-  assert_contains "${NETWORK_STATUS_JSON}" "\"LabIP\":\"${ATTACKER_LAB_IP}\"" "status json includes attacker lab ip"
-  assert_contains "${NETWORK_STATUS_JSON}" "\"LabIP\":\"${TARGET_LAB_IP}\"" "status json includes target lab ip"
+  assert_contains "${NETWORK_STATUS_JSON}" "\"lab_ip\":\"${ATTACKER_LAB_IP}\"" "status json includes attacker lab ip"
+  assert_contains "${NETWORK_STATUS_JSON}" "\"lab_ip\":\"${TARGET_LAB_IP}\"" "status json includes target lab ip"
   record_pass "Two-VM status JSON"
 
   local attacker_ssh=()

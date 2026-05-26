@@ -19,15 +19,15 @@ const (
 )
 
 type DoctorCheck struct {
-	Name    string
-	Status  CheckStatus
-	Details string
+	Name    string      `json:"name"`
+	Status  CheckStatus `json:"status"`
+	Details string      `json:"details"`
 }
 
 type DoctorResult struct {
-	Checks   []DoctorCheck
-	Blockers int
-	Warnings int
+	Checks   []DoctorCheck `json:"checks"`
+	Blockers int           `json:"blockers"`
+	Warnings int           `json:"warnings"`
 }
 
 var (

@@ -16,9 +16,9 @@ type SnapshotsOptions struct {
 }
 
 type SnapshotsResult struct {
-	ProjectID string
-	Instance  string
-	Snapshots []state.SnapshotState
+	ProjectID string                `json:"project_id"`
+	Instance  string                `json:"instance"`
+	Snapshots []state.SnapshotState `json:"snapshots"`
 }
 
 type DeleteSnapshotOptions struct {
@@ -28,9 +28,9 @@ type DeleteSnapshotOptions struct {
 }
 
 type DeleteSnapshotResult struct {
-	ProjectID string
-	Instance  string
-	Snapshot  string
+	ProjectID string `json:"project_id"`
+	Instance  string `json:"instance"`
+	Snapshot  string `json:"snapshot"`
 }
 
 func (s *Service) Snapshots(ctx context.Context, options SnapshotsOptions) (SnapshotsResult, error) {

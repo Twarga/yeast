@@ -19,10 +19,10 @@ type SSHOptions struct {
 }
 
 type SSHResult struct {
-	InstanceName string
-	Address      string
-	User         string
-	Port         int
+	InstanceName string `json:"instance_name"`
+	Address      string `json:"address"`
+	User         string `json:"user"`
+	Port         int    `json:"port"`
 }
 
 func (s *Service) SSH(ctx context.Context, options SSHOptions) (SSHResult, error) {

@@ -22,17 +22,17 @@ type ProvisionOptions struct {
 }
 
 type ProvisionInstanceResult struct {
-	Name               string
-	ProvisioningStatus state.ProvisioningStatus
-	SSHAddress         string
-	SSHPort            int
-	ProvisionLogPath   string
-	LastError          string
+	Name               string                   `json:"name"`
+	ProvisioningStatus state.ProvisioningStatus `json:"provisioning_status"`
+	SSHAddress         string                   `json:"ssh_address,omitempty"`
+	SSHPort            int                      `json:"ssh_port,omitempty"`
+	ProvisionLogPath   string                   `json:"provision_log_path,omitempty"`
+	LastError          string                   `json:"last_error,omitempty"`
 }
 
 type ProvisionResult struct {
-	ProjectID string
-	Instance  ProvisionInstanceResult
+	ProjectID string                  `json:"project_id"`
+	Instance  ProvisionInstanceResult `json:"instance"`
 }
 
 func (s *Service) Provision(ctx context.Context, options ProvisionOptions) (ProvisionResult, error) {

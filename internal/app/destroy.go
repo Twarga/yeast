@@ -18,13 +18,13 @@ type DestroyOptions struct {
 }
 
 type DestroyInstanceResult struct {
-	Name   string
-	Status string
+	Name   string `json:"name"`
+	Status string `json:"status"`
 }
 
 type DestroyResult struct {
-	ProjectID string
-	Instances []DestroyInstanceResult
+	ProjectID string                  `json:"project_id"`
+	Instances []DestroyInstanceResult `json:"instances"`
 }
 
 func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (DestroyResult, error) {

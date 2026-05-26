@@ -3,17 +3,17 @@ package app
 import "yeast/internal/templates"
 
 type TemplateSummary struct {
-	Name        string `json:"Name"`
-	Title       string `json:"Title"`
-	Description string `json:"Description"`
-	Category    string `json:"Category"`
-	Version     string `json:"Version"`
-	Source      string `json:"Source"`
-	Path        string `json:"Path,omitempty"`
+	Name        string `json:"name"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Category    string `json:"category"`
+	Version     string `json:"version"`
+	Source      string `json:"source"`
+	Path        string `json:"path,omitempty"`
 }
 
 type TemplateListResult struct {
-	Templates []TemplateSummary `json:"Templates"`
+	Templates []TemplateSummary `json:"templates"`
 }
 
 func (s *Service) ListTemplates() (TemplateListResult, error) {

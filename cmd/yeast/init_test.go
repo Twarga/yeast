@@ -28,10 +28,11 @@ func TestInitListTemplatesJSON(t *testing.T) {
 	}
 
 	var payload struct {
-		OK      bool   `json:"ok"`
-		Command string `json:"command"`
-		Data    struct {
-			Templates []app.TemplateSummary `json:"Templates"`
+		OK            bool   `json:"ok"`
+		SchemaVersion string `json:"schema_version"`
+		Command       string `json:"command"`
+		Data          struct {
+			Templates []app.TemplateSummary `json:"templates"`
 		} `json:"data"`
 	}
 	if err := json.Unmarshal(buf.Bytes(), &payload); err != nil {
@@ -42,6 +43,9 @@ func TestInitListTemplatesJSON(t *testing.T) {
 	}
 	if payload.Command != "init" {
 		t.Fatalf("expected command init, got %q", payload.Command)
+	}
+	if payload.SchemaVersion != "yeast.v1" {
+		t.Fatalf("expected schema_version yeast.v1, got %q", payload.SchemaVersion)
 	}
 	if len(payload.Data.Templates) != 3 {
 		t.Fatalf("expected 3 templates, got %#v", payload.Data.Templates)

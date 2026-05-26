@@ -16,21 +16,21 @@ type StatusOptions struct {
 }
 
 type StatusInstanceResult struct {
-	Name               string
-	Status             string
-	PID                int
-	ManagementIP       string
-	SSHPort            int
-	LabIP              string
-	RuntimeDir         string
-	ProvisionLogPath   string
-	ProvisioningStatus state.ProvisioningStatus
-	LastError          string
+	Name               string                   `json:"name"`
+	Status             string                   `json:"status"`
+	PID                int                      `json:"pid"`
+	ManagementIP       string                   `json:"management_ip,omitempty"`
+	SSHPort            int                      `json:"ssh_port,omitempty"`
+	LabIP              string                   `json:"lab_ip,omitempty"`
+	RuntimeDir         string                   `json:"runtime_dir,omitempty"`
+	ProvisionLogPath   string                   `json:"provision_log_path,omitempty"`
+	ProvisioningStatus state.ProvisioningStatus `json:"provisioning_status,omitempty"`
+	LastError          string                   `json:"last_error,omitempty"`
 }
 
 type StatusResult struct {
-	ProjectID string
-	Instances []StatusInstanceResult
+	ProjectID string                 `json:"project_id"`
+	Instances []StatusInstanceResult `json:"instances"`
 }
 
 func (s *Service) Status(ctx context.Context, options StatusOptions) (StatusResult, error) {

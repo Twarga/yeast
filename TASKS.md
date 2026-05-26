@@ -4453,7 +4453,7 @@ Completion notes:
 
 ### V0.8-T3: Lock command-specific JSON data shapes
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4463,6 +4463,13 @@ Definition of done:
 
 - core command JSON outputs have tests for required fields
 - docs list stable fields for status, inspect, exec, copy, logs, snapshots, and template listing
+
+Completion notes:
+
+- Added JSON tags to app result structs so command data uses stable lower `snake_case` fields.
+- Updated manual smoke JSON parsing to use the stable field names.
+- Expanded command-rendering tests to assert required fields for core command outputs.
+- Documented the first stable command data shapes in `docs/json-contract.md`.
 
 ### V0.8-T4: Add lifecycle event model
 
