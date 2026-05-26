@@ -4360,7 +4360,7 @@ Completion notes:
 
 ## M16: LabsBackery Contract
 
-Status: [-]
+Status: [~]
 
 Do not start until:
 
@@ -4370,6 +4370,7 @@ Do not start until:
 Planning reference:
 
 - `docs/labsbackery-plan.md`
+- `docs/labsbackery-integration-contract.md`
 
 Core tasks later:
 
@@ -4546,6 +4547,133 @@ Completion notes:
 - Added `docs/release-notes-v0.8.0.md`.
 - Added the draft v0.8.0 changelog entry.
 - Updated README status, current scope, limitations, and project docs for v0.8 automation.
+
+---
+
+# V0.9: LabsBakery-Ready Engine
+
+Goal:
+
+Prove Yeast can act as the local VM engine behind one real LabsBakery lab workflow without adding LabsBakery product state to Yeast.
+
+## V0.9 Tasks
+
+### V0.9-T1: Define the LabsBakery integration contract
+
+Status: [x]
+
+Dependencies:
+
+- V0.8-T1
+- V0.8-T2
+- V0.8-T3
+- V0.8-T4
+- V0.8-T5
+
+Files:
+
+- `docs/labsbackery-integration-contract.md`
+- `README.md`
+- `TASKS.md`
+
+Definition of done:
+
+- LabsBakery/Yeast ownership boundary is explicit
+- session directory model is defined
+- required CLI/JSON commands are listed
+- terminal connection strategy is defined
+- reset/baseline workflow is defined
+- event handling guidance is defined
+- first test lab target is defined
+- known Yeast gaps are documented without implementing future scope early
+
+Completion notes:
+
+- Added `docs/labsbackery-integration-contract.md`.
+- Documented the first LabsBakery adapter command contract around `yeast.v1`.
+- Documented terminal, event, reset, error-handling, and first test lab expectations.
+- Linked the new contract from README and the M16 planning references.
+
+### V0.9-T2: Expose guest user in status and inspect JSON
+
+Status: [ ]
+
+Dependencies:
+
+- V0.9-T1
+
+Definition of done:
+
+- `status --json` includes the configured guest user for each instance
+- `inspect <instance> --json` includes the configured guest user
+- JSON contract docs include the new optional/stable field
+- tests lock the field names
+- manual smoke can assert terminal connection info without reading `yeast.yaml`
+
+### V0.9-T3: Add event coverage for stop/destroy workflows
+
+Status: [ ]
+
+Dependencies:
+
+- V0.9-T1
+- V0.8-T5
+
+Definition of done:
+
+- `down --json --events` emits lifecycle events
+- `destroy --json --events` emits lifecycle events
+- events stay compatible with `yeast.v1`
+- tests cover the CLI event path
+
+### V0.9-T4: Define first lab package/template convention
+
+Status: [ ]
+
+Dependencies:
+
+- V0.9-T1
+
+Definition of done:
+
+- docs define the minimum folder shape for a Yeast-backed LabsBakery lab
+- convention covers `yeast.yaml`, provision files, lab metadata, and optional scenario/check files
+- built-in templates are not converted into LabsBakery product packages yet
+
+### V0.9-T5: Build one LabsBakery-ready example lab
+
+Status: [ ]
+
+Dependencies:
+
+- V0.9-T2
+- V0.9-T4
+
+Definition of done:
+
+- example lab has attacker and target VMs
+- example lab has one private lab network
+- target has a simple service or file for validation
+- lab can start, status, snapshot, reset, and destroy through Yeast
+- full smoke or documented manual test proves the workflow
+
+### V0.9-T6: Add v0.9 release notes
+
+Status: [ ]
+
+Dependencies:
+
+- V0.9-T1
+- V0.9-T2
+- V0.9-T3
+- V0.9-T4
+- V0.9-T5
+
+Definition of done:
+
+- v0.9 release notes exist
+- changelog contains v0.9.0 entry
+- README current scope reflects LabsBakery-ready integration behavior
 
 ---
 

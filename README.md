@@ -605,6 +605,7 @@ yeast docs tutorial-test
 - [docs/architecture-overview.md](docs/architecture-overview.md)
 - [docs/charm-cli-plan.md](docs/charm-cli-plan.md)
 - [docs/json-contract.md](docs/json-contract.md)
+- [docs/labsbackery-integration-contract.md](docs/labsbackery-integration-contract.md)
 - [docs/release-notes-v0.1.0.md](docs/release-notes-v0.1.0.md)
 - [docs/release-notes-v0.7.0.md](docs/release-notes-v0.7.0.md)
 - [docs/release-notes-v0.8.0.md](docs/release-notes-v0.8.0.md)
