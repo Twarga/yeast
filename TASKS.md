@@ -4750,7 +4750,7 @@ v1.0 should stabilize:
 
 ### V1.0-T1: Audit v1 contract surface
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4764,6 +4764,15 @@ Definition of done:
 - identify any current command, field, flag, or JSON shape that is too weak or inconsistent for v1.0
 - create or update one contract audit doc under `docs/`
 - do not change runtime behavior in this task unless only docs are wrong
+
+Completion notes:
+
+- Added `docs/v1-contract-audit.md`.
+- Listed the v1 candidate CLI command and global flag surface.
+- Listed the v1 candidate config schema fields, network fields, instance network fields, and provisioning fields.
+- Listed stable JSON envelope fields, error codes, documented command data shapes, event commands, event envelope fields, and event names.
+- Recorded v1 follow-up gaps for command docs, full JSON docs, config network docs, installer version verification, stale tutorial HTML, and GitHub Actions Node 20 warnings.
+- Made no runtime behavior changes.
 
 ### V1.0-T2: Freeze command reference
 
