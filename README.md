@@ -609,6 +609,7 @@ yeast docs tutorial-test
 - [docs/quickstart.md](docs/quickstart.md)
 - [docs/installation.md](docs/installation.md)
 - [docs/tutorial-test.md](docs/tutorial-test.md)
+- [docs/command-reference.md](docs/command-reference.md)
 - [docs/config-reference.md](docs/config-reference.md)
 - [docs/troubleshooting.md](docs/troubleshooting.md)
 - [docs/known-limitations.md](docs/known-limitations.md)

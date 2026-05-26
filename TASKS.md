@@ -4776,7 +4776,7 @@ Completion notes:
 
 ### V1.0-T2: Freeze command reference
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4807,6 +4807,13 @@ Definition of done:
   - `version`
   - `docs`
 - tests or scripted checks verify command help still renders
+
+Completion notes:
+
+- Added `docs/command-reference.md`.
+- Documented every v1 command with purpose, syntax, flags, human behavior, JSON behavior, examples, and known limits.
+- Linked the command reference from README project docs.
+- Added `cmd/yeast/help_test.go` to verify help renders for every v1 command surface and includes the expected usage line.
 
 ### V1.0-T3: Freeze config reference
 
