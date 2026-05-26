@@ -4643,7 +4643,7 @@ Completion notes:
 
 ### V0.9-T4: Define first lab package/template convention
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4654,6 +4654,13 @@ Definition of done:
 - docs define the minimum folder shape for a Yeast-backed LabsBakery lab
 - convention covers `yeast.yaml`, provision files, lab metadata, and optional scenario/check files
 - built-in templates are not converted into LabsBakery product packages yet
+
+Completion notes:
+
+- Added `docs/labsbackery-lab-package.md`.
+- Defined the first package/session folder shape for Yeast-backed LabsBakery labs.
+- Documented `template.yaml`, `yeast.yaml`, `lab.yaml`, scenario instructions, checks, assets, session layout, baseline/reset conventions, and import/export boundaries.
+- Linked the package convention from the LabsBakery integration contract and README.
 
 ### V0.9-T5: Build one LabsBakery-ready example lab
 

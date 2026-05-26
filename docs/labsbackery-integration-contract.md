@@ -76,6 +76,8 @@ LabsBakery should run all Yeast commands with the session directory as the curre
 
 This keeps Yeast project identity, state, disks, logs, and snapshots isolated per session.
 
+The source package convention is defined in `docs/labsbackery-lab-package.md`.
+
 ## Required Yeast Version
 
 LabsBakery should require:
@@ -343,8 +345,6 @@ This target proves the full engine path without cloud hosting, auth, billing, ma
 These are possible Yeast improvements found by the contract. Add them only when they are generic engine improvements:
 
 - add project-level snapshot/reset helpers if per-instance reset becomes too repetitive
-- add event coverage for `down` and `destroy` if LabsBakery needs progress for those actions
-- document a first lab package/template folder convention
 - make terminal connection fields explicit in the JSON contract
 
 ## Minimal Adapter Pseudocode
