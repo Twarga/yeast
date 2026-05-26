@@ -7,6 +7,36 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.9.0] - Draft
+
+### Summary
+
+Yeast v0.9.0 makes the engine LabsBakery-ready without turning Yeast into the LabsBakery web product. This release defines the integration contract, adds browser-terminal-friendly status metadata, extends lifecycle event streaming to stop and destroy workflows, documents a lab package convention, and ships the first attacker/target LabsBakery example package.
+
+### Added
+
+- LabsBakery integration contract in `docs/labsbackery-integration-contract.md`.
+- LabsBakery lab package convention in `docs/labsbackery-lab-package.md`.
+- First LabsBakery-ready attacker/target example in `examples/labsbackery-attacker-target-basic`.
+- `user` field in `status --json` instance records.
+- `user` field in `inspect --json` instance records.
+- JSON Lines event streaming for `yeast down --json --events`.
+- JSON Lines event streaming for `yeast destroy --json --events`.
+- `docs/release-notes-v0.9.0.md`.
+
+### Changed
+
+- README current scope now reflects v0.9 LabsBakery-ready integration behavior.
+- JSON contract docs now describe the v0.9 draft contract while preserving `schema_version: "yeast.v1"`.
+
+### Known Limitations
+
+- no LabsBakery web UI inside Yeast
+- no daemon or web API
+- no packaged `.lbz` import/export command
+- no project-wide atomic snapshot/reset helper
+- no remote workers or Twarga Cloud features
+
 ## [0.8.0] - 2026-05-26
 
 ### Summary

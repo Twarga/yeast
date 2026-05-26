@@ -4690,7 +4690,7 @@ Completion notes:
 
 ### V0.9-T6: Add v0.9 release notes
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4705,6 +4705,13 @@ Definition of done:
 - v0.9 release notes exist
 - changelog contains v0.9.0 entry
 - README current scope reflects LabsBakery-ready integration behavior
+
+Completion notes:
+
+- Added `docs/release-notes-v0.9.0.md`.
+- Added a v0.9.0 draft entry to `CHANGELOG.md`.
+- Updated README scope, current features, current limits, config label, badge, and project docs for v0.9.
+- Updated the JSON contract status line to v0.9.0 while keeping `schema_version: "yeast.v1"`.
 
 ---
 

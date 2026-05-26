@@ -1,6 +1,6 @@
 # Yeast JSON Contract
 
-Status: Draft for v0.8.0
+Status: Draft for v0.9.0
 
 Yeast JSON output is for tools, scripts, LabsBakery, Yeast MCP, and future automation.
 

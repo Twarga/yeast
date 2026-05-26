@@ -15,7 +15,7 @@ Fast project-based virtual machines with cloud-init, trusted base images, post-b
 ![Go](https://img.shields.io/badge/go-1.25+-cyan.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 ![Runtime](https://img.shields.io/badge/runtime-QEMU%2FKVM-6f42c1.svg)
-![State](https://img.shields.io/badge/status-v0.8%20automation-8a6d3b.svg)
+![State](https://img.shields.io/badge/status-v0.9%20LabsBakery--ready-8a6d3b.svg)
 
 [Website](https://twarga.github.io/yeast/) · [Quick Start](#quick-start) · [Current Scope](#current-scope) · [Commands](#commands) · [Examples](#examples) · [Architecture](#architecture) · [Limits](#current-limits)
 
@@ -48,9 +48,9 @@ The important constraint is still simple: **keep the core small and reliable bef
 
 ## Current Scope
 
-Yeast `v0.8` is still intentionally narrow. It now covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, operate inside the guest through a first SSH-backed control surface, start new projects from built-in or local templates, and expose a versioned JSON/events contract for tools.
+Yeast `v0.9` is still intentionally narrow. It now covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, operate inside the guest through a first SSH-backed control surface, start new projects from built-in or local templates, expose a versioned JSON/events contract for tools, and define the first LabsBakery integration boundary.
 
-| Area | v0.8 status |
+| Area | v0.9 status |
 |---|---|
 | Host support | Linux only |
 | Runtime | QEMU + KVM |
@@ -59,13 +59,14 @@ Yeast `v0.8` is still intentionally narrow. It now covers one complete loop: boo
 | Bootstrap | cloud-init seed ISO |
 | Access | SSH over host port forwarding |
 | State | Project-scoped state with locking and reconciliation |
-| Automation | Versioned `--json` envelopes, stable command data fields, documented error codes, and JSON Lines `--events` for long-running workflows |
+| Automation | Versioned `--json` envelopes, stable command data fields, documented error codes, and JSON Lines `--events` for lifecycle workflows |
 | Provisioning | Packages, files, shell, and `yeast provision` |
 | Reset | Stopped-VM snapshot, list, restore, and delete |
 | Private networking | One project-level lab network with static per-instance IPv4 |
 | Guest control | `exec`, `copy`, `logs`, and `inspect` |
 | Templates | Built-in `ubuntu-basic`, `caddy-single-vm`, and `two-vm-lab`; local template directories |
-| Examples | Single-VM Ubuntu, Caddy provisioning/reset, and first two-VM lab example |
+| LabsBakery integration | Draft engine contract, lab package convention, and first attacker/target example package |
+| Examples | Single-VM Ubuntu, Caddy provisioning/reset, first two-VM lab example, and LabsBakery package example |
 
 ### What works now
 
@@ -94,14 +95,21 @@ Yeast `v0.8` is still intentionally narrow. It now covers one complete loop: boo
 - `yeast version`
 - first private lab network with per-instance `LAB IP`
 - versioned `--json` output with `schema_version: "yeast.v1"`
-- `--json --events` streams for `up`, `provision`, and `restore`
+- browser-terminal-friendly `user` metadata in `status --json` and `inspect --json`
+- `--json --events` streams for `up`, `provision`, `restore`, `down`, and `destroy`
+- LabsBakery integration contract docs
+- LabsBakery lab package convention docs
+- first Yeast-backed LabsBakery attacker/target example package
 
-### What is not in v0.8 yet
+### What is not in v0.9 yet
 
 - remote template downloads or registry search/update
 - complex template variables
 - daemon or web API
 - Twarga Cloud features
+- LabsBakery web UI
+- packaged `.lbz` import/export
+- project-wide atomic snapshot/reset helper
 - multiple private networks
 - bridge mode
 - DHCP lab guests
@@ -409,7 +417,7 @@ yeast status --json
 
 ## Config
 
-Current `v0.8` example:
+Current `v0.9` example:
 
 ```yaml
 version: 1
@@ -612,6 +620,7 @@ yeast docs tutorial-test
 - [docs/release-notes-v0.1.0.md](docs/release-notes-v0.1.0.md)
 - [docs/release-notes-v0.7.0.md](docs/release-notes-v0.7.0.md)
 - [docs/release-notes-v0.8.0.md](docs/release-notes-v0.8.0.md)
+- [docs/release-notes-v0.9.0.md](docs/release-notes-v0.9.0.md)
 - [TASKS.md](TASKS.md)
 
 ---
