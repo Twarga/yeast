@@ -4515,6 +4515,38 @@ Completion notes:
 - Added CLI event sink tests and app-level provision/restore event emission tests.
 - Documented `--json --events` usage in `docs/json-contract.md`.
 
+### V0.8-T6: Add v0.8 release notes
+
+Status: [x]
+
+Dependencies:
+
+- V0.8-T1
+- V0.8-T2
+- V0.8-T3
+- V0.8-T4
+- V0.8-T5
+
+Files:
+
+- `docs/release-notes-v0.8.0.md`
+- `CHANGELOG.md`
+- `README.md`
+- `TASKS.md`
+
+Definition of done:
+
+- v0.8 release notes exist
+- changelog contains a draft v0.8.0 entry
+- README current scope reflects stable JSON and events
+- project docs link to the JSON contract and v0.8 release notes
+
+Completion notes:
+
+- Added `docs/release-notes-v0.8.0.md`.
+- Added the draft v0.8.0 changelog entry.
+- Updated README status, current scope, limitations, and project docs for v0.8 automation.
+
 ---
 
 # Final v0.1 Success State

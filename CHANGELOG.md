@@ -7,6 +7,40 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.8.0] - Draft
+
+### Summary
+
+Yeast v0.8.0 makes the CLI safer to use as an engine for LabsBakery, Yeast MCP, scripts, and future UIs. This release adds the first stable automation contract: versioned JSON envelopes, documented error codes, stable command data fields, lifecycle events, and JSON Lines event streaming.
+
+### Added
+
+- `schema_version: "yeast.v1"` on success and error JSON envelopes.
+- Stable JSON contract documentation in `docs/json-contract.md`.
+- Stable lower `snake_case` data fields for core command JSON outputs.
+- Standard error code catalog for automation.
+- Lifecycle event model for app workflows.
+- JSON Lines event renderer.
+- Global `--events` flag.
+- Event streaming for `up`, `provision`, and `restore` when used with `--json`.
+- `docs/release-notes-v0.8.0.md`.
+
+### Changed
+
+- Core command JSON data fields now use stable lower `snake_case` names.
+- Guest control failures are classified as `guest_error`.
+- Provisioning failures are classified as `provisioning_failed`.
+- Runtime and timeout failures have explicit error categories.
+- Manual smoke tests now parse the stable v0.8 JSON field names.
+
+### Known Limitations
+
+- event streaming is limited to `up`, `provision`, and `restore`
+- no persisted event history
+- no progress percentage contract yet
+- no daemon or web API
+- no remote workers or Twarga Cloud features
+
 ## [0.7.0] - 2026-05-26
 
 ### Summary

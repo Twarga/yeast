@@ -9,13 +9,13 @@
 
 **Linux-first local VM orchestration for QEMU/KVM**
 
-Fast project-based virtual machines with cloud-init, trusted base images, post-boot provisioning, SSH access, and clean JSON output.
+Fast project-based virtual machines with cloud-init, trusted base images, post-boot provisioning, SSH access, stable JSON, and event streams.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Go](https://img.shields.io/badge/go-1.25+-cyan.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 ![Runtime](https://img.shields.io/badge/runtime-QEMU%2FKVM-6f42c1.svg)
-![State](https://img.shields.io/badge/status-v0.7%20templates-8a6d3b.svg)
+![State](https://img.shields.io/badge/status-v0.8%20automation-8a6d3b.svg)
 
 [Website](https://twarga.github.io/yeast/) · [Quick Start](#quick-start) · [Current Scope](#current-scope) · [Commands](#commands) · [Examples](#examples) · [Architecture](#architecture) · [Limits](#current-limits)
 
@@ -48,9 +48,9 @@ The important constraint is still simple: **keep the core small and reliable bef
 
 ## Current Scope
 
-Yeast `v0.7` is still intentionally narrow. It now covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, operate inside the guest through a first SSH-backed control surface, and start new projects from built-in or local templates.
+Yeast `v0.8` is still intentionally narrow. It now covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, operate inside the guest through a first SSH-backed control surface, start new projects from built-in or local templates, and expose a versioned JSON/events contract for tools.
 
-| Area | v0.7 status |
+| Area | v0.8 status |
 |---|---|
 | Host support | Linux only |
 | Runtime | QEMU + KVM |
@@ -59,7 +59,7 @@ Yeast `v0.7` is still intentionally narrow. It now covers one complete loop: boo
 | Bootstrap | cloud-init seed ISO |
 | Access | SSH over host port forwarding |
 | State | Project-scoped state with locking and reconciliation |
-| Automation | Stable `--json` output for core non-interactive commands |
+| Automation | Versioned `--json` envelopes, stable command data fields, documented error codes, and JSON Lines `--events` for long-running workflows |
 | Provisioning | Packages, files, shell, and `yeast provision` |
 | Reset | Stopped-VM snapshot, list, restore, and delete |
 | Private networking | One project-level lab network with static per-instance IPv4 |
@@ -93,8 +93,10 @@ Yeast `v0.7` is still intentionally narrow. It now covers one complete loop: boo
 - `yeast destroy`
 - `yeast version`
 - first private lab network with per-instance `LAB IP`
+- versioned `--json` output with `schema_version: "yeast.v1"`
+- `--json --events` streams for `up`, `provision`, and `restore`
 
-### What is not in v0.7 yet
+### What is not in v0.8 yet
 
 - remote template downloads or registry search/update
 - complex template variables
@@ -103,6 +105,7 @@ Yeast `v0.7` is still intentionally narrow. It now covers one complete loop: boo
 - multiple private networks
 - bridge mode
 - DHCP lab guests
+- event history or progress percentages
 
 ---
 
@@ -406,7 +409,7 @@ yeast status --json
 
 ## Config
 
-Current `v0.7` example:
+Current `v0.8` example:
 
 ```yaml
 version: 1
@@ -601,8 +604,10 @@ yeast docs tutorial-test
 - [docs/known-limitations.md](docs/known-limitations.md)
 - [docs/architecture-overview.md](docs/architecture-overview.md)
 - [docs/charm-cli-plan.md](docs/charm-cli-plan.md)
+- [docs/json-contract.md](docs/json-contract.md)
 - [docs/release-notes-v0.1.0.md](docs/release-notes-v0.1.0.md)
 - [docs/release-notes-v0.7.0.md](docs/release-notes-v0.7.0.md)
+- [docs/release-notes-v0.8.0.md](docs/release-notes-v0.8.0.md)
 - [TASKS.md](TASKS.md)
 
 ---
