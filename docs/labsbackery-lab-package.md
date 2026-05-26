@@ -158,7 +158,7 @@ tags:
   - beginner
 engine:
   type: yeast
-  min_version: v0.8.0
+  min_version: v0.9.0
   schema_version: yeast.v1
 topology:
   nodes:

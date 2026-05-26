@@ -1,6 +1,6 @@
 # Yeast v0.9.0 Release Notes
 
-Status: Draft
+Status: Released
 
 ## Summary
 

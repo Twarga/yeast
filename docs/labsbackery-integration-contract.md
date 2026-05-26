@@ -83,7 +83,7 @@ The source package convention is defined in `docs/labsbackery-lab-package.md`.
 LabsBakery should require:
 
 ```text
-yeast version >= v0.8.0
+yeast version >= v0.9.0
 ```
 
 Required contract:
