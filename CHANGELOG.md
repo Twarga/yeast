@@ -7,6 +7,52 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.7.0] - Draft
+
+### Summary
+
+Yeast v0.7.0 adds the first template system to the local VM engine. Users can now list built-in starters and initialize a normal editable project from a built-in or local template directory.
+
+This release keeps templates intentionally simple. Templates are project starters only and do not add remote downloads, registries, complex variables, or LabsBackery-specific packaging.
+
+### Added
+
+- `yeast init --list-templates`.
+- `yeast init --template <name-or-path>`.
+- Built-in template catalog and metadata model.
+- Local template metadata loading.
+- Template materialization service with no-overwrite behavior.
+- Built-in templates:
+  - `ubuntu-basic`
+  - `caddy-single-vm`
+  - `two-vm-lab`
+- Human and JSON output for template listing.
+- Template docs across README, quickstart, config reference, manual test docs, and embedded terminal docs.
+- `docs/release-notes-v0.7.0.md`.
+
+### Changed
+
+- `yeast init` can now initialize from a template while preserving normal project metadata behavior.
+- The positive real-host smoke path now starts the Caddy VM workflow from `yeast init --template caddy-single-vm`.
+- Built-in template READMEs now document the template workflow instead of old manual copy instructions.
+
+### Verification
+
+- `go test ./... -count=1`
+- `git diff --check`
+- `bash -n scripts/manual-smoke.sh`
+- `TEST_MODE=negative ./scripts/manual-smoke.sh /tmp/yeast-v07-doc-smoke`
+- Positive real-host smoke with template init, Caddy provisioning, guest control, snapshot/restore, and two-VM networking.
+
+### Known Limitations
+
+- templates are project starters only
+- no remote template downloads
+- no template registry/search/update workflow
+- no complex template variable engine
+- no hidden provisioning bundles outside normal `yeast.yaml`
+- no LabsBackery-specific lab package format yet
+
 ## [0.6.0] - Draft
 
 ### Summary

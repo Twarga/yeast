@@ -4334,7 +4334,7 @@ Completion notes:
 
 ### V0.7-T7: Add v0.7 release notes
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4351,6 +4351,12 @@ Definition of done:
 - release notes match shipped template behavior
 - limitations are honest
 - changelog contains a draft v0.7.0 entry
+
+Completion notes:
+
+- Added `docs/release-notes-v0.7.0.md`.
+- Added a draft `0.7.0` changelog entry.
+- Updated README current limits so shipped snapshots, networking, guest control, and templates are represented accurately.
 
 ## M16: LabsBackery Contract
 

@@ -562,10 +562,11 @@ Current known limits:
 - QEMU/KVM only
 - no Windows or macOS host support
 - no VirtualBox backend
-- no snapshots yet
-- no multi-VM provisioning topology yet
-- no multi-VM networking yet
-- no guest exec/copy/logs yet
+- snapshots are stopped-VM and per-instance only
+- private networking supports one project-level lab network only
+- guest control is SSH-backed and one instance at a time
+- templates are project starters only
+- no remote template downloads or registry workflow
 - no daemon or remote worker mode yet
 - no full LabsBackery contract yet
 
@@ -601,6 +602,7 @@ yeast docs tutorial-test
 - [docs/architecture-overview.md](docs/architecture-overview.md)
 - [docs/charm-cli-plan.md](docs/charm-cli-plan.md)
 - [docs/release-notes-v0.1.0.md](docs/release-notes-v0.1.0.md)
+- [docs/release-notes-v0.7.0.md](docs/release-notes-v0.7.0.md)
 - [TASKS.md](TASKS.md)
 
 ---
