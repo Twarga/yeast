@@ -15,6 +15,7 @@ import (
 type DestroyOptions struct {
 	ProjectRoot string
 	Timeout     time.Duration
+	Events      EventSink
 }
 
 type DestroyInstanceResult struct {
@@ -44,6 +45,10 @@ func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (DestroyR
 		}
 		return DestroyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+	emitEvent(options.Events, "destroy", EventProjectLoaded, EventOptions{
+		ProjectID: metadata.ID,
+		Message:   "Project metadata loaded",
+	})
 	yeastHome, err := s.resolveYeastHome()
 	if err != nil {
 		return DestroyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
@@ -98,11 +103,23 @@ func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (DestroyR
 			Name:   name,
 			Status: "destroyed",
 		})
+		emitEvent(options.Events, "destroy", EventInstanceDestroyed, EventOptions{
+			ProjectID: metadata.ID,
+			Instance:  name,
+			Message:   "Instance destroyed",
+			Data: map[string]any{
+				"status": "destroyed",
+			},
+		})
 	}
 
 	if err := state.Save(paths.StateFile, currentState); err != nil {
 		return DestroyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+	emitEvent(options.Events, "destroy", EventWorkflowCompleted, EventOptions{
+		ProjectID: metadata.ID,
+		Message:   "Workflow completed",
+	})
 
 	return result, nil
 }

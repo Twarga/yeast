@@ -4619,7 +4619,7 @@ Completion notes:
 
 ### V0.9-T3: Add event coverage for stop/destroy workflows
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4632,6 +4632,14 @@ Definition of done:
 - `destroy --json --events` emits lifecycle events
 - events stay compatible with `yeast.v1`
 - tests cover the CLI event path
+
+Completion notes:
+
+- Added event sinks to `DownOptions` and `DestroyOptions`.
+- Wired `down` and `destroy` CLI commands through the shared `--json --events` renderer.
+- Emitted `project.loaded`, per-instance `instance.stopped` / `instance.destroyed`, and `workflow.completed`.
+- Updated JSON and LabsBakery integration docs.
+- Added service-level event tests and CLI validation tests for `--events` requiring `--json`.
 
 ### V0.9-T4: Define first lab package/template convention
 

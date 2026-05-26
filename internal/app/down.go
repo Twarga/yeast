@@ -15,6 +15,7 @@ import (
 type DownOptions struct {
 	ProjectRoot string
 	Timeout     time.Duration
+	Events      EventSink
 }
 
 type DownInstanceResult struct {
@@ -44,6 +45,10 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 		}
 		return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+	emitEvent(options.Events, "down", EventProjectLoaded, EventOptions{
+		ProjectID: metadata.ID,
+		Message:   "Project metadata loaded",
+	})
 	yeastHome, err := s.resolveYeastHome()
 	if err != nil {
 		return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
@@ -93,6 +98,14 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 				Name:   name,
 				Status: "already_stopped",
 			})
+			emitEvent(options.Events, "down", EventInstanceStopped, EventOptions{
+				ProjectID: metadata.ID,
+				Instance:  name,
+				Message:   "Instance already stopped",
+				Data: map[string]any{
+					"status": "already_stopped",
+				},
+			})
 			continue
 		}
 
@@ -123,11 +136,23 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 			Name:   name,
 			Status: "stopped",
 		})
+		emitEvent(options.Events, "down", EventInstanceStopped, EventOptions{
+			ProjectID: metadata.ID,
+			Instance:  name,
+			Message:   "Instance stopped",
+			Data: map[string]any{
+				"status": "stopped",
+			},
+		})
 	}
 
 	if err := state.Save(paths.StateFile, currentState); err != nil {
 		return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+	emitEvent(options.Events, "down", EventWorkflowCompleted, EventOptions{
+		ProjectID: metadata.ID,
+		Message:   "Workflow completed",
+	})
 
 	return result, nil
 }

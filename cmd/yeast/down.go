@@ -12,7 +12,11 @@ func newDownCmd(service *app.Service) *cobra.Command {
 		Use:   "down",
 		Short: "Stop running VMs in the current project",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			result, err := service.Down(context.Background(), app.DownOptions{})
+			events, err := eventSink(cmd.OutOrStdout())
+			if err != nil {
+				return err
+			}
+			result, err := service.Down(context.Background(), app.DownOptions{Events: events})
 			if err != nil {
 				return err
 			}

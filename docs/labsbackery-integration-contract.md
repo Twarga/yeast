@@ -162,7 +162,7 @@ Expected use:
 ### Stop Lab
 
 ```bash
-yeast down --json
+yeast down --json --events
 ```
 
 Expected use:
@@ -173,7 +173,7 @@ Expected use:
 ### Destroy Lab
 
 ```bash
-yeast destroy --json
+yeast destroy --json --events
 ```
 
 Expected use:
@@ -184,7 +184,7 @@ Expected use:
 ### Create Baseline
 
 ```bash
-yeast down --json
+yeast down --json --events
 yeast snapshot <instance> clean --description "Clean baseline" --json
 ```
 
@@ -193,7 +193,7 @@ For multi-VM labs, LabsBakery v0.1 should snapshot each instance one at a time w
 ### Reset Lab
 
 ```bash
-yeast down --json
+yeast down --json --events
 yeast restore <instance> clean --json --events
 yeast up --json --events
 ```
@@ -257,6 +257,8 @@ LabsBakery should use JSON Lines events for long-running operations:
 yeast up --json --events
 yeast provision --json --events
 yeast restore <instance> clean --json --events
+yeast down --json --events
+yeast destroy --json --events
 ```
 
 Required event fields:

@@ -250,6 +250,8 @@ Initial commands with event streaming:
 - `yeast up --json --events`
 - `yeast provision [instance] --json --events`
 - `yeast restore <instance> <name> --json --events`
+- `yeast down --json --events`
+- `yeast destroy --json --events`
 
 Event output uses this envelope:
 

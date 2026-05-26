@@ -364,6 +364,39 @@ func TestEventSinkRequiresJSON(t *testing.T) {
 	}
 }
 
+func TestDownAndDestroyEventsRequireJSON(t *testing.T) {
+	tests := []string{"down", "destroy"}
+
+	for _, command := range tests {
+		command := command
+		t.Run(command, func(t *testing.T) {
+			previousJSON := outputJSON
+			previousEvents := outputEvents
+			outputJSON = false
+			outputEvents = false
+			defer func() {
+				outputJSON = previousJSON
+				outputEvents = previousEvents
+			}()
+
+			root := newRootCmd(app.NewService())
+			root.SetArgs([]string{command, "--events"})
+
+			var buf bytes.Buffer
+			root.SetOut(&buf)
+			root.SetErr(&buf)
+
+			err := root.Execute()
+			if err == nil {
+				t.Fatal("expected --events without --json to fail")
+			}
+			if !strings.Contains(err.Error(), "--events requires --json") {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
 func TestEventSinkRendersJSONLine(t *testing.T) {
 	previousJSON := outputJSON
 	previousEvents := outputEvents

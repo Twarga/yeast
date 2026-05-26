@@ -104,6 +104,60 @@ func TestDownHandlesAlreadyStoppedInstances(t *testing.T) {
 	}
 }
 
+func TestDownEmitsLifecycleEvents(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.managementPortAvailable = func(port int) bool { return true }
+	service.sleep = func(time.Duration) {}
+	service.runtime = &fakeDownRuntime{}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+
+	current := state.New(metadata.ID)
+	current.Instances["api"] = state.InstanceState{Status: "stopped"}
+	current.Instances["web"] = state.InstanceState{Status: "running", PID: 1001, SSHPort: 2222, RuntimeDir: "/tmp/web"}
+	if err := state.Save(paths.StateFile, current); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	var events []Event
+	_, err = service.Down(context.Background(), DownOptions{
+		ProjectRoot: root,
+		Timeout:     5 * time.Second,
+		Events: func(event Event) {
+			events = append(events, event)
+		},
+	})
+	if err != nil {
+		t.Fatalf("Down returned error: %v", err)
+	}
+
+	got := eventNames(events)
+	want := []EventName{EventProjectLoaded, EventInstanceStopped, EventInstanceStopped, EventWorkflowCompleted}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("unexpected events:\n got: %#v\nwant: %#v", got, want)
+	}
+	if events[1].Command != "down" || events[1].Instance != "api" {
+		t.Fatalf("unexpected first instance event: %#v", events[1])
+	}
+	if events[2].Command != "down" || events[2].Instance != "web" {
+		t.Fatalf("unexpected second instance event: %#v", events[2])
+	}
+}
+
 func TestDownClassifiesRuntimeStopFailure(t *testing.T) {
 	root := t.TempDir()
 	yeastHome := filepath.Join(root, "yeast-home")
