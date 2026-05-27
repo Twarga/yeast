@@ -4892,7 +4892,7 @@ Completion notes:
 
 ### V1.0-T6: Expand release smoke coverage
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4922,6 +4922,15 @@ Definition of done:
   - destroy
   - negative JSON error cases
 - script stays optional for host-dependent VM checks
+
+Completion notes:
+
+- Updated `scripts/manual-smoke.sh` default workdir for the v1 candidate.
+- Added LabsBakery example package materialization coverage using `yeast init --template examples/labsbackery-attacker-target-basic`.
+- Added `TEST_MODE=templates` for non-VM template and LabsBakery package smoke coverage.
+- The smoke suite now verifies LabsBakery package files, lab schema, attacker/target config, scenario checks, and target marker file materialization.
+- Refreshed stale smoke labels from old v0.5/v0.7 wording.
+- Updated `docs/tutorial-test.md` for the v1.0 candidate and documented the expanded smoke coverage and modes.
 
 ### V1.0-T7: Run real-host v1 candidate validation
 

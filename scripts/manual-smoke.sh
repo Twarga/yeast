@@ -2,7 +2,7 @@
 set -euo pipefail
 
 BIN_PATH="${1:-}"
-WORKDIR="${WORKDIR:-/tmp/yeast-v050-test}"
+WORKDIR="${WORKDIR:-/tmp/yeast-v100-test}"
 IMAGE_NAME="${IMAGE_NAME:-ubuntu-24.04}"
 INSTANCE_NAME="${INSTANCE_NAME:-web}"
 INSTANCE_HOSTNAME="${INSTANCE_HOSTNAME:-caddy-lab}"
@@ -70,6 +70,7 @@ PORT_VALUE=""
 POSITIVE_DIR="${WORKDIR}/happy-path"
 NETWORK_DIR="${WORKDIR}/network-path"
 TEMPLATE_DIR="${WORKDIR}/template-path"
+LABSBACKERY_DIR="${WORKDIR}/labsbackery-package-path"
 NEGATIVE_ROOT="${WORKDIR}/negative-cases"
 
 section() {
@@ -99,9 +100,9 @@ record_fail() {
 
 require_test_mode() {
   case "${TEST_MODE}" in
-    full|positive|negative) ;;
+    full|positive|negative|templates) ;;
     *)
-      fail "invalid TEST_MODE=${TEST_MODE} (expected full, positive, or negative)"
+      fail "invalid TEST_MODE=${TEST_MODE} (expected full, positive, negative, or templates)"
       ;;
   esac
 }
@@ -505,6 +506,28 @@ run_template_suite() {
   record_pass "Initialize built-in Caddy template"
 }
 
+run_labsbackery_package_suite() {
+  section "Materialize LabsBakery example package"
+  rm -rf "${LABSBACKERY_DIR}"
+  mkdir -p "${LABSBACKERY_DIR}"
+  cd "${LABSBACKERY_DIR}"
+
+  "${BIN_PATH}" init --template "${REPO_ROOT}/examples/labsbackery-attacker-target-basic"
+
+  for generated_file in yeast.yaml lab.yaml README.md scenario/instructions.md scenario/checks.yaml files/target/flag.txt .yeast/project.json; do
+    if [[ ! -f "${LABSBACKERY_DIR}/${generated_file}" ]]; then
+      fail "expected LabsBakery package file ${generated_file}"
+    fi
+  done
+
+  assert_contains "$(cat "${LABSBACKERY_DIR}/lab.yaml")" "schema: labsbakery.lab.v1" "lab package includes LabsBakery schema"
+  assert_contains "$(cat "${LABSBACKERY_DIR}/yeast.yaml")" "${ATTACKER_NAME}" "lab package config includes attacker"
+  assert_contains "$(cat "${LABSBACKERY_DIR}/yeast.yaml")" "${TARGET_NAME}" "lab package config includes target"
+  assert_contains "$(cat "${LABSBACKERY_DIR}/scenario/checks.yaml")" "attacker-reaches-target-ssh" "lab package checks include attacker reachability check"
+  assert_contains "$(cat "${LABSBACKERY_DIR}/files/target/flag.txt")" "labsbackery-ready" "lab package includes target marker file"
+  record_pass "Materialize LabsBakery example package"
+}
+
 run_positive_suite() {
   section "Prepare clean project"
   rm -rf "${POSITIVE_DIR}"
@@ -516,7 +539,7 @@ run_positive_suite() {
   if [[ "${INSTANCE_SSH_PORT}" != "2205" ]]; then
     rewrite_ssh_port "${POSITIVE_DIR}" "${INSTANCE_SSH_PORT}"
   fi
-  section "Generated v0.7.0 template config"
+  section "Generated template config"
   cat "${POSITIVE_DIR}/yeast.yaml"
   assert_contains "$(cat "${POSITIVE_DIR}/yeast.yaml")" "caddy" "generated template config includes caddy"
   record_pass "Generated template config"
@@ -743,7 +766,7 @@ run_network_suite() {
 
   run_capture "Init two-VM lab" "${BIN_PATH}" init
 
-  section "Write v0.5.0 network config"
+  section "Write network config"
   write_network_config "${NETWORK_DIR}"
   cat "${NETWORK_DIR}/yeast.yaml"
   record_pass "Write network config"
@@ -1000,8 +1023,12 @@ run_capture "Doctor" "${BIN_PATH}" doctor
 rm -rf "${WORKDIR}"
 mkdir -p "${WORKDIR}"
 
-if [[ "${TEST_MODE}" == "full" || "${TEST_MODE}" == "positive" ]]; then
+if [[ "${TEST_MODE}" == "full" || "${TEST_MODE}" == "positive" || "${TEST_MODE}" == "templates" ]]; then
   run_template_suite
+  run_labsbackery_package_suite
+fi
+
+if [[ "${TEST_MODE}" == "full" || "${TEST_MODE}" == "positive" ]]; then
   run_positive_suite
   run_network_suite
 fi

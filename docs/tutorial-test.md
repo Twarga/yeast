@@ -1,6 +1,6 @@
-# Yeast v0.7.0 Manual Test Tutorial
+# Yeast v1.0 Candidate Manual Test Tutorial
 
-This is the real host manual test for the current `v0.7.0` candidate.
+This is the real-host smoke test for the current `v1.0.0` stabilization candidate.
 
 It assumes:
 
@@ -10,6 +10,7 @@ It assumes:
   - the single-VM provisioning/reset loop
   - the first two-VM private lab network
   - built-in template listing and initialization
+  - LabsBakery package materialization
 
 Use the built binary directly:
 
@@ -29,8 +30,13 @@ TEST_MODE=full ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
 
 That script now proves:
 
+- `yeast doctor`
 - `yeast init --list-templates`
 - `yeast init --template caddy-single-vm`
+- `yeast init --template examples/labsbackery-attacker-target-basic`
+- `yeast pull`
+- `yeast up`
+- `yeast status`
 - lifecycle path
 - `disk_size`, `hostname`, and `ssh_port`
 - provisioning during `yeast up`
@@ -40,9 +46,12 @@ That script now proves:
 - `yeast logs`
 - `yeast provision` reruns
 - stopped-VM snapshot create/list/restore/delete
+- `yeast down`
+- `yeast destroy`
 - two-VM private lab boot
 - visible `LAB IP` values in `yeast status`
 - guest-to-guest lab TCP reachability
+- LabsBakery lab package files and metadata materialize from the example package
 - negative JSON contracts for:
   - invalid config
   - bad project/state
@@ -56,18 +65,21 @@ That script now proves:
 TEST_MODE=full ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
 TEST_MODE=positive ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
 TEST_MODE=negative ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
+TEST_MODE=templates ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64
 ```
 
 - `full`: single-VM provisioning/reset + two-VM lab networking + negative checks
 - `positive`: only the real VM and lab workflows
 - `negative`: only error-path contract checks
+- `templates`: only built-in template listing/init and LabsBakery package materialization; does not boot VMs
 
-## What v0.7.0 Proves
+## What The v1 Candidate Proves
 
 This candidate can now:
 
 - list built-in templates
 - initialize a normal editable project from a built-in template
+- initialize a normal editable project from the LabsBakery example package
 - boot and manage real QEMU/KVM guests
 - provision them after SSH readiness
 - snapshot and restore a stopped VM
@@ -78,6 +90,7 @@ This candidate can now:
 - run one-shot commands inside the guest
 - move files in and out of the guest
 - expose VM runtime logs and detailed instance state
+- expose stable JSON envelopes and event streams for supported workflows
 
 This still does not prove:
 
@@ -88,7 +101,9 @@ This still does not prove:
 - DHCP
 - multiple private networks
 - multi-network topology editing
-- LabsBackery / MCP / cloud worker flows
+- LabsBakery web UI
+- Yeast MCP server
+- cloud worker flows
 
 ## Manual Flow
 
@@ -96,6 +111,7 @@ If you want to run the same logic by hand instead of the smoke script, use these
 
 - `yeast init --template caddy-single-vm`
 - `yeast init --template two-vm-lab`
+- `yeast init --template ./examples/labsbackery-attacker-target-basic`
 
 ### Single-VM flow
 
