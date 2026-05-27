@@ -4934,7 +4934,7 @@ Completion notes:
 
 ### V1.0-T7: Run real-host v1 candidate validation
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4954,6 +4954,17 @@ Definition of done:
 - run the two-VM lab example
 - run the LabsBakery attacker/target example at least through materialization and documented Yeast commands
 - record validation notes in a v1.0 release checklist doc
+
+Completion notes:
+
+- Built `v1.0.0-rc1` release candidate artifact and verified checksum.
+- Ran `go test ./... -count=1`.
+- Ran shell syntax checks and whitespace diff check.
+- Installed pinned static-analysis tools and ran `./scripts/static-analysis.sh artifacts`.
+- Ran installer path through a temporary non-system install harness because the agent cannot provide the maintainer sudo password.
+- Ran full real-host KVM smoke with `TEST_MODE=full WORKDIR=/tmp/yeast-v1-full-smoke ./scripts/manual-smoke.sh ./dist/yeast-linux-amd64`.
+- Full smoke passed Caddy template init, provisioning, guest control, snapshot/restore, two-VM networking, LabsBakery package materialization, and negative JSON error cases.
+- Recorded validation in `docs/release-checklist-v1.0.0.md`.
 
 ### V1.0-T8: Refresh public docs and README for v1.0
 
