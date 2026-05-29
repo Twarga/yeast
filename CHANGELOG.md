@@ -7,6 +7,33 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-05-29
+
+### Summary
+
+Yeast v1.0.1 is a patch release from the post-v1 massive validation pass. It fixes a race-detector issue in TCP readiness tests and upgrades `golang.org/x/net` to remove a reachable vulnerability reported by `govulncheck`.
+
+### Fixed
+
+- Removed package-level readiness test dial mutation that caused `go test -race ./...` to report a data race.
+- Added optional `ReadinessOptions.Dial` test injection instead of shared package state.
+
+### Security
+
+- Upgraded `golang.org/x/net` from `v0.33.0` to `v0.38.0`.
+- Fixed reachable `GO-2025-3595` exposure through the CLI docs rendering dependency path.
+
+### Verification
+
+- `go test ./... -count=1`
+- `go test -race ./... -count=1`
+- `go test ./... -coverprofile=/tmp/yeast-cover.out -count=1`
+- `govulncheck ./...`
+- `./scripts/static-analysis.sh artifacts`
+- shell syntax checks
+- `git diff --check`
+- full real-host KVM smoke test
+
 ## [1.0.0] - 2026-05-29
 
 ### Summary

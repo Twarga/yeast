@@ -2,7 +2,7 @@
 set -euo pipefail
 
 YEAST_REPO_URL="${YEAST_REPO_URL:-https://github.com/Twarga/yeast.git}"
-YEAST_REF="${YEAST_REF:-v1.0.0}"
+YEAST_REF="${YEAST_REF:-v1.0.1}"
 YEAST_INSTALL_DIR="${YEAST_INSTALL_DIR:-/usr/local/bin}"
 YEAST_BIN_PATH="${YEAST_INSTALL_DIR}/yeast"
 YEAST_EXPECTED_VERSION="${YEAST_EXPECTED_VERSION:-}"

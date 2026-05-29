@@ -623,6 +623,7 @@ yeast docs tutorial-test
 - [docs/labsbackery-integration-contract.md](docs/labsbackery-integration-contract.md)
 - [docs/labsbackery-lab-package.md](docs/labsbackery-lab-package.md)
 - [docs/release-checklist-v1.0.0.md](docs/release-checklist-v1.0.0.md)
+- [docs/release-notes-v1.0.1.md](docs/release-notes-v1.0.1.md)
 - [docs/release-notes-v1.0.0.md](docs/release-notes-v1.0.0.md)
 - [docs/release-notes-v0.1.0.md](docs/release-notes-v0.1.0.md)
 - [docs/release-notes-v0.2.0.md](docs/release-notes-v0.2.0.md)

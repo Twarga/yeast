@@ -37,20 +37,14 @@ func TestWaitForTCPSucceedsAgainstListeningServer(t *testing.T) {
 func TestWaitForTCPTimeout(t *testing.T) {
 	t.Parallel()
 
-	previous := dialContext
-	defer func() {
-		dialContext = previous
-	}()
-
-	dialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
-		return nil, context.DeadlineExceeded
-	}
-
 	err := WaitForTCP(context.Background(), ReadinessOptions{
 		Address:      "127.0.0.1:2222",
 		Timeout:      300 * time.Millisecond,
 		PollInterval: 10 * time.Millisecond,
 		DialTimeout:  10 * time.Millisecond,
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			return nil, context.DeadlineExceeded
+		},
 	})
 	if err == nil {
 		t.Fatal("expected timeout error, got nil")
@@ -61,32 +55,29 @@ func TestWaitForTCPTimeout(t *testing.T) {
 }
 
 func TestWaitForTCPRetriesConnectionRefusedThenSucceeds(t *testing.T) {
-	previous := dialContext
-	defer func() {
-		dialContext = previous
-	}()
+	t.Parallel()
 
 	attempts := 0
-	dialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
-		attempts++
-		if attempts < 3 {
-			return nil, &net.OpError{Err: syscall.ECONNREFUSED}
-		}
-
-		server, client := net.Pipe()
-		go func() {
-			<-ctx.Done()
-			_ = server.Close()
-		}()
-		_ = server.Close()
-		return client, nil
-	}
 
 	err := WaitForTCP(context.Background(), ReadinessOptions{
 		Address:      "127.0.0.1:2222",
 		Timeout:      2 * time.Second,
 		PollInterval: 10 * time.Millisecond,
 		DialTimeout:  10 * time.Millisecond,
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			attempts++
+			if attempts < 3 {
+				return nil, &net.OpError{Err: syscall.ECONNREFUSED}
+			}
+
+			server, client := net.Pipe()
+			go func() {
+				<-ctx.Done()
+				_ = server.Close()
+			}()
+			_ = server.Close()
+			return client, nil
+		},
 	})
 	if err != nil {
 		t.Fatalf("WaitForTCP returned error: %v", err)

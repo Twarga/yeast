@@ -20,11 +20,10 @@ type ReadinessOptions struct {
 	Timeout      time.Duration
 	PollInterval time.Duration
 	DialTimeout  time.Duration
+	Dial         DialFunc
 }
 
 type DialFunc func(ctx context.Context, network, address string) (net.Conn, error)
-
-var dialContext DialFunc = defaultDialContext
 
 func WaitForTCP(ctx context.Context, options ReadinessOptions) error {
 	if options.Address == "" {
@@ -42,13 +41,17 @@ func WaitForTCP(ctx context.Context, options ReadinessOptions) error {
 	if dialTimeout <= 0 {
 		dialTimeout = DefaultDialTimeout
 	}
+	dial := options.Dial
+	if dial == nil {
+		dial = defaultDialContext
+	}
 
 	deadline := time.Now().Add(options.Timeout)
 	var lastErr error
 
 	for {
 		attemptCtx, cancel := context.WithTimeout(ctx, dialTimeout)
-		conn, err := dialContext(attemptCtx, "tcp", options.Address)
+		conn, err := dial(attemptCtx, "tcp", options.Address)
 		cancel()
 		if err == nil {
 			_ = conn.Close()
