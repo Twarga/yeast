@@ -1,8 +1,8 @@
 # Yeast Known Limitations
 
-This document describes Yeast `v0.7` planning limits and the shipped `v0.6` behavior.
+This document describes the current Yeast `v1.0` limits.
 
-Yeast is intentionally narrow right now. The goal is a reliable local VM core before adding LabsBackery, MCP, cloud, advanced networking, and richer guest-control workflows.
+Yeast is intentionally narrow. The goal of v1.0 is a reliable local VM engine before adding daemon mode, cloud workers, advanced networking, richer guest health checks, and product-specific LabsBakery UI behavior.
 
 ## Platform Limits
 
@@ -35,7 +35,7 @@ Current images:
 
 ## Provisioning Limits
 
-Yeast `v0.3` now supports:
+Yeast `v1.0` supports:
 
 - `provision.packages`
 - `provision.files`
@@ -56,7 +56,7 @@ Raw `user_data` still fully replaces Yeast-generated cloud-init.
 
 ## Networking Limits
 
-Yeast `v0.5` now supports the first narrow private lab network:
+Yeast `v1.0` supports the first narrow private lab network:
 
 - one project-level private lab network
 - one static IPv4 per attached instance
@@ -72,11 +72,11 @@ Current limits:
 - multiple private networks in one project are not supported
 - multi-network lab topologies are not supported
 - the current guest-side lab NIC shape is one deterministic interface (`yeastlab0`) only
-- deeper guest-to-guest validation is still manual from inside the VMs
+- full smoke coverage validates guest-to-guest TCP reachability, but deeper topology debugging is still manual from inside the VMs
 
 ## Snapshot Limits
 
-Yeast `v0.4` now supports the first narrow reset loop:
+Yeast `v1.0` supports the first narrow reset loop:
 
 - per-instance snapshot create
 - per-instance snapshot list
@@ -99,7 +99,7 @@ This is enough for the first single-VM reset workflows, but still not enough for
 
 ## Guest Control Limits
 
-Yeast `v0.6` now supports the first narrow guest-control surface:
+Yeast `v1.0` supports the first narrow guest-control surface:
 
 - `yeast exec`
 - `yeast copy`
@@ -118,14 +118,14 @@ Current limits:
 
 ## Template Limits
 
-Yeast `v0.7` will add the first narrow template surface:
+Yeast `v1.0` supports the first narrow template surface:
 
 - `yeast init --list-templates`
 - `yeast init --template <name-or-path>`
 - built-in templates
 - local filesystem templates
 
-Current planned limits:
+Current limits:
 
 - templates are project starters only
 - generated projects are normal editable Yeast projects
@@ -133,28 +133,28 @@ Current planned limits:
 - no template registry/search/update workflow
 - no complex variable engine
 - no hidden provisioning bundles outside normal `yeast.yaml`
-- no LabsBackery-specific package format yet
+- Yeast can materialize LabsBakery-style local template packages, but LabsBakery package import/export is still a LabsBakery product concern
 
 ## UI And Integration Limits
 
 - No daemon.
 - No web API.
 - No TUI progress view yet.
-- No LabsBackery integration contract yet.
+- First LabsBakery local-engine integration contract is documented.
 - No MCP server yet.
 
-The current integration surface is the CLI plus `--json`.
+The current integration surface is the CLI plus `--json` and `--json --events`.
 
 ## Stability Limits
 
-The project is still pre-1.0.
+Yeast v1.0 stabilizes the local engine surface documented in the command, config, and JSON references.
 
-Expected to change before v1:
+Still expected to evolve after v1.0:
 
-- config schema details
-- state schema details
-- JSON schemas
-- error codes
+- future config fields for features outside the current v1 scope
+- state internals, with migrations when needed
+- new JSON fields, added compatibly where possible
+- new event names for future workflows
 - image manifest format
 
-The goal is to stabilize these before `v1.0`.
+Existing v1 command names, config fields, JSON envelope shape, and documented error codes should not be broken casually.

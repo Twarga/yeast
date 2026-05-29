@@ -26,6 +26,7 @@
       <div class="nav-links">
         <a href="#config">Config</a>
         <a href="#features">Features</a>
+        <a href="#docs">Docs</a>
         <a href="#showcase">Showcase</a>
         <a href="https://github.com/Twarga/yeast" class="nav-cta">GitHub</a>
       </div>
@@ -58,13 +59,13 @@
             <span>Copy</span>
           </button>
         </div>
-        <pre class="term-body"><code id="install-cmd"><span class="p">$</span> <span class="c">curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.7.0/install.sh | YEAST_REF=v0.7.0 bash</span></code></pre>
+        <pre class="term-body"><code id="install-cmd"><span class="p">$</span> <span class="c">curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash</span></code></pre>
       </div>
     </section>
 
     <script>
       async function copyInstall(btn) {
-        const text = "curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.7.0/install.sh | YEAST_REF=v0.7.0 bash";
+        const text = "curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash";
         try {
           await navigator.clipboard.writeText(text);
           const span = btn.querySelector('span');
@@ -152,10 +153,50 @@
       </div>
     </section>
 
+    <!-- Docs -->
+    <section class="features" id="docs">
+      <div class="features-header">
+        <span class="section-tag">03 — Documentation</span>
+        <h2>The v1.0 surface is documented.</h2>
+      </div>
+      <div class="features-grid">
+        <a class="feat" href="quickstart.md">
+          <div class="feat-num">QS</div>
+          <h3>Quickstart</h3>
+          <p>Install, initialize, pull, boot, SSH, snapshot, restore, and destroy your first projects.</p>
+        </a>
+        <a class="feat" href="command-reference.md">
+          <div class="feat-num">CLI</div>
+          <h3>Commands</h3>
+          <p>The stable v1 command surface for humans, scripts, and product integrations.</p>
+        </a>
+        <a class="feat" href="config-reference.md">
+          <div class="feat-num">YML</div>
+          <h3>Config</h3>
+          <p>The v1 <code>yeast.yaml</code> schema for instances, provisioning, networks, and templates.</p>
+        </a>
+        <a class="feat" href="json-contract.md">
+          <div class="feat-num">API</div>
+          <h3>JSON Contract</h3>
+          <p>Versioned envelopes, event streams, and error codes for LabsBakery, MCP, and automation.</p>
+        </a>
+        <a class="feat" href="labsbackery-integration-contract.md">
+          <div class="feat-num">LB</div>
+          <h3>LabsBakery</h3>
+          <p>The local-engine boundary for lab sessions, terminals, checks, reset, and status panels.</p>
+        </a>
+        <a class="feat" href="known-limitations.md">
+          <div class="feat-num">LIM</div>
+          <h3>Limits</h3>
+          <p>What v1.0 intentionally does not do yet, including cloud, daemon mode, and advanced networks.</p>
+        </a>
+      </div>
+    </section>
+
     <!-- Showcase / Terminal -->
     <section class="showcase" id="showcase">
       <div class="showcase-header">
-        <span class="section-tag">03 — In Action</span>
+        <span class="section-tag">04 — In Action</span>
         <h2>From zero to running VMs.</h2>
       </div>
       <div class="term term-xl">
@@ -236,7 +277,10 @@
       <div class="footer-links">
         <a href="quickstart.md">Quickstart</a>
         <a href="installation.md">Install</a>
+        <a href="command-reference.md">Commands</a>
         <a href="config-reference.md">Config</a>
+        <a href="json-contract.md">JSON</a>
+        <a href="labsbackery-integration-contract.md">LabsBakery</a>
         <a href="known-limitations.md">Limits</a>
         <a href="architecture-overview.md">Architecture</a>
       </div>

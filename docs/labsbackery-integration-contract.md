@@ -1,6 +1,6 @@
 # LabsBakery Integration Contract
 
-Status: Draft for Yeast v0.9.0
+Status: Stable local-engine contract for Yeast v1.0.0
 
 Yeast is the VM engine. LabsBakery is the lab product. This contract defines how LabsBakery should call Yeast without reimplementing VM runtime behavior or depending on human terminal output.
 
@@ -83,7 +83,7 @@ The source package convention is defined in `docs/labsbackery-lab-package.md`.
 LabsBakery should require:
 
 ```text
-yeast version >= v0.9.0
+yeast version >= v1.0.0
 ```
 
 Required contract:
@@ -190,7 +190,7 @@ yeast down --json --events
 yeast snapshot <instance> clean --description "Clean baseline" --json
 ```
 
-For multi-VM labs, LabsBakery v0.1 should snapshot each instance one at a time while all instances are stopped.
+For the first LabsBakery local adapter, snapshot each instance one at a time while all instances are stopped.
 
 ### Reset Lab
 
@@ -200,7 +200,7 @@ yeast restore <instance> clean --json --events
 yeast up --json --events
 ```
 
-For multi-VM labs, LabsBakery v0.1 should restore each instance one at a time while all instances are stopped, then start the full lab again.
+For the first LabsBakery local adapter, restore each instance one at a time while all instances are stopped, then start the full lab again.
 
 LabsBakery should make reset a destructive action in the UI because it discards learner changes after the baseline.
 
@@ -340,7 +340,7 @@ JSON status/debug panel
 
 This target proves the full engine path without cloud hosting, auth, billing, marketplace, or advanced visual builder scope.
 
-## Yeast Gaps To Track During v0.9
+## Yeast Gaps To Track After v1.0
 
 These are possible Yeast improvements found by the contract. Add them only when they are generic engine improvements:
 

@@ -1,8 +1,8 @@
 # Yeast Quickstart
 
-This guide gets one Ubuntu VM running with Yeast `v0.7`, shows the provisioning and stopped-VM reset flow, proves the first guest-control commands, and then points to the first two-VM private lab template.
+This guide gets one Ubuntu VM running with Yeast `v1.0`, shows the provisioning and stopped-VM reset flow, proves guest-control commands, and then points to the first two-VM private lab template.
 
-Yeast is still Linux-first and QEMU/KVM-first. `v0.7` keeps the narrow `v0.6` VM engine and adds project starters through `yeast init --template`.
+Yeast is still Linux-first and QEMU/KVM-first. `v1.0` is the stable local engine target for project VMs, provisioning, snapshots, one private lab network, guest control, templates, JSON/events, and the first LabsBakery integration boundary.
 
 ## 1. Check The Host
 
@@ -148,7 +148,7 @@ This stops tracked running VMs but keeps runtime files and disks.
 
 ## 10. Create A Snapshot
 
-Snapshots in `v0.4` are stopped-VM only. Create the baseline after provisioning has finished and the VM is stopped.
+Snapshots in `v1.0` are stopped-VM only. Create the baseline after provisioning has finished and the VM is stopped.
 
 ```bash
 yeast snapshot web clean --description "Provisioned baseline"
@@ -217,7 +217,7 @@ Read the VM runtime log:
 yeast logs web --tail 20
 ```
 
-`yeast ssh` is still the interactive terminal flow. The new `v0.6` commands are for one-shot operations and structured automation.
+`yeast ssh` is still the interactive terminal flow. Guest-control commands are for one-shot operations and structured automation.
 
 ## 14. First Two-VM Private Lab
 
@@ -268,7 +268,7 @@ yeast status --json
 
 ## First Provisioning And Reset Demo
 
-The reference `v0.4` demo is:
+The reference provisioning and reset demo is:
 
 ```text
 examples/caddy-single-vm

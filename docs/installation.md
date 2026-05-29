@@ -111,10 +111,10 @@ To install an explicit release, branch, or commit:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_REF=main bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_REF=v0.9.0 bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_REF=v1.0.0 bash
 ```
 
-When `YEAST_REF` is a semantic version tag such as `v0.9.0`, the installer injects that version into the built binary and verifies `yeast version` after installation.
+When `YEAST_REF` is a semantic version tag such as `v1.0.0`, the installer injects that version into the built binary and verifies `yeast version` after installation.
 
 When installing a branch or commit that is not a semantic version tag, the installer builds with `0.0.0-dev` unless `YEAST_EXPECTED_VERSION` is set.
 
@@ -160,7 +160,7 @@ Supported overrides:
 
 ```bash
 YEAST_REPO_URL=https://github.com/Twarga/yeast.git
-YEAST_REF=v0.9.0
+YEAST_REF=v1.0.0
 YEAST_INSTALL_DIR=/usr/local/bin
 YEAST_EXPECTED_VERSION=
 YEAST_INSTALL_VERBOSE=1
@@ -188,7 +188,7 @@ Examples:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_REF=v0.9.0 bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_REF=v1.0.0 bash
 ```
 
 The installer overwrites the binary at `YEAST_INSTALL_DIR/yeast`. It does not delete project directories, cached images, disks, snapshots, or state under `~/.yeast`.

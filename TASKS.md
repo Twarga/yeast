@@ -4968,7 +4968,7 @@ Completion notes:
 
 ### V1.0-T8: Refresh public docs and README for v1.0
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -4986,6 +4986,15 @@ Definition of done:
 - known limitations are honest and current
 - LabsBakery integration docs reflect v1.0 as the minimum stable target
 - landing page content does not overpromise
+
+Completion notes:
+
+- Updated README scope, status badge, quickstart output shapes, config wording, current limits, and docs index for v1.0.
+- Updated quickstart and known limitations from old v0.7/v0.6 wording to the v1.0 local-engine surface.
+- Updated installation examples to use `v1.0.0` for explicit release installs.
+- Updated LabsBakery integration and package docs to require Yeast `v1.0.0` and describe the local-engine contract as stable.
+- Updated landing page install command, docs links, footer links, and v1.0 wording without adding cloud/daemon promises.
+- Fixed stale manual-test pass criteria wording.
 
 ### V1.0-T9: Prepare v1.0 release notes and changelog
 

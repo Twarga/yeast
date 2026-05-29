@@ -139,7 +139,7 @@ code {
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 0;
   margin-bottom: 28px;
 }
 
@@ -147,7 +147,7 @@ code {
   font-size: clamp(42px, 7vw, 84px);
   font-weight: 900;
   line-height: 0.98;
-  letter-spacing: -2.5px;
+  letter-spacing: 0;
   color: #fff;
   margin-bottom: 24px;
 }
@@ -327,7 +327,7 @@ code {
   font-size: clamp(32px, 4.5vw, 52px);
   font-weight: 800;
   line-height: 1.05;
-  letter-spacing: -1.5px;
+  letter-spacing: 0;
   color: #fff;
   margin-bottom: 16px;
 }
@@ -369,7 +369,7 @@ code {
   font-weight: 700;
   color: var(--amber);
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 0;
   margin-bottom: 14px;
 }
 
@@ -389,7 +389,7 @@ code {
   font-size: clamp(32px, 4.5vw, 52px);
   font-weight: 800;
   line-height: 1.05;
-  letter-spacing: -1.5px;
+  letter-spacing: 0;
   color: #fff;
 }
 
@@ -427,7 +427,7 @@ code {
   font-weight: 800;
   color: #fff;
   margin-bottom: 10px;
-  letter-spacing: -0.3px;
+  letter-spacing: 0;
 }
 
 .feat p {
@@ -451,7 +451,7 @@ code {
   font-size: clamp(32px, 4.5vw, 52px);
   font-weight: 800;
   line-height: 1.05;
-  letter-spacing: -1.5px;
+  letter-spacing: 0;
   color: #fff;
 }
 
@@ -481,7 +481,7 @@ code {
   font-weight: 800;
   color: #fff;
   margin: 14px 0 10px;
-  letter-spacing: -0.3px;
+  letter-spacing: 0;
   line-height: 1.2;
 }
 
@@ -514,7 +514,7 @@ code {
   font-size: clamp(36px, 5vw, 64px);
   font-weight: 900;
   line-height: 1.05;
-  letter-spacing: -2px;
+  letter-spacing: 0;
   color: #fff;
   margin-bottom: 16px;
 }
@@ -608,7 +608,7 @@ code {
   }
 
   .hero h1 {
-    letter-spacing: -1.5px;
+    letter-spacing: 0;
   }
 
   .term-xl { max-width: 100%; }

@@ -15,7 +15,7 @@ Fast project-based virtual machines with cloud-init, trusted base images, post-b
 ![Go](https://img.shields.io/badge/go-1.25+-cyan.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 ![Runtime](https://img.shields.io/badge/runtime-QEMU%2FKVM-6f42c1.svg)
-![State](https://img.shields.io/badge/status-v0.9%20LabsBakery--ready-8a6d3b.svg)
+![State](https://img.shields.io/badge/status-v1.0%20stable%20local%20engine-8a6d3b.svg)
 
 [Website](https://twarga.github.io/yeast/) · [Quick Start](#quick-start) · [Current Scope](#current-scope) · [Commands](#commands) · [Examples](#examples) · [Architecture](#architecture) · [Limits](#current-limits)
 
@@ -48,9 +48,9 @@ The important constraint is still simple: **keep the core small and reliable bef
 
 ## Current Scope
 
-Yeast `v0.9` is still intentionally narrow. It now covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, operate inside the guest through a first SSH-backed control surface, start new projects from built-in or local templates, expose a versioned JSON/events contract for tools, and define the first LabsBakery integration boundary.
+Yeast `v1.0` is the first stable local engine release. It covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, operate inside the guest through an SSH-backed control surface, start new projects from built-in or local templates, expose a versioned JSON/events contract for tools, and define the first LabsBakery integration boundary.
 
-| Area | v0.9 status |
+| Area | v1.0 status |
 |---|---|
 | Host support | Linux only |
 | Runtime | QEMU + KVM |
@@ -101,7 +101,7 @@ Yeast `v0.9` is still intentionally narrow. It now covers one complete loop: boo
 - LabsBakery lab package convention docs
 - first Yeast-backed LabsBakery attacker/target example package
 
-### What is not in v0.9 yet
+### What is not in v1.0 yet
 
 - remote template downloads or registry search/update
 - complex template variables
@@ -222,10 +222,11 @@ yeast pull ubuntu-24.04
 yeast up
 ```
 
-Expected human output:
+Expected human output shape:
 
 ```text
-Started web (127.0.0.1:2222)
+OK Instances ready
+  RUN  web  127.0.0.1:2222
 ```
 
 ### 6. Check status
@@ -234,10 +235,12 @@ Started web (127.0.0.1:2222)
 yeast status
 ```
 
-Expected human output:
+Expected human output shape:
 
 ```text
-web	running	127.0.0.1:2222
+Project status
+  NAME  STATUS   SSH
+  web   running  127.0.0.1:2222
 ```
 
 ### 7. Connect
@@ -418,7 +421,7 @@ yeast status --json
 
 ## Config
 
-Current `v0.9` example:
+Current `v1.0` example:
 
 ```yaml
 version: 1
@@ -460,8 +463,8 @@ instances:
 - `env` is rendered into the guest bootstrap profile script
 - `provision` now supports packages, files, and shell steps during `yeast up` and `yeast provision`
 - file provision `source` paths are resolved relative to the project root unless they are absolute
-- one project-level private lab `networks` block is active in `v0.5+`
-- guest-control commands in `v0.6` are SSH-backed only and operate on one selected instance at a time
+- one project-level private lab `networks` block is active in v1.0
+- guest-control commands are SSH-backed only and operate on one selected instance at a time
 - templates are project starters only; after `yeast init --template`, the generated files are normal editable project files
 
 ---
@@ -582,7 +585,7 @@ Current known limits:
 - templates are project starters only
 - no remote template downloads or registry workflow
 - no daemon or remote worker mode yet
-- no full LabsBackery contract yet
+- first LabsBakery local-engine contract is documented, but LabsBakery itself is not part of Yeast
 
 That is not a weakness in the README. It is the correct scope boundary for the current release line.
 
@@ -619,7 +622,13 @@ yeast docs tutorial-test
 - [docs/json-contract.md](docs/json-contract.md)
 - [docs/labsbackery-integration-contract.md](docs/labsbackery-integration-contract.md)
 - [docs/labsbackery-lab-package.md](docs/labsbackery-lab-package.md)
+- [docs/release-checklist-v1.0.0.md](docs/release-checklist-v1.0.0.md)
 - [docs/release-notes-v0.1.0.md](docs/release-notes-v0.1.0.md)
+- [docs/release-notes-v0.2.0.md](docs/release-notes-v0.2.0.md)
+- [docs/release-notes-v0.3.0.md](docs/release-notes-v0.3.0.md)
+- [docs/release-notes-v0.4.0.md](docs/release-notes-v0.4.0.md)
+- [docs/release-notes-v0.5.0.md](docs/release-notes-v0.5.0.md)
+- [docs/release-notes-v0.6.0.md](docs/release-notes-v0.6.0.md)
 - [docs/release-notes-v0.7.0.md](docs/release-notes-v0.7.0.md)
 - [docs/release-notes-v0.8.0.md](docs/release-notes-v0.8.0.md)
 - [docs/release-notes-v0.9.0.md](docs/release-notes-v0.9.0.md)

@@ -1,6 +1,6 @@
 # LabsBakery Lab Package Convention
 
-Status: Draft for Yeast v0.9.0
+Status: Stable local package convention for Yeast v1.0.0
 
 This document defines the first file/folder convention for a Yeast-backed LabsBakery lab. It is intentionally small. The goal is to let LabsBakery bake a visual lab into a normal Yeast project without adding LabsBakery product state to Yeast.
 
@@ -158,7 +158,7 @@ tags:
   - beginner
 engine:
   type: yeast
-  min_version: v0.9.0
+  min_version: v1.0.0
   schema_version: yeast.v1
 topology:
   nodes:
@@ -292,7 +292,7 @@ LabsBakery may keep its own session database record pointing to:
 
 ## Baseline Convention
 
-For v0.9/v1 local labs, the first baseline name should be:
+For v1 local labs, the first baseline name should be:
 
 ```text
 clean
@@ -326,7 +326,7 @@ LabsBakery export packages may later use:
 <lab-id>.lbz
 ```
 
-For now, `.lbz` should be treated as a LabsBakery concern. Yeast should not read or write `.lbz` archives in v0.9.
+For now, `.lbz` should be treated as a LabsBakery concern. Yeast should not read or write `.lbz` archives in v1.0.
 
 If export is needed early, LabsBakery can zip the source package files and exclude:
 
@@ -337,7 +337,7 @@ If export is needed early, LabsBakery can zip the source package files and exclu
 - runtime state
 - downloaded base images
 
-## What Yeast Should Not Do In v0.9
+## What Yeast Should Not Do In v1.0
 
 Do not add these to Yeast for this convention:
 

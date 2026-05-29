@@ -202,7 +202,7 @@ What this proves:
 
 ## Pass Criteria
 
-Call `v0.7.0` ready only if all of these hold:
+Call the `v1.0.0` candidate ready only if all of these hold:
 
 - template list/init smoke passes
 - single-VM provisioning/reset smoke passes
