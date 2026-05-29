@@ -4998,7 +4998,7 @@ Completion notes:
 
 ### V1.0-T9: Prepare v1.0 release notes and changelog
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -5011,6 +5011,14 @@ Definition of done:
 - release notes summarize the stable product, not only the last minor delta
 - release notes include install, upgrade, compatibility, limitations, and verification
 - release notes clearly state what remains out of scope
+
+Completion notes:
+
+- Added `docs/release-notes-v1.0.0.md`.
+- Added `CHANGELOG.md` v1.0.0 entry.
+- Release notes summarize Yeast as the first stable local engine release, not only a v0.9 delta.
+- Release notes include install, upgrade, compatibility, limitations, verification, migration notes, and out-of-scope items.
+- README project docs now link the v1.0 release notes.
 
 ### V1.0-T10: Build and publish v1.0.0
 

@@ -65,7 +65,7 @@ Yeast `v1.0` is the first stable local engine release. It covers one complete lo
 | Private networking | One project-level lab network with static per-instance IPv4 |
 | Guest control | `exec`, `copy`, `logs`, and `inspect` |
 | Templates | Built-in `ubuntu-basic`, `caddy-single-vm`, and `two-vm-lab`; local template directories |
-| LabsBakery integration | Draft engine contract, lab package convention, and first attacker/target example package |
+| LabsBakery integration | Stable local-engine contract, lab package convention, and first attacker/target example package |
 | Examples | Single-VM Ubuntu, Caddy provisioning/reset, first two-VM lab example, and LabsBakery package example |
 
 ### What works now
@@ -623,6 +623,7 @@ yeast docs tutorial-test
 - [docs/labsbackery-integration-contract.md](docs/labsbackery-integration-contract.md)
 - [docs/labsbackery-lab-package.md](docs/labsbackery-lab-package.md)
 - [docs/release-checklist-v1.0.0.md](docs/release-checklist-v1.0.0.md)
+- [docs/release-notes-v1.0.0.md](docs/release-notes-v1.0.0.md)
 - [docs/release-notes-v0.1.0.md](docs/release-notes-v0.1.0.md)
 - [docs/release-notes-v0.2.0.md](docs/release-notes-v0.2.0.md)
 - [docs/release-notes-v0.3.0.md](docs/release-notes-v0.3.0.md)

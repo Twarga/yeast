@@ -1,11 +1,17 @@
 # Yeast Installation
 
-Yeast v0.1 targets Linux hosts with KVM.
+Yeast v1.0 targets Linux hosts with KVM.
 
-Install from the v0.1.0 release:
+Install the latest stable release:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/v0.1.0/install.sh | YEAST_REF=v0.1.0 bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
+```
+
+Install the explicit v1.0.0 release:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_REF=v1.0.0 bash
 ```
 
 The installer attempts to:

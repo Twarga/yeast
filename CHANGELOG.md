@@ -7,6 +7,59 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-05-29
+
+### Summary
+
+Yeast v1.0.0 is the first stable local engine release. It stabilizes the complete local VM loop: project-based QEMU/KVM machines, trusted images, cloud-init bootstrap, provisioning, snapshots and restore, one private lab network, guest control, templates, JSON/events, and the first LabsBakery local-engine contract.
+
+### Added
+
+- `docs/release-notes-v1.0.0.md`.
+- v1.0 release candidate checklist in `docs/release-checklist-v1.0.0.md`.
+- Stable v1 public documentation refresh across README, quickstart, installation, known limitations, LabsBakery integration, and the GitHub Pages landing page.
+
+### Changed
+
+- README now presents Yeast as the v1.0 stable local engine instead of a v0.9 LabsBakery-ready milestone.
+- Installation docs now use `v1.0.0` for explicit release installs.
+- LabsBakery integration docs now require Yeast `v1.0.0` as the stable minimum target.
+- Known limitations now describe the v1.0 product boundary instead of older planning slices.
+
+### Compatibility
+
+- Stable command surface is documented in `docs/command-reference.md`.
+- Stable config surface is documented in `docs/config-reference.md`.
+- Stable JSON envelope uses `schema_version: "yeast.v1"`.
+- LabsBakery should target the v1.0 local-engine contract and avoid scraping human terminal output.
+
+### Verification
+
+- Built a `v1.0.0-rc1` release candidate artifact and verified checksum.
+- Ran `go test ./... -count=1`.
+- Ran shell syntax checks and `git diff --check`.
+- Ran static analysis through `go vet`, `golangci-lint`, and `gosec`.
+- Ran installer path validation with a temporary non-system install harness.
+- Ran full real-host KVM smoke covering Caddy provisioning, guest control, snapshot/restore, two-VM networking, LabsBakery package materialization, and negative JSON error cases.
+
+### Known Limitations
+
+- Linux host only.
+- QEMU/KVM only.
+- No Windows or macOS host support.
+- No VirtualBox or libvirt backend.
+- No daemon or web API.
+- No remote workers or Twarga Cloud features.
+- No LabsBakery web UI inside Yeast.
+- No Yeast MCP server inside Yeast.
+- No remote template registry.
+- No packaged `.lbz` import/export command.
+- No project-wide atomic snapshot/reset helper.
+- No live snapshots, live restore, or memory-state snapshots.
+- One private lab network per project.
+- No bridge mode or DHCP lab guests.
+- Guest control remains SSH-backed and one selected instance at a time.
+
 ## [0.9.0] - 2026-05-26
 
 ### Summary

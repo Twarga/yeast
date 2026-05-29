@@ -1,6 +1,6 @@
 # Yeast Limits
 
-Current shipped scope through v0.6:
+Current shipped v1.0 scope:
 
 - VM lifecycle
 - project-safe paths
@@ -8,13 +8,12 @@ Current shipped scope through v0.6:
 - stopped-VM snapshots and restore
 - one private multi-VM lab network
 - guest `exec`, `copy`, `logs`, and `inspect`
-
-Planned first template scope for v0.7:
-
 - `yeast init --list-templates`
 - `yeast init --template <name-or-path>`
 - built-in starter templates
 - local filesystem templates
+- stable JSON envelopes and lifecycle events
+- LabsBakery local-engine integration contract
 
 Still not included:
 
@@ -25,7 +24,6 @@ Still not included:
 - log streaming/follow mode
 - service health checks
 - daemon or web API
-- LabsBackery integration contract
 - Yeast MCP integration
 - Twarga Cloud workers
 - Windows or macOS host support
