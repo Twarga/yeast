@@ -5022,7 +5022,7 @@ Completion notes:
 
 ### V1.0-T10: Build and publish v1.0.0
 
-Status: [ ]
+Status: [x]
 
 Dependencies:
 
@@ -5039,6 +5039,18 @@ Definition of done:
 - release assets include Linux amd64 binary and checksum
 - install command works against the released tag
 - `TASKS.md` records the release completion
+
+Completion notes:
+
+- Updated installer default `YEAST_REF` to `v1.0.0`.
+- Built final release artifact with `bash scripts/build-release.sh v1.0.0`.
+- Verified `./dist/yeast-linux-amd64 version` reports `v1.0.0`.
+- Verified `dist/yeast-linux-amd64.sha256`.
+- Pushed annotated tag `v1.0.0`.
+- Published GitHub release: `https://github.com/Twarga/yeast/releases/tag/v1.0.0`.
+- Release assets include `yeast-linux-amd64` and `yeast-linux-amd64.sha256`.
+- Validated the installer against the released tag with `YEAST_REF=v1.0.0` and `YEAST_EXPECTED_VERSION=v1.0.0` in a temporary non-system install path.
+- Final CI and GitHub Pages deploy passed on `main`.
 
 ---
 

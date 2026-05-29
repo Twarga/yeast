@@ -179,12 +179,18 @@ The full smoke covered:
 
 ## Release Gate
 
-The v1.0.0 candidate is ready for the public documentation refresh and release notes pass.
+The v1.0.0 release was published on 2026-05-29.
 
-Remaining before final tag:
+Final release result:
 
-- refresh public README/docs for v1.0.0
-- prepare v1.0.0 changelog and release notes
-- build final `v1.0.0` artifact
-- run the public installer command against the `v1.0.0` tag
-- publish the GitHub release
+- final release metadata commit: `f868c65`
+- tag: `v1.0.0`
+- release: `https://github.com/Twarga/yeast/releases/tag/v1.0.0`
+- assets:
+  - `yeast-linux-amd64`
+  - `yeast-linux-amd64.sha256`
+- final binary reported `v1.0.0`
+- final checksum verification passed
+- GitHub CI passed on `main`
+- GitHub Pages deploy passed
+- installer validation against `YEAST_REF=v1.0.0` passed in a temporary non-system install path
