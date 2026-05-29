@@ -1,6 +1,6 @@
 # Yeast v1.0.0 Release Notes
 
-Status: Prepared for release
+Status: Released
 
 Release date: 2026-05-29
 
