@@ -3,532 +3,195 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Yeast — Real machines. Local first.</title>
+  <title>Yeast</title>
   <style>
     :root {
       --bg: #080a09;
-      --surface: #0f1210;
-      --surface-2: #161a17;
-      --surface-3: #1c211d;
-      --border: #252b26;
-      --border-dim: #1a1f1b;
       --text: #f0fdf4;
-      --text-dim: #94a89b;
+      --muted: #94a89b;
       --green: #22c55e;
-      --green-dim: #16a34a;
-      --green-glow: rgba(34,197,94,0.12);
-      --radius: 14px;
-      --radius-sm: 8px;
+      --surface: #111411;
     }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { -webkit-font-smoothing: antialiased; }
+
     body {
       font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.55;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 80px 24px 40px;
     }
+
+    main {
+      width: 100%;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      gap: 64px;
+    }
+
     a { color: var(--green); text-decoration: none; }
     a:hover { text-decoration: underline; }
 
-    /* Nav */
-    nav {
-      max-width: 1200px; margin: 0 auto; padding: 20px 24px;
-      display: flex; align-items: center; justify-content: space-between;
+    /* Logo */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 32px;
     }
-    .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.15rem; color: var(--text); }
-    .nav-logo:hover { text-decoration: none; }
-    .nav-logo svg { width: 28px; height: 28px; }
-    .nav-links { display: flex; align-items: center; gap: 32px; font-size: 0.9rem; }
-    .nav-links a { color: var(--text-dim); font-weight: 500; }
-    .nav-links a:hover { color: var(--text); }
-    .btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 20px; border-radius: var(--radius-sm);
-      font-weight: 600; font-size: 0.9rem; border: 1px solid var(--border);
-      background: var(--surface-2); color: var(--text); cursor: pointer; transition: .15s;
-    }
-    .btn:hover { text-decoration: none; border-color: var(--green-dim); background: var(--surface-3); }
-    .btn-green { background: var(--green); color: #052e16; border-color: var(--green); }
-    .btn-green:hover { background: #4ade80; border-color: #4ade80; }
-    .btn-dark { background: var(--surface-2); color: var(--text); }
-
-    /* Sections */
-    .container { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
-    section { padding: 80px 0; }
+    .logo svg { width: 44px; height: 44px; }
+    .logo span { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; }
 
     /* Hero */
-    .hero { padding-top: 40px; padding-bottom: 60px; }
-    .hero-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items: center; }
-    .pill {
-      display: inline-flex; align-items: center; gap: 10px;
-      font-size: 0.75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-      margin-bottom: 20px;
-    }
-    .pill .tag { background: var(--green-glow); color: var(--green); border: 1px solid rgba(34,197,94,.25); padding: 4px 10px; border-radius: 999px; }
-    .pill .txt { color: var(--text-dim); }
     .hero h1 {
-      font-size: clamp(2.4rem, 5vw, 3.6rem); font-weight: 800; line-height: 1.08; letter-spacing: -0.03em;
-      margin-bottom: 18px;
+      font-size: clamp(2.2rem, 5.5vw, 3.4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
     }
     .hero h1 .green { color: var(--green); }
-    .hero p { color: var(--text-dim); font-size: 1.08rem; max-width: 480px; margin-bottom: 28px; }
-    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
-    .hero-badges { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.78rem; color: var(--text-dim); }
-    .hero-badges span { display: flex; align-items: center; gap: 6px; }
+    .hero p {
+      color: var(--muted);
+      font-size: 1.15rem;
+      max-width: 480px;
+      line-height: 1.5;
+    }
 
-    /* Diagram */
-    .diagram { position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px; }
-    .laptop {
-      width: 140px; height: 90px; border: 2px solid var(--border); border-radius: 10px;
-      display: flex; align-items: center; justify-content: center; background: var(--surface);
-      position: relative;
+    /* Install */
+    .label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 12px;
     }
-    .laptop::after {
-      content: ""; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
-      width: 160px; height: 8px; background: var(--surface-2); border-radius: 0 0 6px 6px; border: 2px solid var(--border); border-top: none;
+    .cmd {
+      background: var(--surface);
+      border: 1px solid #1f291f;
+      border-radius: 10px;
+      padding: 18px 22px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.9rem;
+      color: var(--text);
+      overflow-x: auto;
+      white-space: nowrap;
+      cursor: text;
+      line-height: 1.4;
     }
-    .laptop-term { color: var(--green); font-family: monospace; font-size: 1.2rem; }
-    .y-card {
-      width: 100px; height: 100px; border-radius: var(--radius); border: 2px solid var(--green);
-      background: var(--surface); display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 50px rgba(34,197,94,0.18);
-      position: relative;
-    }
-    .y-card .y-letter {
-      font-size: 3.2rem; font-weight: 900; color: var(--green);
-      font-family: ui-sans-serif, system-ui, sans-serif;
-      line-height: 1; text-shadow: 0 0 20px rgba(34,197,94,0.3);
-    }
-    .distro-row { display: flex; gap: 12px; margin-top: 8px; }
-    .distro {
-      width: 72px; height: 72px; border-radius: var(--radius-sm); background: var(--surface-2);
-      border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-      font-size: 0.7rem; color: var(--text-dim); font-weight: 600;
-    }
-    .distro .d-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; color: #fff; }
-    .d-ubuntu { background: #e95420; }
-    .d-debian { background: #a80030; }
-    .d-fedora { background: #294172; }
-    .d-rocky  { background: #10b981; }
+    .cmd .dim { color: var(--muted); }
 
-    /* Pain */
-    .pain { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 48px; }
-    .pain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
-    .pain h2 { font-size: 1.9rem; font-weight: 700; line-height: 1.2; margin-bottom: 20px; }
-    .pain ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-    .pain li { display: flex; align-items: center; gap: 10px; color: var(--text-dim); font-size: 0.95rem; }
-    .pain li::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
-    .pain .lead { color: var(--text); font-weight: 600; }
-    .pain .lead .green { color: var(--green); }
+    /* Quickstart */
+    .quickstart pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.9rem;
+      line-height: 2.2;
+      color: var(--muted);
+    }
+    .quickstart .prompt { color: var(--green); margin-right: 10px; }
+    .quickstart .cmd { color: var(--text); background: none; border: none; padding: 0; white-space: normal; }
 
     /* Features */
-    .section-title { text-align: center; font-size: 1.6rem; font-weight: 700; margin-bottom: 40px; }
-    .section-title .green { color: var(--green); }
-    .features-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-    .feature-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px;
-      transition: border-color .2s;
+    .features ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
-    .feature-card:hover { border-color: var(--green-dim); }
-    .feature-icon {
-      width: 40px; height: 40px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: var(--green); font-size: 1.1rem;
+    .features li {
+      color: var(--muted);
+      font-size: 0.95rem;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      line-height: 1.5;
     }
-    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
-    .feature-card p { font-size: 0.88rem; color: var(--text-dim); line-height: 1.5; }
-
-    /* Terminal */
-    .term-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 48px; }
-    .term-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: center; }
-    .term-section h2 { font-size: 2rem; font-weight: 700; line-height: 1.15; margin-bottom: 12px; }
-    .term-section h2 .green { color: var(--green); }
-    .term-section p { color: var(--text-dim); margin-bottom: 24px; }
-    .window {
-      background: #0c0f0d; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    .features li::before {
+      content: "";
+      display: block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+      margin-top: 7px;
     }
-    .win-bar {
-      display: flex; align-items: center; gap: 8px; padding: 12px 16px;
-      background: var(--surface-2); border-bottom: 1px solid var(--border);
-    }
-    .win-body { padding: 24px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.85rem; line-height: 2; }
-    .win-body .row { display: flex; align-items: center; gap: 10px; }
-    .win-body .check { color: var(--green); }
-    .win-body .cmd { color: var(--text); }
-    .win-body .dim { color: var(--text-dim); }
-    .win-body .badge { margin-left: auto; color: var(--green); font-size: 0.7rem; border: 1px solid rgba(34,197,94,.25); padding: 2px 8px; border-radius: 999px; }
-    .win-body .ready { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: var(--green); }
-    .dot-r { width: 10px; height: 10px; border-radius: 50%; background: #ef6155; }
-    .dot-y { width: 10px; height: 10px; border-radius: 50%; background: #f5ae3d; }
-    .dot-g { width: 10px; height: 10px; border-radius: 50%; background: var(--green); }
-
-    /* Use cases */
-    .use-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .use-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; }
-    .use-card .icon { width: 44px; height: 44px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: var(--green); font-size: 1.2rem; }
-    .use-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
-    .use-card p { font-size: 0.88rem; color: var(--text-dim); }
-
-    /* Quote */
-    .quote-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 56px 48px; }
-    .quote-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; align-items: center; }
-    .quote-text { font-size: 1.7rem; font-weight: 700; line-height: 1.3; }
-    .quote-text .green { color: var(--green); }
-    .quote-mark { color: var(--green); font-size: 3rem; line-height: 1; }
-    .quote-desc { color: var(--text-dim); font-size: 0.95rem; }
-    .quote-desc .green { color: var(--green); font-weight: 600; }
-
-    /* Ecosystem */
-    .eco-grid { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
-    .eco-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
-      padding: 20px 24px; text-align: center; min-width: 150px;
-    }
-    .eco-card .eco-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; color: var(--green); font-size: 1.1rem; }
-    .eco-card h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
-    .eco-card p { font-size: 0.75rem; color: var(--text-dim); }
-    .eco-arrow { color: var(--green); font-size: 1.2rem; }
-
-    /* CTA */
-    .cta-section { text-align: center; padding-bottom: 40px; }
-    .cta-section h2 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
-    .cta-section h2 .green { color: var(--green); }
-    .cta-section p { color: var(--text-dim); margin-bottom: 28px; }
-    .cta-headline { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; line-height: 1.15; margin-bottom: 12px; }
-    .cta-sub { color: var(--text-dim); font-size: 1.05rem; margin-bottom: 32px; }
-    .install-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
-    .install-box {
-      display: inline-flex; align-items: center; gap: 12px;
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
-      padding: 12px 20px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 0.88rem; color: var(--text);
-    }
-    .install-box .dim { color: var(--text-dim); }
-    .install-note { font-size: 0.8rem; color: var(--text-dim); margin-top: 20px; }
 
     /* Footer */
-    footer { border-top: 1px solid var(--border); padding: 28px 0; }
-    .footer-inner { max-width: 1160px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-    footer .copy { font-size: 0.85rem; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
-    footer .links { display: flex; gap: 28px; font-size: 0.85rem; }
-    footer .links a { color: var(--text-dim); }
-    footer .links a:hover { color: var(--text); }
-
-    /* Responsive */
-    @media (max-width: 900px) {
-      .hero-grid, .pain-grid, .term-grid, .quote-grid { grid-template-columns: 1fr; }
-      .features-grid { grid-template-columns: repeat(2, 1fr); }
-      .use-grid { grid-template-columns: 1fr; }
-      .diagram { order: -1; margin-bottom: 30px; }
-      .eco-grid { flex-direction: column; }
-      .eco-arrow { transform: rotate(90deg); }
-      .nav-links { display: none; }
+    footer {
+      margin-top: auto;
+      padding-top: 80px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-align: center;
     }
-    @media (max-width: 520px) {
-      .features-grid { grid-template-columns: 1fr; }
-      section { padding: 48px 0; }
-      .pain { padding: 28px; }
-      .term-section { padding: 28px; }
-      .quote-section { padding: 32px 24px; }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--text); }
+
+    /* Mobile */
+    @media (max-width: 480px) {
+      body { padding-top: 48px; }
+      main { gap: 48px; }
+      .logo svg { width: 36px; height: 36px; }
     }
   </style>
 </head>
 <body>
+  <main>
+    <section class="hero">
+      <div class="logo">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="180" height="180" rx="40" fill="none" stroke="#22c55e" stroke-width="14"/>
+          <g fill="#22c55e">
+            <rect x="45" y="35" width="14" height="65" rx="7" transform="rotate(-30 52 67)"/>
+            <rect x="105" y="35" width="14" height="65" rx="7" transform="rotate(30 112 67)"/>
+            <rect x="93" y="78" width="14" height="75" rx="7"/>
+          </g>
+        </svg>
+        <span>Yeast</span>
+      </div>
+      <h1>Turn a folder into <span class="green">real VMs.</span></h1>
+      <p>Linux-first local VM orchestration for QEMU/KVM. One YAML file. One command. Real machines.</p>
+    </section>
 
-<nav>
-  <a href="/yeast/" class="nav-logo" aria-label="Yeast home">
-    <svg width="28" height="28" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-      <rect x="10" y="10" width="180" height="180" rx="40" fill="none" stroke="#22c55e" stroke-width="14"/>
-      <g fill="#22c55e">
-        <rect x="45" y="35" width="14" height="65" rx="7" transform="rotate(-30 52 67)"/>
-        <rect x="105" y="35" width="14" height="65" rx="7" transform="rotate(30 112 67)"/>
-        <rect x="93" y="78" width="14" height="75" rx="7"/>
-      </g>
-    </svg>
-    <span>yeast</span>
-  </a>
-  <div class="nav-links">
-    <a href="#features">Features</a>
-    <a href="#use-cases">Use Cases</a>
-    <a href="#ecosystem">Ecosystem</a>
-    <a href="https://github.com/Twarga/yeast">GitHub</a>
-    <a class="btn btn-green" href="https://github.com/Twarga/yeast#quick-start">Get Started</a>
-  </div>
-</nav>
+    <section>
+      <p class="label">Install</p>
+      <div class="cmd"><span class="dim">$</span> curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash</div>
+    </section>
 
-<header class="hero">
-  <div class="container">
-    <div class="hero-grid">
-      <div>
-        <div class="pill">
-          <span class="tag">TwargaOps</span>
-          <span class="txt">Local VM Engine</span>
-        </div>
-        <h1>Real machines.<br><span class="green">Local first.</span><br>No container-shaped compromises.</h1>
-        <p>Linux-first VM orchestration for QEMU/KVM. Create reproducible virtual machines, labs, and infrastructure directly from code.</p>
-        <div class="hero-actions">
-          <a class="btn btn-green" href="https://github.com/Twarga/yeast#quick-start">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-            Get Started
-          </a>
-          <a class="btn btn-dark" href="https://github.com/Twarga/yeast">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-            GitHub
-          </a>
-        </div>
-        <div class="hero-badges">
-          <span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M9 12l2 2 4-4"/></svg>
-            MIT Licensed
-          </span>
-          <span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
-            Written in Go
-          </span>
-          <span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-            Linux Native
-          </span>
-          <span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            KVM Powered
-          </span>
-        </div>
-      </div>
+    <section class="quickstart">
+      <p class="label">Quickstart</p>
+      <pre><span class="prompt">$</span> <span class="cmd">mkdir my-lab && cd my-lab</span>
+<span class="prompt">$</span> <span class="cmd">yeast init</span>
+<span class="prompt">$</span> <span class="cmd">yeast pull ubuntu-24.04</span>
+<span class="prompt">$</span> <span class="cmd">yeast up</span>
+<span class="prompt">$</span> <span class="cmd">yeast ssh web</span></pre>
+    </section>
 
-      <div class="diagram">
-        <div class="laptop"><span class="laptop-term">>_</span></div>
-        <div class="y-card">
-          <span class="y-letter">Y</span>
-        </div>
-        <div class="distro-row">
-          <div class="distro"><div class="d-icon d-ubuntu">U</div>ubuntu</div>
-          <div class="distro"><div class="d-icon d-debian">D</div>debian</div>
-          <div class="distro"><div class="d-icon d-fedora">F</div>fedora</div>
-          <div class="distro"><div class="d-icon d-rocky">R</div>rocky</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</header>
+    <section class="features">
+      <p class="label">Why Yeast</p>
+      <ul>
+        <li>YAML-driven infrastructure. No GUI, no clicks.</li>
+        <li>cloud-init and post-boot provisioning built in.</li>
+        <li>Stopped-VM snapshots for safe lab reset.</li>
+        <li>Private lab networking for multi-VM environments.</li>
+        <li>Stable JSON and event streams for automation.</li>
+      </ul>
+    </section>
 
-<section id="pain">
-  <div class="container">
-    <div class="pain">
-      <div class="pain-grid">
-        <div>
-          <h2>VirtualBox feels old.<br>Vagrant feels abandoned.<br>Containers are not<br>always enough.</h2>
-        </div>
-        <div>
-          <ul>
-            <li>Need a real Linux machine?</li>
-            <li>Need cloud-init?</li>
-            <li>Need SSH?</li>
-            <li>Need repeatable labs?</li>
-          </ul>
-          <p class="lead" style="margin-top:18px">Use a VM. <span class="green">Not another abstraction.</span></p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="features">
-  <div class="container">
-    <h2 class="section-title">Everything you need to run <span class="green">real machines</span></h2>
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">&lt;/&gt;</div>
-        <h3>Infrastructure as Code</h3>
-        <p>Define machines with simple configuration. Create environments repeatedly.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
-        </div>
-        <h3>Cloud-Init Ready</h3>
-        <p>Boot machines already configured. Users, SSH keys and packages included.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
-        </div>
-        <h3>KVM Native</h3>
-        <p>Built directly on Linux virtualization. No unnecessary layers.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-        </div>
-        <h3>Automation Friendly</h3>
-        <p>Designed for labs, testing, education and local infrastructure.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="terminal">
-  <div class="container">
-    <div class="term-section">
-      <div class="term-grid">
-        <div>
-          <h2>Fast from the<br><span class="green">first command.</span></h2>
-          <p>Create, configure, and connect to machines in seconds.</p>
-        </div>
-        <div class="window">
-          <div class="win-bar">
-            <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
-          </div>
-          <div class="win-body">
-            <div class="row"><span class="dim">$</span> <span class="cmd">yeast up</span><span class="badge">2.4s</span></div>
-            <div class="row"><span class="check">&#10003;</span> <span class="dim">Creating VM</span></div>
-            <div class="row"><span class="check">&#10003;</span> <span class="dim">Configuring cloud-init</span></div>
-            <div class="row"><span class="check">&#10003;</span> <span class="dim">Starting machine</span></div>
-            <div class="row"><span class="check">&#10003;</span> <span class="dim">Waiting for SSH</span></div>
-            <div class="row ready"><span>&#9632;</span> Machine ready</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="use-cases">
-  <div class="container">
-    <h2 class="section-title">Built for <span class="green">builders</span></h2>
-    <div class="use-grid">
-      <div class="use-card">
-        <div class="icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-        </div>
-        <h3>Cybersecurity Labs</h3>
-        <p>Create disposable environments for testing and learning.</p>
-      </div>
-      <div class="use-card">
-        <div class="icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-        </div>
-        <h3>Software Development</h3>
-        <p>Test applications across multiple Linux distributions.</p>
-      </div>
-      <div class="use-card">
-        <div class="icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
-        </div>
-        <h3>Homelab Infrastructure</h3>
-        <p>Build local infrastructure without cloud costs. Full control, your way.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="quote">
-  <div class="container">
-    <div class="quote-section">
-      <div class="quote-grid">
-        <div>
-          <div class="quote-mark">"</div>
-          <p class="quote-text">Containers changed deployment.<br>Virtual machines <span class="green">never stopped mattering.</span></p>
-        </div>
-        <div>
-          <p class="quote-desc">
-            Yeast exists for builders who need real operating systems, real networking, and real infrastructure.
-          </p>
-          <p class="quote-desc" style="margin-top:14px">
-            <span class="green">Fast</span> enough for local development.<br>
-            <span class="green">Simple</span> enough for daily use.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="ecosystem">
-  <div class="container">
-    <h2 class="section-title">Built to power the <span class="green">TwargaOps</span> ecosystem.</h2>
-    <div class="eco-grid">
-      <div class="eco-card">
-        <div class="eco-icon">Y</div>
-        <h4>Yeast</h4>
-        <p>Local VM engine</p>
-      </div>
-      <span class="eco-arrow">&#8594;</span>
-      <div class="eco-card">
-        <div class="eco-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-        </div>
-        <h4>LabsBakery</h4>
-        <p>Pre-baked labs and environments</p>
-      </div>
-      <span class="eco-arrow">&#8594;</span>
-      <div class="eco-card">
-        <div class="eco-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect><rect x="7" y="14" width="3" height="3"></rect><rect x="14" y="14" width="3" height="3"></rect></svg>
-        </div>
-        <h4>Yeast MCP</h4>
-        <p>Automate with MCP integration</p>
-      </div>
-      <span class="eco-arrow">&#8594;</span>
-      <div class="eco-card">
-        <div class="eco-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
-        </div>
-        <h4>Twarga Cloud</h4>
-        <p>Seamless sync and sharing</p>
-      </div>
-      <span class="eco-arrow">&#8594;</span>
-      <div class="eco-card">
-        <div class="eco-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-        </div>
-        <h4>Future Tools</h4>
-        <p>More tools for builders</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="cta-section">
-  <div class="container">
-    <p class="cta-headline">Stop fighting your VM stack.<br>Create machines. Build infrastructure. <span class="green">Ship faster.</span></p>
-    <p class="cta-sub">One command. Real VMs. No cloud required.</p>
-    <div class="install-row">
-      <a class="btn btn-green" href="https://github.com/Twarga/yeast#quick-start">Get Started</a>
-      <div class="install-box">
-        <span class="dim">$</span>
-        <code>curl -fsSL install.yeast.sh | sh</code>
-      </div>
-    </div>
-    <p class="install-note">Requires Linux, <code>/dev/kvm</code>, and <code>qemu-system-x86_64</code>.</p>
-  </div>
-</section>
-
-<footer>
-  <div class="footer-inner">
-    <div class="copy">
-      <svg width="18" height="18" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <rect x="10" y="10" width="180" height="180" rx="40" fill="none" stroke="#22c55e" stroke-width="14"/>
-        <g fill="#22c55e">
-          <rect x="45" y="35" width="14" height="65" rx="7" transform="rotate(-30 52 67)"/>
-          <rect x="105" y="35" width="14" height="65" rx="7" transform="rotate(30 112 67)"/>
-          <rect x="93" y="78" width="14" height="75" rx="7"/>
-        </g>
-      </svg>
-      &copy; 2024 TwargaOps. All rights reserved.
-    </div>
-    <div class="links">
-      <a href="https://github.com/Twarga/yeast">Documentation</a>
-      <a href="https://github.com/Twarga/yeast">GitHub</a>
-      <a href="https://github.com/Twarga/yeast/blob/main/LICENSE">License (MIT)</a>
-      <a href="https://github.com/Twarga/yeast">Community</a>
-    </div>
-  </div>
-</footer>
-
+    <footer>
+      <a href="https://github.com/Twarga/yeast">GitHub</a> &middot;
+      <a href="https://github.com/Twarga/yeast/blob/main/LICENSE">MIT License</a> &middot;
+      Built by TwargaOps
+    </footer>
+  </main>
 </body>
 </html>
