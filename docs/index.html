@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yeast — Linux-first local VM orchestration</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/yeast/" class="logo" aria-label="Yeast home">
+        <svg width="32" height="32" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="180" height="180" rx="40" fill="none" stroke="#22c55e" stroke-width="10"/>
+          <g fill="#22c55e">
+            <rect x="45" y="35" width="14" height="65" rx="7" transform="rotate(-30 52 67)"/>
+            <rect x="105" y="35" width="14" height="65" rx="7" transform="rotate(30 112 67)"/>
+            <rect x="93" y="78" width="14" height="75" rx="7"/>
+          </g>
+        </svg>
+        <span>Yeast</span>
+      </a>
+      <div class="links">
+        <a href="https://github.com/Twarga/yeast">GitHub</a>
+        <a href="#install">Install</a>
+        <a href="#quickstart">Quickstart</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Turn a folder into real VMs.</h1>
+      <p class="tagline">
+        Yeast is a Linux-first local VM orchestrator for QEMU/KVM.
+        Describe machines in YAML. Run <code>yeast up</code>. SSH in. Done.
+      </p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/Twarga/yeast#quick-start">Get Started</a>
+        <a class="btn" href="https://github.com/Twarga/yeast">View on GitHub</a>
+      </div>
+    </section>
+
+    <section class="term" id="quickstart">
+      <div class="window">
+        <div class="bar">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+          <span class="title">terminal</span>
+        </div>
+        <div class="body">
+          <p><span class="prompt">$</span> <span class="cmd">mkdir my-lab && cd my-lab</span></p>
+          <p><span class="prompt">$</span> <span class="cmd">yeast init</span></p>
+          <p class="out">OK Project initialized</p>
+          <p><span class="prompt">$</span> <span class="cmd">yeast pull ubuntu-24.04</span></p>
+          <p><span class="prompt">$</span> <span class="cmd">yeast up</span></p>
+          <p class="out ok">&#10003; Started web (127.0.0.1:2222)</p>
+          <p><span class="prompt">$</span> <span class="cmd">yeast ssh web</span></p>
+          <p class="out">yeast@web-lab:~$</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="features">
+      <h2>What you get</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>YAML-driven</h3>
+          <p>One <code>yeast.yaml</code> per project. Declare what you want. Yeast makes it real.</p>
+        </div>
+        <div class="card">
+          <h3>cloud-init ready</h3>
+          <p>Users, SSH keys, hostnames, and networks are injected automatically on first boot.</p>
+        </div>
+        <div class="card">
+          <h3>Provisioning</h3>
+          <p>Install packages, copy files, and run shell commands over SSH after the VM boots.</p>
+        </div>
+        <div class="card">
+          <h3>Snapshots</h3>
+          <p>Save a clean baseline. Restore it later. Perfect for lab reset workflows.</p>
+        </div>
+        <div class="card">
+          <h3>Private lab networks</h3>
+          <p>Connect multiple VMs on a static-IP private network. VM-to-VM, isolated from the host.</p>
+        </div>
+        <div class="card">
+          <h3>JSON &amp; events</h3>
+          <p>Every command supports <code>--json</code>. Lifecycle commands stream <code>--events</code>. Built for tools.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="install" id="install">
+      <h2>Install</h2>
+      <pre><code>curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash</code></pre>
+      <p class="note">Requires Linux, <code>/dev/kvm</code>, and <code>qemu-system-x86_64</code>.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      Built by <a href="https://github.com/Twarga">Twarga</a>.
+      Licensed under MIT.
+    </p>
+  </footer>
+</body>
+</html>
