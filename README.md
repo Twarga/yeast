@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="assets/banner.svg" alt="Yeast - Linux-first local VM orchestration for QEMU/KVM" width="100%" />
+<img src="assets/banner.png" alt="Yeast - Linux-first local VM orchestration for QEMU/KVM" width="100%" />
 
 <br />
 <br />
