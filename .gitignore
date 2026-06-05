@@ -4,3 +4,18 @@ dist/
 *.state
 *.state.lock
 vm_test*/
+
+# ------------------------------------------------------------------
+# Hide ALL markdown files from the GitHub repo surface.
+# Only README.md stays public. Everything else (planning docs,
+# changelogs, contributing guides, release notes, tutorials,
+# embedded docs, and the deep-dive manual) stays local only.
+# ------------------------------------------------------------------
+*.md
+
+# Re-allow the only public-facing markdown file
+!README.md
+
+# Also hide the entire docs/ tree (which contains html/css/png too)
+/docs/
+/internal/docs/
