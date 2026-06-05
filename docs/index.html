@@ -93,11 +93,16 @@
     }
     .laptop-term { color: var(--green); font-family: monospace; font-size: 1.2rem; }
     .y-card {
-      width: 90px; height: 90px; border-radius: var(--radius-sm); border: 2px solid var(--green);
+      width: 100px; height: 100px; border-radius: var(--radius); border: 2px solid var(--green);
       background: var(--surface); display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 40px rgba(34,197,94,0.15);
+      box-shadow: 0 0 50px rgba(34,197,94,0.18);
+      position: relative;
     }
-    .y-card svg { width: 50px; height: 50px; }
+    .y-card .y-letter {
+      font-size: 3.2rem; font-weight: 900; color: var(--green);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      line-height: 1; text-shadow: 0 0 20px rgba(34,197,94,0.3);
+    }
     .distro-row { display: flex; gap: 12px; margin-top: 8px; }
     .distro {
       width: 72px; height: 72px; border-radius: var(--radius-sm); background: var(--surface-2);
@@ -193,13 +198,17 @@
     .cta-section h2 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
     .cta-section h2 .green { color: var(--green); }
     .cta-section p { color: var(--text-dim); margin-bottom: 28px; }
+    .cta-headline { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; line-height: 1.15; margin-bottom: 12px; }
+    .cta-sub { color: var(--text-dim); font-size: 1.05rem; margin-bottom: 32px; }
+    .install-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
     .install-box {
       display: inline-flex; align-items: center; gap: 12px;
-      background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
-      padding: 12px 20px; font-family: ui-monospace, monospace; font-size: 0.85rem; color: var(--text-dim);
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 12px 20px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.88rem; color: var(--text);
     }
-    .install-box code { color: var(--text); }
-    .install-note { font-size: 0.8rem; color: var(--text-dim); margin-top: 16px; }
+    .install-box .dim { color: var(--text-dim); }
+    .install-note { font-size: 0.8rem; color: var(--text-dim); margin-top: 20px; }
 
     /* Footer */
     footer { border-top: 1px solid var(--border); padding: 28px 0; }
@@ -294,13 +303,7 @@
       <div class="diagram">
         <div class="laptop"><span class="laptop-term">>_</span></div>
         <div class="y-card">
-          <svg width="50" height="50" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <g fill="#22c55e">
-              <rect x="45" y="35" width="14" height="65" rx="7" transform="rotate(-30 52 67)"/>
-              <rect x="105" y="35" width="14" height="65" rx="7" transform="rotate(30 112 67)"/>
-              <rect x="93" y="78" width="14" height="75" rx="7"/>
-            </g>
-          </svg>
+          <span class="y-letter">Y</span>
         </div>
         <div class="distro-row">
           <div class="distro"><div class="d-icon d-ubuntu">U</div>ubuntu</div>
@@ -492,18 +495,14 @@
 
 <section class="cta-section">
   <div class="container">
-    <h2>Stop fighting your VM stack.</h2>
-    <h2>Create machines. Build infrastructure. <span class="green">Ship faster.</span></h2>
-    <p style="margin-top:10px">Linux only. KVM required.</p>
-    <div style="margin: 24px 0;">
-      <a class="btn btn-green" href="https://github.com/Twarga/yeast#quick-start">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-        Install Yeast
-      </a>
-    </div>
-    <div class="install-box">
-      <span class="dim">$</span>
-      <code>curl -fsSL install.yeast.sh | sh</code>
+    <p class="cta-headline">Stop fighting your VM stack.<br>Create machines. Build infrastructure. <span class="green">Ship faster.</span></p>
+    <p class="cta-sub">One command. Real VMs. No cloud required.</p>
+    <div class="install-row">
+      <a class="btn btn-green" href="https://github.com/Twarga/yeast#quick-start">Get Started</a>
+      <div class="install-box">
+        <span class="dim">$</span>
+        <code>curl -fsSL install.yeast.sh | sh</code>
+      </div>
     </div>
     <p class="install-note">Requires Linux, <code>/dev/kvm</code>, and <code>qemu-system-x86_64</code>.</p>
   </div>
