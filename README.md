@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="docs/banner.svg" alt="Yeast - Linux-first local VM orchestration for QEMU/KVM" width="100%" />
+<img src="assets/banner.svg" alt="Yeast - Linux-first local VM orchestration for QEMU/KVM" width="100%" />
 
 <br />
 <br />
@@ -15,7 +15,7 @@ Fast project-based virtual machines with cloud-init, trusted base images, post-b
 ![Go](https://img.shields.io/badge/go-1.25+-cyan.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 ![Runtime](https://img.shields.io/badge/runtime-QEMU%2FKVM-6f42c1.svg)
-![State](https://img.shields.io/badge/status-v1.0%20stable%20local%20engine-8a6d3b.svg)
+![State](https://img.shields.io/badge/status-v1.0%20stable%20local%20engine-22c55e.svg)
 
 [Website](https://twarga.github.io/yeast/) · [Quick Start](#quick-start) · [Current Scope](#current-scope) · [Commands](#commands) · [Examples](#examples) · [Architecture](#architecture) · [Limits](#current-limits)
 
