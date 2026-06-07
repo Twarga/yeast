@@ -35,6 +35,8 @@ func RenderHuman(w io.Writer, command string, data any) error {
 		return renderExec(w, theme, value)
 	case app.CopyResult:
 		return renderCopy(w, theme, value)
+	case app.CleanResult:
+		return renderClean(w, theme, value)
 	case app.InspectResult:
 		return renderInspect(w, theme, value)
 	case app.LogsResult:
@@ -283,6 +285,30 @@ func renderCopy(w io.Writer, theme humanTheme, value app.CopyResult) error {
 	return writeBlock(w, theme, lines)
 }
 
+func renderClean(w io.Writer, theme humanTheme, value app.CleanResult) error {
+	lines := []string{theme.Success.Render("OK") + " " + theme.Title.Render("Project cleaned")}
+	for _, instance := range value.Instances {
+		detail := "runtime removed"
+		if len(instance.CleanedPIDs) > 0 {
+			pids := make([]string, 0, len(instance.CleanedPIDs))
+			for _, pid := range instance.CleanedPIDs {
+				pids = append(pids, fmt.Sprintf("%d", pid))
+			}
+			detail = "killed qemu pid " + strings.Join(pids, ",")
+		}
+		lines = append(lines, fmt.Sprintf(
+			"  %s  %s  %s",
+			statusBadge(theme, instance.Status),
+			theme.Value.Render(instance.Name),
+			theme.Muted.Render(detail),
+		))
+	}
+	if len(value.Instances) == 0 {
+		lines = append(lines, theme.Muted.Render("No tracked project instances found."))
+	}
+	return writeBlock(w, theme, lines)
+}
+
 func renderInspect(w io.Writer, theme humanTheme, value app.InspectResult) error {
 	lines := []string{
 		theme.Title.Render("Instance inspect"),
@@ -454,6 +480,8 @@ func statusBadge(theme humanTheme, status string) string {
 		return theme.Warning.Render("STOP")
 	case "destroyed":
 		return theme.Blocker.Render("DEL")
+	case "cleaned":
+		return theme.Blocker.Render("CLEAN")
 	default:
 		return theme.Muted.Render(strings.ToUpper(status))
 	}

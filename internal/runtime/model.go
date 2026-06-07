@@ -69,3 +69,15 @@ type ProcessInfo struct {
 	State     ProcessState
 	StartedAt time.Time
 }
+
+type CleanupTarget struct {
+	Name       string
+	RuntimeDir string
+	SSHHost    string
+	SSHPort    int
+}
+
+type CleanupResult struct {
+	Name string
+	PID  int
+}

@@ -296,6 +296,7 @@ instances:
   - name: web
     image: ubuntu-24.04
     ssh_port: 2205
+    sudo: nopasswd
     provision:
       packages:
         - caddy
@@ -438,6 +439,7 @@ instances:
   - name: web
     image: ubuntu-24.04
     ssh_port: 2205
+    sudo: nopasswd
 `
 	if err := os.WriteFile(filepath.Join(root, ConfigFileName), []byte(configContent), 0644); err != nil {
 		t.Fatalf("write config: %v", err)

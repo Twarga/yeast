@@ -253,6 +253,14 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			},
 		}
 
+		provisionPlan, err := resolveProvisionPlan(absoluteRoot, provision.BuildPlan(instance, cfg.Provision))
+		if err != nil {
+			return UpResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("resolve provision plan for %s: %v", instance.Name, err), err)
+		}
+		if err := validateProvisionSudoPolicy(instance, provisionPlan); err != nil {
+			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
+		}
+
 		if _, err := s.runtime.PrepareDisk(ctx, plan); err != nil {
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
@@ -337,10 +345,6 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			},
 		})
 
-		provisionPlan, err := resolveProvisionPlan(absoluteRoot, provision.BuildPlan(instance, cfg.Provision))
-		if err != nil {
-			return UpResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("resolve provision plan for %s: %v", instance.Name, err), err)
-		}
 		provisionLogPath := instanceState.ProvisionLogPath
 		if provisionPlan.Empty() {
 			instanceState.ProvisioningStatus = state.ProvisioningStatusReady
@@ -492,6 +496,7 @@ func (s *Service) startWithManagementPortRetry(ctx context.Context, plan rtm.Mac
 		sleep = time.Sleep
 	}
 
+	cleanedOrphans := false
 	for attempt := 1; attempt <= managementStartAttempts; attempt++ {
 		started, err := s.runtime.Start(ctx, plan)
 		if err != nil {
@@ -508,6 +513,23 @@ func (s *Service) startWithManagementPortRetry(ctx context.Context, plan rtm.Mac
 		}
 
 		_ = s.runtime.Stop(ctx, started, 5*time.Second)
+		if !cleanedOrphans {
+			cleaned, cleanErr := s.cleanOrphanedQEMU(ctx, []rtm.CleanupTarget{{
+				Name:       instanceName,
+				RuntimeDir: plan.RuntimeDir,
+				SSHHost:    plan.Networks.Management.SSHHost,
+				SSHPort:    sshPort,
+			}}, 5*time.Second)
+			if cleanErr != nil {
+				return rtm.RuntimeInstance{}, WrapError(ErrorCodeInternal, cleanErr.Error(), cleanErr)
+			}
+			if len(cleaned) > 0 {
+				cleanedOrphans = true
+				_ = s.waitForManagementPortRelease(ctx, sshPort, 5*time.Second)
+				sleep(500 * time.Millisecond)
+				continue
+			}
+		}
 		if attempt == managementStartAttempts {
 			return rtm.RuntimeInstance{}, WrapError(
 				ErrorCodeInvalidArgument,

@@ -204,6 +204,7 @@ instances:
   - name: web
     image: ubuntu-24.04
     ssh_port: 2205
+    sudo: nopasswd
     provision:
       packages:
         - caddy

@@ -169,6 +169,25 @@ func (r *Runtime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) err
 	return nil
 }
 
+func (r *Runtime) CleanOrphans(ctx context.Context, targets []rtm.CleanupTarget, timeout time.Duration) ([]rtm.CleanupResult, error) {
+	processes, err := findQEMUProcesses(targets)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]rtm.CleanupResult, 0, len(processes))
+	for _, process := range processes {
+		if err := stopPID(ctx, process.PID, timeout); err != nil {
+			return results, err
+		}
+		if process.RuntimeDir != "" {
+			_ = os.Remove(pidFilePath(process.RuntimeDir))
+		}
+		results = append(results, rtm.CleanupResult{Name: process.Name, PID: process.PID})
+	}
+	return results, nil
+}
+
 func writePIDFile(runtimeDir string, pid int) error {
 	if runtimeDir == "" || pid <= 0 {
 		return nil
@@ -195,4 +214,94 @@ func readPIDFile(runtimeDir string) (int, error) {
 
 func pidFilePath(runtimeDir string) string {
 	return filepath.Join(runtimeDir, pidFileName)
+}
+
+type qemuProcessMatch struct {
+	Name       string
+	RuntimeDir string
+	PID        int
+}
+
+func findQEMUProcesses(targets []rtm.CleanupTarget) ([]qemuProcessMatch, error) {
+	entries, err := os.ReadDir("/proc")
+	if err != nil {
+		return nil, fmt.Errorf("read /proc: %w", err)
+	}
+
+	seen := make(map[int]bool)
+	var matches []qemuProcessMatch
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		pid, err := strconv.Atoi(entry.Name())
+		if err != nil || seen[pid] {
+			continue
+		}
+		cmdline, err := os.ReadFile(filepath.Join("/proc", entry.Name(), "cmdline"))
+		if err != nil || len(cmdline) == 0 {
+			continue
+		}
+		args := strings.Split(strings.TrimRight(string(cmdline), "\x00"), "\x00")
+		if !isQEMUSystemCommand(args) {
+			continue
+		}
+		joined := strings.Join(args, " ")
+		for _, target := range targets {
+			if !targetMatchesCommand(target, joined) {
+				continue
+			}
+			seen[pid] = true
+			matches = append(matches, qemuProcessMatch{
+				Name:       target.Name,
+				RuntimeDir: target.RuntimeDir,
+				PID:        pid,
+			})
+			break
+		}
+	}
+	return matches, nil
+}
+
+func isQEMUSystemCommand(args []string) bool {
+	if len(args) == 0 {
+		return false
+	}
+	name := filepath.Base(args[0])
+	return strings.HasPrefix(name, "qemu-system-")
+}
+
+func targetMatchesCommand(target rtm.CleanupTarget, cmdline string) bool {
+	if strings.TrimSpace(target.RuntimeDir) != "" && strings.Contains(cmdline, filepath.Clean(target.RuntimeDir)) {
+		return true
+	}
+	if target.SSHPort > 0 {
+		host := strings.TrimSpace(target.SSHHost)
+		if host == "" {
+			host = "127.0.0.1"
+		}
+		return strings.Contains(cmdline, fmt.Sprintf("hostfwd=tcp:%s:%d-:22", host, target.SSHPort))
+	}
+	return false
+}
+
+func stopPID(ctx context.Context, pid int, timeout time.Duration) error {
+	if pid <= 0 {
+		return nil
+	}
+	if err := signalProcess(pid, syscall.SIGTERM); err != nil && !isNoSuchProcess(err) {
+		return fmt.Errorf("send SIGTERM to orphan qemu process %d: %w", pid, err)
+	}
+	if err := waitForProcessExit(ctx, pid, timeout); err == nil {
+		return nil
+	} else if err != context.DeadlineExceeded {
+		return fmt.Errorf("wait for orphan qemu process %d after SIGTERM: %w", pid, err)
+	}
+	if err := signalProcess(pid, syscall.SIGKILL); err != nil && !isNoSuchProcess(err) {
+		return fmt.Errorf("send SIGKILL to orphan qemu process %d: %w", pid, err)
+	}
+	if err := waitForProcessExit(ctx, pid, 5*time.Second); err != nil && err != context.DeadlineExceeded {
+		return fmt.Errorf("wait for orphan qemu process %d after SIGKILL: %w", pid, err)
+	}
+	return nil
 }

@@ -127,6 +127,9 @@ func (s *Service) Provision(ctx context.Context, options ProvisionOptions) (Prov
 	if err != nil {
 		return ProvisionResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("resolve provision plan for %s: %v", selectedName, err), err)
 	}
+	if err := validateProvisionSudoPolicy(instanceCfg, provisionPlan); err != nil {
+		return ProvisionResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
+	}
 	emitEvent(options.Events, "provision", EventProvisionStarted, EventOptions{
 		ProjectID: metadata.ID,
 		Instance:  selectedName,
