@@ -117,6 +117,7 @@ func (t *LocalTransport) Upload(ctx context.Context, request UploadRequest) erro
 		"-P", strconv.Itoa(request.Port),
 		"-o", "StrictHostKeyChecking=no",
 		"-o", "UserKnownHostsFile=/dev/null",
+		"-o", "LogLevel=ERROR",
 		request.Source,
 		fmt.Sprintf("%s@%s:%s", request.User, request.Host, request.Destination),
 	}
@@ -144,6 +145,7 @@ func (t *LocalTransport) Download(ctx context.Context, request DownloadRequest) 
 		"-P", strconv.Itoa(request.Port),
 		"-o", "StrictHostKeyChecking=no",
 		"-o", "UserKnownHostsFile=/dev/null",
+		"-o", "LogLevel=ERROR",
 		fmt.Sprintf("%s@%s:%s", request.User, request.Host, request.Source),
 		request.Destination,
 	}
@@ -186,6 +188,7 @@ func buildSSHBaseArgs(user, host string, port int) []string {
 		"-p", strconv.Itoa(port),
 		"-o", "StrictHostKeyChecking=no",
 		"-o", "UserKnownHostsFile=/dev/null",
+		"-o", "LogLevel=ERROR",
 		fmt.Sprintf("%s@%s", user, host),
 	}
 }

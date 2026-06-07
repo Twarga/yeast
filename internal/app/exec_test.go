@@ -59,7 +59,7 @@ func TestExecRunsCommandAndReturnsStructuredResult(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Exec returned error: %v", err)
 	}
-	if gotRequest.Command != "'whoami'" {
+	if gotRequest.Command != "whoami" {
 		t.Fatalf("unexpected remote command: %q", gotRequest.Command)
 	}
 	if result.Instance != "web" || result.Run.Stdout != "yeast\n" || result.Run.ExitCode != 0 {

@@ -68,11 +68,12 @@ func (p *ShellProvisioner) Run(ctx context.Context, request ShellRequest) (Shell
 	}
 
 	for index, command := range commands {
+		remoteCommand := detachBackgroundCommand(command.Command)
 		runResult, err := transport.Run(ctx, RunRequest{
 			User:    request.User,
 			Host:    request.Host,
 			Port:    request.Port,
-			Command: command.Command,
+			Command: remoteCommand,
 			Timeout: timeout,
 		})
 
@@ -108,4 +109,16 @@ func normalizeShellSteps(steps []provision.ShellStep) ([]provision.ShellStep, er
 	}
 
 	return commands, nil
+}
+
+func detachBackgroundCommand(command string) string {
+	trimmed := strings.TrimSpace(command)
+	if !strings.HasSuffix(trimmed, "&") {
+		return command
+	}
+	withoutAmpersand := strings.TrimSpace(strings.TrimSuffix(trimmed, "&"))
+	if withoutAmpersand == "" {
+		return command
+	}
+	return fmt.Sprintf("nohup sh -c %s >/dev/null 2>&1 </dev/null &", shellQuote(withoutAmpersand))
 }

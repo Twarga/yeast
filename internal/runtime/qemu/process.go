@@ -44,6 +44,7 @@ func startCommandContext(ctx context.Context, name string, args []string, stdout
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}

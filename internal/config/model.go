@@ -17,6 +17,7 @@ type Instance struct {
 	SSHPort  int               `yaml:"ssh_port,omitempty"`
 	User     string            `yaml:"user,omitempty"`
 	Sudo     string            `yaml:"sudo,omitempty"`
+	Ports    []PortForward     `yaml:"ports,omitempty"`
 	Env      map[string]string `yaml:"env,omitempty"`
 	UserData string            `yaml:"user_data,omitempty"`
 
@@ -32,6 +33,12 @@ type Network struct {
 type InstanceNetwork struct {
 	Name string `yaml:"name"`
 	IPv4 string `yaml:"ipv4,omitempty"`
+}
+
+type PortForward struct {
+	Host      string `yaml:"host,omitempty"`
+	HostPort  int    `yaml:"host_port"`
+	GuestPort int    `yaml:"guest_port"`
 }
 
 type ProvisionConfig struct {

@@ -88,6 +88,28 @@ func Validate(cfg *Config) error {
 		if instance.SSHPort != 0 && (instance.SSHPort < 1 || instance.SSHPort > 65535) {
 			return fmt.Errorf("instance %s has invalid ssh_port %d", instance.Name, instance.SSHPort)
 		}
+		seenPorts := make(map[int]string)
+		if instance.SSHPort > 0 {
+			seenPorts[instance.SSHPort] = "ssh_port"
+		}
+		for i, port := range instance.Ports {
+			if strings.TrimSpace(port.Host) != "" {
+				ip := net.ParseIP(strings.TrimSpace(port.Host))
+				if ip == nil || ip.To4() == nil {
+					return fmt.Errorf("instance %s ports[%d] has invalid host %q", instance.Name, i, port.Host)
+				}
+			}
+			if port.HostPort < 1 || port.HostPort > 65535 {
+				return fmt.Errorf("instance %s ports[%d] has invalid host_port %d", instance.Name, i, port.HostPort)
+			}
+			if port.GuestPort < 1 || port.GuestPort > 65535 {
+				return fmt.Errorf("instance %s ports[%d] has invalid guest_port %d", instance.Name, i, port.GuestPort)
+			}
+			if previous, exists := seenPorts[port.HostPort]; exists {
+				return fmt.Errorf("instance %s ports[%d] host_port %d conflicts with %s", instance.Name, i, port.HostPort, previous)
+			}
+			seenPorts[port.HostPort] = fmt.Sprintf("ports[%d]", i)
+		}
 		if strings.TrimSpace(instance.DiskSize) != "" {
 			if _, err := parseByteSize(instance.DiskSize); err != nil {
 				return fmt.Errorf("instance %s has invalid disk_size: %w", instance.Name, err)

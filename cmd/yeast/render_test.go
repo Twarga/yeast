@@ -353,7 +353,7 @@ func TestRenderCommandErrorJSON(t *testing.T) {
 	}
 }
 
-func TestEventSinkRequiresJSON(t *testing.T) {
+func TestEventSinkAllowsEventsWithoutJSON(t *testing.T) {
 	previousJSON := outputJSON
 	previousEvents := outputEvents
 	outputJSON = false
@@ -363,42 +363,14 @@ func TestEventSinkRequiresJSON(t *testing.T) {
 		outputEvents = previousEvents
 	}()
 
-	_, err := eventSink(&bytes.Buffer{})
-	if err == nil {
-		t.Fatal("expected --events without --json to fail")
+	var buf bytes.Buffer
+	sink, err := eventSink(&buf)
+	if err != nil {
+		t.Fatalf("eventSink returned error: %v", err)
 	}
-}
-
-func TestDownAndDestroyEventsRequireJSON(t *testing.T) {
-	tests := []string{"down", "destroy"}
-
-	for _, command := range tests {
-		command := command
-		t.Run(command, func(t *testing.T) {
-			previousJSON := outputJSON
-			previousEvents := outputEvents
-			outputJSON = false
-			outputEvents = false
-			defer func() {
-				outputJSON = previousJSON
-				outputEvents = previousEvents
-			}()
-
-			root := newRootCmd(app.NewService())
-			root.SetArgs([]string{command, "--events"})
-
-			var buf bytes.Buffer
-			root.SetOut(&buf)
-			root.SetErr(&buf)
-
-			err := root.Execute()
-			if err == nil {
-				t.Fatal("expected --events without --json to fail")
-			}
-			if !strings.Contains(err.Error(), "--events requires --json") {
-				t.Fatalf("unexpected error: %v", err)
-			}
-		})
+	sink(app.NewEvent("up", app.EventWorkflowCompleted, app.EventOptions{ProjectID: "proj_123"}))
+	if !strings.Contains(buf.String(), `"name":"workflow.completed"`) {
+		t.Fatalf("expected event json line, got %q", buf.String())
 	}
 }
 

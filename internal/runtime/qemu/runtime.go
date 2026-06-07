@@ -55,11 +55,12 @@ func (r *Runtime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.RuntimeI
 	if err != nil {
 		return rtm.RuntimeInstance{}, fmt.Errorf("start qemu process: %w", err)
 	}
+	pid := proc.PID()
 	if err := proc.Release(); err != nil {
 		return rtm.RuntimeInstance{}, fmt.Errorf("release qemu process handle: %w", err)
 	}
-	if err := writePIDFile(plan.RuntimeDir, proc.PID()); err != nil {
-		_ = signalProcess(proc.PID(), syscall.SIGTERM)
+	if err := writePIDFile(plan.RuntimeDir, pid); err != nil {
+		_ = signalProcess(pid, syscall.SIGTERM)
 		return rtm.RuntimeInstance{}, err
 	}
 
@@ -67,7 +68,7 @@ func (r *Runtime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.RuntimeI
 		Name:       plan.Name,
 		RuntimeDir: plan.RuntimeDir,
 		LogPath:    plan.LogPath,
-		PID:        proc.PID(),
+		PID:        pid,
 		Networks:   plan.Networks,
 		StartedAt:  time.Now().UTC(),
 	}, nil
@@ -79,7 +80,17 @@ func (r *Runtime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeou
 		if err == nil {
 			instance.PID = pid
 		} else if os.IsNotExist(err) {
-			return nil
+			matches, matchErr := findQEMUProcesses([]rtm.CleanupTarget{{
+				Name:       instance.Name,
+				RuntimeDir: instance.RuntimeDir,
+			}})
+			if matchErr != nil {
+				return matchErr
+			}
+			if len(matches) == 0 {
+				return nil
+			}
+			instance.PID = matches[0].PID
 		} else if !os.IsNotExist(err) {
 			return err
 		}
@@ -152,10 +163,14 @@ func (r *Runtime) DeleteSnapshot(ctx context.Context, snapshotPath string) error
 }
 
 func (r *Runtime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) error {
-	if instance.PID > 0 {
+	if instance.PID > 0 || instance.RuntimeDir != "" {
 		if err := r.Stop(ctx, instance, 5*time.Second); err != nil {
-			running, inspectErr := processRunning(instance.PID)
-			if inspectErr != nil || running {
+			running := false
+			inspectErr := error(nil)
+			if instance.PID > 0 {
+				running, inspectErr = processRunning(instance.PID)
+			}
+			if instance.PID <= 0 || inspectErr != nil || running {
 				return err
 			}
 		}
@@ -183,6 +198,19 @@ func (r *Runtime) CleanOrphans(ctx context.Context, targets []rtm.CleanupTarget,
 		if process.RuntimeDir != "" {
 			_ = os.Remove(pidFilePath(process.RuntimeDir))
 		}
+		results = append(results, rtm.CleanupResult{Name: process.Name, PID: process.PID})
+	}
+	return results, nil
+}
+
+func (r *Runtime) FindProcesses(ctx context.Context, targets []rtm.CleanupTarget) ([]rtm.CleanupResult, error) {
+	_ = ctx
+	processes, err := findQEMUProcesses(targets)
+	if err != nil {
+		return nil, err
+	}
+	results := make([]rtm.CleanupResult, 0, len(processes))
+	for _, process := range processes {
 		results = append(results, rtm.CleanupResult{Name: process.Name, PID: process.PID})
 	}
 	return results, nil

@@ -9,13 +9,13 @@ import (
 	"yeast/internal/config"
 	"yeast/internal/guest"
 	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
 	"yeast/internal/state"
 )
 
 type SSHOptions struct {
-	ProjectRoot string
-	Target      string
+	ProjectRoot   string
+	Target        string
+	RemoteCommand []string
 }
 
 type SSHResult struct {
@@ -57,26 +57,18 @@ func (s *Service) SSH(ctx context.Context, options SSHOptions) (SSHResult, error
 	}
 	defer func() { _ = lock.Release() }()
 
-	cfg, err := config.Load(filepath.Join(absoluteRoot, ConfigFileName))
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return SSHResult{}, WrapError(ErrorCodePrecondition, err.Error(), err)
-		}
-		return SSHResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
+	cfg, cfgErr := config.Load(filepath.Join(absoluteRoot, ConfigFileName))
+	if cfgErr != nil && errors.Is(cfgErr, os.ErrNotExist) {
+		return SSHResult{}, WrapError(ErrorCodePrecondition, cfgErr.Error(), cfgErr)
 	}
 	currentState, err := state.Load(paths.StateFile, metadata.ID)
 	if err != nil {
 		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
-	changed := state.Reconcile(&currentState, state.ReconcileOptions{
-		IsProcessAlive: func(pid int) bool {
-			info, err := s.runtime.Inspect(ctx, rtm.RuntimeInstance{PID: pid})
-			if err != nil {
-				return false
-			}
-			return info.State == rtm.ProcessStateRunning
-		},
-	})
+	changed, err := s.reconcileProjectState(ctx, &currentState)
+	if err != nil {
+		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
 	if changed {
 		if err := state.Save(paths.StateFile, currentState); err != nil {
 			return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
@@ -88,18 +80,24 @@ func (s *Service) SSH(ctx context.Context, options SSHOptions) (SSHResult, error
 		return SSHResult{}, err
 	}
 
-	instanceCfg, ok := lookupConfigInstance(cfg, selectedName)
-	if !ok {
-		return SSHResult{}, WrapError(ErrorCodeNotFound, fmt.Sprintf("instance %q not found in config", selectedName), nil)
+	user := selectedState.User
+	if cfgErr == nil {
+		if instanceCfg, ok := lookupConfigInstance(cfg, selectedName); ok && instanceCfg.User != "" {
+			user = instanceCfg.User
+		}
+	}
+	if user == "" {
+		user = config.DefaultUser
 	}
 	address, err := s.sshAddress(defaultManagementHost, selectedState.SSHPort)
 	if err != nil {
 		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
-	args, err := guest.BuildSSHArgs(instanceCfg.User, defaultManagementHost, selectedState.SSHPort)
+	args, err := guest.BuildSSHArgs(user, defaultManagementHost, selectedState.SSHPort)
 	if err != nil {
 		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+	args = append(args, options.RemoteCommand...)
 	if err := s.runSSH(ctx, args); err != nil {
 		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
@@ -107,7 +105,7 @@ func (s *Service) SSH(ctx context.Context, options SSHOptions) (SSHResult, error
 	return SSHResult{
 		InstanceName: selectedName,
 		Address:      address,
-		User:         instanceCfg.User,
+		User:         user,
 		Port:         selectedState.SSHPort,
 	}, nil
 }

@@ -29,9 +29,6 @@ func eventSink(w io.Writer) (app.EventSink, error) {
 	if !outputEvents {
 		return nil, nil
 	}
-	if !outputJSON {
-		return nil, fmt.Errorf("--events requires --json")
-	}
 	return func(event app.Event) {
 		_ = output.RenderJSONEvent(w, event)
 	}, nil
@@ -39,7 +36,10 @@ func eventSink(w io.Writer) (app.EventSink, error) {
 
 func commandEventSink(jsonWriter, humanWriter io.Writer) (app.EventSink, error) {
 	if outputEvents {
-		return eventSink(jsonWriter)
+		if outputJSON {
+			return eventSink(jsonWriter)
+		}
+		return eventSink(humanWriter)
 	}
 	if outputJSON {
 		return nil, nil

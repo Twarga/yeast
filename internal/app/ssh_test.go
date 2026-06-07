@@ -60,6 +60,7 @@ func TestSSHUsesStoredPortForSingleRunningInstance(t *testing.T) {
 		"-p", "2222",
 		"-o", "StrictHostKeyChecking=no",
 		"-o", "UserKnownHostsFile=/dev/null",
+		"-o", "LogLevel=ERROR",
 		"yeast@127.0.0.1",
 	}
 	if !reflect.DeepEqual(gotArgs, wantArgs) {

@@ -3,6 +3,7 @@ package app
 import (
 	"errors"
 	"fmt"
+	"os"
 	"yeast/internal/images"
 )
 
@@ -21,6 +22,7 @@ type PullResult struct {
 	ImagePath   string   `json:"image_path,omitempty"`
 	ManifestURL string   `json:"manifest_url,omitempty"`
 	SHA256      string   `json:"sha256,omitempty"`
+	Cached      bool     `json:"cached,omitempty"`
 }
 
 func (s *Service) Pull(options PullOptions) (PullResult, error) {
@@ -44,6 +46,18 @@ func (s *Service) Pull(options PullOptions) (PullResult, error) {
 	cachePaths, err := images.ResolveCachePaths(cacheRoot+"/cache/images", image.Name)
 	if err != nil {
 		return PullResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+
+	if info, err := os.Stat(cachePaths.ImageFile); err == nil && info.Size() > 0 {
+		if err := images.VerifySHA256(cachePaths.ImageFile, image.SHA256); err == nil {
+			return PullResult{
+				ImageName:   image.Name,
+				ImagePath:   cachePaths.ImageFile,
+				ManifestURL: image.URL,
+				SHA256:      image.SHA256,
+				Cached:      true,
+			}, nil
+		}
 	}
 
 	downloadOptions := s.downloadOptions()

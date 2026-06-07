@@ -11,7 +11,6 @@ import (
 	"yeast/internal/guest"
 	"yeast/internal/project"
 	provssh "yeast/internal/provision/ssh"
-	rtm "yeast/internal/runtime"
 	"yeast/internal/state"
 )
 
@@ -72,15 +71,10 @@ func (s *Service) Copy(ctx context.Context, options CopyOptions) (CopyResult, er
 	if err != nil {
 		return CopyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
-	changed := state.Reconcile(&currentState, state.ReconcileOptions{
-		IsProcessAlive: func(pid int) bool {
-			info, err := s.runtime.Inspect(ctx, rtm.RuntimeInstance{PID: pid})
-			if err != nil {
-				return false
-			}
-			return info.State == rtm.ProcessStateRunning
-		},
-	})
+	changed, err := s.reconcileProjectState(ctx, &currentState)
+	if err != nil {
+		return CopyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
 	if changed {
 		if err := state.Save(paths.StateFile, currentState); err != nil {
 			return CopyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)

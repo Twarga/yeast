@@ -50,6 +50,7 @@ func TestLocalTransportRunBuildsSSHInvocation(t *testing.T) {
 		"-p", "2205",
 		"-o", "StrictHostKeyChecking=no",
 		"-o", "UserKnownHostsFile=/dev/null",
+		"-o", "LogLevel=ERROR",
 		"yeast@127.0.0.1",
 		"echo ready",
 	}
@@ -84,6 +85,7 @@ func TestLocalTransportUploadBuildsSCPInvocation(t *testing.T) {
 		"-P", "2205",
 		"-o", "StrictHostKeyChecking=no",
 		"-o", "UserKnownHostsFile=/dev/null",
+		"-o", "LogLevel=ERROR",
 		"./site",
 		"yeast@127.0.0.1:/srv/site",
 	}
@@ -115,6 +117,7 @@ func TestLocalTransportDownloadBuildsSCPInvocation(t *testing.T) {
 		"-P", "2205",
 		"-o", "StrictHostKeyChecking=no",
 		"-o", "UserKnownHostsFile=/dev/null",
+		"-o", "LogLevel=ERROR",
 		"yeast@127.0.0.1:/srv/site/index.html",
 		"./index.html",
 	}

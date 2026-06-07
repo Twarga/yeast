@@ -35,6 +35,10 @@ type orphanCleaner interface {
 	CleanOrphans(ctx context.Context, targets []rtm.CleanupTarget, timeout time.Duration) ([]rtm.CleanupResult, error)
 }
 
+type processFinder interface {
+	FindProcesses(ctx context.Context, targets []rtm.CleanupTarget) ([]rtm.CleanupResult, error)
+}
+
 func (s *Service) Clean(ctx context.Context, options CleanOptions) (CleanResult, error) {
 	root := options.ProjectRoot
 	if root == "" {
@@ -76,9 +80,7 @@ func (s *Service) Clean(ctx context.Context, options CleanOptions) (CleanResult,
 	if err != nil {
 		return CleanResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
-	if err := addConfiguredRuntimeDirs(&currentState, absoluteRoot, paths); err != nil {
-		return CleanResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
-	}
+	_ = addConfiguredRuntimeDirs(&currentState, absoluteRoot, paths)
 
 	timeout := options.Timeout
 	if timeout <= 0 {
@@ -146,6 +148,14 @@ func (s *Service) cleanOrphanedQEMU(ctx context.Context, targets []rtm.CleanupTa
 		return nil, nil
 	}
 	return cleaner.CleanOrphans(ctx, targets, timeout)
+}
+
+func (s *Service) findQEMUProcesses(ctx context.Context, targets []rtm.CleanupTarget) ([]rtm.CleanupResult, error) {
+	finder, ok := s.runtime.(processFinder)
+	if !ok || len(targets) == 0 {
+		return nil, nil
+	}
+	return finder.FindProcesses(ctx, targets)
 }
 
 func cleanupTargets(currentState state.State, projectRoot string, paths project.Paths) []rtm.CleanupTarget {

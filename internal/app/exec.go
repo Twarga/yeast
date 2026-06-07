@@ -12,7 +12,6 @@ import (
 	"yeast/internal/guest"
 	"yeast/internal/project"
 	provssh "yeast/internal/provision/ssh"
-	rtm "yeast/internal/runtime"
 	"yeast/internal/state"
 )
 
@@ -62,15 +61,10 @@ func (s *Service) Exec(ctx context.Context, options ExecOptions) (ExecResult, er
 	if err != nil {
 		return ExecResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
-	changed := state.Reconcile(&currentState, state.ReconcileOptions{
-		IsProcessAlive: func(pid int) bool {
-			info, err := s.runtime.Inspect(ctx, rtm.RuntimeInstance{PID: pid})
-			if err != nil {
-				return false
-			}
-			return info.State == rtm.ProcessStateRunning
-		},
-	})
+	changed, err := s.reconcileProjectState(ctx, &currentState)
+	if err != nil {
+		return ExecResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
 	if changed {
 		if err := state.Save(paths.StateFile, currentState); err != nil {
 			return ExecResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
@@ -106,7 +100,7 @@ func (s *Service) Exec(ctx context.Context, options ExecOptions) (ExecResult, er
 		User:    instanceCfg.User,
 		Host:    defaultManagementHost,
 		Port:    selectedState.SSHPort,
-		Command: shellQuoteCommand(options.Command),
+		Command: remoteCommandString(options.Command),
 		Timeout: options.Timeout,
 	})
 
@@ -146,6 +140,10 @@ func shellQuoteCommand(parts []string) string {
 		quoted = append(quoted, shellQuote(part))
 	}
 	return strings.Join(quoted, " ")
+}
+
+func remoteCommandString(parts []string) string {
+	return strings.Join(parts, " ")
 }
 
 func shellQuote(value string) string {

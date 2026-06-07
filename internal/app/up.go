@@ -36,6 +36,7 @@ const (
 type UpOptions struct {
 	ProjectRoot      string
 	ReadinessTimeout time.Duration
+	SkipProvision    bool
 	Events           EventSink
 }
 
@@ -106,12 +107,17 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			"instances": len(cfg.Instances),
 		},
 	})
+	if err := validateProvisionPreflight(absoluteRoot, cfg, options.SkipProvision); err != nil {
+		return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
+	}
 
 	currentState, err := state.Load(paths.StateFile, metadata.ID)
 	if err != nil {
 		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
-	if state.Reconcile(&currentState, state.ReconcileOptions{}) {
+	if changed, err := s.reconcileProjectState(ctx, &currentState); err != nil {
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	} else if changed {
 		if err := state.Save(paths.StateFile, currentState); err != nil {
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
@@ -176,11 +182,32 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		if portAvailable == nil {
 			portAvailable = managementPortAvailable
 		}
+		if instance.SSHPort > 0 && !portAvailable(instance.SSHPort) {
+			if cleaned, cleanErr := s.cleanOrphanedQEMU(ctx, []rtm.CleanupTarget{{
+				Name:       instance.Name,
+				RuntimeDir: runtimeDir,
+				SSHHost:    defaultManagementHost,
+				SSHPort:    instance.SSHPort,
+			}}, 5*time.Second); cleanErr != nil {
+				return UpResult{}, WrapError(ErrorCodeInternal, cleanErr.Error(), cleanErr)
+			} else if len(cleaned) > 0 {
+				_ = s.waitForManagementPortRelease(ctx, instance.SSHPort, 5*time.Second)
+			}
+		}
 		sshPort, err := s.chooseManagementSSHPort(currentState, instance, allocatedPorts, portAvailable)
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
 		}
 		allocatedPorts[sshPort] = true
+		for _, forward := range instance.Ports {
+			if allocatedPorts[forward.HostPort] {
+				return UpResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("requested host_port %d for instance %q is already used in this project", forward.HostPort, instance.Name), nil)
+			}
+			if !portAvailable(forward.HostPort) {
+				return UpResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("requested host_port %d for instance %q is already bound on the host", forward.HostPort, instance.Name), nil)
+			}
+			allocatedPorts[forward.HostPort] = true
+		}
 
 		userKey, err := s.discoverSSHKey()
 		if err != nil {
@@ -248,6 +275,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 					SSHPort:       sshPort,
 					InterfaceName: defaultManagementNIC,
 					MACAddress:    deriveManagementMACAddress(metadata.ID, instance.Name),
+					Forwards:      buildPortForwards(instance.Ports),
 				},
 				Lab: labNetworkPlan,
 			},
@@ -256,9 +284,6 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		provisionPlan, err := resolveProvisionPlan(absoluteRoot, provision.BuildPlan(instance, cfg.Provision))
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("resolve provision plan for %s: %v", instance.Name, err), err)
-		}
-		if err := validateProvisionSudoPolicy(instance, provisionPlan); err != nil {
-			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
 		}
 
 		if _, err := s.runtime.PrepareDisk(ctx, plan); err != nil {
@@ -335,6 +360,11 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			}
 			return UpResult{}, WrapError(ErrorCodePrecondition, message, err)
 		}
+		if options.SkipProvision {
+			if err := s.waitForSSHHandshake(ctx, instance.User, sshPort, readinessTimeout); err != nil {
+				return UpResult{}, WrapError(ErrorCodePrecondition, fmt.Sprintf("wait for ssh login for %s: %v", instance.Name, err), err)
+			}
+		}
 		emitEvent(options.Events, "up", EventSSHReady, EventOptions{
 			ProjectID: metadata.ID,
 			Instance:  instance.Name,
@@ -346,7 +376,9 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		})
 
 		provisionLogPath := instanceState.ProvisionLogPath
-		if provisionPlan.Empty() {
+		if options.SkipProvision {
+			instanceState.ProvisioningStatus = state.ProvisioningStatusNotStarted
+		} else if provisionPlan.Empty() {
 			instanceState.ProvisioningStatus = state.ProvisioningStatusReady
 		} else {
 			instanceState.ProvisioningStatus = state.ProvisioningStatusRunning
@@ -359,6 +391,23 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		currentState.Instances[instance.Name] = instanceState
 		if err := state.Save(paths.StateFile, currentState); err != nil {
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+		}
+
+		if options.SkipProvision {
+			currentState.Instances[instance.Name] = instanceState
+			result.Instances = append(result.Instances, UpInstanceResult{
+				Name:       instance.Name,
+				Status:     "running",
+				SSHAddress: address,
+				SSHPort:    sshPort,
+				User:       instance.User,
+			})
+			emitEvent(options.Events, "up", EventInstanceReady, EventOptions{
+				ProjectID: metadata.ID,
+				Instance:  instance.Name,
+				Message:   "Instance is ready",
+			})
+			continue
 		}
 
 		provisionResult, err := s.runProvisionPlan(ctx, instance, sshPort, provisionLogPath, provisionPlan)
@@ -490,55 +539,84 @@ func deriveMACAddress(projectID, instanceName, networkName string) string {
 	)
 }
 
+func (s *Service) waitForSSHHandshake(ctx context.Context, user string, sshPort int, timeout time.Duration) error {
+	transport := s.provisionTransport
+	if transport == nil {
+		transport = provssh.NewLocalTransport()
+	}
+	sleep := s.sleep
+	if sleep == nil {
+		sleep = time.Sleep
+	}
+	deadline := time.Now().Add(timeout)
+	var lastErr error
+	for {
+		_, err := transport.Run(ctx, provssh.RunRequest{
+			User:    user,
+			Host:    defaultManagementHost,
+			Port:    sshPort,
+			Command: "true",
+			Timeout: 5 * time.Second,
+		})
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		if time.Now().After(deadline) {
+			return lastErr
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			sleep(500 * time.Millisecond)
+		}
+	}
+}
+
+func validateProvisionPreflight(projectRoot string, cfg *config.Config, skipProvision bool) error {
+	if skipProvision || cfg == nil {
+		return nil
+	}
+	for _, instance := range cfg.Instances {
+		plan, err := resolveProvisionPlan(projectRoot, provision.BuildPlan(instance, cfg.Provision))
+		if err != nil {
+			return fmt.Errorf("resolve provision plan for %s: %v", instance.Name, err)
+		}
+		if err := validateProvisionSudoPolicy(instance, plan); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func buildPortForwards(ports []config.PortForward) []rtm.PortForward {
+	if len(ports) == 0 {
+		return nil
+	}
+	forwards := make([]rtm.PortForward, 0, len(ports))
+	for _, port := range ports {
+		forwards = append(forwards, rtm.PortForward{
+			Host:      port.Host,
+			HostPort:  port.HostPort,
+			GuestPort: port.GuestPort,
+		})
+	}
+	return forwards
+}
+
 func (s *Service) startWithManagementPortRetry(ctx context.Context, plan rtm.MachinePlan, sshPort int, instanceName string) (rtm.RuntimeInstance, error) {
 	sleep := s.sleep
 	if sleep == nil {
 		sleep = time.Sleep
 	}
 
-	cleanedOrphans := false
 	for attempt := 1; attempt <= managementStartAttempts; attempt++ {
 		started, err := s.runtime.Start(ctx, plan)
 		if err != nil {
 			return rtm.RuntimeInstance{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
-
-		conflict, conflictErr := s.waitForManagementPortConflict(plan.LogPath, sshPort, time.Second)
-		if conflictErr != nil {
-			_ = s.runtime.Stop(ctx, started, 5*time.Second)
-			return rtm.RuntimeInstance{}, WrapError(ErrorCodeInternal, conflictErr.Error(), conflictErr)
-		}
-		if !conflict {
-			return started, nil
-		}
-
-		_ = s.runtime.Stop(ctx, started, 5*time.Second)
-		if !cleanedOrphans {
-			cleaned, cleanErr := s.cleanOrphanedQEMU(ctx, []rtm.CleanupTarget{{
-				Name:       instanceName,
-				RuntimeDir: plan.RuntimeDir,
-				SSHHost:    plan.Networks.Management.SSHHost,
-				SSHPort:    sshPort,
-			}}, 5*time.Second)
-			if cleanErr != nil {
-				return rtm.RuntimeInstance{}, WrapError(ErrorCodeInternal, cleanErr.Error(), cleanErr)
-			}
-			if len(cleaned) > 0 {
-				cleanedOrphans = true
-				_ = s.waitForManagementPortRelease(ctx, sshPort, 5*time.Second)
-				sleep(500 * time.Millisecond)
-				continue
-			}
-		}
-		if attempt == managementStartAttempts {
-			return rtm.RuntimeInstance{}, WrapError(
-				ErrorCodeInvalidArgument,
-				fmt.Sprintf("requested ssh_port %d for instance %q is already bound on the host", sshPort, instanceName),
-				nil,
-			)
-		}
-		_ = s.waitForManagementPortRelease(ctx, sshPort, 2*time.Second)
-		sleep(500 * time.Millisecond)
+		return started, nil
 	}
 
 	return rtm.RuntimeInstance{}, WrapError(
@@ -568,6 +646,9 @@ func (s *Service) chooseManagementSSHPort(currentState state.State, instance con
 		}
 		if used[instance.SSHPort] {
 			return 0, fmt.Errorf("requested ssh_port %d for instance %q is already in use", instance.SSHPort, instance.Name)
+		}
+		if !portAvailable(instance.SSHPort) {
+			return 0, fmt.Errorf("requested ssh_port %d for instance %q is already bound on the host", instance.SSHPort, instance.Name)
 		}
 		return instance.SSHPort, nil
 	}

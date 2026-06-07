@@ -67,7 +67,7 @@ func BuildCommandArgs(plan runtime.MachinePlan) ([]string, error) {
 		"-smp", fmt.Sprintf("%d", plan.CPUs),
 		"-drive", buildDiskDriveArg(plan.Disk.DiskPath),
 		"-drive", buildSeedDriveArg(plan.SeedImagePath),
-		"-netdev", buildManagementNetdevArg(plan.Networks.Management.SSHHost, plan.Networks.Management.SSHPort),
+		"-netdev", buildManagementNetdevArg(plan.Networks.Management),
 		"-device", buildManagementDeviceArg(plan.Networks.Management),
 	}
 	if plan.Networks.Lab != nil {
@@ -97,8 +97,20 @@ func buildSeedDriveArg(path string) string {
 	return fmt.Sprintf("file=%s,if=virtio,media=cdrom,readonly=on", filepath.Clean(path))
 }
 
-func buildManagementNetdevArg(host string, port int) string {
-	return fmt.Sprintf("user,id=mgmt0,hostfwd=tcp:%s:%d-:22", host, port)
+func buildManagementNetdevArg(management runtime.ManagementNetworkPlan) string {
+	host := strings.TrimSpace(management.SSHHost)
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	forwards := []string{fmt.Sprintf("hostfwd=tcp:%s:%d-:22", host, management.SSHPort)}
+	for _, forward := range management.Forwards {
+		forwardHost := strings.TrimSpace(forward.Host)
+		if forwardHost == "" {
+			forwardHost = host
+		}
+		forwards = append(forwards, fmt.Sprintf("hostfwd=tcp:%s:%d-:%d", forwardHost, forward.HostPort, forward.GuestPort))
+	}
+	return "user,id=mgmt0," + strings.Join(forwards, ",")
 }
 
 func buildManagementDeviceArg(management runtime.ManagementNetworkPlan) string {

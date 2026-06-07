@@ -9,7 +9,7 @@ const (
 	DefaultMemoryMB = 512
 	DefaultCPUs     = 1
 	DefaultUser     = "yeast"
-	DefaultSudo     = "none"
+	DefaultSudo     = "nopasswd"
 )
 
 func ApplyDefaults(cfg *Config) error {

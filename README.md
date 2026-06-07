@@ -381,6 +381,7 @@ Then log out and back in before your first `yeast up`.
 | `yeast pull --list` | List supported trusted images |
 | `yeast pull <image>` | Download a trusted base image |
 | `yeast up` | Start all instances in the project |
+| `yeast up --no-provision` | Fast-start instances without package/file/shell provisioning |
 | `yeast provision [instance]` | Rerun post-boot provisioning for a running instance |
 | `yeast status` | Show tracked instance state |
 | `yeast exec [instance] -- <command...>` | Run one command inside a running instance |
@@ -390,6 +391,7 @@ Then log out and back in before your first `yeast up`.
 | `yeast ssh [instance]` | Open SSH into a running instance |
 | `yeast down` | Stop tracked running instances |
 | `yeast destroy` | Stop and remove tracked runtime data |
+| `yeast clean` | Force-clean tracked/configured runtimes and matching orphan QEMU processes |
 | `yeast version` | Print the current version |
 
 ### JSON mode
@@ -444,6 +446,9 @@ instances:
     cpus: 1
     disk_size: 20G
     ssh_port: 2205
+    ports:
+      - host_port: 8080
+        guest_port: 80
     user: yeast
     sudo: nopasswd
     env:
@@ -470,12 +475,27 @@ instances:
 | `cpus` | no | `1` | Virtual CPU count. |
 | `disk_size` | no | image default | Overlay disk size, such as `20G`. Existing disks are not resized. |
 | `ssh_port` | no | auto | Host-side SSH port. Auto-allocation starts at `2222`. |
+| `ports` | no | empty | Extra host-to-guest TCP forwards, for example host `8080` to guest `80`. |
 | `user` | no | `yeast` | Linux user Yeast creates for SSH key login. |
 | `sudo` | no | `none` | `none`, `nopasswd`, or `password`. Use `nopasswd` for passwordless sudo. |
 | `env` | no | empty | Environment variables written to `/etc/profile.d/yeast-env.sh`. |
 | `user_data` | no | generated | Custom cloud-init. Replaces Yeast-generated user-data completely. |
 | `networks` | no | empty | Per-instance attachment to a project network with static IPv4. |
 | `provision` | no | empty | Instance-specific packages, files, and shell steps. |
+
+Port forwarding example:
+
+```yaml
+instances:
+  - name: web
+    image: ubuntu-24.04
+    ssh_port: 2205
+    ports:
+      - host_port: 8080
+        guest_port: 80
+```
+
+After `yeast up`, a web server listening on guest port `80` is reachable from the host at `http://127.0.0.1:8080`.
 
 ### Sudo And Passwords
 

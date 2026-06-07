@@ -568,6 +568,7 @@ func TestUpClassifiesExternallyBoundRequestedSSHPort(t *testing.T) {
 	port := listener.Addr().(*net.TCPAddr).Port
 
 	service, root := newUpServiceWithCachedImage(t)
+	service.managementPortAvailable = managementPortAvailable
 	service.runtime = &fakeRuntime{
 		startHook: func(plan rtm.MachinePlan) error {
 			return os.WriteFile(plan.LogPath, []byte(fmt.Sprintf(
@@ -596,7 +597,7 @@ instances:
 	}
 }
 
-func TestUpRetriesHostForwardConflictBeforeFailing(t *testing.T) {
+func TestUpIgnoresTransientHostForwardLogWarnings(t *testing.T) {
 	service, root := newUpServiceWithCachedImage(t)
 	fake := &fakeRuntime{}
 	service.runtime = fake
@@ -623,11 +624,11 @@ func TestUpRetriesHostForwardConflictBeforeFailing(t *testing.T) {
 	if len(result.Instances) != 1 {
 		t.Fatalf("expected one instance, got %#v", result.Instances)
 	}
-	if startAttempts != 3 {
-		t.Fatalf("expected 3 start attempts, got %d", startAttempts)
+	if startAttempts != 1 {
+		t.Fatalf("expected one start attempt, got %d", startAttempts)
 	}
-	if fake.stopCalls != 2 {
-		t.Fatalf("expected 2 stop calls for conflict retries, got %d", fake.stopCalls)
+	if fake.stopCalls != 0 {
+		t.Fatalf("expected no stop calls for ignored log warning, got %d", fake.stopCalls)
 	}
 }
 
@@ -881,7 +882,7 @@ func TestUpClassifiesCachedRunningSSHAddressFailure(t *testing.T) {
 	}
 
 	_, err = service.Up(context.Background(), UpOptions{ProjectRoot: root})
-	assertAppErrorCode(t, err, ErrorCodeInternal)
+	assertAppErrorCode(t, err, ErrorCodeNotFound)
 }
 
 func TestUpClassifiesMissingSSHPublicKey(t *testing.T) {

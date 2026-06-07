@@ -178,6 +178,9 @@ func renderPull(w io.Writer, theme humanTheme, value app.PullResult) error {
 		keyValue(theme, "image", value.ImageName),
 		keyValue(theme, "path", value.ImagePath),
 	}
+	if value.Cached {
+		lines[0] = theme.Success.Render("OK") + " " + theme.Title.Render("Image already cached")
+	}
 	return writeBlock(w, theme, lines)
 }
 
