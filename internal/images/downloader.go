@@ -11,8 +11,17 @@ import (
 )
 
 type DownloadOptions struct {
-	Timeout time.Duration
-	Client  *http.Client
+	Timeout  time.Duration
+	Client   *http.Client
+	Progress DownloadProgressSink
+}
+
+type DownloadProgressSink func(DownloadProgress)
+
+type DownloadProgress struct {
+	Stage      string
+	Downloaded int64
+	Total      int64
 }
 
 func Download(image TrustedImage, destination string, options DownloadOptions) error {
@@ -60,6 +69,7 @@ func Download(image TrustedImage, destination string, options DownloadOptions) e
 		return fmt.Errorf("build download request for %s: %w", image.URL, err)
 	}
 
+	emitDownloadProgress(options.Progress, DownloadProgress{Stage: "requesting"})
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("download image %s: %w", image.URL, err)
@@ -70,12 +80,18 @@ func Download(image TrustedImage, destination string, options DownloadOptions) e
 		return fmt.Errorf("download image %s: unexpected HTTP status %d", image.URL, resp.StatusCode)
 	}
 
+	total := resp.ContentLength
+	emitDownloadProgress(options.Progress, DownloadProgress{Stage: "downloading", Total: total})
 	file, err := os.OpenFile(tempPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return fmt.Errorf("create temp image file %s: %w", tempPath, err)
 	}
 
-	if _, err := io.Copy(file, resp.Body); err != nil {
+	if _, err := io.Copy(file, &progressReader{
+		reader:   resp.Body,
+		total:    total,
+		progress: options.Progress,
+	}); err != nil {
 		_ = file.Close()
 		return fmt.Errorf("write temp image file %s: %w", tempPath, err)
 	}
@@ -83,6 +99,7 @@ func Download(image TrustedImage, destination string, options DownloadOptions) e
 		return fmt.Errorf("close temp image file %s: %w", tempPath, err)
 	}
 
+	emitDownloadProgress(options.Progress, DownloadProgress{Stage: "verifying", Downloaded: total, Total: total})
 	if err := VerifySHA256(tempPath, image.SHA256); err != nil {
 		return err
 	}
@@ -91,6 +108,33 @@ func Download(image TrustedImage, destination string, options DownloadOptions) e
 		return fmt.Errorf("move verified image into place %s: %w", destination, err)
 	}
 
+	emitDownloadProgress(options.Progress, DownloadProgress{Stage: "complete", Downloaded: total, Total: total})
 	success = true
 	return nil
+}
+
+type progressReader struct {
+	reader     io.Reader
+	downloaded int64
+	total      int64
+	progress   DownloadProgressSink
+}
+
+func (r *progressReader) Read(p []byte) (int, error) {
+	n, err := r.reader.Read(p)
+	if n > 0 {
+		r.downloaded += int64(n)
+		emitDownloadProgress(r.progress, DownloadProgress{
+			Stage:      "downloading",
+			Downloaded: r.downloaded,
+			Total:      r.total,
+		})
+	}
+	return n, err
+}
+
+func emitDownloadProgress(sink DownloadProgressSink, progress DownloadProgress) {
+	if sink != nil {
+		sink(progress)
+	}
 }

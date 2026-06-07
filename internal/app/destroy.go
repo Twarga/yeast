@@ -68,6 +68,9 @@ func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (DestroyR
 	if err != nil {
 		return DestroyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+	if err := addConfiguredRuntimeDirs(&currentState, absoluteRoot, paths); err != nil {
+		return DestroyResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
+	}
 
 	result := DestroyResult{
 		ProjectID: metadata.ID,

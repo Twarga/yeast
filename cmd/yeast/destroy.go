@@ -12,7 +12,7 @@ func newDestroyCmd(service *app.Service) *cobra.Command {
 		Use:   "destroy",
 		Short: "Remove tracked VM runtime files for the current project",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			events, err := eventSink(cmd.OutOrStdout())
+			events, err := commandEventSink(cmd.OutOrStdout(), cmd.ErrOrStderr())
 			if err != nil {
 				return err
 			}

@@ -200,13 +200,18 @@ func renderDoctor(w io.Writer, theme humanTheme, value app.DoctorResult) error {
 func renderUp(w io.Writer, theme humanTheme, value app.UpResult) error {
 	lines := []string{theme.Success.Render("OK") + " " + theme.Title.Render("Instances ready")}
 	for _, instance := range value.Instances {
+		ssh := instance.SSHAddress
+		if instance.User != "" && ssh != "" {
+			ssh = instance.User + "@" + ssh
+		}
 		lines = append(lines, fmt.Sprintf(
 			"  %s  %s  %s",
 			statusBadge(theme, instance.Status),
 			theme.Value.Render(instance.Name),
-			theme.Muted.Render(instance.SSHAddress),
+			theme.Muted.Render(ssh),
 		))
 	}
+	lines = append(lines, "", theme.Muted.Render("Tip: connect with `yeast ssh <name>`; sudo requires `sudo: nopasswd` or custom user-data."))
 	return writeBlock(w, theme, lines)
 }
 

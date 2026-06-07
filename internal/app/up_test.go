@@ -719,7 +719,7 @@ func TestUpClassifiesSSHAddressFailureAndStopsStartedInstance(t *testing.T) {
 	}
 }
 
-func TestUpClassifiesReadinessFailureAndStopsStartedInstance(t *testing.T) {
+func TestUpClassifiesReadinessFailureAndDestroysStartedInstance(t *testing.T) {
 	service, root := newUpServiceWithCachedImage(t)
 	fake := &fakeRuntime{}
 	service.runtime = fake
@@ -732,8 +732,8 @@ func TestUpClassifiesReadinessFailureAndStopsStartedInstance(t *testing.T) {
 	if !strings.Contains(err.Error(), "wait for ssh readiness for web") {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if fake.stopCalls != 1 {
-		t.Fatalf("expected one stop call after readiness failure, got %d", fake.stopCalls)
+	if fake.destroyCalls != 1 {
+		t.Fatalf("expected one destroy call after readiness failure, got %d", fake.destroyCalls)
 	}
 }
 
@@ -967,12 +967,13 @@ func fakeBootstrapTransport(t *testing.T) provssh.FakeTransport {
 }
 
 type fakeRuntime struct {
-	preparePlan rtm.MachinePlan
-	startPlan   rtm.MachinePlan
-	prepareErr  error
-	startErr    error
-	stopCalls   int
-	startHook   func(plan rtm.MachinePlan) error
+	preparePlan  rtm.MachinePlan
+	startPlan    rtm.MachinePlan
+	prepareErr   error
+	startErr     error
+	stopCalls    int
+	destroyCalls int
+	startHook    func(plan rtm.MachinePlan) error
 }
 
 func (f *fakeRuntime) PrepareDisk(ctx context.Context, plan rtm.MachinePlan) (rtm.DiskPlan, error) {
@@ -1025,5 +1026,6 @@ func (f *fakeRuntime) DeleteSnapshot(ctx context.Context, snapshotPath string) e
 }
 
 func (f *fakeRuntime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) error {
+	f.destroyCalls++
 	return nil
 }

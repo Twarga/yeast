@@ -44,6 +44,7 @@ type UpInstanceResult struct {
 	Status     string `json:"status"`
 	SSHAddress string `json:"ssh_address,omitempty"`
 	SSHPort    int    `json:"ssh_port,omitempty"`
+	User       string `json:"user,omitempty"`
 }
 
 type UpResult struct {
@@ -139,6 +140,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 				Status:     existing.Status,
 				SSHAddress: address,
 				SSHPort:    existing.SSHPort,
+				User:       existing.User,
 			})
 			allocatedPorts[existing.SSHPort] = true
 			continue
@@ -279,23 +281,6 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			_ = s.runtime.Stop(ctx, started, 5*time.Second)
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
-		if err := s.waitForTCP(ctx, guest.ReadinessOptions{
-			Address: address,
-			Timeout: readinessTimeout,
-		}); err != nil {
-			_ = s.runtime.Stop(ctx, started, 5*time.Second)
-			message := fmt.Sprintf("wait for ssh readiness for %s: %v", instance.Name, err)
-			return UpResult{}, WrapError(ErrorCodePrecondition, message, err)
-		}
-		emitEvent(options.Events, "up", EventSSHReady, EventOptions{
-			ProjectID: metadata.ID,
-			Instance:  instance.Name,
-			Message:   "SSH is ready",
-			Data: map[string]any{
-				"ssh_address": address,
-				"ssh_port":    sshPort,
-			},
-		})
 
 		previousState, hadPreviousState := currentState.Instances[instance.Name]
 		instanceState := state.InstanceState{
@@ -316,6 +301,41 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			instanceState.Snapshots = previousState.Snapshots
 		}
 		currentState.Instances[instance.Name] = instanceState
+		if err := state.Save(paths.StateFile, currentState); err != nil {
+			_ = s.runtime.Destroy(ctx, started)
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+		}
+
+		if err := s.waitForTCP(ctx, guest.ReadinessOptions{
+			Address: address,
+			Timeout: readinessTimeout,
+		}); err != nil {
+			message := fmt.Sprintf("wait for ssh readiness for %s at %s: %v", instance.Name, address, err)
+			if destroyErr := s.runtime.Destroy(ctx, started); destroyErr != nil {
+				instanceState.LastError = fmt.Sprintf("%s; cleanup failed: %v", message, destroyErr)
+			} else {
+				instanceState.Status = "stopped"
+				instanceState.PID = 0
+				instanceState.ManagementIP = ""
+				instanceState.SSHPort = 0
+				instanceState.ProvisioningStatus = state.ProvisioningStatusFailed
+				instanceState.LastError = message
+			}
+			currentState.Instances[instance.Name] = instanceState
+			if saveErr := state.Save(paths.StateFile, currentState); saveErr != nil {
+				return UpResult{}, WrapError(ErrorCodeInternal, saveErr.Error(), saveErr)
+			}
+			return UpResult{}, WrapError(ErrorCodePrecondition, message, err)
+		}
+		emitEvent(options.Events, "up", EventSSHReady, EventOptions{
+			ProjectID: metadata.ID,
+			Instance:  instance.Name,
+			Message:   "SSH is ready",
+			Data: map[string]any{
+				"ssh_address": address,
+				"ssh_port":    sshPort,
+			},
+		})
 
 		provisionPlan, err := resolveProvisionPlan(absoluteRoot, provision.BuildPlan(instance, cfg.Provision))
 		if err != nil {
@@ -351,7 +371,11 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			if appErr.Code == ErrorCodeInternal {
 				return UpResult{}, appErr
 			}
-			return UpResult{}, WrapError(ErrorCodeProvisioning, fmt.Sprintf("provision instance %s: %v", instance.Name, err), err)
+			return UpResult{}, WrapError(
+				ErrorCodeProvisioning,
+				fmt.Sprintf("provision instance %s: %v (log: %s)", instance.Name, err, provisionLogPath),
+				err,
+			)
 		}
 		emitEvent(options.Events, "up", EventProvisionFinished, EventOptions{
 			ProjectID: metadata.ID,
@@ -368,6 +392,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			Status:     "running",
 			SSHAddress: address,
 			SSHPort:    sshPort,
+			User:       instance.User,
 		})
 		emitEvent(options.Events, "up", EventInstanceReady, EventOptions{
 			ProjectID: metadata.ID,

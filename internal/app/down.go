@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"time"
+	"yeast/internal/config"
 	"yeast/internal/project"
 	rtm "yeast/internal/runtime"
 	"yeast/internal/state"
@@ -68,6 +70,9 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 	if err != nil {
 		return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+	if err := addConfiguredRuntimeDirs(&currentState, absoluteRoot, paths); err != nil {
+		return DownResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
+	}
 
 	timeout := options.Timeout
 	if timeout <= 0 {
@@ -87,7 +92,7 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 
 	for _, name := range names {
 		instance := currentState.Instances[name]
-		if instance.Status != "running" || instance.PID <= 0 {
+		if instance.PID <= 0 && instance.RuntimeDir == "" {
 			instance.Status = "stopped"
 			instance.PID = 0
 			instance.ManagementIP = ""
@@ -155,4 +160,44 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 	})
 
 	return result, nil
+}
+
+func addConfiguredRuntimeDirs(currentState *state.State, projectRoot string, paths project.Paths) error {
+	if currentState == nil {
+		return nil
+	}
+	if currentState.Instances == nil {
+		currentState.Instances = make(map[string]state.InstanceState)
+	}
+
+	cfg, err := config.Load(filepath.Join(projectRoot, ConfigFileName))
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return err
+	}
+
+	for _, instance := range cfg.Instances {
+		if _, exists := currentState.Instances[instance.Name]; exists {
+			continue
+		}
+		runtimeDir, err := paths.InstanceDir(instance.Name)
+		if err != nil {
+			return err
+		}
+		if _, err := os.Stat(runtimeDir); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+			return err
+		}
+		currentState.Instances[instance.Name] = state.InstanceState{
+			Status:             "stopped",
+			User:               instance.User,
+			RuntimeDir:         runtimeDir,
+			ProvisioningStatus: state.ProvisioningStatusNotStarted,
+		}
+	}
+	return nil
 }

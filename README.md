@@ -226,7 +226,7 @@ Expected human output shape:
 
 ```text
 OK Instances ready
-  RUN  web  127.0.0.1:2222
+  RUN  web  yeast@127.0.0.1:2222
 ```
 
 ### 6. Check status
@@ -421,7 +421,18 @@ yeast status --json
 
 ## Config
 
-Current `v1.0` example:
+Yeast projects are described by `yeast.yaml`. The file has one required top-level `version` field and one or more `instances`.
+
+Minimal single-VM config:
+
+```yaml
+version: 1
+instances:
+  - name: web
+    image: ubuntu-24.04
+```
+
+More complete `v1.0` example:
 
 ```yaml
 version: 1
@@ -434,24 +445,98 @@ instances:
     disk_size: 20G
     ssh_port: 2205
     user: yeast
-    sudo: none
+    sudo: nopasswd
     env:
       APP_ENV: development
 ```
 
-### Supported instance fields
+### Top-Level Fields
 
-- `name`
-- `image`
-- `memory`
-- `cpus`
-- `disk_size`
-- `hostname`
-- `ssh_port`
-- `user`
-- `sudo`
-- `env`
-- `user_data`
+| Field | Required | Meaning |
+|---|---:|---|
+| `version` | yes | Config schema version. Current value is `1`. |
+| `instances` | yes | VM definitions to start for this project. |
+| `provision` | no | Project-wide packages, files, and shell steps applied to every instance. |
+| `networks` | no | Private lab networks. Current v1.0 supports one project network. |
+
+### Instance Fields
+
+| Field | Required | Default | Meaning |
+|---|---:|---|---|
+| `name` | yes | none | Stable Yeast instance name, such as `web` or `target`. |
+| `image` | yes | none | Trusted image name from `yeast pull --list`. |
+| `hostname` | no | `name` | Guest hostname written by cloud-init. |
+| `memory` | no | `512` | RAM in MiB. |
+| `cpus` | no | `1` | Virtual CPU count. |
+| `disk_size` | no | image default | Overlay disk size, such as `20G`. Existing disks are not resized. |
+| `ssh_port` | no | auto | Host-side SSH port. Auto-allocation starts at `2222`. |
+| `user` | no | `yeast` | Linux user Yeast creates for SSH key login. |
+| `sudo` | no | `none` | `none`, `nopasswd`, or `password`. Use `nopasswd` for passwordless sudo. |
+| `env` | no | empty | Environment variables written to `/etc/profile.d/yeast-env.sh`. |
+| `user_data` | no | generated | Custom cloud-init. Replaces Yeast-generated user-data completely. |
+| `networks` | no | empty | Per-instance attachment to a project network with static IPv4. |
+| `provision` | no | empty | Instance-specific packages, files, and shell steps. |
+
+### Sudo And Passwords
+
+Yeast does not set a default password for the guest user. SSH access is key-based, using `~/.ssh/id_ed25519.pub` or `~/.ssh/id_rsa.pub` from the host.
+
+That means `sudo: password` requires custom `user_data` that sets a password yourself. For normal local labs, use:
+
+```yaml
+sudo: nopasswd
+```
+
+If `sudo` is omitted, the default is `none`, so commands like `sudo apt update` inside the VM will not work for the `yeast` user.
+
+### Provision Fields
+
+Provisioning can be declared at the top level, per instance, or both:
+
+```yaml
+provision:
+  packages:
+    - caddy
+  files:
+    - source: ./site/index.html
+      destination: /home/yeast/site/index.html
+      permissions: "0644"
+  shell:
+    - sudo install -D -m 0644 /home/yeast/site/index.html /var/www/html/index.html
+```
+
+| Field | Meaning |
+|---|---|
+| `packages` | Package names installed through the guest package manager. |
+| `files` | Files copied from the project into the guest before shell steps. |
+| `files[].source` | Project-relative or absolute host path. |
+| `files[].destination` | Guest path to write. |
+| `files[].permissions` | Optional octal mode, such as `"0644"`. Quote this in YAML. |
+| `shell` | Shell commands run inside the guest over SSH. |
+
+### Network Fields
+
+Current private lab networking supports one top-level network and one attachment per instance:
+
+```yaml
+version: 1
+networks:
+  - name: lab
+    cidr: 10.10.10.0/24
+instances:
+  - name: attacker
+    image: ubuntu-24.04
+    sudo: nopasswd
+    networks:
+      - name: lab
+        ipv4: 10.10.10.10
+  - name: target
+    image: ubuntu-24.04
+    sudo: nopasswd
+    networks:
+      - name: lab
+        ipv4: 10.10.10.20
+```
 
 ### Important behavior
 

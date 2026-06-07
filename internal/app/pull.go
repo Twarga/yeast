@@ -11,6 +11,7 @@ var ErrUnsupportedImage = errors.New("unsupported image")
 type PullOptions struct {
 	ImageName string
 	List      bool
+	Progress  images.DownloadProgressSink
 }
 
 type PullResult struct {
@@ -45,7 +46,9 @@ func (s *Service) Pull(options PullOptions) (PullResult, error) {
 		return PullResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
-	if err := s.downloadImage(image, cachePaths.ImageFile, s.downloadOptions()); err != nil {
+	downloadOptions := s.downloadOptions()
+	downloadOptions.Progress = options.Progress
+	if err := s.downloadImage(image, cachePaths.ImageFile, downloadOptions); err != nil {
 		return PullResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 

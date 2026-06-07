@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 	rtm "yeast/internal/runtime"
 )
 
 type Runtime struct{}
+
+const pidFileName = "qemu.pid"
 
 func NewRuntime() *Runtime {
 	return &Runtime{}
@@ -54,6 +58,10 @@ func (r *Runtime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.RuntimeI
 	if err := proc.Release(); err != nil {
 		return rtm.RuntimeInstance{}, fmt.Errorf("release qemu process handle: %w", err)
 	}
+	if err := writePIDFile(plan.RuntimeDir, proc.PID()); err != nil {
+		_ = signalProcess(proc.PID(), syscall.SIGTERM)
+		return rtm.RuntimeInstance{}, err
+	}
 
 	return rtm.RuntimeInstance{
 		Name:       plan.Name,
@@ -66,6 +74,16 @@ func (r *Runtime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.RuntimeI
 }
 
 func (r *Runtime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeout time.Duration) error {
+	if instance.PID <= 0 && instance.RuntimeDir != "" {
+		pid, err := readPIDFile(instance.RuntimeDir)
+		if err == nil {
+			instance.PID = pid
+		} else if os.IsNotExist(err) {
+			return nil
+		} else if !os.IsNotExist(err) {
+			return err
+		}
+	}
 	if instance.PID <= 0 {
 		return fmt.Errorf("runtime instance pid is required")
 	}
@@ -94,6 +112,7 @@ func (r *Runtime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeou
 		return fmt.Errorf("wait for process %d after SIGKILL: %w", instance.PID, err)
 	}
 
+	_ = os.Remove(pidFilePath(instance.RuntimeDir))
 	return nil
 }
 
@@ -148,4 +167,32 @@ func (r *Runtime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) err
 		return fmt.Errorf("remove runtime directory %s: %w", instance.RuntimeDir, err)
 	}
 	return nil
+}
+
+func writePIDFile(runtimeDir string, pid int) error {
+	if runtimeDir == "" || pid <= 0 {
+		return nil
+	}
+	path := pidFilePath(runtimeDir)
+	if err := os.WriteFile(path, []byte(strconv.Itoa(pid)+"\n"), 0644); err != nil {
+		return fmt.Errorf("write qemu pid file %s: %w", path, err)
+	}
+	return nil
+}
+
+func readPIDFile(runtimeDir string) (int, error) {
+	path := pidFilePath(runtimeDir)
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return 0, err
+	}
+	pid, err := strconv.Atoi(strings.TrimSpace(string(raw)))
+	if err != nil || pid <= 0 {
+		return 0, fmt.Errorf("invalid qemu pid file %s", path)
+	}
+	return pid, nil
+}
+
+func pidFilePath(runtimeDir string) string {
+	return filepath.Join(runtimeDir, pidFileName)
 }
