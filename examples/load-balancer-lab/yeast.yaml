@@ -1,0 +1,115 @@
+version: 1
+networks:
+  - name: backend
+    cidr: 192.168.2.0/24
+instances:
+  - name: proxy
+    hostname: proxy-lab
+    image: ubuntu-24.04
+    memory: 512
+    cpus: 1
+    ssh_port: 2222
+    user: yeast
+    sudo: nopasswd
+    ports:
+      - host_port: 8080
+        guest_port: 80
+    networks:
+      - name: backend
+        ipv4: 192.168.2.10
+    provision:
+      packages:
+        - caddy
+      files:
+        - source: ./files/proxy/Caddyfile
+          destination: /home/yeast/proxy/Caddyfile
+          permissions: "0644"
+      shell:
+        - sudo install -D -m 0644 /home/yeast/proxy/Caddyfile /etc/caddy/Caddyfile
+        - sudo systemctl enable --now caddy
+
+  - name: web1
+    hostname: web1-lab
+    image: ubuntu-24.04
+    memory: 512
+    cpus: 1
+    ssh_port: 2223
+    user: yeast
+    sudo: nopasswd
+    networks:
+      - name: backend
+        ipv4: 192.168.2.11
+    provision:
+      packages:
+        - python3
+        - python3-pip
+      files:
+        - source: ./files/web1/app.py
+          destination: /home/yeast/web/app.py
+          permissions: "0644"
+      shell:
+        - sudo mkdir -p /opt/web
+        - sudo cp /home/yeast/web/app.py /opt/web/app.py
+        - |
+          cat << 'EOF' | sudo tee /etc/systemd/system/webapp.service
+          [Unit]
+          Description=Web App
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=yeast
+          WorkingDirectory=/opt/web
+          ExecStart=/usr/bin/python3 /opt/web/app.py
+          Restart=always
+          Environment=WEB_NODE=web1
+          Environment=WEB_PORT=8080
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+        - sudo systemctl daemon-reload
+        - sudo systemctl enable --now webapp
+
+  - name: web2
+    hostname: web2-lab
+    image: ubuntu-24.04
+    memory: 512
+    cpus: 1
+    ssh_port: 2224
+    user: yeast
+    sudo: nopasswd
+    networks:
+      - name: backend
+        ipv4: 192.168.2.12
+    provision:
+      packages:
+        - python3
+        - python3-pip
+      files:
+        - source: ./files/web2/app.py
+          destination: /home/yeast/web/app.py
+          permissions: "0644"
+      shell:
+        - sudo mkdir -p /opt/web
+        - sudo cp /home/yeast/web/app.py /opt/web/app.py
+        - |
+          cat << 'EOF' | sudo tee /etc/systemd/system/webapp.service
+          [Unit]
+          Description=Web App
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=yeast
+          WorkingDirectory=/opt/web
+          ExecStart=/usr/bin/python3 /opt/web/app.py
+          Restart=always
+          Environment=WEB_NODE=web2
+          Environment=WEB_PORT=8080
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+        - sudo systemctl daemon-reload
+        - sudo systemctl enable --now webapp

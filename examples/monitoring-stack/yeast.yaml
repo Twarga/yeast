@@ -1,0 +1,112 @@
+version: 1
+networks:
+  - name: backend
+    cidr: 192.168.2.0/24
+instances:
+  - name: monitor
+    hostname: monitor-lab
+    image: ubuntu-24.04
+    memory: 2048
+    cpus: 2
+    disk_size: 20G
+    ssh_port: 2222
+    user: yeast
+    sudo: nopasswd
+    ports:
+      - host_port: 9090
+        guest_port: 9090
+      - host_port: 3030
+        guest_port: 3000
+    networks:
+      - name: backend
+        ipv4: 192.168.2.50
+    provision:
+      packages:
+        - docker.io
+        - docker-compose
+        - curl
+      files:
+        - source: ./files/monitor/docker-compose.yml
+          destination: /home/yeast/monitor/docker-compose.yml
+          permissions: "0644"
+        - source: ./files/monitor/prometheus.yml
+          destination: /home/yeast/monitor/prometheus.yml
+          permissions: "0644"
+      shell:
+        - sudo systemctl enable --now docker
+        - sudo usermod -aG docker yeast
+        - sudo mkdir -p /opt/monitor
+        - sudo cp /home/yeast/monitor/* /opt/monitor/
+        - cd /opt/monitor && sudo docker compose up -d
+
+  - name: web
+    hostname: web-lab
+    image: ubuntu-24.04
+    memory: 512
+    cpus: 1
+    ssh_port: 2223
+    user: yeast
+    sudo: nopasswd
+    networks:
+      - name: backend
+        ipv4: 192.168.2.11
+    provision:
+      packages:
+        - python3
+        - prometheus-node-exporter
+      shell:
+        - sudo systemctl enable --now prometheus-node-exporter
+        - |
+          cat << 'EOF' | sudo tee /etc/systemd/system/stress.service
+          [Unit]
+          Description=Generate Load for Monitoring Demo
+
+          [Service]
+          Type=simple
+          ExecStart=/bin/sh -c 'while true; do dd if=/dev/zero of=/tmp/stress bs=1M count=50; sleep 5; done'
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+        - sudo systemctl daemon-reload
+        - sudo systemctl enable --now stress
+
+  - name: db
+    hostname: db-lab
+    image: ubuntu-24.04
+    memory: 512
+    cpus: 1
+    ssh_port: 2224
+    user: yeast
+    sudo: nopasswd
+    networks:
+      - name: backend
+        ipv4: 192.168.2.12
+    provision:
+      packages:
+        - postgresql
+        - prometheus-node-exporter
+      shell:
+        - sudo systemctl enable --now postgresql
+        - sudo systemctl enable --now prometheus-node-exporter
+
+  - name: cache
+    hostname: cache-lab
+    image: ubuntu-24.04
+    memory: 512
+    cpus: 1
+    ssh_port: 2225
+    user: yeast
+    sudo: nopasswd
+    networks:
+      - name: backend
+        ipv4: 192.168.2.13
+    provision:
+      packages:
+        - redis-server
+        - prometheus-node-exporter
+      shell:
+        - sudo sed -i 's/bind 127.0.0.1 ::1/bind 0.0.0.0/' /etc/redis/redis.conf
+        - sudo systemctl enable --now redis-server
+        - sudo systemctl enable --now prometheus-node-exporter

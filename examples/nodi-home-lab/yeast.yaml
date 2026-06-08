@@ -1,0 +1,139 @@
+version: 1
+networks:
+  - name: home
+    cidr: 192.168.2.0/24
+instances:
+  - name: gateway
+    hostname: gateway-lab
+    image: ubuntu-24.04
+    memory: 512
+    cpus: 1
+    ssh_port: 2222
+    user: yeast
+    sudo: nopasswd
+    ports:
+      - host_port: 8080
+        guest_port: 80
+    networks:
+      - name: home
+        ipv4: 192.168.2.1
+    provision:
+      packages:
+        - caddy
+      files:
+        - source: ./files/gateway/Caddyfile
+          destination: /home/yeast/gateway/Caddyfile
+          permissions: "0644"
+        - source: ./files/gateway/index.html
+          destination: /home/yeast/gateway/index.html
+          permissions: "0644"
+      shell:
+        - sudo mkdir -p /var/www/html
+        - sudo install -D -m 0644 /home/yeast/gateway/Caddyfile /etc/caddy/Caddyfile
+        - sudo install -D -m 0644 /home/yeast/gateway/index.html /var/www/html/index.html
+        - sudo systemctl enable --now caddy
+
+  - name: storage
+    hostname: storage-lab
+    image: ubuntu-24.04
+    memory: 2048
+    cpus: 2
+    disk_size: 30G
+    ssh_port: 2223
+    user: yeast
+    sudo: nopasswd
+    ports:
+      - host_port: 7319
+        guest_port: 7319
+      - host_port: 2049
+        guest_port: 2049
+      - host_port: 445
+        guest_port: 445
+    networks:
+      - name: home
+        ipv4: 192.168.2.50
+    provision:
+      packages:
+        - docker.io
+        - git
+        - samba
+        - nfs-kernel-server
+      files:
+        - source: ./files/storage/smb.conf
+          destination: /home/yeast/storage/smb.conf
+          permissions: "0644"
+      shell:
+        - sudo systemctl enable --now docker
+        - sudo usermod -aG docker yeast
+        - sudo mkdir -p /srv/smb/shared /srv/smb/backup /srv/nfs/shared /srv/nfs/backup
+        - sudo chmod 777 /srv/smb/shared /srv/smb/backup /srv/nfs/shared /srv/nfs/backup
+        - cd /opt && sudo curl -fsSL https://raw.githubusercontent.com/Twarga/Nodi/main/install.sh -o nodi-install.sh
+        - cd /opt && sudo timeout 600 bash nodi-install.sh
+        - sudo cp /home/yeast/storage/smb.conf /etc/samba/smb.conf
+        - sudo bash -c 'echo -e "yeast\nyeast" | smbpasswd -a -s yeast'
+        - sudo systemctl enable --now smbd
+        - sudo bash -c 'echo "/srv/nfs/shared 192.168.2.0/24(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports'
+        - sudo bash -c 'echo "/srv/nfs/backup 192.168.2.0/24(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports'
+        - sudo systemctl enable --now nfs-server
+
+  - name: alpha
+    hostname: alpha-lab
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    ssh_port: 2224
+    user: yeast
+    sudo: nopasswd
+    networks:
+      - name: home
+        ipv4: 192.168.2.11
+    provision:
+      packages:
+        - nfs-common
+        - cifs-utils
+        - curl
+        - jq
+        - git
+        - vim
+      shell:
+        - sudo mkdir -p /mnt/nfs/shared /mnt/nfs/backup
+        - |
+          for i in $(seq 1 20); do
+            sudo mount -t nfs 192.168.2.50:/srv/nfs/shared /mnt/nfs/shared && break
+            echo "Waiting for storage NFS shared... ($i/20)"
+            sleep 15
+          done
+        - |
+          for i in $(seq 1 20); do
+            sudo mount -t nfs 192.168.2.50:/srv/nfs/backup /mnt/nfs/backup && break
+            echo "Waiting for storage NFS backup... ($i/20)"
+            sleep 15
+          done
+        - mkdir -p ~/project && echo "Hello from alpha" > ~/project/readme.txt
+        - cp ~/project/readme.txt /mnt/nfs/shared/
+
+  - name: beta
+    hostname: beta-lab
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    ssh_port: 2225
+    user: yeast
+    sudo: nopasswd
+    networks:
+      - name: home
+        ipv4: 192.168.2.12
+    provision:
+      packages:
+        - cifs-utils
+        - rsync
+      shell:
+        - sudo mkdir -p /mnt/smb/backup
+        - |
+          for i in $(seq 1 20); do
+            sudo mount -t cifs //192.168.2.50/backup /mnt/smb/backup -o username=yeast,password=yeast,uid=1000,vers=3.0,iocharset=utf8 && break
+            echo "Waiting for storage SMB backup... ($i/20)"
+            sleep 15
+          done
+        - mkdir -p ~/workspace && echo "important data" > ~/workspace/data.txt
+        - rsync -av ~/workspace/ /mnt/smb/backup/beta-workspace/

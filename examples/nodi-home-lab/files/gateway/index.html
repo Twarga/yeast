@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Yeast Nodi Home Lab</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; background: #0f0f23; color: #e0e0e0; }
+    .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+    h1 { color: #e94560; margin-bottom: 8px; }
+    .subtitle { color: #888; margin-bottom: 30px; font-size: 0.95em; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95em; }
+    th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #2a2a4a; }
+    th { background: #16163a; color: #a0a0ff; font-weight: 600; }
+    tr:hover { background: #1a1a3a; }
+    a { color: #e94560; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .ip { color: #4ecca3; font-family: monospace; }
+    .status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #4ecca3; margin-right: 6px; }
+    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #2a2a4a; font-size: 0.85em; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Yeast Nodi Home Lab</h1>
+    <p class="subtitle">
+      <span class="status"></span>Network <span class="ip">192.168.2.0/24</span> &middot; Gateway <span class="ip">192.168.2.1</span>
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Service / Role</th>
+          <th>VM</th>
+          <th>Lab IP</th>
+          <th>Host Access</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Landing Page</strong></td>
+          <td>gateway</td>
+          <td class="ip">192.168.2.1</td>
+          <td><a href="http://127.0.0.1:8080">http://127.0.0.1:8080</a></td>
+        </tr>
+        <tr>
+          <td><strong>Nodi File Manager</strong></td>
+          <td>storage</td>
+          <td class="ip">192.168.2.50</td>
+          <td><a href="http://127.0.0.1:7319">http://127.0.0.1:7319</a></td>
+        </tr>
+        <tr>
+          <td>SMB / CIFS Share</td>
+          <td>storage</td>
+          <td class="ip">192.168.2.50</td>
+          <td>//192.168.2.50/shared</td>
+        </tr>
+        <tr>
+          <td>NFS Share</td>
+          <td>storage</td>
+          <td class="ip">192.168.2.50</td>
+          <td>192.168.2.50:/srv/nfs/shared</td>
+        </tr>
+        <tr>
+          <td>Dev Workstation</td>
+          <td>alpha</td>
+          <td class="ip">192.168.2.11</td>
+          <td><code>yeast ssh alpha</code></td>
+        </tr>
+        <tr>
+          <td>Backup Workstation</td>
+          <td>beta</td>
+          <td class="ip">192.168.2.12</td>
+          <td><code>yeast ssh beta</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="footer">
+      Built with <a href="https://github.com/Twarga/yeast">Yeast</a> v1.0 &middot;
+      Storage powered by <a href="https://github.com/Twarga/Nodi">Nodi</a>
+    </div>
+  </div>
+</body>
+</html>

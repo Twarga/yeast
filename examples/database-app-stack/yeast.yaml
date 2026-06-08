@@ -1,0 +1,99 @@
+version: 1
+networks:
+  - name: backend
+    cidr: 192.168.2.0/24
+instances:
+  - name: db
+    hostname: db-lab
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    disk_size: 15G
+    ssh_port: 2222
+    user: yeast
+    sudo: nopasswd
+    ports:
+      - host_port: 5432
+        guest_port: 5432
+    networks:
+      - name: backend
+        ipv4: 192.168.2.50
+    provision:
+      packages:
+        - postgresql
+        - postgresql-contrib
+        - nodejs
+        - npm
+      files:
+        - source: ./files/db/init.sql
+          destination: /home/yeast/db/init.sql
+          permissions: "0644"
+      shell:
+        - sudo systemctl enable --now postgresql
+        - sudo -u postgres psql -c "CREATE USER todoapp WITH PASSWORD 'todosecret';"
+        - sudo -u postgres psql -c "CREATE DATABASE todo OWNER todoapp;"
+        - sudo -u postgres psql -d todo -f /home/yeast/db/init.sql
+        - sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO todoapp;"
+        - sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /etc/postgresql/16/main/postgresql.conf
+        - sudo bash -c 'echo "host all all 192.168.2.0/24 scram-sha-256" >> /etc/postgresql/16/main/pg_hba.conf'
+        - sudo systemctl restart postgresql
+
+  - name: app
+    hostname: app-lab
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    ssh_port: 2223
+    user: yeast
+    sudo: nopasswd
+    ports:
+      - host_port: 3000
+        guest_port: 3000
+    networks:
+      - name: backend
+        ipv4: 192.168.2.10
+    provision:
+      packages:
+        - nodejs
+        - npm
+        - curl
+      files:
+        - source: ./files/app/server.js
+          destination: /home/yeast/app/server.js
+          permissions: "0644"
+        - source: ./files/app/package.json
+          destination: /home/yeast/app/package.json
+          permissions: "0644"
+      shell:
+        - sudo mkdir -p /opt/app
+        - sudo cp /home/yeast/app/* /opt/app/
+        - cd /opt/app && sudo npm install
+        - |
+          cat << 'EOF' | sudo tee /etc/systemd/system/todoapp.service
+          [Unit]
+          Description=Todo API
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=yeast
+          WorkingDirectory=/opt/app
+          ExecStart=/usr/bin/node /opt/app/server.js
+          Restart=always
+          Environment=DB_HOST=192.168.2.50
+          Environment=DB_PORT=5432
+          Environment=DB_NAME=todo
+          Environment=DB_USER=todoapp
+          Environment=DB_PASS=todosecret
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+        - sudo systemctl daemon-reload
+        - |
+          for i in $(seq 1 30); do
+            yeast exec db -- pg_isready -h localhost -p 5432 -U postgres > /dev/null 2>&1 && break
+            echo "Waiting for PostgreSQL... ($i/30)"
+            sleep 10
+          done
+        - sudo systemctl enable --now todoapp
