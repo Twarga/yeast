@@ -1,0 +1,111 @@
+version: 1
+networks:
+  - name: backend
+    cidr: 192.168.2.0/24
+instances:
+  - name: gitea
+    hostname: gitea-lab
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    disk_size: 15G
+    ssh_port: 2222
+    user: yeast
+    sudo: nopasswd
+    ports:
+      - host_port: 3000
+        guest_port: 3000
+    networks:
+      - name: backend
+        ipv4: 192.168.2.50
+    provision:
+      packages:
+        - git
+        - docker.io
+        - docker-compose
+      files:
+        - source: ./files/gitea/app.ini
+          destination: /home/yeast/gitea/app.ini
+          permissions: "0644"
+        - source: ./files/gitea/docker-compose.yml
+          destination: /home/yeast/gitea/docker-compose.yml
+          permissions: "0644"
+      shell:
+        - sudo systemctl enable --now docker
+        - sudo usermod -aG docker yeast
+        - sudo mkdir -p /opt/gitea
+        - sudo cp /home/yeast/gitea/* /opt/gitea/
+        - cd /opt/gitea && sudo docker compose up -d
+        - |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000 > /dev/null 2>&1 && break
+            echo "Waiting for Gitea... ($i/30)"
+            sleep 10
+          done
+        - |
+          # Create a test repo via Gitea API (admin/admin)
+          curl -sf -X POST http://localhost:3000/api/v1/user/repos \
+            -u admin:admin \
+            -H "Content-Type: application/json" \
+            -d '{"name":"hello","auto_init":true,"private":false}' || true
+
+  - name: runner
+    hostname: runner-lab
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    ssh_port: 2223
+    user: yeast
+    sudo: nopasswd
+    networks:
+      - name: backend
+        ipv4: 192.168.2.11
+    provision:
+      packages:
+        - docker.io
+        - git
+        - curl
+      files:
+        - source: ./files/runner/docker-compose.yml
+          destination: /home/yeast/runner/docker-compose.yml
+          permissions: "0644"
+      shell:
+        - sudo systemctl enable --now docker
+        - sudo usermod -aG docker yeast
+        - sudo mkdir -p /opt/runner
+        - sudo cp /home/yeast/runner/* /opt/runner/
+        - |
+          for i in $(seq 1 30); do
+            yeast exec gitea -- curl -sf http://localhost:3000 > /dev/null 2>&1 && break
+            echo "Waiting for Gitea before starting runner... ($i/30)"
+            sleep 10
+          done
+        - cd /opt/runner && sudo docker compose up -d
+
+  - name: registry
+    hostname: registry-lab
+    image: ubuntu-24.04
+    memory: 512
+    cpus: 1
+    ssh_port: 2224
+    user: yeast
+    sudo: nopasswd
+    ports:
+      - host_port: 5000
+        guest_port: 5000
+    networks:
+      - name: backend
+        ipv4: 192.168.2.12
+    provision:
+      packages:
+        - docker.io
+      files:
+        - source: ./files/registry/docker-compose.yml
+          destination: /home/yeast/registry/docker-compose.yml
+          permissions: "0644"
+      shell:
+        - sudo systemctl enable --now docker
+        - sudo usermod -aG docker yeast
+        - sudo mkdir -p /opt/registry
+        - sudo cp /home/yeast/registry/* /opt/registry/
+        - cd /opt/registry && sudo docker compose up -d
