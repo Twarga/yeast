@@ -16,7 +16,9 @@ vm_test*/
 # Re-allow the only public-facing markdown file
 !README.md
 
+# Allow docs-site markdown files
+!docs-site/**/*.md
+
 # Also hide the entire docs/ tree (which contains html/css/png too)
 /docs/
 /internal/docs/
-!docs-site/.vitepress/dist/
