@@ -1,0 +1,149 @@
+---
+title: Installation
+description: Install Yeast on your Linux system
+---
+
+# Installation
+
+This guide walks you through installing Yeast on your Linux system.
+
+## System Requirements
+
+- **Operating System**: Linux (Ubuntu 20.04+, Debian 11+, Fedora 38+, or similar)
+- **Architecture**: x86_64 (AMD64)
+- **RAM**: 4 GB minimum (8 GB recommended)
+- **Disk**: 10 GB free space
+- **Virtualization**: KVM support enabled
+
+## Prerequisites
+
+Yeast requires the following packages to be installed:
+
+### Ubuntu/Debian
+
+```bash
+sudo apt update
+sudo apt install -y qemu-kvm qemu-utils genisoimage ssh-client
+```
+
+### Fedora/RHEL
+
+```bash
+sudo dnf install -y qemu-kvm qemu-img genisoimage openssh-clients
+```
+
+### Arch Linux
+
+```bash
+sudo pacman -S qemu-full cdrtools openssh
+```
+
+## Check KVM Support
+
+Verify that KVM is available on your system:
+
+```bash
+# Check if KVM module is loaded
+lsmod | grep kvm
+
+# Check if /dev/kvm exists
+ls -la /dev/kvm
+
+# Check if your user can access KVM
+groups | grep kvm
+```
+
+If `/dev/kvm` doesn't exist or your user doesn't have access:
+
+```bash
+# Add your user to the kvm group
+sudo usermod -aG kvm $USER
+
+# Log out and log back in for changes to take effect
+```
+
+## Install Yeast
+
+### Using the Install Script
+
+The easiest way to install Yeast is using the official install script:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
+```
+
+This script will:
+1. Download the latest Yeast release
+2. Install it to `/usr/local/bin/`
+3. Verify the installation
+
+### Manual Installation
+
+If you prefer manual installation:
+
+```bash
+# Download the latest release
+VERSION="1.0.1"
+curl -LO "https://github.com/Twarga/yeast/releases/download/v${VERSION}/yeast-linux-amd64"
+
+# Make it executable
+chmod +x yeast-linux-amd64
+
+# Move to /usr/local/bin/
+sudo mv yeast-linux-amd64 /usr/local/bin/yeast
+```
+
+### Build from Source
+
+To build Yeast from source:
+
+```bash
+# Clone the repository
+git clone https://github.com/Twarga/yeast.git
+cd yeast
+
+# Build the binary
+go build -o yeast ./cmd/yeast
+
+# Install it
+sudo mv yeast /usr/local/bin/
+```
+
+## Verify Installation
+
+After installation, verify that Yeast is working:
+
+```bash
+# Check the version
+yeast --version
+
+# Check system requirements
+yeast doctor
+```
+
+The `yeast doctor` command checks:
+- KVM support
+- Required packages
+- SSH key availability
+- System resources
+
+## SSH Key Setup
+
+Yeast uses SSH keys for VM access. If you don't have an SSH key:
+
+```bash
+# Generate a new SSH key
+ssh-keygen -t ed25519 -C "your_email@example.com"
+
+# Start the SSH agent
+eval "$(ssh-agent -s)"
+
+# Add your key to the agent
+ssh-add ~/.ssh/id_ed25519
+```
+
+## Next Steps
+
+- [Quickstart](./quickstart) - Get your first VM running in 5 minutes
+- [Configuration](./configuration) - Learn about yeast.yaml
+- [Troubleshooting](./troubleshooting) - Common issues and fixes
