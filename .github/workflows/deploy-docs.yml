@@ -47,6 +47,9 @@ jobs:
           mkdir -p dist
           cp -r docs-site/.vitepress/dist/* dist/
           mv dist/assets dist/docs/assets
+          mkdir -p dist/assets
+          cp assets/logo.svg dist/assets/
+          cp assets/favicon.ico dist/assets/
           cp landing/index.html dist/index.html
 
       - name: Configure Pages
