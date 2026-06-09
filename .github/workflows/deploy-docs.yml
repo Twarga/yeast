@@ -45,8 +45,9 @@ jobs:
       - name: Prepare dist
         run: |
           mkdir -p dist
+          cp -r docs-site/.vitepress/dist/* dist/
+          mv dist/assets dist/docs/assets
           cp landing/index.html dist/index.html
-          cp -r docs-site/.vitepress/dist/docs dist/docs
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
