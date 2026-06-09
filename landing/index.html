@@ -36,6 +36,7 @@
       color: var(--text-primary);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
 
     /* ── Grid background ── */
@@ -129,6 +130,51 @@
       font-size: 12px;
     }
     .nav-stars svg { width: 12px; height: 12px; color: #e2b340; }
+    .nav-hamburger {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      color: var(--text-primary);
+    }
+    .nav-hamburger svg { width: 24px; height: 24px; }
+    .nav-mobile {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(10, 14, 12, 0.97);
+      backdrop-filter: blur(16px);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+    }
+    .nav-mobile.open { display: flex; }
+    .nav-mobile a {
+      color: var(--text-primary);
+      text-decoration: none;
+      font-size: 22px;
+      font-weight: 600;
+      font-family: var(--font-body);
+      transition: color 0.2s;
+    }
+    .nav-mobile a:hover { color: var(--accent); }
+    .nav-mobile .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 8px;
+    }
+    .nav-mobile .close-btn svg { width: 28px; height: 28px; }
 
     /* ── Hero ── */
     .hero {
@@ -260,6 +306,7 @@
       font-size: 14px;
       line-height: 1.8;
       min-height: 240px;
+      overflow-x: auto;
     }
     .terminal-line {
       white-space: nowrap;
@@ -589,9 +636,11 @@
 
     /* ── Responsive ── */
     @media (max-width: 900px) {
+      section { padding: 60px 0; }
+      .hero { min-height: auto; padding-top: 100px; padding-bottom: 40px; }
       .hero .container {
         grid-template-columns: 1fr;
-        gap: 40px;
+        gap: 32px;
       }
       .terminal-wrapper { order: -1; }
       .features-grid,
@@ -599,12 +648,47 @@
       .cases-grid { grid-template-columns: 1fr; }
       .steps { grid-template-columns: repeat(2, 1fr); }
       .steps::before { display: none; }
+      .install-cmd {
+        font-size: 13px;
+        padding: 14px 16px;
+        gap: 8px;
+      }
+      .section-title { font-size: clamp(24px, 4vw, 36px); }
     }
-    @media (max-width: 600px) {
-      .nav-links { gap: 12px; }
-      .nav-links a:not(.nav-github) { display: none; }
+    @media (max-width: 700px) {
+      .nav-links > a:not(.nav-github) { display: none; }
+      .nav-hamburger { display: block; }
+      .hero h1 { font-size: clamp(28px, 7vw, 40px); }
+      .hero-sub { font-size: 16px; }
+      .hero-actions { flex-direction: column; }
+      .hero-actions .btn { width: 100%; justify-content: center; }
+      .terminal-body {
+        font-size: 12px;
+        padding: 14px;
+        min-height: 200px;
+        overflow-x: auto;
+      }
+      .terminal-line { white-space: pre; }
+      .steps { grid-template-columns: 1fr 1fr; gap: 16px; }
+      .install-cmd { font-size: 11px; padding: 12px 14px; }
+      .install-badges { flex-wrap: wrap; justify-content: center; }
+      .what-card, .feature-card, .case-card { padding: 24px 20px; }
+      .case-icon { font-size: 28px; }
+    }
+    @media (max-width: 480px) {
+      section { padding: 48px 0; }
+      .hero { padding-top: 80px; }
+      .hero h1 { font-size: 26px; letter-spacing: -0.5px; }
+      .hero-sub { font-size: 15px; margin-bottom: 24px; }
+      .section-label { font-size: 11px; }
+      .section-title { font-size: 22px; }
+      .section-desc { font-size: 15px; }
       .steps { grid-template-columns: 1fr; }
+      .step { display: flex; align-items: center; gap: 16px; text-align: left; }
+      .step-num { margin: 0; flex-shrink: 0; }
+      .step-info { text-align: left; }
       footer .container { flex-direction: column; text-align: center; }
+      .footer-links { flex-wrap: wrap; justify-content: center; gap: 16px; }
     }
   </style>
 </head>
@@ -631,8 +715,20 @@
         </span>
       </a>
     </div>
+    <button class="nav-hamburger" onclick="document.getElementById('mobile-menu').classList.add('open')" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
   </div>
 </nav>
+
+<div class="nav-mobile" id="mobile-menu">
+  <button class="close-btn" onclick="this.parentElement.classList.remove('open')" aria-label="Close">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <a href="/yeast/docs/intro" onclick="this.parentElement.classList.remove('open')">Docs</a>
+  <a href="/yeast/docs/tutorials/" onclick="this.parentElement.classList.remove('open')">Tutorials</a>
+  <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">GitHub</a>
+</div>
 
 <!-- ── Hero ── -->
 <section class="hero">
@@ -761,23 +857,31 @@
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
-        <div class="step-cmd">yeast.yaml</div>
-        <div class="step-label">Define your lab</div>
+        <div class="step-info">
+          <div class="step-cmd">yeast.yaml</div>
+          <div class="step-label">Define your lab</div>
+        </div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <div class="step-cmd">yeast up</div>
-        <div class="step-label">Boot real VMs</div>
+        <div class="step-info">
+          <div class="step-cmd">yeast up</div>
+          <div class="step-label">Boot real VMs</div>
+        </div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <div class="step-cmd">Running VMs</div>
-        <div class="step-label">SSH-ready machines</div>
+        <div class="step-info">
+          <div class="step-cmd">Running VMs</div>
+          <div class="step-label">SSH-ready machines</div>
+        </div>
       </div>
       <div class="step">
         <div class="step-num">4</div>
-        <div class="step-cmd">yeast ssh</div>
-        <div class="step-label">Connect and work</div>
+        <div class="step-info">
+          <div class="step-cmd">yeast ssh</div>
+          <div class="step-label">Connect and work</div>
+        </div>
       </div>
     </div>
   </div>
