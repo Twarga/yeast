@@ -128,13 +128,27 @@ sudo usermod -aG kvm $USER
 The easiest way to install Yeast is using the official install script:
 
 ```bash
+# Works in bash, zsh, fish, and any POSIX shell
 curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
 ```
 
+::: tip Shell Compatibility
+The `curl ... | bash` syntax works in **all shells** (bash, zsh, fish, etc.). The script itself runs inside bash regardless of your current shell.
+
+If your shell doesn't support piping (rare), download then run:
+```bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh -o /tmp/yeast-install.sh
+bash /tmp/yeast-install.sh
+```
+:::
+
 This script will:
-1. Download the latest Yeast release
-2. Install it to `/usr/local/bin/`
-3. Verify the installation
+1. Detect your Linux distro (Ubuntu, Debian, Fedora, Arch, openSUSE, Alpine, etc.)
+2. Check what prerequisites are already installed
+3. Install only what's missing
+4. Build Yeast from source
+5. Install it to `/usr/local/bin/`
+6. Verify the installation
 
 ### Manual Installation
 

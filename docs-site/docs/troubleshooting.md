@@ -374,6 +374,31 @@ Install QEMU. See [Installation](./installation).
 
 Add your user to the `kvm` group and log out/back in.
 
+## Shell Compatibility
+
+### Fish Shell: "Invalid redirection target"
+
+**Symptom:** In fish shell, `bash <(curl -fsSL ...)` fails with:
+```
+fish: Invalid redirection target: bash <(curl ...)
+```
+
+**Cause:** `<(...)` is bash process substitution syntax. Fish doesn't support it.
+
+**Fix:** Use `curl ... | bash` instead (works in all shells):
+```fish
+# Correct - works in bash, zsh, fish, and any shell
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
+```
+
+**Alternative:** Download then run:
+```fish
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh -o /tmp/yeast-install.sh
+bash /tmp/yeast-install.sh
+```
+
+**Note:** The Yeast CLI itself works in any shell once installed. Only the one-liner install command needs to be shell-compatible.
+
 ## Getting More Help
 
 If you're still stuck:
