@@ -44,6 +44,7 @@ func TestBuildCommandArgsIncludesExpectedRuntimeFlags(t *testing.T) {
 		"-drive", "file=/runtime/web/seed.iso,if=virtio,media=cdrom,readonly=on",
 		"-netdev", "user,id=mgmt0,hostfwd=tcp:127.0.0.1:2222-:22",
 		"-device", "virtio-net-pci,netdev=mgmt0,mac=52:54:00:11:22:33",
+		"-qmp", "unix:/runtime/web/qmp.sock,server,nowait",
 		"-nographic",
 	}
 	if !reflect.DeepEqual(got, want) {
@@ -96,6 +97,7 @@ func TestBuildCommandArgsIncludesLabNetworkFlags(t *testing.T) {
 		"-drive", "file=/runtime/proj/instances/target/seed.iso,if=virtio,media=cdrom,readonly=on",
 		"-netdev", "user,id=mgmt0,hostfwd=tcp:127.0.0.1:2222-:22",
 		"-device", "virtio-net-pci,netdev=mgmt0,mac=52:54:00:11:22:33",
+		"-qmp", "unix:/runtime/proj/instances/target/qmp.sock,server,nowait",
 		"-netdev", wantLabNetdev,
 		"-device", "virtio-net-pci,netdev=lab0,mac=52:54:00:aa:bb:cc",
 		"-nographic",

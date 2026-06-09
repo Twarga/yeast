@@ -212,6 +212,33 @@ func cleanupTargets(currentState state.State, projectRoot string, paths project.
 	return targets
 }
 
+func addConfiguredRuntimeDirs(currentState *state.State, projectRoot string, paths project.Paths) error {
+	cfg, err := config.Load(filepath.Join(projectRoot, ConfigFileName))
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return err
+	}
+	for _, instance := range cfg.Instances {
+		if _, exists := currentState.Instances[instance.Name]; exists {
+			continue
+		}
+		runtimeDir, err := paths.InstanceDir(instance.Name)
+		if err != nil {
+			continue
+		}
+		if _, err := os.Stat(runtimeDir); err != nil {
+			continue
+		}
+		currentState.Instances[instance.Name] = state.InstanceState{
+			Status:     "unknown",
+			RuntimeDir: runtimeDir,
+		}
+	}
+	return nil
+}
+
 func cleanedPIDsByName(cleaned []rtm.CleanupResult) map[string][]int {
 	grouped := make(map[string][]int)
 	for _, result := range cleaned {

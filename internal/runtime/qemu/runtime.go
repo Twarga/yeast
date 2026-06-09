@@ -78,10 +78,22 @@ func (r *Runtime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeou
 		return nil
 	}
 
+	qmpTimeout := timeout / 2
+	if qmpTimeout < 3*time.Second {
+		qmpTimeout = 3 * time.Second
+	}
+	if err := r.gracefulPowerdown(ctx, instance, qmpTimeout); err == nil {
+		return nil
+	}
+
+	termTimeout := timeout - qmpTimeout
+	if termTimeout < 0 {
+		termTimeout = 0
+	}
 	if err := signalProcess(instance.PID, syscall.SIGTERM); err != nil && !isNoSuchProcess(err) {
 		return fmt.Errorf("send SIGTERM to process %d: %w", instance.PID, err)
 	}
-	if err := waitForProcessExit(ctx, instance.PID, timeout); err == nil {
+	if err := waitForProcessExit(ctx, instance.PID, termTimeout); err == nil {
 		return nil
 	} else if err != context.DeadlineExceeded {
 		return fmt.Errorf("wait for process %d after SIGTERM: %w", instance.PID, err)
@@ -94,6 +106,31 @@ func (r *Runtime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeou
 		return fmt.Errorf("wait for process %d after SIGKILL: %w", instance.PID, err)
 	}
 
+	return nil
+}
+
+func (r *Runtime) gracefulPowerdown(ctx context.Context, instance rtm.RuntimeInstance, timeout time.Duration) error {
+	if instance.RuntimeDir == "" {
+		return fmt.Errorf("runtime directory is required for graceful shutdown")
+	}
+	socketPath := qmpSocketPath(instance.RuntimeDir)
+	if _, err := os.Stat(socketPath); err != nil {
+		return fmt.Errorf("qmp socket not available: %w", err)
+	}
+
+	client, err := newQMPClient(socketPath, 2*time.Second)
+	if err != nil {
+		return fmt.Errorf("connect to qmp: %w", err)
+	}
+	defer client.close()
+
+	if err := client.execute("system_powerdown", nil); err != nil {
+		return fmt.Errorf("send system_powerdown: %w", err)
+	}
+
+	if err := waitForProcessExit(ctx, instance.PID, timeout); err != nil {
+		return fmt.Errorf("wait for process exit after powerdown: %w", err)
+	}
 	return nil
 }
 

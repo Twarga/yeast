@@ -50,6 +50,36 @@ func WrapError(code ErrorCode, message string, cause error) *AppError {
 	}
 }
 
+func WithDetails(err error, details map[string]any) error {
+	if err == nil {
+		return nil
+	}
+	if appErr, ok := err.(*AppError); ok {
+		if appErr.Details == nil {
+			appErr.Details = make(map[string]any)
+		}
+		for k, v := range details {
+			appErr.Details[k] = v
+		}
+		return appErr
+	}
+	return err
+}
+
+func WithRecovery(err error, steps ...string) error {
+	if err == nil {
+		return nil
+	}
+	if appErr, ok := err.(*AppError); ok {
+		if appErr.Details == nil {
+			appErr.Details = make(map[string]any)
+		}
+		appErr.Details["recovery"] = steps
+		return appErr
+	}
+	return err
+}
+
 func NormalizeError(err error) *AppError {
 	if err == nil {
 		return nil

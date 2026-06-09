@@ -69,6 +69,7 @@ func BuildCommandArgs(plan runtime.MachinePlan) ([]string, error) {
 		"-drive", buildSeedDriveArg(plan.SeedImagePath),
 		"-netdev", buildManagementNetdevArg(plan.Networks.Management.SSHHost, plan.Networks.Management.SSHPort),
 		"-device", buildManagementDeviceArg(plan.Networks.Management),
+		"-qmp", fmt.Sprintf("unix:%s,server,nowait", qmpSocketPath(plan.RuntimeDir)),
 	}
 	if plan.Networks.Lab != nil {
 		args = append(args,
