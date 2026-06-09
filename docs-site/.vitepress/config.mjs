@@ -9,7 +9,7 @@ export default defineConfig({
     ['link', { rel: 'icon', href: '/yeast/favicon.ico' }],
   ],
 
-  base: '/yeast/',
+  base: '/yeast/docs/',
 
   themeConfig: {
     logo: '/logo.svg',
