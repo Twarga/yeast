@@ -7,7 +7,15 @@ description: Get your first VM running in 5 minutes
 
 Get your first Yeast VM running in 5 minutes.
 
-## Create a Project
+## Prerequisites
+
+Before starting, make sure you have:
+
+- [Yeast installed](./installation)
+- KVM support enabled (`yeast doctor` should pass)
+- An SSH key (`~/.ssh/id_ed25519.pub` or `~/.ssh/id_rsa.pub`)
+
+## Step 1: Create a Project
 
 First, create a directory for your project:
 
@@ -22,10 +30,10 @@ yeast init
 ```
 
 This creates:
-- `.yeast/project.json` - Project identity file
-- `yeast.yaml` - Default configuration
+- `.yeast/project.json` — Project identity file with a unique ID
+- `yeast.yaml` — Default configuration
 
-## Configure Your VM
+## Step 2: Configure Your VM
 
 Edit `yeast.yaml` with your preferred editor:
 
@@ -43,12 +51,26 @@ instances:
 ```
 
 This defines a single VM named `web` with:
-- Ubuntu 24.04 base image
-- 512 MB RAM
-- 1 CPU
-- SSH access on port 2222
+- **Ubuntu 24.04** base image
+- **512 MB** RAM
+- **1 CPU**
+- **SSH access** on port 2222
+- **User** `yeast` with passwordless sudo
 
-## Pull the Base Image
+### What's in this config?
+
+| Field | Description |
+|---|---|
+| `name` | The instance name. Must be unique within the project. |
+| `hostname` | The guest OS hostname. |
+| `image` | The base image to use. Must be pulled first. |
+| `memory` | RAM in megabytes. |
+| `cpus` | Number of virtual CPUs. |
+| `ssh_port` | Host port for SSH access. Must be unique across all instances. |
+| `user` | Username created by cloud-init. |
+| `sudo` | Sudo policy. `nopasswd` allows sudo without password. |
+
+## Step 3: Pull the Base Image
 
 Download the Ubuntu cloud image:
 
@@ -56,9 +78,14 @@ Download the Ubuntu cloud image:
 yeast pull ubuntu-24.04
 ```
 
-This downloads the image to `~/.yeast/cache/images/`. It only runs once - subsequent projects reuse the cached image.
+This downloads the image to `~/.yeast/cache/images/`. It only runs once — subsequent projects reuse the cached image.
 
-## Start the VM
+```
+Pulling ubuntu-24.04...
+Image downloaded successfully.
+```
+
+## Step 4: Start the VM
 
 Boot the virtual machine:
 
@@ -67,12 +94,20 @@ yeast up
 ```
 
 First boot takes 30-60 seconds. Yeast will:
-1. Create a disk image
-2. Generate cloud-init configuration
-3. Start QEMU with KVM acceleration
-4. Wait for SSH to become available
+1. Create a disk image from the base image
+2. Generate cloud-init configuration (user, SSH key, hostname)
+3. Build a seed ISO with cloud-init files
+4. Start QEMU with KVM acceleration
+5. Wait for SSH to become available
 
-## SSH into the VM
+Expected output:
+
+```
+OK Instances ready
+  RUN  web  127.0.0.1:2222
+```
+
+## Step 5: SSH into the VM
 
 Connect to your VM:
 
@@ -89,17 +124,20 @@ hostname
 # Check the IP address
 ip addr show
 
+# Check if you're the yeast user
+whoami
+
 # Install a package
-sudo apt update && sudo apt install -y nginx
+sudo apt update && sudo apt install -y curl
 
 # Check the service
-systemctl status nginx
+systemctl status ssh
 
 # Exit the VM
 exit
 ```
 
-## Check Status
+## Step 6: Check Status
 
 From your host, check the VM status:
 
@@ -107,15 +145,25 @@ From your host, check the VM status:
 yeast status
 ```
 
-## Stop the VM
+Expected output:
 
-Stop the VM (preserves the disk):
+```
+Project status
+  NAME  STATUS   SSH
+  web   running  127.0.0.1:2222
+```
+
+## Step 7: Stop the VM
+
+Stop the VM (preserves the disk for later):
 
 ```bash
 yeast down
 ```
 
-## Destroy Everything
+The VM stops but the project files remain. You can start it again with `yeast up`.
+
+## Step 8: Destroy Everything
 
 Remove all VMs and project files:
 
@@ -123,10 +171,12 @@ Remove all VMs and project files:
 yeast destroy
 ```
 
+**Warning:** This permanently deletes VMs, disks, and snapshots. It cannot be undone.
+
 ## What You Learned
 
 | Concept | Command |
-|---------|---------|
+|---|---|
 | Initialize project | `yeast init` |
 | Pull base image | `yeast pull ubuntu-24.04` |
 | Start VMs | `yeast up` |
@@ -137,8 +187,26 @@ yeast destroy
 
 ## Next Steps
 
-- [Configuration](./configuration) - Learn about all yeast.yaml options
-- [Provisioning](./provisioning) - Install packages and configure VMs
-- [Networking](./networking) - Create private networks
-- [Snapshots](./snapshots) - Take and restore snapshots
-- [Tutorials](/tutorials/) - Step-by-step guided labs
+- [Configuration](./configuration) — Learn about all `yeast.yaml` options
+- [Provisioning](./provisioning) — Install packages and configure VMs automatically
+- [Networking](./networking) — Create private networks for multi-VM labs
+- [Snapshots](./snapshots) — Take and restore VM snapshots
+- [Tutorials](/tutorials/) — Step-by-step guided labs
+
+## Common Issues
+
+### "SSH timeout" during `yeast up`
+
+Wait longer or check VM logs:
+
+```bash
+yeast logs web
+```
+
+### "port 2222 is already in use"
+
+Change the `ssh_port` in `yeast.yaml` to another port (e.g., 2223).
+
+### "KVM not available"
+
+Check [Troubleshooting](./troubleshooting) for KVM setup.

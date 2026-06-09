@@ -1,11 +1,11 @@
 ---
 title: Installation
-description: Install Yeast on your Linux system
+description: Install Yeast on your Linux or WSL system
 ---
 
 # Installation
 
-This guide walks you through installing Yeast on your Linux system.
+This guide walks you through installing Yeast on your system.
 
 ## System Requirements
 
@@ -13,7 +13,56 @@ This guide walks you through installing Yeast on your Linux system.
 - **Architecture**: x86_64 (AMD64)
 - **RAM**: 4 GB minimum (8 GB recommended)
 - **Disk**: 10 GB free space
-- **Virtualization**: KVM support enabled
+- **Virtualization**: KVM support enabled (strongly recommended)
+
+### WSL Support
+
+Yeast can run on **WSL2** with the following caveats:
+
+| Feature | Native Linux | WSL2 |
+|---|---|---|
+| KVM acceleration | Full | Limited (see below) |
+| VM performance | Native speed | Slower without KVM |
+| Private networking | Works | Works |
+| QEMU/KVM | Works | Works with `qemu-system-x86_64` |
+
+**Important:** WSL1 is **not supported** — it lacks a Linux kernel and cannot run QEMU/KVM VMs.
+
+### Checking WSL2 KVM Support
+
+```bash
+# Check if KVM is available in WSL2
+ls -la /dev/kvm
+
+# If /dev/kvm exists, check nested virtualization
+cat /proc/cpuinfo | grep vmx
+cat /proc/cpuinfo | grep svm
+```
+
+**If `/dev/kvm` exists:** You have KVM support! Performance will be near-native.
+
+**If `/dev/kvm` does not exist:** VMs will still work but run in TCG (software emulation) mode, which is significantly slower. To enable KVM in WSL2:
+
+1. **Enable nested virtualization in Windows:**
+   - Open PowerShell as Administrator
+   - Run: `wsl --shutdown`
+   - Create/edit `%USERPROFILE%\.wslconfig`:
+   ```ini
+   [wsl2]
+   nestedVirtualization=true
+   ```
+   - Restart WSL: `wsl --shutdown` then reopen WSL
+
+2. **Alternatively, enable Hyper-V:**
+   - Open "Turn Windows features on or off"
+   - Check "Virtual Machine Platform" and "Windows Subsystem for Linux"
+   - Restart your computer
+
+3. **Verify after restart:**
+   ```bash
+   ls -la /dev/kvm
+   # Should show: crw-rw---- 1 root kvm 10, 232 ...
+   ```
 
 ## Prerequisites
 
@@ -36,6 +85,16 @@ sudo dnf install -y qemu-kvm qemu-img genisoimage openssh-clients
 
 ```bash
 sudo pacman -S qemu-full cdrtools openssh
+```
+
+### WSL2 (Ubuntu)
+
+```bash
+sudo apt update
+sudo apt install -y qemu-kvm qemu-utils genisoimage ssh-client
+
+# If KVM is not available, install QEMU without KVM
+sudo apt install -y qemu-system-x86 qemu-utils genisoimage ssh-client
 ```
 
 ## Check KVM Support
@@ -127,6 +186,19 @@ The `yeast doctor` command checks:
 - SSH key availability
 - System resources
 
+### Expected Output
+
+A successful `yeast doctor` output looks like:
+
+```
+System Check
+  OS:        linux
+  KVM:       available
+  QEMU:      found at /usr/bin/qemu-system-x86_64
+  SSH key:   found at ~/.ssh/id_ed25519.pub
+  Resources: sufficient
+```
+
 ## SSH Key Setup
 
 Yeast uses SSH keys for VM access. If you don't have an SSH key:
@@ -142,8 +214,47 @@ eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_ed25519
 ```
 
+## Troubleshooting Installation
+
+### "KVM not available" on WSL2
+
+If you see this warning, VMs will work but run slower:
+
+```bash
+# Check Windows version (must be Windows 11 22H2+ for nested virtualization)
+winver
+
+# In PowerShell (as Admin), check Hyper-V status
+Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+Get-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform
+```
+
+**Fix:** Enable nested virtualization (see [WSL Support](#wsl-support) section above) or accept slower TCG mode.
+
+### "qemu-system-x86_64 not found"
+
+```bash
+# Find where QEMU is installed
+which qemu-system-x86_64 || find /usr -name qemu-system-x86_64 2>/dev/null
+
+# If not found, install QEMU
+sudo apt install qemu-system-x86  # Ubuntu/Debian
+sudo dnf install qemu-system-x86    # Fedora
+```
+
+### "Permission denied on /dev/kvm"
+
+```bash
+# Fix permissions
+sudo chmod 660 /dev/kvm
+sudo chown root:kvm /dev/kvm
+
+# Add user to kvm group and re-login
+sudo usermod -aG kvm $USER
+```
+
 ## Next Steps
 
-- [Quickstart](./quickstart) - Get your first VM running in 5 minutes
-- [Configuration](./configuration) - Learn about yeast.yaml
-- [Troubleshooting](./troubleshooting) - Common issues and fixes
+- [Quickstart](./quickstart) — Get your first VM running in 5 minutes
+- [Configuration](./configuration) — Learn about yeast.yaml
+- [Troubleshooting](./troubleshooting) — Common issues and fixes

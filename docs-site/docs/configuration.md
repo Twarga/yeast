@@ -9,13 +9,37 @@ This page documents all fields in `yeast.yaml`.
 
 ## Overview
 
-A `yeast.yaml` file defines your Yeast project. It contains:
+A `yeast.yaml` file defines your Yeast project. It is a single source of truth for:
 
-1. **Version** - Configuration schema version
-2. **Networks** - Private lab networks
-3. **Instances** - Virtual machine definitions
+1. **Version** — Configuration schema version
+2. **Networks** — Private lab networks for VM-to-VM communication
+3. **Instances** — Virtual machine definitions
 
-## Example
+Yeast reads this file on every command and reconciles the desired state with the actual state.
+
+## Minimal Example
+
+The simplest possible `yeast.yaml`:
+
+```yaml
+version: 1
+
+instances:
+  - name: web
+    image: ubuntu-24.04
+```
+
+This creates one VM with all defaults:
+- 512 MB RAM
+- 1 CPU
+- 2 GB disk
+- Auto-assigned SSH port
+- Username `yeast`
+- Passwordless sudo
+
+## Complete Example
+
+A fully-featured `yeast.yaml` for a multi-VM lab:
 
 ```yaml
 version: 1
@@ -42,6 +66,7 @@ instances:
         ipv4: 192.168.2.10
     env:
       - MY_VAR=value
+      - APP_ENV=development
     provision:
       packages:
         - nginx
@@ -52,187 +77,329 @@ instances:
           permissions: "0644"
       shell:
         - sudo systemctl enable nginx
+        - sudo systemctl start nginx
+
+  - name: db
+    hostname: db-lab
+    image: ubuntu-24.04
+    memory: 2048
+    cpus: 2
+    ssh_port: 2223
+    networks:
+      - name: lab
+        ipv4: 192.168.2.20
+    provision:
+      packages:
+        - postgresql
 ```
 
 ## Top-Level Fields
 
 ### version
 
-**Required**: Yes  
-**Type**: Number  
-**Value**: `1`
+**Required:** Yes  
+**Type:** Number  
+**Value:** `1`
 
 The configuration schema version. Always `1` for Yeast v1.
 
-## networks
+```yaml
+version: 1
+```
 
-**Required**: No  
-**Type**: Array
+### networks
+
+**Required:** No  
+**Type:** Array  
+**Default:** `[]`
 
 Defines private lab networks for VM-to-VM communication.
 
-### networks[].name
+```yaml
+networks:
+  - name: lab
+    cidr: 192.168.2.0/24
+```
 
-**Required**: Yes  
-**Type**: String
+#### networks[].name
 
-The network name. Must be unique within the project.
+**Required:** Yes  
+**Type:** String
 
-### networks[].cidr
+The network name. Must be unique within the project. Used to attach instances.
 
-**Required**: Yes  
-**Type**: String
+#### networks[].cidr
 
-The CIDR notation for the network address space.
+**Required:** Yes  
+**Type:** String
+
+The CIDR notation for the network address space (e.g., `192.168.2.0/24`, `10.10.10.0/24`).
+
+**Important:** Choose a range that doesn't conflict with your host's network.
 
 ## instances
 
-**Required**: Yes  
-**Type**: Array
+**Required:** Yes  
+**Type:** Array
 
 Defines the virtual machines in your project.
 
 ### instances[].name
 
-**Required**: Yes  
-**Type**: String
+**Required:** Yes  
+**Type:** String
 
-The instance name. Must be unique within the project.
+The instance name. Must be unique within the project. Used for:
+- SSH access (`yeast ssh web`)
+- State tracking
+- Snapshot names
+- Log files
+
+**Naming rules:**
+- Must start with a letter
+- Can contain letters, numbers, hyphens, and underscores
+- Must be 1-63 characters
 
 ### instances[].hostname
 
-**Required**: No  
-**Type**: String
+**Required:** No  
+**Type:** String  
+**Default:** Same as `name`
 
-The guest OS hostname. Written by cloud-init.
+The guest OS hostname. Written by cloud-init during first boot.
+
+```yaml
+hostname: web-lab
+```
 
 ### instances[].image
 
-**Required**: Yes  
-**Type**: String
+**Required:** Yes  
+**Type:** String
 
-The base image to use. Must be pulled first with `yeast pull`.
+The base image to use. Must be pulled first with `yeast pull <image>`.
+
+**Available images:**
+- `ubuntu-24.04`
+- `ubuntu-22.04`
+
+```yaml
+image: ubuntu-24.04
+```
 
 ### instances[].memory
 
-**Required**: No  
-**Type**: Number  
-**Default**: 512
+**Required:** No  
+**Type:** Number  
+**Default:** `512`
 
 RAM in megabytes (MiB).
 
+```yaml
+memory: 1024  # 1 GB
+```
+
+**Recommended values:**
+- Minimal VM: 512 MB
+- Web server: 1024 MB
+- Database: 2048+ MB
+
 ### instances[].cpus
 
-**Required**: No  
-**Type**: Number  
-**Default**: 1
+**Required:** No  
+**Type:** Number  
+**Default:** `1`
 
 Number of virtual CPUs.
 
+```yaml
+cpus: 2
+```
+
 ### instances[].disk_size
 
-**Required**: No  
-**Type**: String  
-**Default**: "2G"
+**Required:** No  
+**Type:** String  
+**Default:** `"2G"`
 
-Disk size for the overlay image.
+Disk size for the overlay image. Accepts:
+- Whole numbers: `20`, `50`
+- With suffix: `512M`, `20G`, `1T`
+
+```yaml
+disk_size: 20G
+```
+
+**Important:** This only applies on first disk creation. Existing disks are kept as-is even if you change this value.
 
 ### instances[].ssh_port
 
-**Required**: No  
-**Type**: Number  
-**Default**: Auto-assigned
+**Required:** No  
+**Type:** Number  
+**Default:** Auto-assigned starting at 2222
 
-The host port for SSH access. Must be unique across all instances.
+The host port for SSH access. Must be unique across all instances in the project.
+
+```yaml
+ssh_port: 2222
+```
+
+**Tip:** Explicitly set `ssh_port` for projects you access frequently. This makes SSH URLs predictable.
 
 ### instances[].user
 
-**Required**: No  
-**Type**: String  
-**Default**: "yeast"
+**Required:** No  
+**Type:** String  
+**Default:** `"yeast"`
 
-The username created by cloud-init.
+The username created by cloud-init. This user gets SSH key access and sudo privileges.
+
+```yaml
+user: admin
+```
 
 ### instances[].sudo
 
-**Required**: No  
-**Type**: String  
-**Default**: "nopasswd"
+**Required:** No  
+**Type:** String  
+**Default:** `"nopasswd"`
 
 Sudo policy for the user.
 
+**Options:**
+- `"none"` — No sudo access
+- `"pass"` — Sudo with password (you must set a password via cloud-init)
+- `"nopasswd"` — Sudo without password
+
+```yaml
+sudo: nopasswd
+```
+
 ### instances[].ports
 
-**Required**: No  
-**Type**: Array
+**Required:** No  
+**Type:** Array  
+**Default:** `[]`
 
-Host-to-guest port forwarding rules.
+Host-to-guest port forwarding rules. These let you access guest services from your host.
+
+```yaml
+ports:
+  - host_port: 8080
+    guest_port: 80
+    description: "HTTP web server"
+  - host_port: 8443
+    guest_port: 443
+    description: "HTTPS web server"
+```
+
+**Important:** `host_port` must be unique across all instances in the project.
 
 ### instances[].networks
 
-**Required**: No  
-**Type**: Array
+**Required:** No  
+**Type:** Array  
+**Default:** `[]`
 
-Network attachments for the instance.
+Network attachments for the instance. Each entry attaches the VM to a private lab network.
+
+```yaml
+networks:
+  - name: lab
+    ipv4: 192.168.2.10
+```
+
+#### networks[].name
+
+The network name (must match a network defined in the top-level `networks` array).
+
+#### networks[].ipv4
+
+Static IPv4 address for the VM on this network. Must be within the network's CIDR range.
+
+**Important:** Yeast does not provide DHCP. You must assign static IPs.
 
 ### instances[].env
 
-**Required**: No  
-**Type**: Array
+**Required:** No  
+**Type:** Array of strings  
+**Default:** `[]`
 
-Environment variables written to `/etc/profile.d/yeast-env.sh`.
+Environment variables written to `/etc/profile.d/yeast-env.sh` in the guest. Available to all users after login.
+
+```yaml
+env:
+  - APP_ENV=production
+  - DATABASE_URL=postgres://localhost:5432/mydb
+```
 
 ### instances[].provision
 
-**Required**: No  
-**Type**: Object
+**Required:** No  
+**Type:** Object
 
-Post-boot provisioning configuration.
+Post-boot provisioning configuration. See [Provisioning](./provisioning) for details.
 
-#### instances[].provision.packages
+```yaml
+provision:
+  packages:
+    - nginx
+    - curl
+    - git
+  files:
+    - source: ./files/index.html
+      destination: /var/www/html/index.html
+      permissions: "0644"
+  shell:
+    - sudo systemctl enable nginx
+    - sudo systemctl start nginx
+```
 
-**Required**: No  
-**Type**: Array
+#### provision.packages
 
-Packages to install with the system package manager.
+Packages to install with the system package manager (`apt` on Ubuntu/Debian).
 
-#### instances[].provision.files
+#### provision.files
 
-**Required**: No  
-**Type**: Array
+Files to copy from host to guest.
 
-Files to copy from the host to the guest.
+| Field | Required | Description |
+|---|---|---|
+| `source` | Yes | Host path (relative to project root) |
+| `destination` | Yes | Guest path (absolute) |
+| `permissions` | No | Octal permissions (e.g., `"0644"`, `"0755"`) |
 
-#### instances[].provision.shell
+#### provision.shell
 
-**Required**: No  
-**Type**: Array
+Shell commands to execute during provisioning. Commands run as the configured user.
 
-Shell commands to execute during provisioning.
+**Important:** Use `sudo` for commands requiring root.
 
-## Field Summary
+## Validation
 
-| Field | Required | Type | Default | Description |
-|-------|----------|------|---------|-------------|
-| `version` | Yes | Number | - | Config schema version |
-| `networks` | No | Array | - | Private lab networks |
-| `instances` | Yes | Array | - | VM definitions |
-| `instances[].name` | Yes | String | - | Instance name |
-| `instances[].image` | Yes | String | - | Base image |
-| `instances[].memory` | No | Number | 512 | RAM in MiB |
-| `instances[].cpus` | No | Number | 1 | Virtual CPUs |
-| `instances[].disk_size` | No | String | "2G" | Disk size |
-| `instances[].ssh_port` | No | Number | Auto | SSH host port |
-| `instances[].user` | No | String | "yeast" | Username |
-| `instances[].sudo` | No | String | "nopasswd" | Sudo policy |
-| `instances[].ports` | No | Array | - | Port forwarding |
-| `instances[].networks` | No | Array | - | Network attachments |
-| `instances[].env` | No | Array | - | Environment variables |
-| `instances[].provision` | No | Object | - | Provisioning config |
+Yeast validates `yeast.yaml` on every command:
+
+- **Required fields** — `version`, `instances[].name`, `instances[].image`
+- **Unique names** — Instance names and SSH ports must be unique
+- **Valid CIDR** — Network CIDRs must be valid
+- **Valid IPs** — Static IPs must be within their network's CIDR range
+- **Port conflicts** — `host_port` values must not collide between instances
+- **File existence** — `provision.files[].source` paths must exist
+
+Validation errors show exactly which field is wrong and why.
+
+## Environment Variables
+
+Yeast supports these environment variables:
+
+| Variable | Description |
+|---|---|
+| `YEAST_DEBUG` | Enable debug logging |
+| `YEAST_JSON` | Default to JSON output |
 
 ## Next Steps
 
-- [Architecture](./architecture) - How Yeast works under the hood
-- [Provisioning](./provisioning) - Detailed provisioning guide
-- [Networking](./networking) - Network configuration
-- [Troubleshooting](./troubleshooting) - Common issues and fixes
+- [Architecture](./architecture) — How Yeast works under the hood
+- [Provisioning](./provisioning) — Detailed provisioning guide
+- [Networking](./networking) — Network configuration
+- [Troubleshooting](./troubleshooting) — Common issues and fixes
