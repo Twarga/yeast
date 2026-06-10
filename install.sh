@@ -226,13 +226,20 @@ detect_distro() {
 # Check if a command exists and report its version
 check_tool() {
   local tool="$1" version_flag="${2:---version}"
-  if command -v "${tool}" >/dev/null 2>&1; then
-    local ver; ver="$(${tool} ${version_flag} 2>/dev/null | head -1 || true)"
-    printf 'found\t%s' "${ver}"
-    return 0
+  if ! command -v "${tool}" >/dev/null 2>&1; then
+    printf 'missing'
+    return 1
   fi
-  printf 'missing'
-  return 1
+  
+  # Special case for ssh which uses -V instead of --version
+  if [[ "${tool}" == "ssh" ]]; then
+    version_flag="-V"
+  fi
+  
+  local ver
+  ver="$(${tool} ${version_flag} 2>&1 | head -1 || true)"
+  printf 'found\t%s' "${ver}"
+  return 0
 }
 
 # Check if a package is installed (distro-aware)
@@ -283,7 +290,7 @@ check_prerequisites() {
   local missing=() present=()
 
   # Check each prerequisite
-  local git_status; git_status="$(check_tool git)"
+  local git_status; git_status="$(check_tool git)" || true
   if [[ "${git_status}" == found* ]]; then
     present+=("git")
     key_value "git" "$(echo "${git_status}" | cut -f2)"
@@ -292,7 +299,7 @@ check_prerequisites() {
     key_value "git" "$(red 'missing')"
   fi
 
-  local curl_status; curl_status="$(check_tool curl)"
+  local curl_status; curl_status="$(check_tool curl)" || true
   if [[ "${curl_status}" == found* ]]; then
     present+=("curl")
     key_value "curl" "$(echo "${curl_status}" | cut -f2)"
@@ -301,7 +308,7 @@ check_prerequisites() {
     key_value "curl" "$(red 'missing')"
   fi
 
-  local tar_status; tar_status="$(check_tool tar)"
+  local tar_status; tar_status="$(check_tool tar)" || true
   if [[ "${tar_status}" == found* ]]; then
     present+=("tar")
     key_value "tar" "$(echo "${tar_status}" | cut -f2)"
@@ -310,7 +317,7 @@ check_prerequisites() {
     key_value "tar" "$(red 'missing')"
   fi
 
-  local ssh_status; ssh_status="$(check_tool ssh)"
+  local ssh_status; ssh_status="$(check_tool ssh -V)" || true
   if [[ "${ssh_status}" == found* ]]; then
     present+=("ssh")
     key_value "ssh" "$(echo "${ssh_status}" | cut -f2)"
@@ -321,8 +328,8 @@ check_prerequisites() {
 
   # QEMU checks
   local qemu_status qemu_img_status
-  qemu_status="$(check_tool qemu-system-x86_64)"
-  qemu_img_status="$(check_tool qemu-img)"
+  qemu_status="$(check_tool qemu-system-x86_64)" || true
+  qemu_img_status="$(check_tool qemu-img)" || true
   if [[ "${qemu_status}" == found* && "${qemu_img_status}" == found* ]]; then
     present+=("qemu-system-x86_64 qemu-img")
     key_value "QEMU" "$(echo "${qemu_status}" | cut -f2)"
@@ -378,7 +385,7 @@ check_prerequisites() {
   key_value "KVM" "${kvm_status}"
 
   # Go check
-  local go_status; go_status="$(resolve_go_bin)"
+  local go_status; go_status="$(resolve_go_bin)" || true
   if [[ -n "${go_status}" ]]; then
     local go_ver; go_ver="$(go_version_value "${go_status}")"
     if version_at_least "${go_ver}" "${YEAST_MIN_GO_VERSION}"; then
@@ -399,6 +406,7 @@ check_prerequisites() {
     success "All prerequisites satisfied"
   else
     info "Missing prerequisites: ${missing[*]}"
+    info "Will install missing dependencies..."
   fi
 
   PREREQ_MISSING="${missing[*]}"
@@ -440,22 +448,33 @@ ensure_pkg() {
 # Try multiple package names, stop at first success
 try_pkgs() {
   local description="$1"; shift
-  local pkg
+  local pkg found_installed=0
+  
+  # Check if any of the packages are already installed
   for pkg in "$@"; do
     if is_pkg_installed "${pkg}"; then
       info "${description} (${pkg}) already installed"
       return 0
     fi
-    if pkg_install "${pkg}"; then
+  done
+  
+  # Try to install the first available package
+  for pkg in "$@"; do
+    if pkg_install "${pkg}" 2>/dev/null; then
       success "Installed ${description} (${pkg})"
       return 0
     fi
   done
-  die "failed to install ${description} with ${PKG_MANAGER}"
+  
+  warn "Could not install ${description} with ${PKG_MANAGER} (tried: $*)"
+  return 1
 }
 
 install_base_packages() {
   section "Installing Base Packages"
+  
+  run_step "Updating package cache" pkg_update
+  
   case "${PKG_MANAGER}" in
     apt)
       ensure_pkg "ca-certificates" "CA certificates"
@@ -463,6 +482,7 @@ install_base_packages() {
       ensure_pkg "git" "Git"
       ensure_pkg "openssh-client" "SSH client"
       ensure_pkg "tar" "tar"
+      ensure_pkg "build-essential" "build-essential"
       ;;
     dnf|yum)
       ensure_pkg "ca-certificates" "CA certificates"
@@ -470,6 +490,7 @@ install_base_packages() {
       ensure_pkg "git" "Git"
       ensure_pkg "openssh-clients" "SSH client"
       ensure_pkg "tar" "tar"
+      try_pkgs "Development tools" "gcc" "make"
       ;;
     pacman)
       ensure_pkg "ca-certificates" "CA certificates"
@@ -477,6 +498,7 @@ install_base_packages() {
       ensure_pkg "git" "Git"
       ensure_pkg "openssh" "SSH"
       ensure_pkg "tar" "tar"
+      ensure_pkg "base-devel" "base-devel"
       ;;
     zypper)
       ensure_pkg "ca-certificates" "CA certificates"
@@ -484,6 +506,7 @@ install_base_packages() {
       ensure_pkg "git" "Git"
       ensure_pkg "openssh" "SSH"
       ensure_pkg "tar" "tar"
+      try_pkgs "Development tools" "gcc" "make"
       ;;
     apk)
       ensure_pkg "ca-certificates" "CA certificates"
@@ -492,6 +515,7 @@ install_base_packages() {
       ensure_pkg "openssh-client" "SSH client"
       ensure_pkg "tar" "tar"
       ensure_pkg "bash" "bash"
+      ensure_pkg "build-base" "build-base"
       ;;
   esac
 }
@@ -500,30 +524,32 @@ install_virtualization_packages() {
   section "Installing Virtualization Packages"
   case "${PKG_MANAGER}" in
     apt)
-      try_pkgs "QEMU" "qemu-system-x86" "qemu-system-x86-64" "qemu-kvm"
-      try_pkgs "qemu-img" "qemu-utils" "qemu-img"
-      try_pkgs "ISO builder" "genisoimage" "cdrkit-genisoimage" "xorriso"
+      try_pkgs "QEMU system" "qemu-system-x86" "qemu-system-x86-64" "qemu-kvm" "qemu-system"
+      try_pkgs "QEMU utilities" "qemu-utils" "qemu-img"
+      try_pkgs "ISO builder" "genisoimage" "cdrkit" "xorriso" "mkisofs"
       ;;
     dnf|yum)
-      try_pkgs "QEMU" "qemu-system-x86" "qemu-kvm" "qemu-system-x86-core"
-      try_pkgs "qemu-img" "qemu-img" "qemu-utils"
+      try_pkgs "QEMU" "qemu-system-x86" "qemu-kvm" "qemu-system-x86-core" "qemu"
+      try_pkgs "QEMU utilities" "qemu-img" "qemu-utils"
       try_pkgs "ISO builder" "genisoimage" "mkisofs" "xorriso"
       ;;
     pacman)
-      try_pkgs "QEMU" "qemu-base" "qemu-desktop" "qemu-full"
+      try_pkgs "QEMU" "qemu-base" "qemu-desktop" "qemu-full" "qemu"
       try_pkgs "ISO builder" "cdrtools" "cdrkit" "xorriso"
       ;;
     zypper)
       try_pkgs "QEMU" "qemu-x86" "qemu-kvm" "qemu"
-      try_pkgs "qemu-tools" "qemu-tools" "qemu-img"
+      try_pkgs "QEMU tools" "qemu-tools" "qemu-img"
       try_pkgs "ISO builder" "genisoimage" "mkisofs" "xorriso"
       ;;
     apk)
       try_pkgs "QEMU" "qemu-system-x86_64" "qemu-system-x86" "qemu"
-      try_pkgs "qemu-img" "qemu-img"
+      try_pkgs "QEMU utilities" "qemu-img"
       try_pkgs "ISO builder" "cdrkit" "xorriso" "mkisofs"
       ;;
   esac
+  
+  success "Virtualization packages installation complete"
 }
 
 # ─── KVM Setup ────────────────────────────────────────────────────────
@@ -785,13 +811,11 @@ main() {
   # Phase 1: Smart prerequisite check
   check_prerequisites
 
-  # Phase 2: Install what's missing
+  # Phase 2: Install what's missing (always run update and install if anything is missing)
   if [[ -n "${PREREQ_MISSING:-}" ]]; then
-    section "Installing Missing Dependencies"
-    run_required "Refreshing package metadata" pkg_update
     install_base_packages
     install_virtualization_packages
-    run_required "Preparing genisoimage compatibility" ensure_genisoimage_compat
+    run_step "Preparing genisoimage compatibility" ensure_genisoimage_compat
   else
     section "All Dependencies Satisfied"
     success "No packages to install"
