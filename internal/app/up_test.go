@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 	"yeast/internal/guest"
+	"yeast/internal/images"
 	"yeast/internal/project"
 	"yeast/internal/provision/cloudinit"
 	provssh "yeast/internal/provision/ssh"
@@ -45,6 +46,9 @@ func TestUpStartsInstanceAndSavesState(t *testing.T) {
 	service.createSeedISO = func(ctx context.Context, input cloudinit.SeedInput) (cloudinit.SeedResult, error) {
 		if input.InstanceName != "web" {
 			t.Fatalf("unexpected instance for seed iso: %q", input.InstanceName)
+		}
+		if !strings.Contains(input.NetworkConfig, "dhcp4: true") {
+			t.Fatalf("expected management DHCP network-config, got %q", input.NetworkConfig)
 		}
 		return cloudinit.SeedResult{
 			UserDataPath: filepath.Join(input.RuntimeDir, "user-data"),
@@ -274,6 +278,9 @@ func TestUpRunsProvisioningInDocumentedOrder(t *testing.T) {
 	service.provisionTransport = provssh.FakeTransport{
 		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
 			runRequests = append(runRequests, request)
+			if request.Command == cloudInitStatusCommand {
+				return provssh.RunResult{Stdout: "status: done\n", ExitCode: 0, Duration: time.Millisecond}, nil
+			}
 			return provssh.RunResult{Stdout: "ok\n", ExitCode: 0, Duration: time.Millisecond}, nil
 		},
 		UploadFunc: func(ctx context.Context, request provssh.UploadRequest) error {
@@ -315,7 +322,7 @@ instances:
 	}
 
 	wantCommands := []string{
-		"cloud-init status --wait",
+		cloudInitStatusCommand,
 		"sudo -n DEBIAN_FRONTEND=noninteractive apt-get update && sudo -n DEBIAN_FRONTEND=noninteractive apt-get install -y curl caddy",
 		"mkdir -p '/home/yeast/site'",
 		"chmod 0644 '/home/yeast/site/index.html'",
@@ -423,6 +430,9 @@ func TestUpMarksProvisioningFailureAndKeepsInstanceRunning(t *testing.T) {
 	service.provisionTransport = provssh.FakeTransport{
 		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
 			runCalls++
+			if request.Command == cloudInitStatusCommand {
+				return provssh.RunResult{Stdout: "status: done\n", ExitCode: 0, Duration: time.Millisecond}, nil
+			}
 			if strings.Contains(request.Command, "apt-get install") {
 				return provssh.RunResult{Stderr: "apt failed\n", ExitCode: 100, Duration: time.Millisecond}, errors.New("ssh failed")
 			}
@@ -495,7 +505,7 @@ func TestUpRetriesBootstrapSSHReadinessWithinTimeout(t *testing.T) {
 			case 1:
 				return provssh.RunResult{ExitCode: 255, Duration: time.Millisecond}, errors.New("ssh failed")
 			case 2:
-				return provssh.RunResult{Stdout: "done\n", ExitCode: 0, Duration: time.Millisecond}, nil
+				return provssh.RunResult{Stdout: "status: done\n", ExitCode: 0, Duration: time.Millisecond}, nil
 			default:
 				return provssh.RunResult{Stdout: "ok\n", ExitCode: 0, Duration: time.Millisecond}, nil
 			}
@@ -532,10 +542,10 @@ func TestUpWaitsForBootstrapEvenWithoutProvisionPlan(t *testing.T) {
 	service.provisionTransport = provssh.FakeTransport{
 		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
 			runCalls++
-			if request.Command != "cloud-init status --wait" {
+			if request.Command != cloudInitStatusCommand {
 				t.Fatalf("unexpected command for empty provision plan: %q", request.Command)
 			}
-			return provssh.RunResult{Stdout: "done\n", ExitCode: 0, Duration: time.Millisecond}, nil
+			return provssh.RunResult{Stdout: "status: done\n", ExitCode: 0, Duration: time.Millisecond}, nil
 		},
 	}
 
@@ -554,6 +564,117 @@ instances:
 	}
 	if runCalls != 1 {
 		t.Fatalf("expected bootstrap wait even without provision plan, got %d run calls", runCalls)
+	}
+}
+
+func TestUpSkipsProvisionOnFingerprintMatchAndReprovisionOverrides(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.runtime = &fakeRuntime{}
+
+	siteDir := filepath.Join(root, "site")
+	if err := os.MkdirAll(siteDir, 0755); err != nil {
+		t.Fatalf("mkdir site dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(siteDir, "index.html"), []byte("<h1>yeast</h1>\n"), 0644); err != nil {
+		t.Fatalf("write site file: %v", err)
+	}
+
+	provisionRunCount := 0
+	service.provisionTransport = provssh.FakeTransport{
+		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
+			if request.Command == cloudInitStatusCommand {
+				return provssh.RunResult{Stdout: "status: done\n", ExitCode: 0, Duration: time.Millisecond}, nil
+			}
+			if strings.Contains(request.Command, "apt-get install") || strings.Contains(request.Command, "echo ") {
+				provisionRunCount++
+			}
+			return provssh.RunResult{Stdout: "ok\n", ExitCode: 0, Duration: time.Millisecond}, nil
+		},
+		UploadFunc: func(ctx context.Context, request provssh.UploadRequest) error { return nil },
+	}
+
+	configContent := `version: 1
+provision:
+  packages:
+    - curl
+  files:
+    - source: ./site/index.html
+      destination: /home/yeast/site/index.html
+  shell:
+    - echo hello
+instances:
+  - name: web
+    image: ubuntu-24.04
+    ssh_port: 2205
+`
+	if err := os.WriteFile(filepath.Join(root, ConfigFileName), []byte(configContent), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	// First boot: provisioning should run
+	if _, err := service.Up(context.Background(), UpOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("first Up returned error: %v", err)
+	}
+	if provisionRunCount == 0 {
+		t.Fatal("expected provisioning to run on first boot")
+	}
+
+	// Verify fingerprint was stored
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	loaded, err := state.Load(filepath.Join(root, "yeast-home", "projects", metadata.ID, "state.json"), metadata.ID)
+	if err != nil {
+		t.Fatalf("Load state: %v", err)
+	}
+	if loaded.Instances["web"].ProvisionFingerprint == "" {
+		t.Fatal("expected provision fingerprint to be stored after first boot")
+	}
+
+	// Second boot (warm boot): provisioning should be skipped
+	provisionRunCount = 0
+	if _, err := service.Up(context.Background(), UpOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("second Up returned error: %v", err)
+	}
+	if provisionRunCount != 0 {
+		t.Fatalf("expected provisioning to be skipped on warm boot, but got %d provision commands", provisionRunCount)
+	}
+
+	// Change config: provisioning should run again
+	configContent2 := `version: 1
+provision:
+  packages:
+    - curl
+    - jq
+  files:
+    - source: ./site/index.html
+      destination: /home/yeast/site/index.html
+  shell:
+    - echo hello
+instances:
+  - name: web
+    image: ubuntu-24.04
+    ssh_port: 2205
+`
+	if err := os.WriteFile(filepath.Join(root, ConfigFileName), []byte(configContent2), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+	provisionRunCount = 0
+	if _, err := service.Up(context.Background(), UpOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("third Up returned error: %v", err)
+	}
+	if provisionRunCount == 0 {
+		t.Fatal("expected provisioning to run after config change")
+	}
+
+	// Reprovision flag: force re-provision even when fingerprint matches
+	provisionRunCount = 0
+	if _, err := service.Up(context.Background(), UpOptions{ProjectRoot: root, Reprovision: true}); err != nil {
+		t.Fatalf("reprovision Up returned error: %v", err)
+	}
+	if provisionRunCount == 0 {
+		t.Fatal("expected provisioning to run with --reprovision flag")
 	}
 }
 
@@ -635,6 +756,9 @@ func TestUpFailsClearlyWhenCachedImageMissing(t *testing.T) {
 
 	service := NewService()
 	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.downloadImage = func(image images.TrustedImage, destination string, options images.DownloadOptions) error {
+		return fmt.Errorf("download failed: no network")
+	}
 
 	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
 		t.Fatalf("Init returned error: %v", err)
@@ -644,15 +768,15 @@ func TestUpFailsClearlyWhenCachedImageMissing(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	if !strings.Contains(err.Error(), "run `yeast pull ubuntu-24.04`") {
-		t.Fatalf("expected pull guidance, got %q", err)
+	if !strings.Contains(err.Error(), "auto-pull image ubuntu-24.04 failed") {
+		t.Fatalf("expected auto-pull failure message, got %q", err)
 	}
 	var appErr *AppError
 	if !errors.As(err, &appErr) {
 		t.Fatalf("expected AppError, got %T", err)
 	}
-	if appErr.Code != ErrorCodeNotFound {
-		t.Fatalf("expected not_found error code, got %q", appErr.Code)
+	if appErr.Code != ErrorCodeInternal {
+		t.Fatalf("expected internal error code, got %q", appErr.Code)
 	}
 }
 
@@ -685,6 +809,44 @@ instances:
 	}
 	if appErr.Code != ErrorCodeInvalidArgument {
 		t.Fatalf("expected invalid_argument error code, got %q", appErr.Code)
+	}
+}
+
+func TestUpShowsManualImageInstructions(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	configContent := `version: 1
+instances:
+  - name: web
+    image: kali-2026.1
+`
+	if err := os.WriteFile(filepath.Join(root, ConfigFileName), []byte(configContent), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	if err == nil {
+		t.Fatal("expected error for manual image, got nil")
+	}
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	if appErr.Code != ErrorCodeInvalidArgument {
+		t.Fatalf("expected invalid_argument error code, got %q", appErr.Code)
+	}
+	if !strings.Contains(appErr.Message, "manual download") {
+		t.Fatalf("expected manual download instructions in error, got: %s", appErr.Message)
+	}
+	if !strings.Contains(appErr.Message, "kali-2026.1") {
+		t.Fatalf("expected image name in error, got: %s", appErr.Message)
 	}
 }
 
@@ -734,6 +896,21 @@ func TestUpClassifiesReadinessFailureAndStopsStartedInstance(t *testing.T) {
 	}
 	if fake.stopCalls != 1 {
 		t.Fatalf("expected one stop call after readiness failure, got %d", fake.stopCalls)
+	}
+}
+
+func TestUpFailsWhenRuntimeExitsAfterTCPReadiness(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	fake := &fakeRuntime{inspectState: rtm.ProcessStateStopped}
+	service.runtime = fake
+	service.waitForTCP = func(ctx context.Context, options guest.ReadinessOptions) error {
+		return nil
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodePrecondition)
+	if fake.stopCalls != 1 {
+		t.Fatalf("expected one stop call after runtime exit, got %d", fake.stopCalls)
 	}
 }
 
@@ -958,21 +1135,23 @@ func fakeBootstrapTransport(t *testing.T) provssh.FakeTransport {
 
 	return provssh.FakeTransport{
 		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
-			if request.Command != "cloud-init status --wait" {
+			if request.Command != cloudInitStatusCommand {
 				t.Fatalf("unexpected provisioning command without explicit test transport: %q", request.Command)
 			}
-			return provssh.RunResult{Stdout: "done\n", ExitCode: 0, Duration: time.Millisecond}, nil
+			return provssh.RunResult{Stdout: "status: done\n", ExitCode: 0, Duration: time.Millisecond}, nil
 		},
 	}
 }
 
 type fakeRuntime struct {
-	preparePlan rtm.MachinePlan
-	startPlan   rtm.MachinePlan
-	prepareErr  error
-	startErr    error
-	stopCalls   int
-	startHook   func(plan rtm.MachinePlan) error
+	preparePlan  rtm.MachinePlan
+	startPlan    rtm.MachinePlan
+	prepareErr   error
+	startErr     error
+	stopCalls    int
+	startHook    func(plan rtm.MachinePlan) error
+	inspectState rtm.ProcessState
+	inspectErr   error
 }
 
 func (f *fakeRuntime) PrepareDisk(ctx context.Context, plan rtm.MachinePlan) (rtm.DiskPlan, error) {
@@ -1009,7 +1188,14 @@ func (f *fakeRuntime) Stop(ctx context.Context, instance rtm.RuntimeInstance, ti
 }
 
 func (f *fakeRuntime) Inspect(ctx context.Context, instance rtm.RuntimeInstance) (rtm.ProcessInfo, error) {
-	return rtm.ProcessInfo{PID: instance.PID, State: rtm.ProcessStateRunning}, nil
+	if f.inspectErr != nil {
+		return rtm.ProcessInfo{}, f.inspectErr
+	}
+	state := f.inspectState
+	if state == "" {
+		state = rtm.ProcessStateRunning
+	}
+	return rtm.ProcessInfo{PID: instance.PID, State: state}, nil
 }
 
 func (f *fakeRuntime) CreateSnapshot(ctx context.Context, plan rtm.SnapshotPlan) error {

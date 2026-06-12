@@ -96,13 +96,11 @@ func RenderUserData(input UserDataInput) (string, error) {
 	}
 
 	if content := buildEnvScript(input.Instance.Env); content != "" {
-		cfg.WriteFiles = []cloudWriteFile{
-			{
-				Path:        "/etc/profile.d/yeast-env.sh",
-				Permissions: "0644",
-				Content:     content,
-			},
-		}
+		cfg.WriteFiles = append(cfg.WriteFiles, cloudWriteFile{
+			Path:        "/etc/profile.d/yeast-env.sh",
+			Permissions: "0644",
+			Content:     content,
+		})
 	}
 
 	body, err := yaml.Marshal(cfg)

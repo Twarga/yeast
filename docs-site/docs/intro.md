@@ -5,9 +5,7 @@ description: What is Yeast and why it exists
 
 # Introduction to Yeast
 
-**Turn a folder into real VMs.**
-
-Yeast is a Linux-first local VM orchestration tool for QEMU/KVM. It lets you define virtual machines in a single YAML file, provision them with cloud-init, and manage their entire lifecycle with simple commands.
+Yeast is a Linux-first local VM orchestration tool for QEMU/KVM. It lets you define virtual machines in a single YAML file, provision them with cloud-init, and manage their lifecycle with simple commands.
 
 ## What Problem Does Yeast Solve?
 
@@ -23,11 +21,7 @@ Running local VMs on Linux is still more painful than it should be. The typical 
 
 Yeast reduces all of this to a **project workflow** instead of a pile of ad hoc commands.
 
-## What is Yeast?
-
-Yeast is a command-line tool that creates and manages virtual machines on your Linux machine. Unlike heavy virtualization platforms, Yeast focuses on simplicity and developer experience.
-
-### Core Workflow
+## Core Workflow
 
 ```bash
 # 1. Create a project
@@ -66,63 +60,15 @@ yeast destroy
 | **JSON Automation** | Stable JSON output and event streams for scripting and CI/CD integration. |
 | **Templates** | Start from built-in templates or create your own reusable project starters. |
 
-## Who is Yeast For?
+## Key Ideas
 
-### Developers
-Need local VMs for testing, development, or learning Linux? Yeast gives you reproducible environments in seconds.
+- You always work inside a project directory
+- `yeast.yaml` is the source of truth
+- QEMU/KVM runs the VMs locally
+- cloud-init prepares the guest on first boot
+- Yeast keeps runtime state and project data separate
 
-### System Administrators
-Want to test configurations before deploying to production? Yeast lets you validate changes safely.
-
-### Students
-Learning Linux, networking, or infrastructure without cloud costs? Yeast runs everything locally.
-
-### Security Researchers
-Need isolated lab environments for testing? Yeast's snapshot and reset workflow is perfect for cybersecurity labs.
-
-### DevOps Engineers
-Want to automate VM workflows? Yeast's stable JSON and event streams integrate with your tooling.
-
-## Why Yeast Over Alternatives?
-
-### vs. Vagrant
-- No VirtualBox dependency (uses native QEMU/KVM)
-- Linux-first (not a multi-platform compromise)
-- Simpler project model
-- Better JSON automation
-
-### vs. Docker
-- Real VMs, not containers
-- Full kernel isolation
-- Better for system-level testing
-- Networking that's closer to production
-
-### vs. Manual QEMU
-- Project-scoped state management
-- Automatic cloud-init generation
-- Built-in SSH port management
-- Snapshot and restore workflows
-
-### vs. Cloud VMs
-- Zero cost
-- No network latency
-- Works offline
-- Faster iteration cycles
-
-## The Yeast Philosophy
-
-> Real infrastructure should be understandable before it becomes scalable.
-
-Yeast hides repetitive pain, but not the mental model:
-
-- You still know there's a project
-- You still see the config that defines machines
-- You still understand that QEMU/KVM runs the VMs
-- You still see that cloud-init prepares the guest
-
-Yeast should feel **simple**, but not **magical in a confusing way**.
-
-## What's Next?
+## What to Read Next
 
 - [Installation](./installation) — Get Yeast running on your system
 - [Quickstart](./quickstart) — Your first VM in 5 minutes

@@ -1,6 +1,7 @@
 package images
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -62,5 +63,66 @@ func TestResolveCachePathsKeepsFilesUnderCacheRoot(t *testing.T) {
 	}
 	if !strings.HasPrefix(paths.ManifestFile, prefix) {
 		t.Fatalf("expected manifest file %q under cache root %q", paths.ManifestFile, root)
+	}
+}
+
+func TestRemoveCachedImage(t *testing.T) {
+	root := t.TempDir()
+
+	// Create a fake cached image.
+	imgDir := filepath.Join(root, "ubuntu-24.04")
+	if err := os.MkdirAll(imgDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	data := strings.Repeat("x", 1024)
+	if err := os.WriteFile(filepath.Join(imgDir, ImageFileName), []byte(data), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	size, err := RemoveCachedImage(root, "ubuntu-24.04")
+	if err != nil {
+		t.Fatalf("RemoveCachedImage returned error: %v", err)
+	}
+	if size != 1024 {
+		t.Fatalf("expected freed size 1024, got %d", size)
+	}
+
+	// Verify directory is gone.
+	if _, err := os.Stat(imgDir); !os.IsNotExist(err) {
+		t.Fatalf("expected image dir to be removed, err=%v", err)
+	}
+
+	// Removing again should fail.
+	_, err = RemoveCachedImage(root, "ubuntu-24.04")
+	if err == nil {
+		t.Fatal("expected error removing non-existent image")
+	}
+}
+
+func TestRemoveAllCached(t *testing.T) {
+	root := t.TempDir()
+
+	// Create two cached images.
+	for _, name := range []string{"ubuntu-24.04", "debian-12"} {
+		imgDir := filepath.Join(root, name)
+		if err := os.MkdirAll(imgDir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(imgDir, ImageFileName), []byte("x"), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	size, err := RemoveAllCached(root)
+	if err != nil {
+		t.Fatalf("RemoveAllCached returned error: %v", err)
+	}
+	if size != 2 {
+		t.Fatalf("expected freed size 2, got %d", size)
+	}
+
+	cached := GetCachedImages(root)
+	if len(cached) != 0 {
+		t.Fatalf("expected no cached images, got %v", cached)
 	}
 }

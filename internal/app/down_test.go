@@ -104,6 +104,43 @@ func TestDownHandlesAlreadyStoppedInstances(t *testing.T) {
 	}
 }
 
+func TestDownUsesLongDefaultShutdownTimeout(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.managementPortAvailable = func(port int) bool { return true }
+	service.sleep = func(time.Duration) {}
+	fakeRuntime := &fakeDownRuntime{}
+	service.runtime = fakeRuntime
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+
+	current := state.New(metadata.ID)
+	current.Instances["web"] = state.InstanceState{Status: "running", PID: 1001, SSHPort: 2222, RuntimeDir: "/tmp/web"}
+	if err := state.Save(paths.StateFile, current); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	if _, err := service.Down(context.Background(), DownOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Down returned error: %v", err)
+	}
+	if len(fakeRuntime.stopTimeouts) != 1 || fakeRuntime.stopTimeouts[0] != time.Minute {
+		t.Fatalf("expected default shutdown timeout %s, got %#v", time.Minute, fakeRuntime.stopTimeouts)
+	}
+}
+
 func TestDownEmitsLifecycleEvents(t *testing.T) {
 	root := t.TempDir()
 	yeastHome := filepath.Join(root, "yeast-home")
@@ -326,8 +363,9 @@ func assertDownAppErrorCode(t *testing.T, err error, want ErrorCode) {
 }
 
 type fakeDownRuntime struct {
-	stoppedPIDs []int
-	stopErr     error
+	stoppedPIDs  []int
+	stopTimeouts []time.Duration
+	stopErr      error
 }
 
 func (f *fakeDownRuntime) PrepareDisk(ctx context.Context, plan rtm.MachinePlan) (rtm.DiskPlan, error) {
@@ -340,6 +378,7 @@ func (f *fakeDownRuntime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.
 
 func (f *fakeDownRuntime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeout time.Duration) error {
 	f.stoppedPIDs = append(f.stoppedPIDs, instance.PID)
+	f.stopTimeouts = append(f.stopTimeouts, timeout)
 	return f.stopErr
 }
 

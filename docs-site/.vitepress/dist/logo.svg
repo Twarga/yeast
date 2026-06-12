@@ -14,13 +14,8 @@
   <rect x="10" y="10" width="180" height="180" rx="40" ry="40"
         fill="none" stroke="#22c55e" stroke-width="10" filter="url(#glow)"/>
 
-  <!-- Letter Y -->
-  <g fill="#22c55e">
-    <!-- Left diagonal stroke -->
-    <rect x="45" y="35" width="14" height="65" rx="7" transform="rotate(-30 52 67)"/>
-    <!-- Right diagonal stroke -->
-    <rect x="105" y="35" width="14" height="65" rx="7" transform="rotate(30 112 67)"/>
-    <!-- Vertical stem -->
-    <rect x="93" y="78" width="14" height="75" rx="7"/>
-  </g>
+  <!-- Letter Y — single path, clean junction -->
+  <path d="M 52 42 L 93 95 L 148 42 L 130 42 L 93 95 L 70 42 Z
+           M 93 95 L 93 158 L 107 158 L 107 95 Z"
+        fill="#22c55e" fill-rule="evenodd"/>
 </svg>

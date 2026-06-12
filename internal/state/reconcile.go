@@ -1,7 +1,8 @@
 package state
 
 type ReconcileOptions struct {
-	IsProcessAlive func(pid int) bool
+	IsProcessAlive         func(pid int) bool
+	FindProcessByRuntimeDir func(name, runtimeDir string) (int, bool)
 }
 
 func Reconcile(state *State, options ReconcileOptions) bool {
@@ -20,6 +21,13 @@ func Reconcile(state *State, options ReconcileOptions) bool {
 			continue
 		}
 		if instance.PID <= 0 {
+			if options.FindProcessByRuntimeDir != nil && instance.RuntimeDir != "" {
+				if pid, ok := options.FindProcessByRuntimeDir(name, instance.RuntimeDir); ok && pid > 0 {
+					instance.PID = pid
+					state.Instances[name] = instance
+					changed = true
+				}
+			}
 			continue
 		}
 		if isAlive(instance.PID) {

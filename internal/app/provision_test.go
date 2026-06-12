@@ -22,6 +22,9 @@ func TestProvisionRerunsForReachableInstance(t *testing.T) {
 	service.provisionTransport = provssh.FakeTransport{
 		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
 			runRequests = append(runRequests, request)
+			if request.Command == cloudInitStatusCommand {
+				return provssh.RunResult{Stdout: "status: done\n", ExitCode: 0, Duration: time.Millisecond}, nil
+			}
 			return provssh.RunResult{Stdout: "ok\n", ExitCode: 0, Duration: time.Millisecond}, nil
 		},
 		UploadFunc: func(ctx context.Context, request provssh.UploadRequest) error {
@@ -42,7 +45,7 @@ func TestProvisionRerunsForReachableInstance(t *testing.T) {
 	}
 
 	wantCommands := []string{
-		"cloud-init status --wait",
+		cloudInitStatusCommand,
 		"sudo -n DEBIAN_FRONTEND=noninteractive apt-get update && sudo -n DEBIAN_FRONTEND=noninteractive apt-get install -y curl caddy",
 		"mkdir -p '/home/yeast/site'",
 		"chmod 0644 '/home/yeast/site/index.html'",
@@ -71,6 +74,9 @@ func TestProvisionRerunsForReachableInstance(t *testing.T) {
 	if instance.ProvisioningStatus != state.ProvisioningStatusReady {
 		t.Fatalf("expected provisioned status, got %#v", instance)
 	}
+	if instance.ProvisionFingerprint == "" {
+		t.Fatalf("expected provision fingerprint to be saved, got %#v", instance)
+	}
 	logContent, err := os.ReadFile(instance.ProvisionLogPath)
 	if err != nil {
 		t.Fatalf("read provision log: %v", err)
@@ -85,6 +91,9 @@ func TestProvisionMarksFailureAndPreservesRunningInstance(t *testing.T) {
 
 	service.provisionTransport = provssh.FakeTransport{
 		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
+			if request.Command == cloudInitStatusCommand {
+				return provssh.RunResult{Stdout: "status: done\n", ExitCode: 0, Duration: time.Millisecond}, nil
+			}
 			if strings.Contains(request.Command, "apt-get install") {
 				return provssh.RunResult{Stderr: "apt failed\n", ExitCode: 100, Duration: time.Millisecond}, errors.New("ssh failed")
 			}
@@ -119,6 +128,9 @@ func TestProvisionEmitsLifecycleEvents(t *testing.T) {
 
 	service.provisionTransport = provssh.FakeTransport{
 		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
+			if request.Command == cloudInitStatusCommand {
+				return provssh.RunResult{Stdout: "status: done\n", ExitCode: 0, Duration: time.Millisecond}, nil
+			}
 			return provssh.RunResult{Stdout: "ok\n", ExitCode: 0, Duration: time.Millisecond}, nil
 		},
 		UploadFunc: func(ctx context.Context, request provssh.UploadRequest) error {

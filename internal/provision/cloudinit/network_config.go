@@ -24,7 +24,7 @@ type networkConfig struct {
 
 type ethernetConfigV2 struct {
 	Match     ethernetMatch `yaml:"match"`
-	SetName   string        `yaml:"set-name"`
+	SetName   string        `yaml:"set-name,omitempty"`
 	DHCP4     bool          `yaml:"dhcp4"`
 	Addresses []string      `yaml:"addresses,omitempty"`
 }
@@ -46,8 +46,7 @@ func RenderNetworkConfig(input NetworkConfigInput) (string, error) {
 			Match: ethernetMatch{
 				MACAddress: strings.ToLower(strings.TrimSpace(input.ManagementMACAddress)),
 			},
-			SetName: input.ManagementInterfaceName,
-			DHCP4:   true,
+			DHCP4: true,
 		},
 	}
 

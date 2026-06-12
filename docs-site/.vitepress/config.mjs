@@ -7,6 +7,9 @@ export default defineConfig({
   
   head: [
     ['link', { rel: 'icon', href: '/yeast/favicon.ico' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
+    ['link', { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap' }],
   ],
 
   base: '/yeast/docs/',
@@ -16,7 +19,7 @@ export default defineConfig({
     siteTitle: 'Yeast',
     
     nav: [
-      { text: 'Docs', link: '/docs/intro' },
+      { text: 'Docs', link: '/' },
       { text: 'Tutorials', link: '/tutorials/' },
       { text: 'Reference', link: '/docs/configuration' },
       { 
@@ -99,7 +102,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024 TwargaOps'
+      copyright: `Copyright © ${new Date().getFullYear()} TwargaOps`
     },
 
     search: {
@@ -107,7 +110,7 @@ export default defineConfig({
     },
 
     editLink: {
-      pattern: 'https://github.com/Twarga/yeast/edit/main/docs-site/docs/:path',
+      pattern: 'https://github.com/Twarga/yeast/edit/main/docs-site/:path',
       text: 'Edit this page on GitHub'
     }
   }

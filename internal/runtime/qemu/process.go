@@ -41,9 +41,16 @@ func (p *cmdProcess) Release() error {
 }
 
 func startCommandContext(ctx context.Context, name string, args []string, stdout, stderr *os.File) (processHandle, error) {
-	cmd := exec.CommandContext(ctx, name, args...)
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	cmd := exec.Command(name, args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}

@@ -99,6 +99,12 @@ VMs have practical limits:
 
 Higher values may work but are not officially supported.
 
+### Manual Images Require User Setup
+
+`yeast pull --list` includes both auto-downloadable cloud images and manual/setup-only image entries. Manual images are searchable and documented, but Yeast cannot automatically download or prepare them because their upstream distribution format, licensing flow, credentials, or cloud-init support differs from standard cloud images.
+
+When a manual image is selected, Yeast prints setup instructions. You must place the prepared disk image in the expected cache location before `yeast up` can use it.
+
 ## Provisioning Limitations
 
 ### No Idempotent Shell Detection
@@ -188,6 +194,17 @@ VMs do not start automatically on host boot.
 Yeast does not monitor or report host resource usage (CPU, RAM, disk) for VMs.
 
 **Workaround:** Use standard Linux tools (`top`, `htop`, `df`) on the host.
+
+### Full Smoke Tests Need a Real VM Runner
+
+Unit tests and non-VM smoke tests can run quickly on ordinary development hosts. Full lifecycle smoke tests boot real QEMU/KVM VMs, wait for cloud-init and SSH readiness, and may download large cloud images.
+
+For reliable full-smoke validation, use a host or CI runner with:
+- writable `/dev/kvm`
+- `qemu-system-x86_64` and `qemu-img`
+- enough free disk space for image cache and qcow2 overlays
+- network access to image mirrors
+- enough time for first-boot cloud-init completion
 
 ## Security Limitations
 

@@ -53,6 +53,8 @@ func RenderHuman(w io.Writer, command string, data any) error {
 		return renderDown(w, theme, value)
 	case app.DestroyResult:
 		return renderDestroy(w, theme, value)
+	case app.ImageCleanResult:
+		return renderImageClean(w, theme, value)
 	default:
 		return fmt.Errorf("unsupported human render type for %s: %T", command, data)
 	}
@@ -163,11 +165,81 @@ func renderTemplateList(w io.Writer, theme humanTheme, value app.TemplateListRes
 }
 
 func renderPull(w io.Writer, theme humanTheme, value app.PullResult) error {
+	if value.List && len(value.ImageGroups) > 0 {
+		lines := []string{theme.Title.Render("Available images")}
+		lines = append(lines, "")
+		categoryLabels := map[string]string{
+			"general":    "General Purpose",
+			"devops":     "DevOps & Cloud",
+			"enterprise": "Enterprise",
+			"security":   "Security",
+			"minimal":    "Minimal",
+			"niche":      "Niche",
+		}
+		for _, group := range value.ImageGroups {
+			label := categoryLabels[group.Category]
+			if label == "" {
+				label = group.Category
+			}
+			lines = append(lines, "  "+theme.Label.Render(label)+":")
+			for _, img := range group.Images {
+				cloudInit := ""
+				if !img.CloudInit {
+					cloudInit = " " + theme.Muted.Render("(manual)")
+				}
+				lines = append(lines, fmt.Sprintf("    %-24s %s%s  %s",
+					theme.Value.Render(img.Name),
+					theme.Muted.Render(img.Description),
+					cloudInit,
+					theme.Muted.Render(img.Size),
+				))
+			}
+			lines = append(lines, "")
+		}
+		lines = append(lines, "  "+theme.Muted.Render("Use: yeast pull <image> to download or get setup instructions"))
+		return writeBlock(w, theme, lines)
+	}
+
 	if value.List {
-		lines := []string{theme.Title.Render("Trusted images")}
+		lines := []string{theme.Title.Render("Available images")}
 		for _, image := range value.Images {
 			lines = append(lines, "  "+theme.Success.Render("*")+" "+theme.Value.Render(image))
 		}
+		return writeBlock(w, theme, lines)
+	}
+
+	if value.ManualHint != "" {
+		lines := []string{
+			theme.Warning.Render("Manual setup required") + " " + theme.Value.Render(value.ImageName),
+			"",
+		}
+		for _, line := range splitLines(value.ManualHint) {
+			lines = append(lines, "  "+line)
+		}
+		return writeBlock(w, theme, lines)
+	}
+
+	if len(value.SearchResults) > 0 {
+		lines := []string{theme.Warning.Render("Multiple images match:") + " " + theme.Value.Render(value.SearchResults[0])}
+		for _, name := range value.SearchResults[1:] {
+			lines = append(lines, "  "+theme.Muted.Render("-")+" "+theme.Value.Render(name))
+		}
+		lines = append(lines, "")
+		lines = append(lines, "  "+theme.Muted.Render("Specify the full name: yeast pull "+value.SearchResults[0]))
+		return writeBlock(w, theme, lines)
+	}
+
+	if len(value.CachedImages) > 0 {
+		lines := []string{theme.Title.Render("Cached images")}
+		lines = append(lines, "")
+		for _, img := range value.CachedImages {
+			lines = append(lines, fmt.Sprintf("  %s  %s",
+				theme.Value.Render(img.Name),
+				theme.Muted.Render(img.Path),
+			))
+		}
+		lines = append(lines, "")
+		lines = append(lines, "  "+theme.Muted.Render("Use: yeast images clean <name> to remove"))
 		return writeBlock(w, theme, lines)
 	}
 
@@ -177,6 +249,14 @@ func renderPull(w io.Writer, theme humanTheme, value app.PullResult) error {
 		keyValue(theme, "path", value.ImagePath),
 	}
 	return writeBlock(w, theme, lines)
+}
+
+func splitLines(s string) []string {
+	var result []string
+	for _, line := range strings.Split(s, "\n") {
+		result = append(result, line)
+	}
+	return result
 }
 
 func renderDoctor(w io.Writer, theme humanTheme, value app.DoctorResult) error {
@@ -198,15 +278,31 @@ func renderDoctor(w io.Writer, theme humanTheme, value app.DoctorResult) error {
 }
 
 func renderUp(w io.Writer, theme humanTheme, value app.UpResult) error {
-	lines := []string{theme.Success.Render("OK") + " " + theme.Title.Render("Instances ready")}
+	rows := [][]string{{"NAME", "STATUS", "SSH"}}
 	for _, instance := range value.Instances {
-		lines = append(lines, fmt.Sprintf(
-			"  %s  %s  %s",
-			statusBadge(theme, instance.Status),
-			theme.Value.Render(instance.Name),
-			theme.Muted.Render(instance.SSHAddress),
-		))
+		ssh := "-"
+		if instance.SSHAddress != "" {
+			ssh = instance.SSHAddress
+		}
+		rows = append(rows, []string{instance.Name, instance.Status, ssh})
 	}
+
+	lines := []string{theme.Success.Render("✓") + " " + theme.Title.Render("All instances ready")}
+	lines = append(lines, "")
+	lines = append(lines, renderRows(theme, rows)...)
+
+	// Connect hint for the first instance.
+	if len(value.Instances) > 0 {
+		first := value.Instances[0]
+		if first.SSHAddress != "" {
+			lines = append(lines, "")
+			lines = append(lines, fmt.Sprintf("  %s %s",
+				theme.Muted.Render("Connect:"),
+				theme.Value.Render("yeast ssh "+first.Name),
+			))
+		}
+	}
+
 	return writeBlock(w, theme, lines)
 }
 
@@ -364,28 +460,66 @@ func renderDeleteSnapshot(w io.Writer, theme humanTheme, value app.DeleteSnapsho
 }
 
 func renderDown(w io.Writer, theme humanTheme, value app.DownResult) error {
-	return renderInstanceAction(w, theme, "Instances stopped", value.Instances)
+	rows := [][]string{{"NAME", "STATUS"}}
+	for _, instance := range value.Instances {
+		name, status := actionFields(instance)
+		rows = append(rows, []string{name, status})
+	}
+
+	lines := []string{theme.Success.Render("✓") + " " + theme.Title.Render("All instances stopped")}
+	lines = append(lines, "")
+	lines = append(lines, renderRows(theme, rows)...)
+	return writeBlock(w, theme, lines)
 }
 
 func renderDestroy(w io.Writer, theme humanTheme, value app.DestroyResult) error {
-	return renderInstanceAction(w, theme, "Instances destroyed", value.Instances)
+	rows := [][]string{{"NAME", "STATUS"}}
+	for _, instance := range value.Instances {
+		name, status := actionFields(instance)
+		rows = append(rows, []string{name, status})
+	}
+
+	lines := []string{theme.Success.Render("✓") + " " + theme.Title.Render("All instances destroyed")}
+	lines = append(lines, "")
+	lines = append(lines, renderRows(theme, rows)...)
+	return writeBlock(w, theme, lines)
+}
+
+func renderImageClean(w io.Writer, theme humanTheme, value app.ImageCleanResult) error {
+	if value.DryRun {
+		lines := []string{theme.Title.Render("Would remove")}
+		lines = append(lines, "")
+		for _, item := range value.Removed {
+			lines = append(lines, fmt.Sprintf("  %s  %s",
+				theme.Value.Render(item.Name),
+				theme.Muted.Render(item.SizeH),
+			))
+		}
+		lines = append(lines, "")
+		lines = append(lines, "  "+theme.Muted.Render("Total: "+value.TotalSizeH))
+		return writeBlock(w, theme, lines)
+	}
+
+	if len(value.Removed) == 0 {
+		lines := []string{theme.Muted.Render("No cached images to remove")}
+		return writeBlock(w, theme, lines)
+	}
+
+	lines := []string{theme.Success.Render("✓") + " " + theme.Title.Render("Cached images removed")}
+	lines = append(lines, "")
+	for _, item := range value.Removed {
+		lines = append(lines, fmt.Sprintf("  %s  %s freed",
+			theme.Value.Render(item.Name),
+			theme.Muted.Render(item.SizeH),
+		))
+	}
+	lines = append(lines, "")
+	lines = append(lines, "  "+theme.Muted.Render("Total: "+value.TotalSizeH+" freed"))
+	return writeBlock(w, theme, lines)
 }
 
 type instanceAction interface {
 	app.DownInstanceResult | app.DestroyInstanceResult
-}
-
-func renderInstanceAction[T instanceAction](w io.Writer, theme humanTheme, title string, instances []T) error {
-	lines := []string{theme.Success.Render("OK") + " " + theme.Title.Render(title)}
-	for _, instance := range instances {
-		name, status := actionFields(instance)
-		lines = append(lines, fmt.Sprintf(
-			"  %s  %s",
-			statusBadge(theme, status),
-			theme.Value.Render(name),
-		))
-	}
-	return writeBlock(w, theme, lines)
 }
 
 func actionFields[T instanceAction](instance T) (string, string) {
@@ -438,19 +572,6 @@ func doctorBadge(theme humanTheme, status app.CheckStatus) string {
 		return theme.Blocker.Render("BLOCK")
 	default:
 		return theme.Muted.Render(string(status))
-	}
-}
-
-func statusBadge(theme humanTheme, status string) string {
-	switch status {
-	case "running":
-		return theme.Success.Render("RUN")
-	case "stopped", "already_stopped":
-		return theme.Warning.Render("STOP")
-	case "destroyed":
-		return theme.Blocker.Render("DEL")
-	default:
-		return theme.Muted.Render(strings.ToUpper(status))
 	}
 }
 

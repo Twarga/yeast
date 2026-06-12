@@ -62,6 +62,9 @@ func TestExecRunsCommandAndReturnsStructuredResult(t *testing.T) {
 	if gotRequest.Command != "'whoami'" {
 		t.Fatalf("unexpected remote command: %q", gotRequest.Command)
 	}
+	if gotRequest.Timeout != defaultReadinessTimeout {
+		t.Fatalf("expected default exec timeout %s, got %s", defaultReadinessTimeout, gotRequest.Timeout)
+	}
 	if result.Instance != "web" || result.Run.Stdout != "yeast\n" || result.Run.ExitCode != 0 {
 		t.Fatalf("unexpected exec result: %#v", result)
 	}

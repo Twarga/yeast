@@ -18,6 +18,7 @@ type SnapshotOptions struct {
 	Target      string
 	Name        string
 	Description string
+	Events      EventSink
 }
 
 type SnapshotResult struct {
@@ -114,6 +115,12 @@ func (s *Service) Snapshot(ctx context.Context, options SnapshotOptions) (Snapsh
 	if err := state.Save(paths.StateFile, currentState); err != nil {
 		return SnapshotResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+
+	emitEvent(options.Events, "snapshot", EventSnapshotCreated, EventOptions{
+		ProjectID: metadata.ID,
+		Instance:  options.Target,
+		Message:   fmt.Sprintf("Snapshot %s created", options.Name),
+	})
 
 	return SnapshotResult{
 		ProjectID: metadata.ID,

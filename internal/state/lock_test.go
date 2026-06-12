@@ -26,6 +26,20 @@ func TestAcquireRelease(t *testing.T) {
 	}
 }
 
+func TestAcquireCreatesParentDirectory(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "nested", "state.lock")
+
+	lock, err := Acquire(path, testLockOptions())
+	if err != nil {
+		t.Fatalf("Acquire returned error: %v", err)
+	}
+	defer func() { _ = lock.Release() }()
+
+	if _, err := os.Stat(path); err != nil {
+		t.Fatalf("expected lock file to exist: %v", err)
+	}
+}
+
 func TestDoubleAcquireTimesOut(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "state.lock")
 	first, err := Acquire(path, testLockOptions())

@@ -7,6 +7,9 @@ mkdir -p "${ARTIFACT_DIR}"
 echo "==> go vet"
 go vet ./... 2>&1 | tee "${ARTIFACT_DIR}/go-vet.log"
 
+echo "==> secret scan"
+./scripts/secret-scan.sh "${ARTIFACT_DIR}"
+
 echo "==> golangci-lint"
 golangci-lint run --config .golangci.yml --timeout 5m 2>&1 | tee "${ARTIFACT_DIR}/golangci-lint.log"
 

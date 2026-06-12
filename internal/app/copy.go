@@ -95,7 +95,8 @@ func (s *Service) Copy(ctx context.Context, options CopyOptions) (CopyResult, er
 	if !ok {
 		return CopyResult{}, WrapError(ErrorCodeNotFound, fmt.Sprintf("instance %q not found in config", selectedName), nil)
 	}
-	address, err := s.sshAddress(defaultManagementHost, selectedState.SSHPort)
+	managementHost := resolveManagementHost(cfg)
+	address, err := s.sshAddress(managementHost, selectedState.SSHPort)
 	if err != nil {
 		return CopyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
@@ -116,7 +117,7 @@ func (s *Service) Copy(ctx context.Context, options CopyOptions) (CopyResult, er
 	case CopyToGuest:
 		err = transport.Upload(ctx, provssh.UploadRequest{
 			User:        instanceCfg.User,
-			Host:        defaultManagementHost,
+			Host:        managementHost,
 			Port:        selectedState.SSHPort,
 			Source:      localSource,
 			Destination: options.Destination,
@@ -125,7 +126,7 @@ func (s *Service) Copy(ctx context.Context, options CopyOptions) (CopyResult, er
 	case CopyFromGuest:
 		err = transport.Download(ctx, provssh.DownloadRequest{
 			User:        instanceCfg.User,
-			Host:        defaultManagementHost,
+			Host:        managementHost,
 			Port:        selectedState.SSHPort,
 			Source:      options.Source,
 			Destination: localDestination,

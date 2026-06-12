@@ -1,50 +1,26 @@
 ---
-layout: home
-
-hero:
-  name: "Yeast"
-  text: "Turn a folder into real VMs."
-  tagline: Linux-first local VM orchestration for QEMU/KVM. One YAML file. One command. Real machines.
-  image:
-    src: /logo.svg
-    alt: Yeast Logo
-  actions:
-    - theme: brand
-      text: Get Started
-      link: /docs/quickstart
-    - theme: alt
-      text: GitHub
-      link: https://github.com/Twarga/yeast
-
-features:
-  - title: YAML-Driven
-    details: One yeast.yaml defines your entire lab. No GUI, no clicks. Version control your infrastructure.
-  - title: Snapshots
-    details: Stop VMs, take snapshots, restore to any state. Safe lab reset in seconds.
-  - title: Private Networking
-    details: Private lab networks for multi-VM environments. VM-to-VM communication out of the box.
-  - title: Cloud-Init Provisioning
-    details: VMs are provisioned with cloud-init on first boot. No manual configuration required.
-  - title: JSON Automation
-    details: Stable JSON output and event streams for scripting and integration with other tools.
-  - title: Real VMs
-    details: Full hardware virtualization with QEMU/KVM. Not containers. Real Linux machines.
+title: Yeast Docs
+description: Installation, configuration, commands, and tutorials for Yeast
 ---
 
-<div style="text-align: center; padding: 2rem 0;">
-  <h2>Install Yeast</h2>
-  <div style="background: #1a1a1a; border-radius: 8px; padding: 1rem; display: inline-block; font-family: monospace;">
-    <code>curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash</code>
-  </div>
-</div>
+# Yeast Docs
 
-<div style="text-align: center; padding: 2rem 0;">
-  <h2>Quick Start</h2>
-  <div style="background: #1a1a1a; border-radius: 8px; padding: 1rem; display: inline-block; font-family: monospace; text-align: left;">
-    <div><span style="color: #22c55e;">$</span> mkdir my-lab && cd my-lab</div>
-    <div><span style="color: #22c55e;">$</span> yeast init</div>
-    <div><span style="color: #22c55e;">$</span> yeast pull ubuntu-24.04</div>
-    <div><span style="color: #22c55e;">$</span> yeast up</div>
-    <div><span style="color: #22c55e;">$</span> yeast ssh</div>
-  </div>
-</div>
+This site documents how to install Yeast, define projects, run VMs, and troubleshoot the common edge cases that show up in real use.
+
+## Start here
+
+1. [Read the introduction](/docs/intro) - get the mental model and see what Yeast is for.
+2. [Install Yeast](/docs/installation) - set up the host and make sure KVM and QEMU are ready.
+3. [Run the quickstart](/docs/quickstart) - create your first project and boot your first VM.
+
+## Need something specific?
+
+Use the reference pages when you need the exact command or field.
+
+[Commands](/docs/commands) · [Configuration](/docs/configuration) · [Architecture](/docs/architecture) · [Networking](/docs/networking) · [Provisioning](/docs/provisioning) · [Snapshots](/docs/snapshots) · [Troubleshooting](/docs/troubleshooting) · [Known limitations](/docs/known-limitations)
+
+## Tutorials
+
+Once the basics make sense, move into the guided labs.
+
+[Tutorial index](/tutorials/) · [First VM](/tutorials/01-first-vm) · [Guest control](/tutorials/05-guest-control) · [Templates](/tutorials/07-templates) · [JSON automation](/tutorials/08-json-automation)

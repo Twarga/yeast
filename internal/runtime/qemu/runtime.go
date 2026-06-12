@@ -33,6 +33,9 @@ func (r *Runtime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.RuntimeI
 	if err := os.MkdirAll(filepath.Dir(plan.LogPath), 0755); err != nil {
 		return rtm.RuntimeInstance{}, fmt.Errorf("create log directory for %s: %w", plan.LogPath, err)
 	}
+	if err := removeStaleQMPSocket(plan.RuntimeDir); err != nil {
+		return rtm.RuntimeInstance{}, err
+	}
 
 	binary, args, err := buildCommand(plan)
 	if err != nil {
@@ -51,6 +54,10 @@ func (r *Runtime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.RuntimeI
 	if err != nil {
 		return rtm.RuntimeInstance{}, fmt.Errorf("start qemu process: %w", err)
 	}
+	pid := proc.PID()
+	if pid <= 0 {
+		return rtm.RuntimeInstance{}, fmt.Errorf("qemu process returned invalid pid %d", pid)
+	}
 	if err := proc.Release(); err != nil {
 		return rtm.RuntimeInstance{}, fmt.Errorf("release qemu process handle: %w", err)
 	}
@@ -59,7 +66,7 @@ func (r *Runtime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.RuntimeI
 		Name:       plan.Name,
 		RuntimeDir: plan.RuntimeDir,
 		LogPath:    plan.LogPath,
-		PID:        proc.PID(),
+		PID:        pid,
 		Networks:   plan.Networks,
 		StartedAt:  time.Now().UTC(),
 	}, nil
@@ -78,12 +85,18 @@ func (r *Runtime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeou
 		return nil
 	}
 
-	qmpTimeout := timeout / 2
-	if qmpTimeout < 3*time.Second {
+	qmpTimeout := timeout - 5*time.Second
+	if qmpTimeout <= 0 {
+		qmpTimeout = timeout
+	}
+	if qmpTimeout < 3*time.Second && timeout >= 3*time.Second {
 		qmpTimeout = 3 * time.Second
 	}
 	if err := r.gracefulPowerdown(ctx, instance, qmpTimeout); err == nil {
+		_ = removeStaleQMPSocket(instance.RuntimeDir)
 		return nil
+	} else {
+		appendRuntimeLog(instance.RuntimeDir, fmt.Sprintf("yeast: graceful powerdown failed, falling back to SIGTERM: %v\n", err))
 	}
 
 	termTimeout := timeout - qmpTimeout
@@ -105,6 +118,7 @@ func (r *Runtime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeou
 	if err := waitForProcessExit(ctx, instance.PID, 5*time.Second); err != nil && err != context.DeadlineExceeded {
 		return fmt.Errorf("wait for process %d after SIGKILL: %w", instance.PID, err)
 	}
+	_ = removeStaleQMPSocket(instance.RuntimeDir)
 
 	return nil
 }
@@ -132,6 +146,21 @@ func (r *Runtime) gracefulPowerdown(ctx context.Context, instance rtm.RuntimeIns
 		return fmt.Errorf("wait for process exit after powerdown: %w", err)
 	}
 	return nil
+}
+
+func appendRuntimeLog(runtimeDir, message string) {
+	if runtimeDir == "" {
+		return
+	}
+	logPath := filepath.Join(runtimeDir, "vm.log")
+	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return
+	}
+	defer func() {
+		_ = logFile.Close()
+	}()
+	_, _ = logFile.WriteString(message)
 }
 
 func (r *Runtime) Inspect(ctx context.Context, instance rtm.RuntimeInstance) (rtm.ProcessInfo, error) {
@@ -183,6 +212,17 @@ func (r *Runtime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) err
 	}
 	if err := os.RemoveAll(instance.RuntimeDir); err != nil {
 		return fmt.Errorf("remove runtime directory %s: %w", instance.RuntimeDir, err)
+	}
+	return nil
+}
+
+func removeStaleQMPSocket(runtimeDir string) error {
+	if runtimeDir == "" {
+		return nil
+	}
+	socketPath := qmpSocketPath(runtimeDir)
+	if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("remove stale qmp socket %s: %w", socketPath, err)
 	}
 	return nil
 }

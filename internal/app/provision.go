@@ -107,7 +107,8 @@ func (s *Service) Provision(ctx context.Context, options ProvisionOptions) (Prov
 	if !ok {
 		return ProvisionResult{}, WrapError(ErrorCodeNotFound, fmt.Sprintf("instance %q not found in config", selectedName), nil)
 	}
-	address, err := s.sshAddress(defaultManagementHost, selectedState.SSHPort)
+	managementHost := resolveManagementHost(cfg)
+	address, err := s.sshAddress(managementHost, selectedState.SSHPort)
 	if err != nil {
 		return ProvisionResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
@@ -126,6 +127,10 @@ func (s *Service) Provision(ctx context.Context, options ProvisionOptions) (Prov
 	provisionPlan, err := resolveProvisionPlan(absoluteRoot, provision.BuildPlan(instanceCfg, cfg.Provision))
 	if err != nil {
 		return ProvisionResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("resolve provision plan for %s: %v", selectedName, err), err)
+	}
+	currentFingerprint, err := provision.Fingerprint(absoluteRoot, instanceCfg, cfg)
+	if err != nil {
+		return ProvisionResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("fingerprint provision plan for %s: %v", selectedName, err), err)
 	}
 	emitEvent(options.Events, "provision", EventProvisionStarted, EventOptions{
 		ProjectID: metadata.ID,
@@ -156,7 +161,7 @@ func (s *Service) Provision(ctx context.Context, options ProvisionOptions) (Prov
 		return ProvisionResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
-	provisionResult, err := s.runProvisionPlan(ctx, instanceCfg, selectedState.SSHPort, instanceState.ProvisionLogPath, provisionPlan)
+	provisionResult, err := s.runProvisionPlan(ctx, instanceCfg, selectedState.SSHPort, instanceState.ProvisionLogPath, provisionPlan, true, managementHost)
 	instanceState.ProvisioningStatus = provisionResult.Status
 	instanceState.LastError = ""
 	if err != nil {
@@ -171,6 +176,9 @@ func (s *Service) Provision(ctx context.Context, options ProvisionOptions) (Prov
 			return ProvisionResult{}, appErr
 		}
 		return ProvisionResult{}, WrapError(ErrorCodeProvisioning, fmt.Sprintf("provision instance %s: %v", selectedName, err), err)
+	}
+	if currentFingerprint != "" {
+		instanceState.ProvisionFingerprint = currentFingerprint
 	}
 	emitEvent(options.Events, "provision", EventProvisionFinished, EventOptions{
 		ProjectID: metadata.ID,

@@ -6,15 +6,20 @@ import (
 )
 
 const (
-	DefaultMemoryMB = 512
-	DefaultCPUs     = 1
-	DefaultUser     = "yeast"
-	DefaultSudo     = "none"
+	DefaultMemoryMB      = 512
+	DefaultCPUs          = 1
+	DefaultUser          = "yeast"
+	DefaultSudo          = "none"
+	DefaultManagementHost = "127.0.0.1"
 )
 
 func ApplyDefaults(cfg *Config) error {
 	if cfg == nil {
 		return fmt.Errorf("config is required")
+	}
+
+	if strings.TrimSpace(cfg.ManagementHost) == "" {
+		cfg.ManagementHost = DefaultManagementHost
 	}
 
 	for i := range cfg.Instances {

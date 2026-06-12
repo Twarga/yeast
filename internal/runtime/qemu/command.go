@@ -61,12 +61,15 @@ func BuildCommandArgs(plan runtime.MachinePlan) ([]string, error) {
 	}
 
 	args := []string{
+		"-machine", "q35,accel=kvm",
+		"-cpu", "host",
 		"-enable-kvm",
 		"-name", plan.Name,
 		"-m", fmt.Sprintf("%d", plan.MemoryMiB),
 		"-smp", fmt.Sprintf("%d", plan.CPUs),
 		"-drive", buildDiskDriveArg(plan.Disk.DiskPath),
 		"-drive", buildSeedDriveArg(plan.SeedImagePath),
+		"-device", "virtio-rng-pci",
 		"-netdev", buildManagementNetdevArg(plan.Networks.Management.SSHHost, plan.Networks.Management.SSHPort),
 		"-device", buildManagementDeviceArg(plan.Networks.Management),
 		"-qmp", fmt.Sprintf("unix:%s,server,nowait", qmpSocketPath(plan.RuntimeDir)),
@@ -88,10 +91,6 @@ func buildCommand(plan runtime.MachinePlan) (string, []string, error) {
 		return "", nil, err
 	}
 	return qemuSystemBinary, args, nil
-}
-
-func buildDiskDriveArg(path string) string {
-	return fmt.Sprintf("file=%s,if=virtio,format=qcow2", filepath.Clean(path))
 }
 
 func buildSeedDriveArg(path string) string {

@@ -51,6 +51,11 @@ func TestRuntimeQMPPowerdownSendsSystemPowerdown(t *testing.T) {
 			}
 			commands <- req.Execute
 
+			if req.Execute == "system_powerdown" {
+				event := map[string]any{"event": "POWERDOWN"}
+				eventLine, _ := json.Marshal(event)
+				_, _ = writer.Write(append(eventLine, '\n'))
+			}
 			resp := map[string]any{"return": map[string]any{}}
 			respLine, _ := json.Marshal(resp)
 			_, _ = writer.Write(append(respLine, '\n'))

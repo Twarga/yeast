@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"yeast/internal/app"
@@ -10,6 +11,25 @@ import (
 
 var outputJSON bool
 var outputEvents bool
+var outputQuiet bool
+
+type commandExitError struct {
+	code int
+}
+
+func (e commandExitError) Error() string {
+	return fmt.Sprintf("command exited with status %d", e.code)
+}
+
+func (e commandExitError) ExitCode() int {
+	if e.code <= 0 {
+		return 1
+	}
+	if e.code > 255 {
+		return 255
+	}
+	return e.code
+}
 
 func newRootCmd(service *app.Service) *cobra.Command {
 	cmd := &cobra.Command{
@@ -22,10 +42,13 @@ func newRootCmd(service *app.Service) *cobra.Command {
 
 	cmd.PersistentFlags().BoolVar(&outputJSON, "json", false, "Output machine-readable JSON")
 	cmd.PersistentFlags().BoolVar(&outputEvents, "events", false, "Stream machine-readable lifecycle events as JSON Lines")
+	cmd.PersistentFlags().BoolVarP(&outputQuiet, "quiet", "q", false, "Suppress progress output (final result only)")
+	cmd.AddCommand(newCompletionCmd())
 	cmd.AddCommand(newDocsCmd())
 	cmd.AddCommand(newDownCmd(service))
 	cmd.AddCommand(newDeleteSnapshotCmd(service))
 	cmd.AddCommand(newDestroyCmd(service))
+	cmd.AddCommand(newImagesCmd(service))
 	cmd.AddCommand(newInitCmd(service))
 	cmd.AddCommand(newDoctorCmd(service))
 	cmd.AddCommand(newExecCmd(service))
@@ -47,12 +70,19 @@ func newRootCmd(service *app.Service) *cobra.Command {
 func Execute() {
 	rootCmd := newRootCmd(app.NewService())
 	if err := rootCmd.Execute(); err != nil {
+		var exitErr commandExitError
+		if errors.As(err, &exitErr) {
+			os.Exit(exitErr.ExitCode())
+		}
 		if outputJSON {
 			if renderErr := renderCommandError(os.Stdout, err); renderErr == nil {
 				os.Exit(1)
 			}
 		}
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		if hint := app.ErrorHint(err); hint != "" {
+			fmt.Fprintf(os.Stderr, "\n  Hint: %s\n", hint)
+		}
 		os.Exit(1)
 	}
 }

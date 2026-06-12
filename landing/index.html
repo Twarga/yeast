@@ -43,9 +43,9 @@
     .grid-bg {
       position: fixed;
       inset: 0;
-      background-image:
-        linear-gradient(rgba(34, 197, 94, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(34, 197, 94, 0.03) 1px, transparent 1px);
+      background:
+        linear-gradient(rgba(34, 197, 94, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34, 197, 94, 0.025) 1px, transparent 1px);
       background-size: 60px 60px;
       pointer-events: none;
       z-index: 0;
@@ -80,12 +80,13 @@
     .nav-logo {
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 8px;
       text-decoration: none;
       color: var(--text-primary);
       font-family: var(--font-mono);
       font-weight: 700;
       font-size: 18px;
+      letter-spacing: -0.02em;
     }
     .nav-logo img { width: 28px; height: 28px; }
     .nav-links {
@@ -121,15 +122,6 @@
       color: var(--accent);
     }
     .nav-github svg { width: 16px; height: 16px; }
-    .nav-stars {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      font-size: 12px;
-    }
-    .nav-stars svg { width: 12px; height: 12px; color: #e2b340; }
     .nav-hamburger {
       display: none;
       background: none;
@@ -185,15 +177,13 @@
       position: relative;
       overflow: hidden;
     }
-    .hero-glow {
+    .hero::before {
+      content: '';
       position: absolute;
-      width: 600px;
-      height: 600px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(34, 197, 94, 0.08) 0%, transparent 70%);
-      top: 50%;
-      right: -100px;
-      transform: translateY(-50%);
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(34, 197, 94, 0.04), transparent 30%),
+        linear-gradient(120deg, transparent 0%, rgba(34, 197, 94, 0.03) 50%, transparent 100%);
       pointer-events: none;
     }
     .hero .container {
@@ -208,7 +198,7 @@
       font-size: 13px;
       font-weight: 600;
       color: var(--accent);
-      letter-spacing: 2px;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
       margin-bottom: 16px;
     }
@@ -216,7 +206,7 @@
       font-size: clamp(36px, 5vw, 56px);
       font-weight: 900;
       line-height: 1.1;
-      letter-spacing: -1.5px;
+      letter-spacing: -0.04em;
       margin-bottom: 20px;
     }
     .hero h1 span { color: var(--accent); }
@@ -226,6 +216,13 @@
       line-height: 1.7;
       margin-bottom: 32px;
       max-width: 480px;
+    }
+    .hero-meta {
+      margin-top: 18px;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-family: var(--font-mono);
+      letter-spacing: 0.02em;
     }
     .hero-actions {
       display: flex;
@@ -237,7 +234,7 @@
       align-items: center;
       gap: 8px;
       padding: 12px 24px;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 15px;
       font-weight: 600;
       text-decoration: none;
@@ -272,9 +269,9 @@
     .terminal {
       background: var(--bg-card);
       border: 1px solid var(--border-strong);
-      border-radius: 12px;
+      border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 0 40px rgba(34, 197, 94, 0.05);
+      box-shadow: 0 16px 50px rgba(0, 0, 0, 0.22);
     }
     .terminal-header {
       display: flex;
@@ -340,7 +337,7 @@
       font-size: 13px;
       font-weight: 600;
       color: var(--accent);
-      letter-spacing: 2px;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
       margin-bottom: 12px;
     }
@@ -349,7 +346,7 @@
       font-weight: 800;
       line-height: 1.2;
       margin-bottom: 16px;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.03em;
     }
     .section-desc {
       font-size: 17px;
@@ -366,7 +363,7 @@
       gap: 12px;
       background: var(--bg-card);
       border: 1px solid var(--border-strong);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 16px 24px;
       margin-top: 24px;
       font-family: var(--font-mono);
@@ -443,25 +440,30 @@
     .what-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 32px 24px;
       text-align: left;
       transition: all 0.3s;
     }
     .what-card:hover {
       border-color: var(--border-strong);
-      transform: translateY(-2px);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
     }
     .what-card-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: var(--accent-glow);
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(34, 197, 94, 0.08);
+      border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 16px;
-      font-size: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: var(--font-mono);
     }
     .what-card h3 {
       font-size: 18px;
@@ -484,26 +486,30 @@
     .feature-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 28px 24px;
       transition: all 0.3s;
+      min-height: 100%;
     }
     .feature-card:hover {
       border-color: var(--border-strong);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
     }
     .feature-icon {
       width: 44px;
       height: 44px;
-      border-radius: 10px;
-      background: var(--accent-glow);
+      border-radius: 12px;
+      background: rgba(34, 197, 94, 0.08);
       border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 16px;
-      font-size: 22px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: var(--font-mono);
     }
     .feature-card h3 {
       font-size: 17px;
@@ -577,18 +583,30 @@
     .case-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 32px 24px;
       text-align: left;
       transition: all 0.3s;
     }
     .case-card:hover {
       border-color: var(--border-strong);
-      transform: translateY(-2px);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
     }
     .case-icon {
-      font-size: 32px;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(34, 197, 94, 0.08);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin-bottom: 16px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: var(--font-mono);
     }
     .case-card h3 {
       font-size: 18px;
@@ -701,18 +719,14 @@
   <div class="container">
     <a href="#" class="nav-logo">
       <img src="/yeast/assets/logo.svg" alt="Yeast" width="28" height="28">
-      east
+      Yeast
     </a>
     <div class="nav-links">
       <a href="/yeast/docs/intro">Docs</a>
       <a href="/yeast/docs/tutorials/">Tutorials</a>
-      <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener" class="nav-github">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener" class="nav-github">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         GitHub
-        <span class="nav-stars">
-          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
-          <span id="gh-stars">—</span>
-        </span>
       </a>
     </div>
     <button class="nav-hamburger" onclick="document.getElementById('mobile-menu').classList.add('open')" aria-label="Menu">
@@ -732,7 +746,6 @@
 
 <!-- ── Hero ── -->
 <section class="hero">
-  <div class="hero-glow"></div>
   <div class="container">
     <div class="hero-content">
       <div class="hero-eyebrow">TwargaOps Local VM Engine</div>
@@ -745,6 +758,7 @@
           View on GitHub
         </a>
       </div>
+      <div class="hero-meta">Stable local engine for project-based VMs, snapshots, and clean resets.</div>
     </div>
 
     <div class="terminal-wrapper">
@@ -756,7 +770,9 @@
           <span class="terminal-title">yeast</span>
         </div>
         <div class="terminal-body" id="terminal-body">
-          <!-- Lines injected by JS -->
+          <div class="terminal-line"><span class="terminal-prompt">$ </span><span class="terminal-cmd">mkdir my-lab &amp;&amp; cd my-lab</span><span class="terminal-cursor"></span></div>
+          <div class="terminal-line"><span class="terminal-prompt">$ </span><span class="terminal-cmd">yeast init</span></div>
+          <div class="terminal-line"><span class="terminal-output">Created yeast.yaml and .yeast/project.json</span></div>
         </div>
       </div>
     </div>
@@ -791,17 +807,17 @@
     <h2 class="section-title">Not a cloud platform. Not containers.<br>Real VMs.</h2>
     <div class="what-is-grid">
       <div class="what-card">
-        <div class="what-card-icon">&#x25B6;</div>
+        <div class="what-card-icon">01</div>
         <h3>Define machines in yeast.yaml</h3>
         <p>One YAML file describes your entire lab. Names, images, resources, networking, provisioning. Version control your infrastructure.</p>
       </div>
       <div class="what-card">
-        <div class="what-card-icon">&#x26A1;</div>
+        <div class="what-card-icon">02</div>
         <h3>Run yeast up</h3>
         <p>One command boots real QEMU/KVM virtual machines with cloud-init provisioning. No GUI. No clicks. No hidden steps.</p>
       </div>
       <div class="what-card">
-        <div class="what-card-icon">&#x1F510;</div>
+        <div class="what-card-icon">03</div>
         <h3>Get SSH-ready machines</h3>
         <p>VMs are reachable by SSH in seconds. Provisioned, configured, and ready to work. Built for developers who want real Linux.</p>
       </div>
@@ -816,32 +832,32 @@
     <h2 class="section-title">Everything you need for local VMs.</h2>
     <div class="features-grid">
       <div class="feature-card">
-        <div class="feature-icon">&#x1F4DD;</div>
+        <div class="feature-icon">YAML</div>
         <h3>YAML-Driven</h3>
         <p>One yeast.yaml defines your entire lab. Version control your infrastructure. No GUI needed.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#x1F5A5;</div>
+        <div class="feature-icon">VM</div>
         <h3>Real VMs</h3>
         <p>Full hardware virtualization with QEMU/KVM. Not containers. Real Linux machines with real kernels.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#x1F4BE;</div>
+        <div class="feature-icon">SNAP</div>
         <h3>Snapshots</h3>
         <p>Stop VMs, take snapshots, restore to any state. Safe lab reset in seconds. Provisioned state preserved.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#x1F310;</div>
+        <div class="feature-icon">NET</div>
         <h3>Private Networking</h3>
         <p>Private lab networks for multi-VM environments. Static IPs. VM-to-VM communication out of the box.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#x2699;</div>
+        <div class="feature-icon">CI</div>
         <h3>Cloud-Init Provisioning</h3>
         <p>VMs are provisioned with cloud-init on first boot. Packages, files, shell commands. No manual setup.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#x1F4CA;</div>
+        <div class="feature-icon">JSON</div>
         <h3>JSON Automation</h3>
         <p>Stable JSON output and event streams for scripting. Integrate with LabsBackery, MCP, or your own tools.</p>
       </div>
@@ -894,17 +910,17 @@
     <h2 class="section-title">Built for real work.</h2>
     <div class="cases-grid">
       <div class="case-card">
-        <div class="case-icon">&#x1F4BB;</div>
+        <div class="case-icon">DEV</div>
         <h3>Developers</h3>
         <p>Test against real Linux environments. Reproduce production-like setups locally. Ship infrastructure with your code.</p>
       </div>
       <div class="case-card">
-        <div class="case-icon">&#x1F6E0;</div>
+        <div class="case-icon">OPS</div>
         <h3>DevOps Learners</h3>
         <p>Practice infrastructure safely. Break things. Restore snapshots. Learn Kubernetes, Docker, CI/CD on real VMs.</p>
       </div>
       <div class="case-card">
-        <div class="case-icon">&#x1F6E1;</div>
+        <div class="case-icon">LAB</div>
         <h3>Security Students</h3>
         <p>Build attacker/target labs. Private networking between VMs. Reset to clean state after every exercise.</p>
       </div>
@@ -942,20 +958,9 @@ const lines = [
 ];
 
 const termBody = document.getElementById('terminal-body');
-let lineIndex = 0;
+let lineIndex = termBody.querySelectorAll('.terminal-line').length;
 
-function typeLine() {
-  if (lineIndex >= lines.length) {
-    // Restart after pause
-    setTimeout(() => {
-      termBody.innerHTML = '';
-      lineIndex = 0;
-      typeLine();
-    }, 4000);
-    return;
-  }
-
-  const line = lines[lineIndex];
+function appendLine(line) {
   const el = document.createElement('div');
   el.className = 'terminal-line';
   el.style.animationDelay = '0s';
@@ -969,14 +974,28 @@ function typeLine() {
   }
 
   termBody.appendChild(el);
+}
+
+function typeLine() {
+  if (lineIndex >= lines.length) {
+    // Restart after pause
+    setTimeout(() => {
+      termBody.innerHTML = '';
+      lineIndex = 0;
+      typeLine();
+    }, 4000);
+    return;
+  }
+
+  const line = lines[lineIndex];
+  appendLine(line);
   lineIndex++;
 
-  const delay = line.type === 'cmd' ? 1200 : 600;
+  const delay = line.type === 'cmd' ? 320 : 220;
   setTimeout(typeLine, delay);
 }
 
-// Start typing after a short delay
-setTimeout(typeLine, 800);
+setTimeout(typeLine, 260);
 
 // ── Copy install command ──
 function copyInstall() {
@@ -987,18 +1006,6 @@ function copyInstall() {
     setTimeout(() => copied.classList.remove('show'), 2000);
   });
 }
-</script>
-
-<script>
-fetch('https://api.github.com/repos/Twarga/yeast')
-  .then(r => r.json())
-  .then(d => {
-    const el = document.getElementById('gh-stars');
-    if (el && d.stargazers_count !== undefined) {
-      el.textContent = d.stargazers_count.toLocaleString();
-    }
-  })
-  .catch(() => {});
 </script>
 
 </body>

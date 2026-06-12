@@ -205,16 +205,18 @@ instances:
 yeast pull --list
 ```
 
-Current trusted images:
+Yeast v1 includes 16 trusted image entries:
 
-- `ubuntu-22.04`
-- `ubuntu-24.04`
+- Auto-downloadable cloud images: `ubuntu-24.04`, `ubuntu-22.04`, `debian-12`, `debian-13`, `fedora-42`, `fedora-41`, `rocky-9`, `alma-9`, and `centos-stream-9`
+- Manual/setup-only image entries: `amazon-linux-2023`, `kali-2026.1`, `parrot-security-7.1`, `alpine-3.21`, `arch-linux`, `nixos-24.11`, and `opensuse-leap-15.6`
 
-### 4. Pull one image
+### 4. Pull one image, or let `up` auto-pull it
 
 ```bash
 yeast pull ubuntu-24.04
 ```
+
+This pre-caches the image. If the image is not cached yet, `yeast up` can also download supported cloud images automatically. Manual images print setup instructions instead of downloading.
 
 ### 5. Start the project
 
@@ -222,11 +224,18 @@ yeast pull ubuntu-24.04
 yeast up
 ```
 
-Expected human output shape:
+Expected human output shape includes progress lines and a final summary:
 
 ```text
-OK Instances ready
-  RUN  web  127.0.0.1:2222
+  * [web] Pulling image...
+  + [web] Image ready
+  + [web] SSH ready
+
+All instances ready
+  NAME  STATUS   SSH             LAB IP
+  web   running  127.0.0.1:2222
+
+  Done in 34s
 ```
 
 ### 6. Check status
@@ -239,7 +248,7 @@ Expected human output shape:
 
 ```text
 Project status
-  NAME  STATUS   SSH
+  NAME  STATUS   SSH             LAB IP
   web   running  127.0.0.1:2222
 ```
 
@@ -579,12 +588,14 @@ Current known limits:
 - QEMU/KVM only
 - no Windows or macOS host support
 - no VirtualBox backend
+- some image entries are manual/setup-only and cannot be auto-downloaded
 - snapshots are stopped-VM and per-instance only
 - private networking supports one project-level lab network only
 - guest control is SSH-backed and one instance at a time
 - templates are project starters only
 - no remote template downloads or registry workflow
 - no daemon or remote worker mode yet
+- full end-to-end VM smoke testing requires a host with writable `/dev/kvm`, QEMU tools, network access for image downloads, and enough time for cloud-init/SSH readiness
 - first LabsBakery local-engine contract is documented, but LabsBakery itself is not part of Yeast
 
 That is not a weakness in the README. It is the correct scope boundary for the current release line.

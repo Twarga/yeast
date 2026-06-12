@@ -23,6 +23,7 @@ func TestBuildCreateOverlayArgsWithoutSize(t *testing.T) {
 		"-f", "qcow2",
 		"-F", "qcow2",
 		"-b", "/cache/image.qcow2",
+		"-o", "preallocation=metadata,extended_l2=on",
 		"/runtime/web/disk.qcow2",
 	}
 	if !reflect.DeepEqual(got, want) {
@@ -45,6 +46,7 @@ func TestBuildCreateOverlayArgsWithSize(t *testing.T) {
 		"-f", "qcow2",
 		"-F", "qcow2",
 		"-b", "/cache/image.qcow2",
+		"-o", "preallocation=metadata,extended_l2=on",
 		"/runtime/web/disk.qcow2",
 		"20G",
 	}
@@ -95,6 +97,7 @@ func TestPrepareDiskCreatesDirectoriesAndInvokesQEMUImg(t *testing.T) {
 		"-f", "qcow2",
 		"-F", "qcow2",
 		"-b", plan.Disk.BaseImagePath,
+		"-o", "preallocation=metadata,extended_l2=on",
 		plan.Disk.DiskPath,
 		"10G",
 	}

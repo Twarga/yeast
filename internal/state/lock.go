@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -38,6 +39,9 @@ func DefaultLockOptions() LockOptions {
 func Acquire(path string, options LockOptions) (*FileLock, error) {
 	opts := normalizeLockOptions(options)
 	deadline := opts.Now().Add(opts.AcquireTimeout)
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return nil, fmt.Errorf("create lock directory %s: %w", filepath.Dir(path), err)
+	}
 
 	for {
 		err := tryCreateLock(path, LockInfo{

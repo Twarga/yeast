@@ -1,0 +1,235 @@
+:root {
+  --vp-font-family-base: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --vp-font-family-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --vp-c-brand-1: #22c55e;
+  --vp-c-brand-2: #16a34a;
+  --vp-c-brand-3: #15803d;
+  --vp-c-brand-soft: rgba(34, 197, 94, 0.12);
+  --vp-c-bg: #0a0e0c;
+  --vp-c-bg-soft: #111815;
+  --vp-c-bg-mute: #162018;
+  --vp-c-bg-alt: #0f1512;
+  --vp-c-divider: rgba(34, 197, 94, 0.14);
+  --vp-c-divider-light: rgba(34, 197, 94, 0.08);
+  --vp-c-text-1: #f0fdf4;
+  --vp-c-text-2: #b4cbbd;
+  --vp-c-text-3: #7f9788;
+}
+
+:root body {
+  background:
+    linear-gradient(rgba(34, 197, 94, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 197, 94, 0.02) 1px, transparent 1px),
+    var(--vp-c-bg);
+  background-size: 64px 64px, 64px 64px, auto;
+}
+
+.VPNav {
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--vp-c-divider);
+  background: rgba(10, 14, 12, 0.84);
+}
+
+.VPNavBarTitle .title,
+.VPNavBarMenuLink,
+.VPNavBarSearch .DocSearch-Button,
+.VPNavBar .VPNavBarSocialLinks {
+  letter-spacing: 0;
+}
+
+.VPNavBarTitle .title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--vp-c-text-1);
+  font-family: var(--vp-font-family-mono);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.VPNavBarTitle .title span {
+  font: inherit;
+  color: inherit;
+}
+
+.VPNavBarTitle .VPImage.logo {
+  width: 28px;
+  height: 28px;
+  margin-right: 0;
+}
+
+.VPContent .VPDoc .content-container {
+  max-width: 1120px;
+}
+
+.vp-doc {
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.vp-doc h1,
+.vp-doc h2,
+.vp-doc h3 {
+  letter-spacing: -0.03em;
+}
+
+.vp-doc h1 {
+  font-size: clamp(2.2rem, 4vw, 3rem);
+}
+
+.vp-doc h2 {
+  margin-top: 2.5rem;
+}
+
+.vp-doc p,
+.vp-doc li {
+  color: var(--vp-c-text-2);
+}
+
+.vp-doc a {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+.vp-doc table {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.vp-doc table th,
+.vp-doc table td {
+  border-color: var(--vp-c-divider);
+}
+
+.vp-doc :where(pre, code) {
+  font-family: var(--vp-font-family-mono);
+}
+
+.vp-doc pre {
+  border: 1px solid var(--vp-c-divider);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  border-radius: 14px;
+}
+
+.vp-doc .details,
+.vp-doc .custom-block {
+  border-radius: 14px;
+}
+
+.docs-home-kicker {
+  display: inline-block;
+  margin-bottom: 12px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--vp-c-brand-1);
+}
+
+.docs-path {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0;
+  display: grid;
+  gap: 18px;
+  counter-reset: docs-step;
+}
+
+.docs-path li {
+  position: relative;
+  padding: 18px 0 0 54px;
+  border-top: 1px solid var(--vp-c-divider);
+  counter-increment: docs-step;
+}
+
+.docs-path li::before {
+  content: counter(docs-step, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 16px;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--vp-c-divider);
+  display: grid;
+  place-items: center;
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--vp-c-brand-1);
+  background: rgba(17, 24, 21, 0.7);
+}
+
+.docs-path a {
+  color: var(--vp-c-text-1);
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.docs-path a:hover {
+  color: var(--vp-c-brand-1);
+}
+
+.docs-path p {
+  margin: 8px 0 0;
+  color: var(--vp-c-text-2);
+}
+
+.docs-jump {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin: 18px 0 0;
+}
+
+.docs-jump > div {
+  padding-top: 14px;
+  border-top: 1px solid var(--vp-c-divider);
+  display: grid;
+  gap: 12px;
+}
+
+.docs-jump a {
+  color: var(--vp-c-text-1);
+  text-decoration: none;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--vp-c-divider-light);
+}
+
+.docs-jump a:hover {
+  color: var(--vp-c-brand-1);
+  border-bottom-color: rgba(34, 197, 94, 0.32);
+}
+
+.docs-jump-tutorials {
+  margin-top: 10px;
+}
+
+.docs-next-note {
+  margin: -6px 0 0;
+  color: var(--vp-c-text-2);
+}
+
+.VPDocFooter .edit-link-button {
+  border-radius: 999px;
+}
+
+@media (max-width: 960px) {
+  .docs-jump {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .docs-jump {
+    grid-template-columns: 1fr;
+  }
+
+  .docs-path li {
+    padding-left: 46px;
+  }
+}

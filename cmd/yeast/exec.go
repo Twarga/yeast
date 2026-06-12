@@ -39,7 +39,16 @@ func newExecCmd(service *app.Service) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return renderCommandOutput(cmd.OutOrStdout(), "exec", result)
+			if err := renderCommandOutput(cmd.OutOrStdout(), "exec", result); err != nil {
+				return err
+			}
+			if result.Run.ExitCode != 0 {
+				return commandExitError{code: result.Run.ExitCode}
+			}
+			if result.Run.TimedOut {
+				return commandExitError{code: 124}
+			}
+			return nil
 		},
 	}
 

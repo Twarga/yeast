@@ -85,7 +85,8 @@ func (s *Service) Exec(ctx context.Context, options ExecOptions) (ExecResult, er
 	if !ok {
 		return ExecResult{}, WrapError(ErrorCodeNotFound, fmt.Sprintf("instance %q not found in config", selectedName), nil)
 	}
-	address, err := s.sshAddress(defaultManagementHost, selectedState.SSHPort)
+	managementHost := resolveManagementHost(cfg)
+	address, err := s.sshAddress(managementHost, selectedState.SSHPort)
 	if err != nil {
 		return ExecResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
@@ -101,13 +102,18 @@ func (s *Service) Exec(ctx context.Context, options ExecOptions) (ExecResult, er
 		transport = provssh.NewLocalTransport()
 	}
 
+	timeout := options.Timeout
+	if timeout <= 0 {
+		timeout = defaultReadinessTimeout
+	}
+
 	displayCommand := commandString(options.Command)
 	runResult, runErr := transport.Run(ctx, provssh.RunRequest{
 		User:    instanceCfg.User,
-		Host:    defaultManagementHost,
+		Host:    managementHost,
 		Port:    selectedState.SSHPort,
 		Command: shellQuoteCommand(options.Command),
-		Timeout: options.Timeout,
+		Timeout: timeout,
 	})
 
 	finishedAt := time.Now().UTC()

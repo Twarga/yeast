@@ -67,6 +67,57 @@ func TestSSHUsesStoredPortForSingleRunningInstance(t *testing.T) {
 	}
 }
 
+func TestSSHVerbosePassesFlag(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.runtime = &fakeStatusRuntime{states: map[int]rtm.ProcessState{4242: rtm.ProcessStateRunning}}
+
+	var gotArgs []string
+	service.runSSH = func(ctx context.Context, args []string) error {
+		gotArgs = append([]string(nil), args...)
+		return nil
+	}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root, Now: time.Date(2026, 5, 16, 12, 0, 0, 0, time.UTC)}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+	current := state.New(metadata.ID)
+	current.Instances["web"] = state.InstanceState{
+		Status:  "running",
+		PID:     4242,
+		SSHPort: 2222,
+	}
+	if err := state.Save(paths.StateFile, current); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	_, err = service.SSH(context.Background(), SSHOptions{ProjectRoot: root, Verbose: true})
+	if err != nil {
+		t.Fatalf("SSH returned error: %v", err)
+	}
+	wantArgs := []string{
+		"-v",
+		"-p", "2222",
+		"-o", "StrictHostKeyChecking=no",
+		"-o", "UserKnownHostsFile=/dev/null",
+		"yeast@127.0.0.1",
+	}
+	if !reflect.DeepEqual(gotArgs, wantArgs) {
+		t.Fatalf("unexpected ssh args:\n got: %#v\nwant: %#v", gotArgs, wantArgs)
+	}
+}
+
 func TestSSHErrorsOnMultipleRunningInstancesWithoutTarget(t *testing.T) {
 	root := t.TempDir()
 	yeastHome := filepath.Join(root, "yeast-home")
