@@ -20,6 +20,7 @@ var topics = map[string]string{
 	"installation":    "embedded/installation.md",
 	"limits":          "embedded/limits.md",
 	"quickstart":      "embedded/quickstart.md",
+	"release-smoke":   "embedded/release-smoke.md",
 	"troubleshooting": "embedded/troubleshooting.md",
 	"tutorial-test":   "embedded/tutorial-test.md",
 }
@@ -99,6 +100,7 @@ func IndexMarkdown() string {
 	b.WriteString("```bash\n")
 	b.WriteString("yeast docs quickstart\n")
 	b.WriteString("yeast docs installation\n")
+	b.WriteString("yeast docs release-smoke\n")
 	b.WriteString("yeast docs tutorial-test\n")
 	b.WriteString("yeast docs --list\n")
 	b.WriteString("```\n")

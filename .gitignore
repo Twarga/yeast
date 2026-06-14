@@ -24,3 +24,6 @@ vm_test*/
 # Also hide the entire docs/ tree (which contains html/css/png too)
 /docs/
 /internal/docs/
+!/internal/docs/
+!/internal/docs/embedded/
+!/internal/docs/embedded/*.md

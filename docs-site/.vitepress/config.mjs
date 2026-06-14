@@ -33,6 +33,7 @@ export default defineConfig({
             { text: 'Introduction', link: '/docs/intro' },
             { text: 'Installation', link: '/docs/installation' },
             { text: 'Quickstart', link: '/docs/quickstart' },
+            { text: 'Release Smoke Test', link: '/docs/release-smoke-v1.1.0' },
           ]
         },
         {

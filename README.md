@@ -345,7 +345,7 @@ The installer attempts to:
 - verify the installed binary version
 - create the Yeast cache directory
 - generate an SSH key if needed
-- add the user to the `kvm` group when possible
+- leave `/dev/kvm` ownership unchanged unless `YEAST_FIX_KVM_PERMISSIONS=1` is set
 
 ### Build from source
 
@@ -624,6 +624,7 @@ yeast docs tutorial-test
 - [docs-site/docs/quickstart.md](docs-site/docs/quickstart.md)
 - [docs-site/docs/installation.md](docs-site/docs/installation.md)
 - [docs-site/docs/commands.md](docs-site/docs/commands.md)
+- [docs-site/docs/release-smoke-v1.1.0.md](docs-site/docs/release-smoke-v1.1.0.md)
 - [docs-site/docs/configuration.md](docs-site/docs/configuration.md)
 - [docs-site/docs/networking.md](docs-site/docs/networking.md)
 - [docs-site/docs/provisioning.md](docs-site/docs/provisioning.md)

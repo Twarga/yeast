@@ -54,4 +54,7 @@ func TestIndexMarkdown(t *testing.T) {
 	if !strings.Contains(body, "`tutorial-test`") {
 		t.Fatalf("expected tutorial-test topic, got %q", body)
 	}
+	if !strings.Contains(body, "`release-smoke`") {
+		t.Fatalf("expected release-smoke topic, got %q", body)
+	}
 }
