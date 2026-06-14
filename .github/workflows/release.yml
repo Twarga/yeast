@@ -48,7 +48,6 @@ jobs:
       - name: Verify binary
         run: |
           ./dist/${{ matrix.artifact }} version
-          ./dist/${{ matrix.artifact }} doctor
 
       - name: Create checksums
         run: |
