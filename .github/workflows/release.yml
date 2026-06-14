@@ -58,11 +58,21 @@ jobs:
           cd dist
           sha256sum ${{ matrix.artifact }} >> SHA256SUMS.txt
 
+      - name: Package as tar.gz
+        run: |
+          cd dist
+          tar -czf ${{ matrix.artifact }}.tar.gz ${{ matrix.artifact }}
+
+      - name: Create checksums for packages
+        run: |
+          cd dist
+          sha256sum *.tar.gz >> SHA256SUMS.txt
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: dist/${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}.tar.gz
 
       - name: Upload checksums
         uses: actions/upload-artifact@v4
@@ -84,42 +94,29 @@ jobs:
         run: |
           mkdir -p release
           for arch in amd64 arm64; do
-            cp dist/yeast_linux_${arch}/yeast_linux_${arch} release/
+            cp dist/yeast_linux_${arch}/yeast_linux_${arch}.tar.gz release/
           done
           cp dist/SHA256SUMS/SHA256SUMS.txt release/
           ls -la release/
 
-      - name: Generate release notes
-        id: notes
+      - name: Extract release notes from CHANGELOG
+        id: changelog
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          cat <<EOF > release-notes.md
-          ## yeast v${VERSION}
+          # Extract the section for this version from CHANGELOG.md
+          awk -v ver="## \\[${VERSION}\\]" '
+            $0 ~ ver {found=1; next}
+            found && /^## \\[/ {exit}
+            found {print}
+          ' CHANGELOG.md > release-notes.md
           
-          ### Changes
-          - Auto-download images on \`yeast up\`
-          - 22 pre-configured images across 6 categories
-          - Sequential VM boot with profiling support
-          - Fingerprint-based reprovisioning
-          - New \`yeast images\`, \`yeast completion\`, \`yeast update\` commands
-          - SSH transport refactor
-          - Expanded smoke tests
-
-          ### Installation
-          \`\`\`bash
-          curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
-          \`\`\`
-
-          ### Upgrade
-          \`\`\`bash
-          yeast update
-          \`\`\`
-
-          ### Assets
-          - \`yeast_linux_amd64\` — Linux x86_64
-          - \`yeast_linux_arm64\` — Linux ARM64
-          - \`SHA256SUMS.txt\` — Checksums for verification
-          EOF
+          # If not found, use a fallback
+          if [ ! -s release-notes.md ]; then
+            echo "## yeast v${VERSION}" > release-notes.md
+            echo "" >> release-notes.md
+            echo "See [CHANGELOG.md](https://github.com/Twarga/yeast/blob/main/CHANGELOG.md) for details." >> release-notes.md
+          fi
+          
           cat release-notes.md
 
       - name: Create Release
@@ -129,8 +126,8 @@ jobs:
           name: yeast ${{ github.ref_name }}
           body_path: release-notes.md
           files: |
-            release/yeast_linux_amd64
-            release/yeast_linux_arm64
+            release/yeast_linux_amd64.tar.gz
+            release/yeast_linux_arm64.tar.gz
             release/SHA256SUMS.txt
           draft: false
           prerelease: false

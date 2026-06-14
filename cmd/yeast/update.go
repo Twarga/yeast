@@ -128,14 +128,10 @@ func runUpdate(cmd *cobra.Command, force, check bool, targetVersion string) erro
 	fmt.Println("Checksum verified!")
 
 	var binaryBytes []byte
-	if strings.HasSuffix(binaryName, ".tar.gz") {
-		fmt.Println("Extracting archive...")
-		binaryBytes, err = extractBinaryFromTarGz(binaryData, "yeast")
-		if err != nil {
-			return fmt.Errorf("extract binary: %w", err)
-		}
-	} else {
-		binaryBytes = binaryData
+	fmt.Println("Extracting archive...")
+	binaryBytes, err = extractBinaryFromTarGz(binaryData, "yeast")
+	if err != nil {
+		return fmt.Errorf("extract binary: %w", err)
 	}
 
 	binaryPath, err := findBinaryPath()
