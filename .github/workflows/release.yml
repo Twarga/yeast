@@ -18,9 +18,6 @@ jobs:
           - os: linux
             arch: amd64
             artifact: yeast_linux_amd64
-          - os: linux
-            arch: arm64
-            artifact: yeast_linux_arm64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -93,9 +90,7 @@ jobs:
       - name: Organize release files
         run: |
           mkdir -p release
-          for arch in amd64 arm64; do
-            cp dist/yeast_linux_${arch}/yeast_linux_${arch}.tar.gz release/
-          done
+          cp dist/yeast_linux_amd64/yeast_linux_amd64.tar.gz release/
           cp dist/SHA256SUMS/SHA256SUMS.txt release/
           ls -la release/
 
@@ -104,9 +99,9 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           # Extract the section for this version from CHANGELOG.md
-          awk -v ver="## \\[${VERSION}\\]" '
+          awk -v ver="## \\\\[${VERSION}\\\\]" '
             $0 ~ ver {found=1; next}
-            found && /^## \\[/ {exit}
+            found && /^## \\\\[/ {exit}
             found {print}
           ' CHANGELOG.md > release-notes.md
           
@@ -127,7 +122,6 @@ jobs:
           body_path: release-notes.md
           files: |
             release/yeast_linux_amd64.tar.gz
-            release/yeast_linux_arm64.tar.gz
             release/SHA256SUMS.txt
           draft: false
           prerelease: false
