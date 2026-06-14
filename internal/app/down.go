@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sort"
 	"time"
+	"yeast/internal/config"
 	"yeast/internal/project"
 	rtm "yeast/internal/runtime"
 	"yeast/internal/state"
@@ -69,6 +70,11 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 		return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
 
+	managementHost := defaultManagementHost
+	if cfg, err := config.Load(filepath.Join(absoluteRoot, ConfigFileName)); err == nil {
+		managementHost = resolveManagementHost(cfg)
+	}
+
 	timeout := options.Timeout
 	if timeout <= 0 {
 		timeout = time.Minute
@@ -116,7 +122,7 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 		if err != nil {
 			return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
-		if err := s.waitForManagementPortRelease(ctx, instance.SSHPort, timeout); err != nil {
+		if err := s.waitForManagementPortRelease(ctx, managementHost, instance.SSHPort, timeout); err != nil {
 			return DownResult{}, WrapError(
 				ErrorCodeInternal,
 				fmt.Sprintf("wait for ssh_port %d to become available: %v", instance.SSHPort, err),

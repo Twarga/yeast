@@ -20,4 +20,4 @@ Current runtime focus:
 - cloud-init
 - SSH port forwarding
 
-The v1.0 job is to keep this local engine reliable while LabsBakery, Yeast MCP, and future cloud workers build on top of the documented command, config, JSON, and event contracts.
+The job is to keep this local engine reliable while LabsBakery, Yeast MCP, and future cloud workers build on top of the documented command, config, JSON, and event contracts.

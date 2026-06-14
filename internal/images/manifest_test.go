@@ -49,8 +49,11 @@ func TestLookupKnownImage(t *testing.T) {
 	if image.URL == "" {
 		t.Fatal("expected trusted image URL to be set")
 	}
-	if image.SHA256 == "" {
-		t.Fatal("expected trusted image SHA256 to be set")
+	if image.Checksum == "" {
+		t.Fatal("expected trusted image Checksum to be set")
+	}
+	if got := len(image.Checksum); got != 64 && got != 128 {
+		t.Fatalf("expected trusted image checksum length 64 or 128, got %d", got)
 	}
 	if !image.CloudInit {
 		t.Fatal("expected ubuntu-24.04 to support cloud-init")
@@ -150,12 +153,17 @@ func TestAllImagesHaveRequiredFields(t *testing.T) {
 		if img.Size == "" {
 			t.Errorf("image %q has empty Size", name)
 		}
-		// Auto-downloadable images must have URL and SHA256.
-		if img.URL != "" && img.SHA256 == "" {
-			t.Errorf("image %q has URL but no SHA256", name)
+		// Auto-downloadable images must have URL and a SHA256 or SHA512 checksum.
+		if img.URL != "" && img.Checksum == "" {
+			t.Errorf("image %q has URL but no Checksum", name)
 		}
-		if img.SHA256 != "" && img.URL == "" {
-			t.Errorf("image %q has SHA256 but no URL", name)
+		if img.Checksum != "" && img.URL == "" {
+			t.Errorf("image %q has Checksum but no URL", name)
+		}
+		if img.URL != "" {
+			if got := len(img.Checksum); got != 64 && got != 128 {
+				t.Errorf("image %q has unsupported checksum length %d", name, got)
+			}
 		}
 		// Manual images must have instructions.
 		if img.URL == "" && img.ManualInstructions == "" {

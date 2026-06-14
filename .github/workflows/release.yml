@@ -27,12 +27,15 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22.5'
+          go-version-file: go.mod
 
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq qemu-system-x86 qemu-kvm libvirt-daemon-system
+
+      - name: Prepare dist directory
+        run: mkdir -p dist
 
       - name: Build binary
         env:
@@ -40,29 +43,24 @@ jobs:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${GITHUB_REF_NAME}"
           go build -trimpath -ldflags \
             "-s -w -X yeast/internal/app.Version=${VERSION}" \
-            -o dist/${{ matrix.artifact }} ./cmd/yeast
+            -o dist/yeast ./cmd/yeast
 
       - name: Verify binary
         run: |
-          ./dist/${{ matrix.artifact }} version
-
-      - name: Create checksums
-        run: |
-          cd dist
-          sha256sum ${{ matrix.artifact }} >> SHA256SUMS.txt
+          ./dist/yeast version
 
       - name: Package as tar.gz
         run: |
           cd dist
-          tar -czf ${{ matrix.artifact }}.tar.gz ${{ matrix.artifact }}
+          tar -czf ${{ matrix.artifact }}.tar.gz yeast
 
-      - name: Create checksums for packages
+      - name: Create checksums
         run: |
           cd dist
-          sha256sum *.tar.gz >> SHA256SUMS.txt
+          sha256sum ${{ matrix.artifact }}.tar.gz > SHA256SUMS.txt
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -81,6 +79,11 @@ jobs:
     needs: build-and-release
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -96,14 +99,14 @@ jobs:
       - name: Extract release notes from CHANGELOG
         id: changelog
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${GITHUB_REF_NAME}"
           # Extract the section for this version from CHANGELOG.md
           # Using sed: print lines between "## [vX.Y.Z]" and next "## ["
           sed -n "/^## \[${VERSION}\]/,/^## \[/p" CHANGELOG.md | head -n -1 > release-notes.md
           
           # If not found or empty, use fallback
           if [ ! -s release-notes.md ]; then
-            echo "## yeast v${VERSION}" > release-notes.md
+            echo "## yeast ${VERSION}" > release-notes.md
             echo "" >> release-notes.md
             echo "See [CHANGELOG.md](https://github.com/Twarga/yeast/blob/main/CHANGELOG.md) for details." >> release-notes.md
           fi

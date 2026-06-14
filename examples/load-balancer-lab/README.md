@@ -1,6 +1,6 @@
 # load-balancer-lab
 
-A 3-VM load balancer lab for Yeast `v1.0`.
+A 3-VM load balancer lab for Yeast.
 
 ## What it does
 

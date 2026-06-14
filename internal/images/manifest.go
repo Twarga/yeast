@@ -20,7 +20,7 @@ const (
 type TrustedImage struct {
 	Name        string
 	URL         string
-	SHA256      string
+	Checksum    string
 	Category    ImageCategory
 	Description string
 	CloudInit   bool
@@ -35,7 +35,7 @@ var trustedManifest = map[string]TrustedImage{
 	"ubuntu-24.04": {
 		Name:        "ubuntu-24.04",
 		URL:         "https://cloud-images.ubuntu.com/releases/noble/release-20260321/ubuntu-24.04-server-cloudimg-amd64.img",
-		SHA256:      "5c3ddb00f60bc455dac0862fabe9d8bacec46c33ac1751143c5c3683404b110d",
+		Checksum:    "5c3ddb00f60bc455dac0862fabe9d8bacec46c33ac1751143c5c3683404b110d",
 		Category:    CategoryGeneral,
 		Description: "Ubuntu 24.04 LTS — default choice for web dev, containers, DevOps",
 		CloudInit:   true,
@@ -44,7 +44,7 @@ var trustedManifest = map[string]TrustedImage{
 	"ubuntu-22.04": {
 		Name:        "ubuntu-22.04",
 		URL:         "https://cloud-images.ubuntu.com/releases/jammy/release-20260320/ubuntu-22.04-server-cloudimg-amd64.img",
-		SHA256:      "ea85b16f81b3f6aa53a1260912d3f991fc33e0e0fc1d73f0b8c9c96247e42fdb",
+		Checksum:    "ea85b16f81b3f6aa53a1260912d3f991fc33e0e0fc1d73f0b8c9c96247e42fdb",
 		Category:    CategoryGeneral,
 		Description: "Ubuntu 22.04 LTS — legacy LTS, stability-critical workloads",
 		CloudInit:   true,
@@ -53,7 +53,7 @@ var trustedManifest = map[string]TrustedImage{
 	"debian-12": {
 		Name:        "debian-12",
 		URL:         "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2",
-		SHA256:      "c39495a4d81927810e93f825b0b135a08e798f46dc748e78d6bfa2984f93ffc4bcfdc7a6b7f97666ad66fbae3e0f21debd24466ce1d844d0de7856fdc7537d58",
+		Checksum:    "c39495a4d81927810e93f825b0b135a08e798f46dc748e78d6bfa2984f93ffc4bcfdc7a6b7f97666ad66fbae3e0f21debd24466ce1d844d0de7856fdc7537d58",
 		Category:    CategoryGeneral,
 		Description: "Debian 12 (Bookworm) — rock-solid stability, minimal attack surface",
 		CloudInit:   true,
@@ -62,7 +62,7 @@ var trustedManifest = map[string]TrustedImage{
 	"debian-13": {
 		Name:        "debian-13",
 		URL:         "https://cloud.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2",
-		SHA256:      "97675b27e69153002c4e13644e36200c8f9067f661dca00918c54f1cacbdb88d4bff8c0fbf5cf5d63a0397bdf0cc472d7a6372bae5281bf7ced756249c10f8a2",
+		Checksum:    "97675b27e69153002c4e13644e36200c8f9067f661dca00918c54f1cacbdb88d4bff8c0fbf5cf5d63a0397bdf0cc472d7a6372bae5281bf7ced756249c10f8a2",
 		Category:    CategoryGeneral,
 		Description: "Debian 13 (Trixie) — testing release, newer packages",
 		CloudInit:   true,
@@ -73,7 +73,7 @@ var trustedManifest = map[string]TrustedImage{
 	"fedora-42": {
 		Name:        "fedora-42",
 		URL:         "https://download.fedoraproject.org/pub/fedora/linux/releases/42/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-42-1.1.x86_64.qcow2",
-		SHA256:      "e401a4db2e5e04d1967b6729774faa96da629bcf3ba90b67d8d9cce9906bec0f",
+		Checksum:    "e401a4db2e5e04d1967b6729774faa96da629bcf3ba90b67d8d9cce9906bec0f",
 		Category:    CategoryDevOps,
 		Description: "Fedora 42 — cutting-edge tooling, first to ship new kernels",
 		CloudInit:   true,
@@ -82,7 +82,7 @@ var trustedManifest = map[string]TrustedImage{
 	"fedora-41": {
 		Name:        "fedora-41",
 		URL:         "https://download.fedoraproject.org/pub/fedora/linux/releases/41/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-41-1.4.x86_64.qcow2",
-		SHA256:      "6205ae0c524b4d1816dbd3573ce29b5c44ed26c9fbc874fbe48c41c89dd0bac2",
+		Checksum:    "6205ae0c524b4d1816dbd3573ce29b5c44ed26c9fbc874fbe48c41c89dd0bac2",
 		Category:    CategoryDevOps,
 		Description: "Fedora 41 — balanced stable/bleeding-edge",
 		CloudInit:   true,
@@ -93,7 +93,7 @@ var trustedManifest = map[string]TrustedImage{
 	"rocky-9": {
 		Name:        "rocky-9",
 		URL:         "https://dl.rockylinux.org/pub/rocky/9/images/x86_64/Rocky-9-GenericCloud-Base-latest.x86_64.qcow2",
-		SHA256:      "92c206cc6f790c61583247eefe87890f8828420662c17cacf247cec78ab4eec8",
+		Checksum:    "92c206cc6f790c61583247eefe87890f8828420662c17cacf247cec78ab4eec8",
 		Category:    CategoryEnterprise,
 		Description: "Rocky Linux 9 — RHEL-compatible, enterprise production",
 		CloudInit:   true,
@@ -102,7 +102,7 @@ var trustedManifest = map[string]TrustedImage{
 	"alma-9": {
 		Name:        "alma-9",
 		URL:         "https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/AlmaLinux-9-GenericCloud-latest.x86_64.qcow2",
-		SHA256:      "c397eed7023e92c841155831b1f47e26300e5bef0f0256c129322307c897a251",
+		Checksum:    "c397eed7023e92c841155831b1f47e26300e5bef0f0256c129322307c897a251",
 		Category:    CategoryEnterprise,
 		Description: "AlmaLinux 9 — RHEL-compatible, community-driven",
 		CloudInit:   true,
@@ -111,7 +111,7 @@ var trustedManifest = map[string]TrustedImage{
 	"centos-stream-9": {
 		Name:        "centos-stream-9",
 		URL:         "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2",
-		SHA256:      "459ed0b4a3762130c5f3c4a9c8124e9f0ab3fa176bbf5384d21ed3413c088649",
+		Checksum:    "459ed0b4a3762130c5f3c4a9c8124e9f0ab3fa176bbf5384d21ed3413c088649",
 		Category:    CategoryEnterprise,
 		Description: "CentOS Stream 9 — upstream RHEL, CI/CD testing",
 		CloudInit:   true,
@@ -120,7 +120,7 @@ var trustedManifest = map[string]TrustedImage{
 	"amazon-linux-2023": {
 		Name:        "amazon-linux-2023",
 		URL:         "",
-		SHA256:      "",
+		Checksum:    "",
 		Category:    CategoryEnterprise,
 		Description: "Amazon Linux 2023 — AWS-optimized, RHEL-compatible",
 		CloudInit:   true,
@@ -138,13 +138,12 @@ var trustedManifest = map[string]TrustedImage{
 
   Note: cloud-init is supported — provisioning will work after manual setup`,
 	},
-	
 
 	// ── Security ─────────────────────────────────────────────────────
 	"kali-2026.1": {
 		Name:        "kali-2026.1",
 		URL:         "",
-		SHA256:      "",
+		Checksum:    "",
 		Category:    CategorySecurity,
 		Description: "Kali Linux 2026.1 — 600+ pentesting tools, default creds: kali/kali",
 		CloudInit:   false,
@@ -159,7 +158,7 @@ var trustedManifest = map[string]TrustedImage{
 
   3. Place the qcow2 file:
      mkdir -p ~/.yeast/cache/images/kali-2026.1/
-     mv kali-linux-2026.1-qemu-amd64/qemu-arm64.qcow2 ~/.yeast/cache/images/kali-2026.1/image.qcow2
+     mv kali-linux-2026.1-qemu-amd64.qcow2 ~/.yeast/cache/images/kali-2026.1/image.qcow2
 
   4. Re-run: yeast up
 
@@ -169,7 +168,7 @@ var trustedManifest = map[string]TrustedImage{
 	"parrot-security-7.1": {
 		Name:        "parrot-security-7.1",
 		URL:         "",
-		SHA256:      "",
+		Checksum:    "",
 		Category:    CategorySecurity,
 		Description: "Parrot Security 7.1 — 800+ security tools, forensics, reverse engineering",
 		CloudInit:   false,
@@ -193,7 +192,7 @@ var trustedManifest = map[string]TrustedImage{
 	"alpine-3.21": {
 		Name:        "alpine-3.21",
 		URL:         "",
-		SHA256:      "",
+		Checksum:    "",
 		Category:    CategoryMinimal,
 		Description: "Alpine Linux 3.21 — minimal (~50MB), fastest boot, containers",
 		CloudInit:   false,
@@ -217,7 +216,7 @@ var trustedManifest = map[string]TrustedImage{
 	"arch-linux": {
 		Name:        "arch-linux",
 		URL:         "",
-		SHA256:      "",
+		Checksum:    "",
 		Category:    CategoryNiche,
 		Description: "Arch Linux — rolling release, bleeding-edge, DIY",
 		CloudInit:   false,
@@ -241,7 +240,7 @@ var trustedManifest = map[string]TrustedImage{
 	"nixos-24.11": {
 		Name:        "nixos-24.11",
 		URL:         "",
-		SHA256:      "",
+		Checksum:    "",
 		Category:    CategoryNiche,
 		Description: "NixOS 24.11 — declarative config, reproducible builds",
 		CloudInit:   false,
@@ -265,7 +264,7 @@ var trustedManifest = map[string]TrustedImage{
 	"opensuse-leap-15.6": {
 		Name:        "opensuse-leap-15.6",
 		URL:         "",
-		SHA256:      "",
+		Checksum:    "",
 		Category:    CategoryEnterprise,
 		Description: "openSUSE Leap 15.6 — SLES-compatible, enterprise, SAP environments",
 		CloudInit:   false,

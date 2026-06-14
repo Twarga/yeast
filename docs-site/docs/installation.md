@@ -155,15 +155,17 @@ This script will:
 If you prefer manual installation:
 
 ```bash
-# Download the latest release
-VERSION="1.0.1"
-curl -LO "https://github.com/Twarga/yeast/releases/download/v${VERSION}/yeast-linux-amd64"
+# Download the current release tarball and checksum file
+VERSION="v1.1.0"
+curl -LO "https://github.com/Twarga/yeast/releases/download/${VERSION}/yeast_linux_amd64.tar.gz"
+curl -LO "https://github.com/Twarga/yeast/releases/download/${VERSION}/SHA256SUMS.txt"
 
-# Make it executable
-chmod +x yeast-linux-amd64
+# Verify the tarball
+grep "yeast_linux_amd64.tar.gz" SHA256SUMS.txt | sha256sum -c -
 
-# Move to /usr/local/bin/
-sudo mv yeast-linux-amd64 /usr/local/bin/yeast
+# Extract the binary and install it
+tar -xzf yeast_linux_amd64.tar.gz
+sudo install -m 0755 yeast /usr/local/bin/yeast
 ```
 
 ### Build from Source

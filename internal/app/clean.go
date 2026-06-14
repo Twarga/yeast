@@ -168,21 +168,23 @@ func (s *Service) cleanOrphanedQEMU(ctx context.Context, targets []rtm.CleanupTa
 }
 
 func cleanupTargets(currentState state.State, projectRoot string, paths project.Paths) []rtm.CleanupTarget {
+	managementHost := defaultManagementHost
+	cfg, err := config.Load(filepath.Join(projectRoot, ConfigFileName))
+	if err == nil {
+		managementHost = cfg.ManagementHost
+	}
+
 	targets := make([]rtm.CleanupTarget, 0, len(currentState.Instances))
 	for name, instance := range currentState.Instances {
 		targets = append(targets, rtm.CleanupTarget{
 			Name:       name,
 			RuntimeDir: instance.RuntimeDir,
-			SSHHost:    defaultManagementHost,
+			SSHHost:    managementHost,
 			SSHPort:    instance.SSHPort,
 		})
 	}
 
-	cfg, err := config.Load(filepath.Join(projectRoot, ConfigFileName))
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return targets
-		}
 		return targets
 	}
 	for _, instance := range cfg.Instances {
@@ -193,7 +195,7 @@ func cleanupTargets(currentState state.State, projectRoot string, paths project.
 		targets = append(targets, rtm.CleanupTarget{
 			Name:       instance.Name,
 			RuntimeDir: runtimeDir,
-			SSHHost:    defaultManagementHost,
+			SSHHost:    managementHost,
 			SSHPort:    instance.SSHPort,
 		})
 	}

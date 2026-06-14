@@ -19,9 +19,9 @@ func TestDownloadSuccess(t *testing.T) {
 
 	destination := filepath.Join(t.TempDir(), "ubuntu-24.04", ImageFileName)
 	err := Download(TrustedImage{
-		Name:   "ubuntu-24.04",
-		URL:    server.URL,
-		SHA256: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+		Name:     "ubuntu-24.04",
+		URL:      server.URL,
+		Checksum: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
 	}, destination, DownloadOptions{Timeout: time.Second})
 	if err != nil {
 		t.Fatalf("Download returned error: %v", err)
@@ -53,9 +53,9 @@ func TestDownloadSkipsValidCachedFile(t *testing.T) {
 	}
 
 	err := Download(TrustedImage{
-		Name:   "ubuntu-24.04",
-		URL:    server.URL,
-		SHA256: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+		Name:     "ubuntu-24.04",
+		URL:      server.URL,
+		Checksum: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
 	}, destination, DownloadOptions{Timeout: time.Second})
 	if err != nil {
 		t.Fatalf("Download returned error: %v", err)
@@ -73,9 +73,9 @@ func TestDownloadHTTPFailure(t *testing.T) {
 
 	destination := filepath.Join(t.TempDir(), "ubuntu-24.04", ImageFileName)
 	err := Download(TrustedImage{
-		Name:   "ubuntu-24.04",
-		URL:    server.URL,
-		SHA256: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+		Name:     "ubuntu-24.04",
+		URL:      server.URL,
+		Checksum: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
 	}, destination, DownloadOptions{Timeout: time.Second})
 	if err == nil {
 		t.Fatal("expected HTTP failure")
@@ -96,9 +96,9 @@ func TestDownloadChecksumFailure(t *testing.T) {
 
 	destination := filepath.Join(t.TempDir(), "ubuntu-24.04", ImageFileName)
 	err := Download(TrustedImage{
-		Name:   "ubuntu-24.04",
-		URL:    server.URL,
-		SHA256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		Name:     "ubuntu-24.04",
+		URL:      server.URL,
+		Checksum: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 	}, destination, DownloadOptions{Timeout: time.Second})
 	if err == nil {
 		t.Fatal("expected checksum failure")
@@ -123,9 +123,9 @@ func TestDownloadPartialCleanup(t *testing.T) {
 
 	destination := filepath.Join(t.TempDir(), "ubuntu-24.04", ImageFileName)
 	err := Download(TrustedImage{
-		Name:   "ubuntu-24.04",
-		URL:    server.URL,
-		SHA256: fmt.Sprintf("%064x", 0),
+		Name:     "ubuntu-24.04",
+		URL:      server.URL,
+		Checksum: fmt.Sprintf("%064x", 0),
 	}, destination, DownloadOptions{Timeout: time.Second})
 	if err == nil {
 		t.Fatal("expected partial download failure")

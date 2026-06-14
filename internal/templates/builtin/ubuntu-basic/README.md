@@ -1,6 +1,6 @@
 # ubuntu-basic
 
-Minimal single-VM starter template for Yeast `v0.7`.
+Minimal single-VM starter template for Yeast.
 
 What this template does:
 

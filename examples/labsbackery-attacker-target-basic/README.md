@@ -1,6 +1,6 @@
 # attacker-target-basic
 
-LabsBakery-ready attacker/target example for Yeast `v0.9`.
+LabsBakery-ready attacker/target example for Yeast.
 
 This is a local Yeast template package with extra LabsBakery-owned metadata. Yeast consumes `template.yaml`, `yeast.yaml`, and provision files. LabsBakery consumes `lab.yaml`, `scenario/instructions.md`, and `scenario/checks.yaml`.
 

@@ -1,6 +1,6 @@
 # wireguard-vpn-mesh
 
-A 3-VM WireGuard VPN mesh for Yeast `v1.0`.
+A 3-VM WireGuard VPN mesh for Yeast.
 
 ## What it does
 

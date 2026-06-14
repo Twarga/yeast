@@ -1,6 +1,6 @@
 # monitoring-stack
 
-A 4-VM monitoring stack for Yeast `v1.0`.
+A 4-VM monitoring stack for Yeast.
 
 ## What it does
 

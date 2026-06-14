@@ -36,21 +36,20 @@ type Service struct {
 
 func NewService() *Service {
 	return &Service{
-		version:                 Version,
-		resolveYeastHome:        project.DefaultYeastHome,
-		downloadImage:           images.Download,
-		discoverSSHKey:          cloudinit.DiscoverAuthorizedKey,
-		renderUserData:          cloudinit.RenderUserData,
-		renderMetaData:          cloudinit.RenderMetaData,
-		renderNetworkConfig:     cloudinit.RenderNetworkConfig,
-		createSeedISO:           cloudinit.CreateSeedISO,
-		waitForTCP:              guest.WaitForTCP,
-		sshAddress:              guest.SSHAddress,
-		runSSH:                  guest.RunSSH,
-		managementPortAvailable: managementPortAvailable,
-		sleep:                   time.Sleep,
-		runtime:                 qemu.NewRuntime(),
-		httpClient:              http.DefaultClient,
+		version:             Version,
+		resolveYeastHome:    project.DefaultYeastHome,
+		downloadImage:       images.Download,
+		discoverSSHKey:      cloudinit.DiscoverAuthorizedKey,
+		renderUserData:      cloudinit.RenderUserData,
+		renderMetaData:      cloudinit.RenderMetaData,
+		renderNetworkConfig: cloudinit.RenderNetworkConfig,
+		createSeedISO:       cloudinit.CreateSeedISO,
+		waitForTCP:          guest.WaitForTCP,
+		sshAddress:          guest.SSHAddress,
+		runSSH:              guest.RunSSH,
+		sleep:               time.Sleep,
+		runtime:             qemu.NewRuntime(),
+		httpClient:          http.DefaultClient,
 	}
 }
 
@@ -68,13 +67,15 @@ func (s *Service) downloadOptions() images.DownloadOptions {
 	}
 }
 
-func (s *Service) waitForManagementPortRelease(ctx context.Context, port int, timeout time.Duration) error {
+func (s *Service) waitForManagementPortRelease(ctx context.Context, host string, port int, timeout time.Duration) error {
 	if port <= 0 {
 		return nil
 	}
 	portAvailable := s.managementPortAvailable
 	if portAvailable == nil {
-		portAvailable = managementPortAvailable
+		portAvailable = func(port int) bool {
+			return managementPortAvailable(host, port)
+		}
 	}
 	sleep := s.sleep
 	if sleep == nil {

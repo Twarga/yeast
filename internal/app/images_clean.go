@@ -13,10 +13,10 @@ type ImageCleanOptions struct {
 }
 
 type ImageCleanResult struct {
-	DryRun     bool              `json:"dry_run,omitempty"`
+	DryRun     bool               `json:"dry_run,omitempty"`
 	Removed    []CleanedImageItem `json:"removed,omitempty"`
-	TotalSize  int64             `json:"total_size_bytes,omitempty"`
-	TotalSizeH string            `json:"total_size,omitempty"`
+	TotalSize  int64              `json:"total_size_bytes,omitempty"`
+	TotalSizeH string             `json:"total_size,omitempty"`
 }
 
 type CleanedImageItem struct {
@@ -26,11 +26,10 @@ type CleanedImageItem struct {
 }
 
 func (s *Service) CleanImages(options ImageCleanOptions) (ImageCleanResult, error) {
-	cacheRoot, err := s.resolveYeastHome()
+	cacheDir, err := s.resolveImageCacheDir()
 	if err != nil {
 		return ImageCleanResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
-	cacheDir := cacheRoot + "/cache/images"
 
 	if options.All {
 		if options.DryRun {

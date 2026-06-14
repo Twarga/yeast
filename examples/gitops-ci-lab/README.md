@@ -1,6 +1,6 @@
 # gitops-ci-lab
 
-A 3-VM GitOps / CI lab for Yeast `v1.0`.
+A 3-VM GitOps / CI lab for Yeast.
 
 ## What it does
 

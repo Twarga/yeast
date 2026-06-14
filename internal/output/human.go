@@ -312,10 +312,7 @@ func renderStatus(w io.Writer, theme humanTheme, value app.StatusResult) error {
 
 	rows := [][]string{{"NAME", "STATUS", "SSH", "LAB IP"}}
 	for _, instance := range instances {
-		ssh := "-"
-		if instance.SSHPort > 0 {
-			ssh = fmt.Sprintf("127.0.0.1:%d", instance.SSHPort)
-		}
+		ssh := sshAddress(instance.ManagementIP, instance.SSHPort)
 		labIP := "-"
 		if instance.LabIP != "" {
 			labIP = instance.LabIP
@@ -379,7 +376,7 @@ func renderInspect(w io.Writer, theme humanTheme, value app.InspectResult) error
 		theme.Title.Render("Instance inspect"),
 		keyValue(theme, "name", value.Instance.Name),
 		keyValue(theme, "status", value.Instance.Status),
-		keyValue(theme, "ssh", sshAddress(value.Instance.SSHPort)),
+		keyValue(theme, "ssh", sshAddress(value.Instance.ManagementIP, value.Instance.SSHPort)),
 		keyValue(theme, "lab_ip", dashIfEmpty(value.Instance.LabIP)),
 		keyValue(theme, "runtime_dir", dashIfEmpty(value.Instance.RuntimeDir)),
 		keyValue(theme, "provision_log", dashIfEmpty(value.Instance.ProvisionLogPath)),
@@ -544,11 +541,14 @@ func dashIfEmpty(value string) string {
 	return value
 }
 
-func sshAddress(port int) string {
+func sshAddress(host string, port int) string {
 	if port <= 0 {
 		return "-"
 	}
-	return fmt.Sprintf("127.0.0.1:%d", port)
+	if strings.TrimSpace(host) == "" {
+		host = "127.0.0.1"
+	}
+	return fmt.Sprintf("%s:%d", host, port)
 }
 
 func indentBlock(value string) string {

@@ -1,6 +1,6 @@
 # caddy-single-vm
 
-Single-VM provisioning starter template for Yeast `v0.7`.
+Single-VM provisioning starter template for Yeast.
 
 What this template does:
 
@@ -56,7 +56,7 @@ yeast provision web
 
 ## Reset Loop
 
-Stop the VM before snapshot or restore. `v0.4` does not support live snapshots or live restore.
+Stop the VM before snapshot or restore. Snapshot and restore operations only work on stopped VMs.
 
 Create a clean baseline:
 
@@ -108,7 +108,7 @@ yeast destroy
 
 - this example assumes Ubuntu or Debian package management because package provisioning currently uses `apt-get`
 - file sources are resolved relative to the project root
-- privileged destination writes are handled through shell provisioning in `v0.3`
-- snapshot create and restore are stopped-VM only in `v0.4`
+- privileged destination writes are handled through shell provisioning
+- snapshot create and restore are stopped-VM only
 - service verification is still manual
 - generated template projects are normal editable Yeast projects

@@ -15,7 +15,7 @@ Fast project-based virtual machines with cloud-init, trusted base images, post-b
 ![Go](https://img.shields.io/badge/go-1.25+-cyan.svg)
 ![Platform](https://img.shields.io/badge/platform-linux-lightgrey.svg)
 ![Runtime](https://img.shields.io/badge/runtime-QEMU%2FKVM-6f42c1.svg)
-![State](https://img.shields.io/badge/status-v1.0%20stable%20local%20engine-22c55e.svg)
+![State](https://img.shields.io/badge/status-stable%20local%20engine-22c55e.svg)
 
 [Website](https://twarga.github.io/yeast/) · [Quick Start](#quick-start) · [Current Scope](#current-scope) · [Commands](#commands) · [Examples](#examples) · [Architecture](#architecture) · [Limits](#current-limits)
 
@@ -48,9 +48,9 @@ The important constraint is still simple: **keep the core small and reliable bef
 
 ## Current Scope
 
-Yeast `v1.0` is the first stable local engine release. It covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, operate inside the guest through an SSH-backed control surface, start new projects from built-in or local templates, expose a versioned JSON/events contract for tools, and define the first LabsBakery integration boundary.
+Yeast `v1.1.0` is the current stable local engine release. It covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, operate inside the guest through an SSH-backed control surface, start new projects from built-in or local templates, expose a versioned JSON/events contract for tools, and define the first LabsBakery integration boundary.
 
-| Area | v1.0 status |
+| Area | Current status |
 |---|---|
 | Host support | Linux only |
 | Runtime | QEMU + KVM |
@@ -101,7 +101,7 @@ Yeast `v1.0` is the first stable local engine release. It covers one complete lo
 - LabsBakery lab package convention docs
 - first Yeast-backed LabsBakery attacker/target example package
 
-### What is not in v1.0 yet
+### What is not in the current release yet
 
 - remote template downloads or registry search/update
 - complex template variables
@@ -205,7 +205,7 @@ instances:
 yeast pull --list
 ```
 
-Yeast v1 includes 16 trusted image entries:
+Yeast includes 16 trusted image entries:
 
 - Auto-downloadable cloud images: `ubuntu-24.04`, `ubuntu-22.04`, `debian-12`, `debian-13`, `fedora-42`, `fedora-41`, `rocky-9`, `alma-9`, and `centos-stream-9`
 - Manual/setup-only image entries: `amazon-linux-2023`, `kali-2026.1`, `parrot-security-7.1`, `alpine-3.21`, `arch-linux`, `nixos-24.11`, and `opensuse-leap-15.6`
@@ -430,7 +430,7 @@ yeast status --json
 
 ## Config
 
-Current `v1.0` example:
+Current example:
 
 ```yaml
 version: 1
@@ -472,7 +472,7 @@ instances:
 - `env` is rendered into the guest bootstrap profile script
 - `provision` now supports packages, files, and shell steps during `yeast up` and `yeast provision`
 - file provision `source` paths are resolved relative to the project root unless they are absolute
-- one project-level private lab `networks` block is active in v1.0
+- one project-level private lab `networks` block is active
 - guest-control commands are SSH-backed only and operate on one selected instance at a time
 - templates are project starters only; after `yeast init --template`, the generated files are normal editable project files
 
@@ -621,30 +621,28 @@ yeast docs tutorial-test
 - [YEAST_TEST_PLAN.md](YEAST_TEST_PLAN.md)
 - [YEAST_RELEASE_PLAN.md](YEAST_RELEASE_PLAN.md)
 - [YEAST_PRODUCT_ROADMAP.md](YEAST_PRODUCT_ROADMAP.md)
-- [docs/quickstart.md](docs/quickstart.md)
-- [docs/installation.md](docs/installation.md)
-- [docs/tutorial-test.md](docs/tutorial-test.md)
-- [docs/command-reference.md](docs/command-reference.md)
-- [docs/config-reference.md](docs/config-reference.md)
-- [docs/troubleshooting.md](docs/troubleshooting.md)
-- [docs/known-limitations.md](docs/known-limitations.md)
-- [docs/architecture-overview.md](docs/architecture-overview.md)
-- [docs/charm-cli-plan.md](docs/charm-cli-plan.md)
-- [docs/json-contract.md](docs/json-contract.md)
-- [docs/labsbackery-integration-contract.md](docs/labsbackery-integration-contract.md)
-- [docs/labsbackery-lab-package.md](docs/labsbackery-lab-package.md)
-- [docs/release-checklist-v1.0.0.md](docs/release-checklist-v1.0.0.md)
-- [docs/release-notes-v1.0.1.md](docs/release-notes-v1.0.1.md)
-- [docs/release-notes-v1.0.0.md](docs/release-notes-v1.0.0.md)
-- [docs/release-notes-v0.1.0.md](docs/release-notes-v0.1.0.md)
-- [docs/release-notes-v0.2.0.md](docs/release-notes-v0.2.0.md)
-- [docs/release-notes-v0.3.0.md](docs/release-notes-v0.3.0.md)
-- [docs/release-notes-v0.4.0.md](docs/release-notes-v0.4.0.md)
-- [docs/release-notes-v0.5.0.md](docs/release-notes-v0.5.0.md)
-- [docs/release-notes-v0.6.0.md](docs/release-notes-v0.6.0.md)
-- [docs/release-notes-v0.7.0.md](docs/release-notes-v0.7.0.md)
-- [docs/release-notes-v0.8.0.md](docs/release-notes-v0.8.0.md)
-- [docs/release-notes-v0.9.0.md](docs/release-notes-v0.9.0.md)
+- [docs-site/docs/quickstart.md](docs-site/docs/quickstart.md)
+- [docs-site/docs/installation.md](docs-site/docs/installation.md)
+- [docs-site/docs/commands.md](docs-site/docs/commands.md)
+- [docs-site/docs/configuration.md](docs-site/docs/configuration.md)
+- [docs-site/docs/networking.md](docs-site/docs/networking.md)
+- [docs-site/docs/provisioning.md](docs-site/docs/provisioning.md)
+- [docs-site/docs/snapshots.md](docs-site/docs/snapshots.md)
+- [docs-site/docs/known-limitations.md](docs-site/docs/known-limitations.md)
+- [docs-site/docs/architecture.md](docs-site/docs/architecture.md)
+- [docs-site/docs/troubleshooting.md](docs-site/docs/troubleshooting.md)
+- [docs-site/docs/tutorials/index.md](docs-site/docs/tutorials/index.md)
+- [docs-site/docs/tutorials/01-first-vm.md](docs-site/docs/tutorials/01-first-vm.md)
+- [docs-site/docs/tutorials/04-multi-vm-lab.md](docs-site/docs/tutorials/04-multi-vm-lab.md)
+- [docs-site/docs/tutorials/06-labsbackery-lab.md](docs-site/docs/tutorials/06-labsbackery-lab.md)
+- [docs-site/docs/tutorials/08-json-automation.md](docs-site/docs/tutorials/08-json-automation.md)
+- [docs-site/docs/tutorials/09-nodi-home-lab.md](docs-site/docs/tutorials/09-nodi-home-lab.md)
+- [docs-site/docs/tutorials/10-load-balancer-lab.md](docs-site/docs/tutorials/10-load-balancer-lab.md)
+- [docs-site/docs/tutorials/11-database-app-stack.md](docs-site/docs/tutorials/11-database-app-stack.md)
+- [docs-site/docs/tutorials/12-monitoring-stack.md](docs-site/docs/tutorials/12-monitoring-stack.md)
+- [docs-site/docs/tutorials/13-wireguard-vpn-mesh.md](docs-site/docs/tutorials/13-wireguard-vpn-mesh.md)
+- [docs-site/docs/tutorials/14-gitops-ci-lab.md](docs-site/docs/tutorials/14-gitops-ci-lab.md)
+- [CHANGELOG.md](CHANGELOG.md)
 - [TASKS.md](TASKS.md)
 
 ---

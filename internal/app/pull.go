@@ -3,6 +3,8 @@ package app
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+	"strings"
 	"yeast/internal/images"
 )
 
@@ -28,8 +30,8 @@ type PullResult struct {
 }
 
 type ImageGroup struct {
-	Category string                    `json:"category"`
-	Images   []images.TrustedImage     `json:"images"`
+	Category string                `json:"category"`
+	Images   []images.TrustedImage `json:"images"`
 }
 
 type CachedImageInfo struct {
@@ -76,11 +78,11 @@ func (s *Service) Pull(options PullOptions) (PullResult, error) {
 		}, nil
 	}
 
-	cacheRoot, err := s.resolveYeastHome()
+	cacheDir, err := s.resolveImageCacheDir()
 	if err != nil {
 		return PullResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
-	cachePaths, err := images.ResolveCachePaths(cacheRoot+"/cache/images", image.Name)
+	cachePaths, err := images.ResolveCachePaths(cacheDir, image.Name)
 	if err != nil {
 		return PullResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
@@ -93,7 +95,7 @@ func (s *Service) Pull(options PullOptions) (PullResult, error) {
 		ImageName:   image.Name,
 		ImagePath:   cachePaths.ImageFile,
 		ManifestURL: image.URL,
-		SHA256:      image.SHA256,
+		SHA256:      image.Checksum,
 	}, nil
 }
 
@@ -128,11 +130,10 @@ func (s *Service) pullList() PullResult {
 }
 
 func (s *Service) pullCached() (PullResult, error) {
-	cacheRoot, err := s.resolveYeastHome()
+	cacheDir, err := s.resolveImageCacheDir()
 	if err != nil {
 		return PullResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
-	cacheDir := cacheRoot + "/cache/images"
 	cached := images.GetCachedImages(cacheDir)
 	var infos []CachedImageInfo
 	for _, name := range cached {
@@ -143,4 +144,15 @@ func (s *Service) pullCached() (PullResult, error) {
 		})
 	}
 	return PullResult{CachedImages: infos}, nil
+}
+
+func (s *Service) resolveImageCacheDir() (string, error) {
+	cacheRoot, err := s.resolveYeastHome()
+	if err != nil {
+		return "", err
+	}
+	if strings.TrimSpace(cacheRoot) == "" {
+		return "", fmt.Errorf("resolve yeast home: empty path")
+	}
+	return filepath.Join(cacheRoot, "cache", "images"), nil
 }

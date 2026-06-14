@@ -296,9 +296,11 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		}
 		portAvailable := s.managementPortAvailable
 		if portAvailable == nil {
-			portAvailable = managementPortAvailable
+			portAvailable = func(port int) bool {
+				return managementPortAvailable(managementHost, port)
+			}
 		}
-		sshPort, err := s.chooseManagementSSHPort(currentState, instance, allocatedPorts, portAvailable)
+		sshPort, err := s.chooseManagementSSHPort(currentState, instance, allocatedPorts, portAvailable, managementHost)
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
 		}
@@ -773,7 +775,7 @@ func (s *Service) startWithManagementPortRetry(ctx context.Context, plan rtm.Mac
 				nil,
 			)
 		}
-		_ = s.waitForManagementPortRelease(ctx, sshPort, 2*time.Second)
+		_ = s.waitForManagementPortRelease(ctx, managementHost, sshPort, 2*time.Second)
 		sleep(500 * time.Millisecond)
 	}
 
@@ -805,9 +807,11 @@ func usedManagementPorts(currentState state.State) map[int]bool {
 	return used
 }
 
-func (s *Service) chooseManagementSSHPort(currentState state.State, instance config.Instance, used map[int]bool, portAvailable func(int) bool) (int, error) {
+func (s *Service) chooseManagementSSHPort(currentState state.State, instance config.Instance, used map[int]bool, portAvailable func(int) bool, managementHost string) (int, error) {
 	if portAvailable == nil {
-		portAvailable = managementPortAvailable
+		portAvailable = func(port int) bool {
+			return managementPortAvailable(managementHost, port)
+		}
 	}
 	if instance.SSHPort > 0 {
 		if existing, ok := currentState.Instances[instance.Name]; ok && existing.SSHPort > 0 && existing.SSHPort != instance.SSHPort {
@@ -828,11 +832,14 @@ func (s *Service) chooseManagementSSHPort(currentState state.State, instance con
 	return port, nil
 }
 
-func managementPortAvailable(port int) bool {
+func managementPortAvailable(host string, port int) bool {
 	if port <= 0 {
 		return false
 	}
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", defaultManagementHost, port))
+	if strings.TrimSpace(host) == "" {
+		host = defaultManagementHost
+	}
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
 		return false
 	}

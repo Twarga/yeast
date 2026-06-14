@@ -1,6 +1,6 @@
 # database-app-stack
 
-A 2-VM database + application stack for Yeast `v1.0`.
+A 2-VM database + application stack for Yeast.
 
 ## What it does
 

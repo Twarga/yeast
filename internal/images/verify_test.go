@@ -1,6 +1,8 @@
 package images
 
 import (
+	"crypto/sha512"
+	"encoding/hex"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,5 +45,17 @@ func TestVerifySHA256MissingFile(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "open file for checksum") {
 		t.Fatalf("expected open file for checksum error, got %v", err)
+	}
+}
+
+func TestVerifyChecksumSupportsSHA512(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "image.qcow2")
+	if err := os.WriteFile(path, []byte("hello"), 0644); err != nil {
+		t.Fatalf("write file: %v", err)
+	}
+
+	sum := sha512.Sum512([]byte("hello"))
+	if err := VerifyChecksum(path, hex.EncodeToString(sum[:])); err != nil {
+		t.Fatalf("expected SHA512 checksum verification to pass, got %v", err)
 	}
 }

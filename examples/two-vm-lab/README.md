@@ -1,6 +1,6 @@
 # two-vm-lab
 
-Minimal attacker/target private-network example for Yeast `v0.5`.
+Minimal attacker/target private-network example for Yeast.
 
 What this example does:
 
@@ -82,7 +82,7 @@ yeast destroy
 
 ## Notes
 
-- this is the first narrow `v0.5` networking slice
+- this is the first narrow private-network slice
 - Yeast still uses user-mode SSH forwarding for management
 - the private lab NIC is separate from that management path
 - the first pass supports exactly one project-level private lab network

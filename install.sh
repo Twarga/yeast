@@ -17,10 +17,11 @@ YEAST_BIN_PATH="${YEAST_INSTALL_DIR}/yeast"
 YEAST_EXPECTED_VERSION="${YEAST_EXPECTED_VERSION:-}"
 YEAST_INSTALL_VERBOSE="${YEAST_INSTALL_VERBOSE:-0}"
 YEAST_KEEP_LOGS="${YEAST_KEEP_LOGS:-0}"
-YEAST_MIN_GO_VERSION="${YEAST_MIN_GO_VERSION:-1.22.0}"
-YEAST_GO_VERSION="${YEAST_GO_VERSION:-1.22.5}"
+YEAST_MIN_GO_VERSION="${YEAST_MIN_GO_VERSION:-1.25.0}"
+YEAST_GO_VERSION="${YEAST_GO_VERSION:-1.25.0}"
 YEAST_GO_INSTALL_ROOT="${YEAST_GO_INSTALL_ROOT:-/usr/local/lib/yeast/go}"
-YEAST_GO_TARBALL_SHA256="${YEAST_GO_TARBALL_SHA256:-a6e8e8e2c8c4c5f5d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c}"
+YEAST_GO_TARBALL_SHA256="${YEAST_GO_TARBALL_SHA256:-}"
+YEAST_FIX_KVM_PERMISSIONS="${YEAST_FIX_KVM_PERMISSIONS:-0}"
 GO_BIN=""
 
 # ─── Colors ───────────────────────────────────────────────────────────
@@ -157,6 +158,16 @@ go_version_value() {
 
 official_go_bin_path() {
   printf '%s/go%s/bin/go' "${YEAST_GO_INSTALL_ROOT}" "${YEAST_GO_VERSION}"
+}
+
+fetch_official_go_checksum() {
+  local checksum_url checksum
+  checksum_url="$1.sha256"
+  checksum="$(curl -fsSL --retry 3 --retry-delay 2 "${checksum_url}" | awk 'NR == 1 { print $1; exit }' || true)"
+  if [[ -z "${checksum}" ]]; then
+    return 1
+  fi
+  printf '%s' "${checksum}"
 }
 
 resolve_go_bin() {
@@ -556,6 +567,10 @@ install_virtualization_packages() {
 fix_kvm_permissions() {
   if [[ ! -e /dev/kvm ]]; then return 0; fi
   if run_as_target test -r /dev/kvm -a -w /dev/kvm 2>/dev/null; then return 0; fi
+  if [[ "${YEAST_FIX_KVM_PERMISSIONS}" != "1" ]]; then
+    warn "Skipping direct /dev/kvm permission changes. Set YEAST_FIX_KVM_PERMISSIONS=1 to opt in."
+    return 0
+  fi
 
   section "Fixing KVM Permissions"
 
@@ -612,8 +627,12 @@ download_official_go() {
   info "Downloading Go ${YEAST_GO_VERSION}..."
   curl -fL --retry 3 --retry-delay 2 -o "${archive}" "${url}"
 
-  if [[ -n "${YEAST_GO_TARBALL_SHA256}" ]]; then
-    printf '%s  %s\n' "${YEAST_GO_TARBALL_SHA256}" "${archive}" | sha256sum -c -
+  local checksum="${YEAST_GO_TARBALL_SHA256}"
+  if [[ -z "${checksum}" ]]; then
+    checksum="$(fetch_official_go_checksum "${url}")" || true
+  fi
+  if [[ -n "${checksum}" ]]; then
+    printf '%s  %s\n' "${checksum}" "${archive}" | sha256sum -c -
   fi
 
   need_root rm -rf "${install_dir}"
@@ -846,4 +865,6 @@ main() {
   print_summary
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi

@@ -1,6 +1,6 @@
 # Yeast Limits
 
-Current shipped v1.0 scope:
+Current shipped scope:
 
 - VM lifecycle
 - project-safe paths

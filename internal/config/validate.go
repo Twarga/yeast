@@ -43,7 +43,7 @@ func Validate(cfg *Config) error {
 	}
 	networkByName := make(map[string]net.IPNet, len(cfg.Networks))
 	if len(cfg.Networks) > 1 {
-		return fmt.Errorf("at most one project network is supported in v0.5")
+		return fmt.Errorf("at most one project network is supported")
 	}
 	for _, network := range cfg.Networks {
 		if strings.TrimSpace(network.Name) == "" {
@@ -121,7 +121,7 @@ func Validate(cfg *Config) error {
 			}
 		}
 		if len(instance.Networks) > 1 {
-			return fmt.Errorf("instance %s can attach to at most one private network in v0.5", instance.Name)
+			return fmt.Errorf("instance %s can attach to at most one private network", instance.Name)
 		}
 		seenInstanceNetworks := make(map[string]struct{}, len(instance.Networks))
 		for _, attachment := range instance.Networks {

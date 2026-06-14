@@ -19,8 +19,8 @@ func Download(image TrustedImage, destination string, options DownloadOptions) e
 	if image.URL == "" {
 		return fmt.Errorf("image URL is required")
 	}
-	if image.SHA256 == "" {
-		return fmt.Errorf("image SHA256 is required")
+	if image.Checksum == "" {
+		return fmt.Errorf("image Checksum is required")
 	}
 	if destination == "" {
 		return fmt.Errorf("destination path is required")
@@ -40,7 +40,7 @@ func Download(image TrustedImage, destination string, options DownloadOptions) e
 		return fmt.Errorf("create image cache directory for %s: %w", destination, err)
 	}
 
-	if err := VerifySHA256(destination, image.SHA256); err == nil {
+	if err := VerifyChecksum(destination, image.Checksum); err == nil {
 		return nil
 	}
 
@@ -87,7 +87,7 @@ func Download(image TrustedImage, destination string, options DownloadOptions) e
 		return fmt.Errorf("close temp image file %s: %w", tempPath, err)
 	}
 
-	if err := VerifySHA256(tempPath, image.SHA256); err != nil {
+	if err := VerifyChecksum(tempPath, image.Checksum); err != nil {
 		return err
 	}
 

@@ -1,6 +1,6 @@
 # ubuntu-basic
 
-Minimal single-VM example for Yeast `v0.3`.
+Minimal single-VM example for Yeast.
 
 What this example does:
 

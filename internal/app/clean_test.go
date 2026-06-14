@@ -89,6 +89,69 @@ func TestCleanIgnoresBrokenConfigButUsesState(t *testing.T) {
 	}
 }
 
+func TestCleanTargetsUseConfiguredManagementHost(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.runtime = &fakeCleanRuntime{}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+
+	current := state.New(metadata.ID)
+	current.Instances["web"] = state.InstanceState{
+		Status:     "running",
+		PID:        4242,
+		SSHPort:    2222,
+		RuntimeDir: "/tmp/web",
+	}
+	if err := state.Save(paths.StateFile, current); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	configYAML := []byte(`version: 1
+management_host: 0.0.0.0
+instances:
+  - name: web
+    image: ubuntu-24.04
+    memory: 512
+    cpus: 1
+  - name: api
+    image: ubuntu-24.04
+    memory: 512
+    cpus: 1
+`)
+	if err := os.WriteFile(filepath.Join(root, ConfigFileName), configYAML, 0o644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	targets := cleanupTargets(current, root, paths)
+	byName := make(map[string]rtm.CleanupTarget, len(targets))
+	for _, target := range targets {
+		byName[target.Name] = target
+	}
+
+	for _, name := range []string{"web", "api"} {
+		target, ok := byName[name]
+		if !ok {
+			t.Fatalf("expected cleanup target for %q, got %#v", name, targets)
+		}
+		if target.SSHHost != "0.0.0.0" {
+			t.Fatalf("expected %q cleanup target SSHHost 0.0.0.0, got %q", name, target.SSHHost)
+		}
+	}
+}
+
 type fakeCleanRuntime struct {
 	destroyed []rtm.RuntimeInstance
 	cleaned   []rtm.CleanupResult

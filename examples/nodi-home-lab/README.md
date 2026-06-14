@@ -1,6 +1,6 @@
 # nodi-home-lab
 
-Complex multi-VM home lab proof for Yeast `v1.0`.
+Complex multi-VM home lab proof for Yeast.
 
 > **New to Yeast or want to understand every concept?**  
 > This README is a quick reference. For the full educational walkthrough with architecture diagrams, networking deep dives, and concept explanations, see the companion tutorial:  
@@ -18,7 +18,7 @@ What this example does:
 - exposes host-facing ports so you can browse the lab from your browser
 - uses provisioning retries so VMs with dependencies tolerate startup order
 
-What this proves about Yeast v1:
+What this proves about Yeast:
 
 - multi-VM orchestration from one project config
 - private lab networking with static IPs
@@ -41,7 +41,7 @@ What this proves about Yeast v1:
 ## Prerequisites
 
 - Linux host with KVM/QEMU
-- `yeast` v1.0 installed
+- `yeast` installed
 - Internet access from VMs (Nodi install pulls from GitHub)
 - At least **~5 GB free RAM** and **~40 GB disk** for all 4 VMs
 
@@ -166,7 +166,7 @@ yeast destroy
 
 ## Architecture Notes
 
-- **One flat private network:** All VMs share `192.168.2.0/24`. There is no router VM because Yeast v1 supports only one lab network and max 2 NICs per VM.
+- **One flat private network:** All VMs share `192.168.2.0/24`. There is no router VM because Yeast supports only one lab network and max 2 NICs per VM.
 - **No DHCP:** All lab IPs are static, written by cloud-init.
 - **Client resilience:** `alpha` and `beta` use retry loops to mount shares because VMs provision in parallel. They will wait up to 5 minutes for `storage` to finish.
 - **Service ports:** `storage` forwards Nodi (`7319`), NFS (`2049`), and SMB (`445`) to the host so you can test from the host OS directly if desired.
@@ -181,4 +181,4 @@ yeast destroy
 
 ## What This Is
 
-This is not a GNS3 clone. It is a **Yeast-native proof** that v1 can orchestrate a realistic, multi-service, multi-VM home lab with shared storage, clients, and web services — entirely from one `yeast.yaml` file.
+This is not a GNS3 clone. It is a **Yeast-native proof** that Yeast can orchestrate a realistic, multi-service, multi-VM home lab with shared storage, clients, and web services — entirely from one `yeast.yaml` file.
