@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 	"yeast/internal/config"
 	"yeast/internal/guest"
@@ -26,6 +27,7 @@ import (
 const (
 	defaultReadinessTimeout = 2 * time.Minute
 	defaultBootstrapTimeout = 5 * time.Minute
+	cloudInitStatusCommand  = `status="$(cloud-init status 2>&1)"; printf '%s\n' "$status"; case "$status" in *"status: done"*|*"status: disabled"*) exit 0;; *"status: error"*) exit 2;; *) exit 1;; esac`
 	defaultManagementHost   = "127.0.0.1"
 	defaultManagementNIC    = "yeastmgmt0"
 	defaultLabInterfaceName = "yeastlab0"
@@ -33,9 +35,20 @@ const (
 	managementStartAttempts = 3
 )
 
+func resolveManagementHost(cfg *config.Config) string {
+	if cfg != nil && strings.TrimSpace(cfg.ManagementHost) != "" {
+		return strings.TrimSpace(cfg.ManagementHost)
+	}
+	return defaultManagementHost
+}
+
 type UpOptions struct {
 	ProjectRoot      string
 	ReadinessTimeout time.Duration
+	NoProvision      bool
+	Reprovision      bool
+	Sequential       bool
+	Profile          bool
 	Events           EventSink
 }
 
@@ -49,6 +62,17 @@ type UpInstanceResult struct {
 type UpResult struct {
 	ProjectID string             `json:"project_id"`
 	Instances []UpInstanceResult `json:"instances"`
+	Profile   *ProfileData       `json:"profile,omitempty"`
+}
+
+type ProfileData struct {
+	Phases []ProfilePhase `json:"phases"`
+	Total  time.Duration  `json:"total_ms"`
+}
+
+type ProfilePhase struct {
+	Name     string        `json:"name"`
+	Duration time.Duration `json:"duration_ms"`
 }
 
 func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
@@ -106,6 +130,8 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		},
 	})
 
+	managementHost := resolveManagementHost(cfg)
+
 	currentState, err := state.Load(paths.StateFile, metadata.ID)
 	if err != nil {
 		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
@@ -126,11 +152,40 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		Instances: make([]UpInstanceResult, 0, len(cfg.Instances)),
 	}
 
+	var profilePhases []ProfilePhase
+	profileStart := time.Now()
+	lastPhaseStart := profileStart
+	finishProfilePhase := func(name string) {
+		if options.Profile {
+			now := time.Now()
+			profilePhases = append(profilePhases, ProfilePhase{
+				Name:     name,
+				Duration: now.Sub(lastPhaseStart),
+			})
+			lastPhaseStart = now
+		}
+	}
+
 	allocatedPorts := usedManagementPorts(currentState)
 	startedInstances := make([]rtm.RuntimeInstance, 0)
+
+	type bootPlan struct {
+		instance         config.Instance
+		plan             rtm.MachinePlan
+		sshPort          int
+		instanceState    state.InstanceState
+		previousState    state.InstanceState
+		hadPreviousState bool
+		provisionPlan    provision.Plan
+		runProvision     bool
+		fingerprint      string
+	}
+
+	var plans []bootPlan
+
 	for _, instance := range cfg.Instances {
 		if existing, ok := currentState.Instances[instance.Name]; ok && existing.Status == "running" && existing.PID > 0 && existing.SSHPort > 0 {
-			address, err := s.sshAddress(defaultManagementHost, existing.SSHPort)
+			address, err := s.sshAddress(managementHost, existing.SSHPort)
 			if err != nil {
 				return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 			}
@@ -141,20 +196,89 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 				SSHPort:    existing.SSHPort,
 			})
 			allocatedPorts[existing.SSHPort] = true
+
+			if !options.NoProvision {
+				existingPlan, planErr := resolveProvisionPlan(absoluteRoot, provision.BuildPlan(instance, cfg.Provision))
+				if planErr != nil {
+					return UpResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("resolve provision plan for %s: %v", instance.Name, planErr), planErr)
+				}
+				if !existingPlan.Empty() {
+					fp, _ := provision.Fingerprint(absoluteRoot, instance, cfg)
+					prevFP := existing.ProvisionFingerprint
+					fpMatch := prevFP != "" && fp == prevFP
+					wasReady := existing.ProvisioningStatus == state.ProvisioningStatusReady
+					needsReprovision := !wasReady || !fpMatch || options.Reprovision
+					if needsReprovision {
+						instState := existing
+						instState.ProvisioningStatus = state.ProvisioningStatusRunning
+						instState.ProvisionLogPath = filepath.Join(existing.RuntimeDir, "provision.log")
+						currentState.Instances[instance.Name] = instState
+						plans = append(plans, bootPlan{
+							instance:         instance,
+							sshPort:          existing.SSHPort,
+							instanceState:    instState,
+							previousState:    existing,
+							hadPreviousState: true,
+							provisionPlan:    existingPlan,
+							runProvision:     true,
+							fingerprint:      fp,
+						})
+					}
+				}
+			}
+
 			continue
 		}
 
 		image, ok := images.Lookup(instance.Image)
 		if !ok {
-			return UpResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("unsupported image %q", instance.Image), nil)
+			matches := images.Search(instance.Image)
+			if len(matches) == 1 {
+				image, _ = images.Lookup(matches[0])
+			} else if len(matches) > 1 {
+				msg := fmt.Sprintf("multiple images match %q:", instance.Image)
+				for _, m := range matches {
+					msg += fmt.Sprintf("\n  - %s", m)
+				}
+				msg += "\n\nSpecify the full name in yeast.yaml."
+				return UpResult{}, WrapError(ErrorCodeInvalidArgument, msg, nil)
+			} else {
+				msg := fmt.Sprintf("image %q not found", instance.Image)
+				suggestions := images.SuggestSimilar(instance.Image, 3)
+				if len(suggestions) > 0 {
+					msg += "\n\nDid you mean?\n"
+					for _, s := range suggestions {
+						msg += fmt.Sprintf("  - %s\n", s)
+					}
+				}
+				msg += "\nRun \"yeast pull --list\" for all available images."
+				return UpResult{}, WrapError(ErrorCodeInvalidArgument, msg, nil)
+			}
 		}
+
+		// Manual images — show instructions instead of downloading.
+		if image.URL == "" && image.ManualInstructions != "" {
+			msg := fmt.Sprintf("image %q requires manual download:\n\n%s", image.Name, image.ManualInstructions)
+			return UpResult{}, WrapError(ErrorCodeInvalidArgument, msg, nil)
+		}
+
 		cachePaths, err := images.ResolveCachePaths(paths.ImageCache, image.Name)
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		if _, err := os.Stat(cachePaths.ImageFile); err != nil {
-			message := fmt.Sprintf("image %s not found in cache at %s: run `yeast pull %s`", image.Name, cachePaths.ImageFile, image.Name)
-			return UpResult{}, WrapError(ErrorCodeNotFound, message, err)
+			emitEvent(options.Events, "up", EventImagePulling, EventOptions{
+				ProjectID: metadata.ID,
+				Instance:  instance.Name,
+				Message:   fmt.Sprintf("Pulling image %s", image.Name),
+				Data: map[string]any{
+					"image": image.Name,
+				},
+			})
+			if pullErr := s.downloadImage(image, cachePaths.ImageFile, s.downloadOptions()); pullErr != nil {
+				return UpResult{}, WrapError(ErrorCodeInternal,
+					fmt.Sprintf("auto-pull image %s failed: %v", image.Name, pullErr), pullErr)
+			}
 		}
 		emitEvent(options.Events, "up", EventImageReady, EventOptions{
 			ProjectID: metadata.ID,
@@ -203,19 +327,19 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("build lab network plan for %s: %v", instance.Name, err), err)
 		}
-		var networkConfig string
+		networkInput := cloudinit.NetworkConfigInput{
+			ManagementInterfaceName: defaultManagementNIC,
+			ManagementMACAddress:    deriveManagementMACAddress(metadata.ID, instance.Name),
+		}
 		if labNetworkPlan != nil {
-			networkConfig, err = s.renderNetworkConfig(cloudinit.NetworkConfigInput{
-				ManagementInterfaceName: defaultManagementNIC,
-				ManagementMACAddress:    deriveManagementMACAddress(metadata.ID, instance.Name),
-				LabInterfaceName:        labNetworkPlan.InterfaceName,
-				LabMACAddress:           labNetworkPlan.MACAddress,
-				LabIPv4:                 labNetworkPlan.IPv4,
-				LabCIDR:                 labNetworkPlan.CIDR,
-			})
-			if err != nil {
-				return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
-			}
+			networkInput.LabInterfaceName = labNetworkPlan.InterfaceName
+			networkInput.LabMACAddress = labNetworkPlan.MACAddress
+			networkInput.LabIPv4 = labNetworkPlan.IPv4
+			networkInput.LabCIDR = labNetworkPlan.CIDR
+		}
+		networkConfig, err := s.renderNetworkConfig(networkInput)
+		if err != nil {
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 		seedResult, err := s.createSeedISO(ctx, cloudinit.SeedInput{
 			InstanceName:  instance.Name,
@@ -242,7 +366,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			},
 			Networks: rtm.NetworkPlan{
 				Management: rtm.ManagementNetworkPlan{
-					SSHHost:       defaultManagementHost,
+					SSHHost:       managementHost,
 					SSHPort:       sshPort,
 					InterfaceName: defaultManagementNIC,
 					MACAddress:    deriveManagementMACAddress(metadata.ID, instance.Name),
@@ -263,115 +387,265 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			},
 		})
 
-		emitEvent(options.Events, "up", EventVMStarting, EventOptions{
-			ProjectID: metadata.ID,
-			Instance:  instance.Name,
-			Message:   "Starting VM",
-		})
-		started, err := s.startWithManagementPortRetry(ctx, plan, sshPort, instance.Name)
-		if err != nil {
-			return UpResult{}, err
-		}
-		startedInstances = append(startedInstances, started)
-
-		address, err := s.sshAddress(defaultManagementHost, sshPort)
-		if err != nil {
-			_ = s.runtime.Stop(ctx, started, 5*time.Second)
-			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
-		}
-		if err := s.waitForTCP(ctx, guest.ReadinessOptions{
-			Address: address,
-			Timeout: readinessTimeout,
-		}); err != nil {
-			_ = s.runtime.Stop(ctx, started, 5*time.Second)
-			message := fmt.Sprintf("wait for ssh readiness for %s: %v", instance.Name, err)
-			return UpResult{}, WrapError(ErrorCodePrecondition, message, err)
-		}
-		emitEvent(options.Events, "up", EventSSHReady, EventOptions{
-			ProjectID: metadata.ID,
-			Instance:  instance.Name,
-			Message:   "SSH is ready",
-			Data: map[string]any{
-				"ssh_address": address,
-				"ssh_port":    sshPort,
-			},
-		})
-
 		previousState, hadPreviousState := currentState.Instances[instance.Name]
-		instanceState := state.InstanceState{
+		previousProvisioningStatus := state.ProvisioningStatusNotStarted
+		if hadPreviousState {
+			previousProvisioningStatus = previousState.ProvisioningStatus
+		}
+		instState := state.InstanceState{
 			Status:             "running",
-			PID:                started.PID,
-			ManagementIP:       defaultManagementHost,
+			ManagementIP:       managementHost,
 			SSHPort:            sshPort,
 			User:               instance.User,
 			RuntimeDir:         runtimeDir,
 			ProvisionLogPath:   filepath.Join(runtimeDir, "provision.log"),
-			ProvisioningStatus: state.ProvisioningStatusNotStarted,
+			ProvisioningStatus: previousProvisioningStatus,
 			LastError:          "",
 		}
 		if labNetworkPlan != nil {
-			instanceState.LabIP = labNetworkPlan.IPv4.String()
+			instState.LabIP = labNetworkPlan.IPv4.String()
 		}
 		if hadPreviousState && len(previousState.Snapshots) > 0 {
-			instanceState.Snapshots = previousState.Snapshots
+			instState.Snapshots = previousState.Snapshots
 		}
-		currentState.Instances[instance.Name] = instanceState
 
 		provisionPlan, err := resolveProvisionPlan(absoluteRoot, provision.BuildPlan(instance, cfg.Provision))
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInvalidArgument, fmt.Sprintf("resolve provision plan for %s: %v", instance.Name, err), err)
 		}
-		provisionLogPath := instanceState.ProvisionLogPath
-		if provisionPlan.Empty() {
-			instanceState.ProvisioningStatus = state.ProvisioningStatusReady
-		} else {
-			instanceState.ProvisioningStatus = state.ProvisioningStatusRunning
+		runProvisionSteps := !options.NoProvision && !provisionPlan.Empty()
+
+		currentFingerprint, _ := provision.Fingerprint(absoluteRoot, instance, cfg)
+		previousFingerprint := ""
+		if hadPreviousState {
+			previousFingerprint = previousState.ProvisionFingerprint
+		}
+		isWarmBoot := instState.ProvisioningStatus == state.ProvisioningStatusReady
+		fingerprintMatch := previousFingerprint != "" && currentFingerprint == previousFingerprint
+		if runProvisionSteps && isWarmBoot && fingerprintMatch && !options.Reprovision {
+			runProvisionSteps = false
+			instState.ProvisionFingerprint = currentFingerprint
+			emitEvent(options.Events, "up", EventProvisionSkipped, EventOptions{
+				ProjectID: metadata.ID,
+				Instance:  instance.Name,
+				Message:   "Provisioning skipped (unchanged)",
+			})
+		}
+		if options.NoProvision || provisionPlan.Empty() {
+			instState.ProvisioningStatus = state.ProvisioningStatusReady
+		} else if runProvisionSteps {
+			instState.ProvisioningStatus = state.ProvisioningStatusRunning
 			emitEvent(options.Events, "up", EventProvisionStarted, EventOptions{
 				ProjectID: metadata.ID,
 				Instance:  instance.Name,
 				Message:   "Provisioning started",
 			})
 		}
-		currentState.Instances[instance.Name] = instanceState
-		if err := state.Save(paths.StateFile, currentState); err != nil {
-			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+		currentState.Instances[instance.Name] = instState
+
+		plans = append(plans, bootPlan{
+			instance:         instance,
+			plan:             plan,
+			sshPort:          sshPort,
+			instanceState:    instState,
+			previousState:    previousState,
+			hadPreviousState: hadPreviousState,
+			provisionPlan:    provisionPlan,
+			runProvision:     runProvisionSteps,
+			fingerprint:      currentFingerprint,
+		})
+	}
+
+	finishProfilePhase("disk_prepare")
+
+	if err := state.Save(paths.StateFile, currentState); err != nil {
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+
+	type bootResult struct {
+		name    string
+		result  UpInstanceResult
+		started rtm.RuntimeInstance
+		err     error
+	}
+
+	bootVM := func(bp bootPlan) bootResult {
+		emitEvent(options.Events, "up", EventVMStarting, EventOptions{
+			ProjectID: metadata.ID,
+			Instance:  bp.instance.Name,
+			Message:   "Starting VM",
+		})
+		started, err := s.startWithManagementPortRetry(ctx, bp.plan, bp.sshPort, bp.instance.Name, managementHost)
+		if err != nil {
+			return bootResult{name: bp.instance.Name, err: err}
 		}
 
-		provisionResult, err := s.runProvisionPlan(ctx, instance, sshPort, provisionLogPath, provisionPlan)
-		instanceState.ProvisioningStatus = provisionResult.Status
-		instanceState.LastError = ""
+		address, err := s.sshAddress(managementHost, bp.sshPort)
 		if err != nil {
-			instanceState.ProvisioningStatus = state.ProvisioningStatusFailed
-			instanceState.LastError = err.Error()
-			currentState.Instances[instance.Name] = instanceState
+			_ = s.runtime.Stop(ctx, started, 5*time.Second)
+			return bootResult{name: bp.instance.Name, err: err}
+		}
+		if err := s.waitForTCP(ctx, guest.ReadinessOptions{
+			Address: address,
+			Timeout: readinessTimeout,
+		}); err != nil {
+			_ = s.runtime.Stop(ctx, started, 5*time.Second)
+			return bootResult{
+				name: bp.instance.Name,
+				err:  WrapError(ErrorCodePrecondition, fmt.Sprintf("wait for ssh readiness for %s: %v", bp.instance.Name, err), err),
+			}
+		}
+		if err := s.ensureRuntimeStillRunning(ctx, started, bp.instance.Name); err != nil {
+			_ = s.runtime.Stop(ctx, started, 5*time.Second)
+			return bootResult{name: bp.instance.Name, err: err}
+		}
+		emitEvent(options.Events, "up", EventSSHReady, EventOptions{
+			ProjectID: metadata.ID,
+			Instance:  bp.instance.Name,
+			Message:   "SSH is ready",
+			Data: map[string]any{
+				"ssh_address": address,
+				"ssh_port":    bp.sshPort,
+			},
+		})
+
+		return bootResult{
+			name:    bp.instance.Name,
+			started: started,
+			result: UpInstanceResult{
+				Name:       bp.instance.Name,
+				Status:     "running",
+				SSHAddress: address,
+				SSHPort:    bp.sshPort,
+			},
+		}
+	}
+
+	var bootResults []bootResult
+	if options.Sequential || len(plans) <= 1 {
+		for _, bp := range plans {
+			bootResults = append(bootResults, bootVM(bp))
+		}
+	} else {
+		bootResults = make([]bootResult, len(plans))
+		var wg sync.WaitGroup
+		for i, bp := range plans {
+			wg.Add(1)
+			go func(idx int, p bootPlan) {
+				defer wg.Done()
+				bootResults[idx] = bootVM(p)
+			}(i, bp)
+		}
+		wg.Wait()
+	}
+
+	for _, br := range bootResults {
+		if br.err != nil {
+			for i := len(startedInstances) - 1; i >= 0; i-- {
+				_ = s.runtime.Stop(ctx, startedInstances[i], 5*time.Second)
+			}
+			if _, ok := br.err.(*AppError); !ok {
+				return UpResult{}, WrapError(ErrorCodeInternal, br.err.Error(), br.err)
+			}
+			return UpResult{}, br.err
+		}
+		startedInstances = append(startedInstances, br.started)
+		result.Instances = append(result.Instances, br.result)
+
+		for _, bp := range plans {
+			if bp.instance.Name == br.name {
+				bp.instanceState.PID = br.started.PID
+				currentState.Instances[bp.instance.Name] = bp.instanceState
+				break
+			}
+		}
+	}
+	if err := state.Save(paths.StateFile, currentState); err != nil {
+		for i := len(startedInstances) - 1; i >= 0; i-- {
+			_ = s.runtime.Stop(ctx, startedInstances[i], 5*time.Second)
+		}
+		return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+
+	finishProfilePhase("vm_boot")
+
+	type provisionResult struct {
+		name        string
+		status      state.ProvisioningStatus
+		fingerprint string
+		err         error
+	}
+
+	provisionVM := func(bp bootPlan) provisionResult {
+		if options.NoProvision {
+			return provisionResult{name: bp.instance.Name, status: state.ProvisioningStatusReady, fingerprint: bp.fingerprint}
+		}
+		pResult, err := s.runProvisionPlan(ctx, bp.instance, bp.sshPort, bp.instanceState.ProvisionLogPath, bp.provisionPlan, bp.runProvision, managementHost)
+		if err != nil {
+			return provisionResult{name: bp.instance.Name, status: state.ProvisioningStatusFailed, err: err}
+		}
+		fp := bp.fingerprint
+		if bp.runProvision {
+			fp = bp.fingerprint
+		}
+		return provisionResult{name: bp.instance.Name, status: pResult.Status, fingerprint: fp}
+	}
+
+	var provisionResults []provisionResult
+	if options.Sequential || len(plans) <= 1 {
+		for _, bp := range plans {
+			provisionResults = append(provisionResults, provisionVM(bp))
+		}
+	} else {
+		provisionResults = make([]provisionResult, len(plans))
+		var wg sync.WaitGroup
+		for i, bp := range plans {
+			wg.Add(1)
+			go func(idx int, p bootPlan) {
+				defer wg.Done()
+				provisionResults[idx] = provisionVM(p)
+			}(i, bp)
+		}
+		wg.Wait()
+	}
+
+	for _, pr := range provisionResults {
+		instState := currentState.Instances[pr.name]
+		instState.ProvisioningStatus = pr.status
+		instState.LastError = ""
+		if pr.err != nil {
+			instState.ProvisioningStatus = state.ProvisioningStatusFailed
+			instState.LastError = pr.err.Error()
+			currentState.Instances[pr.name] = instState
 			if saveErr := state.Save(paths.StateFile, currentState); saveErr != nil {
 				return UpResult{}, WrapError(ErrorCodeInternal, saveErr.Error(), saveErr)
 			}
-			appErr := NormalizeError(err)
+			appErr := NormalizeError(pr.err)
 			if appErr.Code == ErrorCodeInternal {
 				return UpResult{}, appErr
 			}
-			return UpResult{}, WrapError(ErrorCodeProvisioning, fmt.Sprintf("provision instance %s: %v", instance.Name, err), err)
+			return UpResult{}, WrapError(ErrorCodeProvisioning, fmt.Sprintf("provision instance %s: %v", pr.name, pr.err), pr.err)
+		}
+		if pr.fingerprint != "" {
+			instState.ProvisionFingerprint = pr.fingerprint
 		}
 		emitEvent(options.Events, "up", EventProvisionFinished, EventOptions{
 			ProjectID: metadata.ID,
-			Instance:  instance.Name,
+			Instance:  pr.name,
 			Message:   "Provisioning finished",
 			Data: map[string]any{
-				"status": string(instanceState.ProvisioningStatus),
+				"status": string(instState.ProvisioningStatus),
 			},
 		})
-		currentState.Instances[instance.Name] = instanceState
+		currentState.Instances[pr.name] = instState
+	}
 
-		result.Instances = append(result.Instances, UpInstanceResult{
-			Name:       instance.Name,
-			Status:     "running",
-			SSHAddress: address,
-			SSHPort:    sshPort,
-		})
+	finishProfilePhase("provision")
+
+	for _, bp := range plans {
 		emitEvent(options.Events, "up", EventInstanceReady, EventOptions{
 			ProjectID: metadata.ID,
-			Instance:  instance.Name,
+			Instance:  bp.instance.Name,
 			Message:   "Instance is ready",
 		})
 	}
@@ -386,6 +660,15 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 	sort.Slice(result.Instances, func(i, j int) bool {
 		return result.Instances[i].Name < result.Instances[j].Name
 	})
+
+	if options.Profile {
+		totalDuration := time.Since(profileStart)
+		result.Profile = &ProfileData{
+			Phases: profilePhases,
+			Total:  totalDuration,
+		}
+	}
+
 	emitEvent(options.Events, "up", EventWorkflowCompleted, EventOptions{
 		ProjectID: metadata.ID,
 		Message:   "Workflow completed",
@@ -461,7 +744,7 @@ func deriveMACAddress(projectID, instanceName, networkName string) string {
 	)
 }
 
-func (s *Service) startWithManagementPortRetry(ctx context.Context, plan rtm.MachinePlan, sshPort int, instanceName string) (rtm.RuntimeInstance, error) {
+func (s *Service) startWithManagementPortRetry(ctx context.Context, plan rtm.MachinePlan, sshPort int, instanceName string, managementHost string) (rtm.RuntimeInstance, error) {
 	sleep := s.sleep
 	if sleep == nil {
 		sleep = time.Sleep
@@ -473,7 +756,7 @@ func (s *Service) startWithManagementPortRetry(ctx context.Context, plan rtm.Mac
 			return rtm.RuntimeInstance{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 
-		conflict, conflictErr := s.waitForManagementPortConflict(plan.LogPath, sshPort, time.Second)
+		conflict, conflictErr := s.waitForManagementPortConflict(plan.LogPath, sshPort, time.Second, managementHost)
 		if conflictErr != nil {
 			_ = s.runtime.Stop(ctx, started, 5*time.Second)
 			return rtm.RuntimeInstance{}, WrapError(ErrorCodeInternal, conflictErr.Error(), conflictErr)
@@ -499,6 +782,17 @@ func (s *Service) startWithManagementPortRetry(ctx context.Context, plan rtm.Mac
 		fmt.Sprintf("requested ssh_port %d for instance %q is already bound on the host", sshPort, instanceName),
 		nil,
 	)
+}
+
+func (s *Service) ensureRuntimeStillRunning(ctx context.Context, instance rtm.RuntimeInstance, instanceName string) error {
+	info, err := s.runtime.Inspect(ctx, instance)
+	if err != nil {
+		return WrapError(ErrorCodeInternal, fmt.Sprintf("inspect runtime for %s: %v", instanceName, err), err)
+	}
+	if info.State != rtm.ProcessStateRunning {
+		return WrapError(ErrorCodePrecondition, fmt.Sprintf("instance %q exited before ssh became ready", instanceName), nil)
+	}
+	return nil
 }
 
 func usedManagementPorts(currentState state.State) map[int]bool {
@@ -546,7 +840,7 @@ func managementPortAvailable(port int) bool {
 	return true
 }
 
-func (s *Service) waitForManagementPortConflict(logPath string, port int, timeout time.Duration) (bool, error) {
+func (s *Service) waitForManagementPortConflict(logPath string, port int, timeout time.Duration, managementHost string) (bool, error) {
 	if logPath == "" || port <= 0 {
 		return false, nil
 	}
@@ -555,7 +849,7 @@ func (s *Service) waitForManagementPortConflict(logPath string, port int, timeou
 		sleep = time.Sleep
 	}
 	deadline := time.Now().Add(timeout)
-	conflictNeedle := fmt.Sprintf("tcp:%s:%d-:22", defaultManagementHost, port)
+	conflictNeedle := fmt.Sprintf("tcp:%s:%d-:22", managementHost, port)
 
 	for {
 		content, err := os.ReadFile(logPath)
@@ -601,29 +895,31 @@ func resolveProvisionPlan(projectRoot string, plan provision.Plan) (provision.Pl
 	return resolved, nil
 }
 
-func (s *Service) runProvisionPlan(ctx context.Context, instance config.Instance, sshPort int, logPath string, plan provision.Plan) (provision.Result, error) {
+func (s *Service) runProvisionPlan(ctx context.Context, instance config.Instance, sshPort int, logPath string, plan provision.Plan, runSteps bool, managementHost string) (provision.Result, error) {
 	result := provision.NewResult(logPath)
 
 	transport := s.provisionTransport
 	if transport == nil {
-		transport = provssh.NewLocalTransport()
+		lt := provssh.NewLocalTransport()
+		defer lt.Close()
+		transport = lt
 	}
 
 	user := instance.User
-	host := defaultManagementHost
+	host := managementHost
 
 	bootstrapWaitResult, err := s.waitForCloudInitBootstrap(ctx, transport, provssh.RunRequest{
 		User:    user,
 		Host:    host,
 		Port:    sshPort,
-		Command: "cloud-init status --wait",
+		Command: cloudInitStatusCommand,
 		Timeout: defaultBootstrapTimeout,
 	})
 	if bootstrapWaitResult.ExitCode != 0 || err != nil {
 		now := time.Now().UTC()
 		result.Steps = append(result.Steps, provision.StepResult{
 			Kind:        provision.StepKindShell,
-			Description: "cloud-init status --wait",
+			Description: cloudInitStatusCommand,
 			ExitCode:    bootstrapWaitResult.ExitCode,
 			Stdout:      bootstrapWaitResult.Stdout,
 			Stderr:      bootstrapWaitResult.Stderr,
@@ -639,7 +935,7 @@ func (s *Service) runProvisionPlan(ctx context.Context, instance config.Instance
 		return result, WrapError(ErrorCodePrecondition, fmt.Sprintf("wait for cloud-init bootstrap: %v", err), err)
 	}
 
-	if plan.Empty() {
+	if plan.Empty() || !runSteps {
 		result.Status = state.ProvisioningStatusReady
 		if err := writeProvisionLog(logPath, result); err != nil {
 			return result, err
@@ -769,16 +1065,35 @@ func (s *Service) waitForCloudInitBootstrap(ctx context.Context, transport provs
 	}
 
 	deadline := time.Now().Add(request.Timeout)
+	probeTimeout := 15 * time.Second
 	for {
-		result, err := transport.Run(ctx, request)
+		remaining := time.Until(deadline)
+		if remaining <= 0 {
+			return provssh.RunResult{}, fmt.Errorf("cloud-init did not finish within %s", request.Timeout)
+		}
+		probe := request
+		if probe.Timeout <= 0 || probe.Timeout > probeTimeout {
+			probe.Timeout = probeTimeout
+		}
+		if probe.Timeout > remaining {
+			probe.Timeout = remaining
+		}
+		result, err := transport.Run(ctx, probe)
 		if err == nil && result.ExitCode == 0 {
 			return result, nil
 		}
-		if ctx.Err() != nil || time.Now().After(deadline) {
+		if result.ExitCode == 2 || cloudInitStatusFailed(result.Stdout) || cloudInitStatusFailed(result.Stderr) {
+			return result, fmt.Errorf("cloud-init reported failure")
+		}
+		if ctx.Err() != nil {
 			return result, err
 		}
 		sleep(2 * time.Second)
 	}
+}
+
+func cloudInitStatusFailed(output string) bool {
+	return strings.Contains(strings.ToLower(output), "status: error")
 }
 
 func writeProvisionLog(logPath string, result provision.Result) error {

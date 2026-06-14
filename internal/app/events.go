@@ -7,6 +7,7 @@ type EventName string
 const (
 	EventProjectLoaded      EventName = "project.loaded"
 	EventConfigValidated    EventName = "config.validated"
+	EventImagePulling       EventName = "image.pulling"
 	EventImageReady         EventName = "image.ready"
 	EventDiskReady          EventName = "disk.ready"
 	EventCloudInitGenerated EventName = "cloud_init.generated"
@@ -15,6 +16,7 @@ const (
 	EventSSHReady           EventName = "ssh.ready"
 	EventProvisionStarted   EventName = "provision.started"
 	EventProvisionFinished  EventName = "provision.finished"
+	EventProvisionSkipped   EventName = "provision.skipped"
 	EventSnapshotCreated    EventName = "snapshot.created"
 	EventRestoreStarted     EventName = "restore.started"
 	EventRestoreFinished    EventName = "restore.finished"

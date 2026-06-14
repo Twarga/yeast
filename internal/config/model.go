@@ -1,10 +1,11 @@
 package config
 
 type Config struct {
-	Version   int              `yaml:"version"`
-	Networks  []Network        `yaml:"networks,omitempty"`
-	Instances []Instance       `yaml:"instances"`
-	Provision *ProvisionConfig `yaml:"provision,omitempty"`
+	Version         int              `yaml:"version"`
+	ManagementHost  string           `yaml:"management_host,omitempty"`
+	Networks        []Network        `yaml:"networks,omitempty"`
+	Instances       []Instance       `yaml:"instances"`
+	Provision       *ProvisionConfig `yaml:"provision,omitempty"`
 }
 
 type Instance struct {

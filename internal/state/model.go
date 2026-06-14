@@ -20,17 +20,18 @@ type State struct {
 }
 
 type InstanceState struct {
-	Status             string                   `json:"status"`
-	PID                int                      `json:"pid,omitempty"`
-	ManagementIP       string                   `json:"management_ip,omitempty"`
-	SSHPort            int                      `json:"ssh_port,omitempty"`
-	User               string                   `json:"user,omitempty"`
-	LabIP              string                   `json:"lab_ip,omitempty"`
-	RuntimeDir         string                   `json:"runtime_dir,omitempty"`
-	Snapshots          map[string]SnapshotState `json:"snapshots,omitempty"`
-	ProvisionLogPath   string                   `json:"provision_log_path,omitempty"`
-	ProvisioningStatus ProvisioningStatus       `json:"provisioning_status,omitempty"`
-	LastError          string                   `json:"last_error,omitempty"`
+	Status               string                   `json:"status"`
+	PID                  int                      `json:"pid,omitempty"`
+	ManagementIP         string                   `json:"management_ip,omitempty"`
+	SSHPort              int                      `json:"ssh_port,omitempty"`
+	User                 string                   `json:"user,omitempty"`
+	LabIP                string                   `json:"lab_ip,omitempty"`
+	RuntimeDir           string                   `json:"runtime_dir,omitempty"`
+	Snapshots            map[string]SnapshotState `json:"snapshots,omitempty"`
+	ProvisionLogPath     string                   `json:"provision_log_path,omitempty"`
+	ProvisioningStatus   ProvisioningStatus       `json:"provisioning_status,omitempty"`
+	ProvisionFingerprint string                   `json:"provision_fingerprint,omitempty"`
+	LastError            string                   `json:"last_error,omitempty"`
 }
 
 type SnapshotState struct {

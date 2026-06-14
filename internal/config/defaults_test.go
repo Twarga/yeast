@@ -86,3 +86,32 @@ func TestApplyDefaultsPreservesExplicitValues(t *testing.T) {
 		t.Fatalf("expected normalized disk size 25G, got %q", instance.DiskSize)
 	}
 }
+
+func TestApplyDefaultsManagementHost(t *testing.T) {
+	cfg := &Config{
+		Version: 1,
+		Instances: []Instance{
+			{Name: "web", Image: "ubuntu-24.04"},
+		},
+	}
+	if err := ApplyDefaults(cfg); err != nil {
+		t.Fatalf("ApplyDefaults returned error: %v", err)
+	}
+	if cfg.ManagementHost != DefaultManagementHost {
+		t.Fatalf("expected default management_host %q, got %q", DefaultManagementHost, cfg.ManagementHost)
+	}
+
+	cfg2 := &Config{
+		Version:        1,
+		ManagementHost: "0.0.0.0",
+		Instances: []Instance{
+			{Name: "web", Image: "ubuntu-24.04"},
+		},
+	}
+	if err := ApplyDefaults(cfg2); err != nil {
+		t.Fatalf("ApplyDefaults returned error: %v", err)
+	}
+	if cfg2.ManagementHost != "0.0.0.0" {
+		t.Fatalf("expected explicit management_host 0.0.0.0, got %q", cfg2.ManagementHost)
+	}
+}

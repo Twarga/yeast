@@ -26,6 +26,15 @@ func Validate(cfg *Config) error {
 	if cfg.Version != SupportedVersion {
 		return fmt.Errorf("unsupported version: %d (expected %d)", cfg.Version, SupportedVersion)
 	}
+	if strings.TrimSpace(cfg.ManagementHost) != "" {
+		host := strings.TrimSpace(cfg.ManagementHost)
+		if host != "127.0.0.1" && host != "0.0.0.0" {
+			ip := net.ParseIP(host)
+			if ip == nil || ip.To4() == nil {
+				return fmt.Errorf("management_host must be a valid IPv4 address (got %q)", cfg.ManagementHost)
+			}
+		}
+	}
 	if len(cfg.Instances) == 0 {
 		return fmt.Errorf("at least one instance is required")
 	}

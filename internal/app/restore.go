@@ -108,6 +108,12 @@ func (s *Service) Restore(ctx context.Context, options RestoreOptions) (RestoreR
 		}
 		return RestoreResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+	instance.ProvisioningStatus = state.ProvisioningStatusReady
+	currentState.Instances[options.Target] = instance
+	if err := state.Save(paths.StateFile, currentState); err != nil {
+		return RestoreResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+
 	emitEvent(options.Events, "restore", EventRestoreFinished, EventOptions{
 		ProjectID: metadata.ID,
 		Instance:  options.Target,

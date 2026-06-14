@@ -15,3 +15,9 @@ type Runtime interface {
 	DeleteSnapshot(ctx context.Context, snapshotPath string) error
 	Destroy(ctx context.Context, instance RuntimeInstance) error
 }
+
+// ProcessFinder is an optional interface that Runtimes can implement
+// to support finding processes by name and runtime directory.
+type ProcessFinder interface {
+	FindProcesses(ctx context.Context, targets []CleanupTarget) ([]CleanupResult, error)
+}

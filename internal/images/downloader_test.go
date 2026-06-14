@@ -36,6 +36,35 @@ func TestDownloadSuccess(t *testing.T) {
 	}
 }
 
+func TestDownloadSkipsValidCachedFile(t *testing.T) {
+	requests := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		http.Error(w, "should not download", http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	destination := filepath.Join(t.TempDir(), "ubuntu-24.04", ImageFileName)
+	if err := os.MkdirAll(filepath.Dir(destination), 0755); err != nil {
+		t.Fatalf("mkdir cache: %v", err)
+	}
+	if err := os.WriteFile(destination, []byte("hello"), 0644); err != nil {
+		t.Fatalf("write cached image: %v", err)
+	}
+
+	err := Download(TrustedImage{
+		Name:   "ubuntu-24.04",
+		URL:    server.URL,
+		SHA256: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+	}, destination, DownloadOptions{Timeout: time.Second})
+	if err != nil {
+		t.Fatalf("Download returned error: %v", err)
+	}
+	if requests != 0 {
+		t.Fatalf("expected no HTTP requests for valid cached image, got %d", requests)
+	}
+}
+
 func TestDownloadHTTPFailure(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "nope", http.StatusNotFound)

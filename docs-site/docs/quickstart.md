@@ -70,15 +70,21 @@ This defines a single VM named `web` with:
 | `user` | Username created by cloud-init. |
 | `sudo` | Sudo policy. `nopasswd` allows sudo without password. |
 
-## Step 3: Pull the Base Image
+## Step 3: Review or Pre-Pull the Base Image
 
-Download the Ubuntu cloud image:
+List available images:
+
+```bash
+yeast pull --list
+```
+
+Optionally pre-download the Ubuntu cloud image:
 
 ```bash
 yeast pull ubuntu-24.04
 ```
 
-This downloads the image to `~/.yeast/cache/images/`. It only runs once — subsequent projects reuse the cached image.
+This downloads the image to `~/.yeast/cache/images/`. It only runs once — subsequent projects reuse the cached image. If you skip this step, `yeast up` can auto-pull supported cloud images. Images marked manual in `yeast pull --list` print setup instructions instead of downloading automatically.
 
 ```
 Pulling ubuntu-24.04...
@@ -93,18 +99,20 @@ Boot the virtual machine:
 yeast up
 ```
 
-First boot takes 30-60 seconds. Yeast will:
+First boot can take 30-90 seconds depending on the host, image cache, and cloud-init. Yeast will:
 1. Create a disk image from the base image
 2. Generate cloud-init configuration (user, SSH key, hostname)
 3. Build a seed ISO with cloud-init files
 4. Start QEMU with KVM acceleration
 5. Wait for SSH to become available
+6. Run any configured provisioning steps
 
 Expected output:
 
 ```
-OK Instances ready
-  RUN  web  127.0.0.1:2222
+All instances ready
+  NAME  STATUS   SSH             LAB IP
+  web   running  127.0.0.1:2222
 ```
 
 ## Step 5: SSH into the VM
@@ -149,7 +157,7 @@ Expected output:
 
 ```
 Project status
-  NAME  STATUS   SSH
+  NAME  STATUS   SSH             LAB IP
   web   running  127.0.0.1:2222
 ```
 
@@ -178,7 +186,8 @@ yeast destroy
 | Concept | Command |
 |---|---|
 | Initialize project | `yeast init` |
-| Pull base image | `yeast pull ubuntu-24.04` |
+| List images | `yeast pull --list` |
+| Pre-pull base image | `yeast pull ubuntu-24.04` |
 | Start VMs | `yeast up` |
 | SSH into VM | `yeast ssh web` |
 | Check status | `yeast status` |

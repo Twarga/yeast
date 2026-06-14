@@ -79,6 +79,7 @@ func (s *Service) Status(ctx context.Context, options StatusOptions) (StatusResu
 			}
 			return info.State == rtm.ProcessStateRunning
 		},
+		FindProcessByRuntimeDir: s.findProcessByRuntimeDir(ctx, currentState),
 	})
 	if changed {
 		if err := state.Save(paths.StateFile, currentState); err != nil {
@@ -110,4 +111,24 @@ func (s *Service) Status(ctx context.Context, options StatusOptions) (StatusResu
 		return result.Instances[i].Name < result.Instances[j].Name
 	})
 	return result, nil
+}
+
+func (s *Service) findProcessByRuntimeDir(ctx context.Context, currentState state.State) func(name, runtimeDir string) (int, bool) {
+	finder, ok := s.runtime.(rtm.ProcessFinder)
+	if !ok {
+		return nil
+	}
+	return func(name, runtimeDir string) (int, bool) {
+		targets := []rtm.CleanupTarget{{Name: name, RuntimeDir: runtimeDir}}
+		results, err := finder.FindProcesses(ctx, targets)
+		if err != nil || len(results) == 0 {
+			return 0, false
+		}
+		for _, r := range results {
+			if r.Name == name && r.PID > 0 {
+				return r.PID, true
+			}
+		}
+		return 0, false
+	}
 }

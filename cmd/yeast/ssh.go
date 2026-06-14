@@ -8,7 +8,9 @@ import (
 )
 
 func newSSHCmd(service *app.Service) *cobra.Command {
-	return &cobra.Command{
+	var verbose bool
+
+	cmd := &cobra.Command{
 		Use:   "ssh [instance]",
 		Short: "Open an SSH session to a running instance",
 		Args: func(cmd *cobra.Command, args []string) error {
@@ -18,7 +20,7 @@ func newSSHCmd(service *app.Service) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			options := app.SSHOptions{}
+			options := app.SSHOptions{Verbose: verbose}
 			if len(args) == 1 {
 				options.Target = args[0]
 			}
@@ -26,4 +28,8 @@ func newSSHCmd(service *app.Service) *cobra.Command {
 			return err
 		},
 	}
+
+	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show SSH connection details (passes -v to ssh)")
+
+	return cmd
 }

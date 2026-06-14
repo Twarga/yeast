@@ -344,3 +344,32 @@ func TestValidateRejectsMultipleInstanceNetworkAttachments(t *testing.T) {
 		t.Fatal("expected too many instance network attachments error")
 	}
 }
+
+func TestValidateManagementHost(t *testing.T) {
+	cfg := validConfig()
+
+	cfg.ManagementHost = ""
+	if err := Validate(cfg); err != nil {
+		t.Fatalf("expected empty management_host to be valid, got: %v", err)
+	}
+
+	cfg.ManagementHost = "127.0.0.1"
+	if err := Validate(cfg); err != nil {
+		t.Fatalf("expected 127.0.0.1 to be valid, got: %v", err)
+	}
+
+	cfg.ManagementHost = "0.0.0.0"
+	if err := Validate(cfg); err != nil {
+		t.Fatalf("expected 0.0.0.0 to be valid, got: %v", err)
+	}
+
+	cfg.ManagementHost = "192.168.1.100"
+	if err := Validate(cfg); err != nil {
+		t.Fatalf("expected valid IPv4 to be valid, got: %v", err)
+	}
+
+	cfg.ManagementHost = "not-an-ip"
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected invalid management_host to fail")
+	}
+}

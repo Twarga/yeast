@@ -6,9 +6,12 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 	rtm "yeast/internal/runtime"
+
+	"golang.org/x/sys/unix"
 )
 
 func TestRuntimeStartCreatesLogAndReleasesHandle(t *testing.T) {
@@ -21,6 +24,7 @@ func TestRuntimeStartCreatesLogAndReleasesHandle(t *testing.T) {
 	var gotArgs []string
 	var gotLogPath string
 	var released bool
+	var handle *fakeProcessHandle
 	startProcess = func(_ context.Context, name string, args []string, stdout, stderr *os.File) (processHandle, error) {
 		gotName = name
 		gotArgs = append([]string(nil), args...)
@@ -34,13 +38,15 @@ func TestRuntimeStartCreatesLogAndReleasesHandle(t *testing.T) {
 		if _, err := stdout.WriteString("started\n"); err != nil {
 			t.Fatalf("write log output: %v", err)
 		}
-		return &fakeProcessHandle{
+		handle = &fakeProcessHandle{
 			pid: 4242,
 			releaseFn: func() error {
 				released = true
+				handle.pid = -1
 				return nil
 			},
-		}, nil
+		}
+		return handle, nil
 	}
 
 	root := t.TempDir()
@@ -90,6 +96,102 @@ func TestRuntimeStartCreatesLogAndReleasesHandle(t *testing.T) {
 	}
 	if !strings.Contains(string(content), "started") {
 		t.Fatalf("expected log output, got %q", string(content))
+	}
+}
+
+func TestRuntimeStartRemovesStaleQMPSocket(t *testing.T) {
+	previous := startProcess
+	defer func() {
+		startProcess = previous
+	}()
+
+	startProcess = func(_ context.Context, name string, args []string, stdout, stderr *os.File) (processHandle, error) {
+		return &fakeProcessHandle{pid: 4242}, nil
+	}
+
+	root := t.TempDir()
+	runtimeDir := filepath.Join(root, "instances", "web")
+	if err := os.MkdirAll(runtimeDir, 0755); err != nil {
+		t.Fatalf("mkdir runtime dir: %v", err)
+	}
+	socketPath := qmpSocketPath(runtimeDir)
+	if err := os.WriteFile(socketPath, []byte("stale"), 0644); err != nil {
+		t.Fatalf("write stale socket marker: %v", err)
+	}
+
+	plan := rtm.MachinePlan{
+		Name:          "web",
+		RuntimeDir:    runtimeDir,
+		LogPath:       filepath.Join(runtimeDir, "vm.log"),
+		MemoryMiB:     1024,
+		CPUs:          1,
+		SeedImagePath: filepath.Join(runtimeDir, "seed.iso"),
+		Disk: rtm.DiskPlan{
+			DiskPath: filepath.Join(runtimeDir, "disk.qcow2"),
+		},
+		Networks: rtm.NetworkPlan{
+			Management: rtm.ManagementNetworkPlan{
+				SSHHost:       "127.0.0.1",
+				SSHPort:       2222,
+				InterfaceName: "yeastmgmt0",
+				MACAddress:    "52:54:00:11:22:33",
+			},
+		},
+	}
+
+	if _, err := NewRuntime().Start(context.Background(), plan); err != nil {
+		t.Fatalf("Start returned error: %v", err)
+	}
+	if _, err := os.Stat(socketPath); !os.IsNotExist(err) {
+		t.Fatalf("expected stale qmp socket to be removed, stat err=%v", err)
+	}
+}
+
+func TestStartCommandContextDoesNotTieReleasedProcessToContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	logPath := filepath.Join(t.TempDir(), "process.log")
+	logFile, err := os.Create(logPath)
+	if err != nil {
+		t.Fatalf("create log file: %v", err)
+	}
+	defer func() {
+		_ = logFile.Close()
+	}()
+
+	handle, err := startCommandContext(ctx, "sleep", []string{"60"}, logFile, logFile)
+	if err != nil {
+		t.Fatalf("startCommandContext returned error: %v", err)
+	}
+	pid := handle.PID()
+	defer func() {
+		_ = signalProcess(pid, syscall.SIGKILL)
+	}()
+
+	parentSID, err := unix.Getsid(0)
+	if err != nil {
+		t.Fatalf("get parent session id: %v", err)
+	}
+	childSID, err := unix.Getsid(pid)
+	if err != nil {
+		t.Fatalf("get child session id: %v", err)
+	}
+	if childSID == parentSID {
+		t.Fatal("expected released process to run in a separate session")
+	}
+
+	if err := handle.Release(); err != nil {
+		t.Fatalf("release handle: %v", err)
+	}
+
+	cancel()
+	time.Sleep(200 * time.Millisecond)
+
+	running, err := processRunning(pid)
+	if err != nil {
+		t.Fatalf("inspect process: %v", err)
+	}
+	if !running {
+		t.Fatal("expected released process to survive context cancellation")
 	}
 }
 

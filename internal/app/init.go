@@ -120,7 +120,9 @@ func looksLikePath(value string) bool {
 }
 
 func defaultConfig() string {
-	return `version: 1
+	return `# Yeast VM configuration
+# Run 'yeast pull --list' to see all available images
+version: 1
 instances:
   - name: web
     image: ubuntu-24.04

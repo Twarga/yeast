@@ -25,7 +25,6 @@ func TestRenderNetworkConfigContainsStaticIPv4Definition(t *testing.T) {
 		"version: 2",
 		"yeastmgmt0:",
 		`macaddress: "52:54:00:11:22:33"`,
-		"set-name: yeastmgmt0",
 		"dhcp4: true",
 		"yeastlab0:",
 		"macaddress: 52:54:00:aa:bb:cc",
@@ -37,6 +36,9 @@ func TestRenderNetworkConfigContainsStaticIPv4Definition(t *testing.T) {
 		if !strings.Contains(got, want) {
 			t.Fatalf("expected network-config to contain %q, got:\n%s", want, got)
 		}
+	}
+	if strings.Contains(got, "set-name: yeastmgmt0") {
+		t.Fatalf("management interface should not be renamed, got:\n%s", got)
 	}
 }
 

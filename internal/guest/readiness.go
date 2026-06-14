@@ -13,6 +13,13 @@ import (
 const (
 	DefaultPollInterval = 250 * time.Millisecond
 	DefaultDialTimeout  = 1 * time.Second
+
+	fastPollInterval = 100 * time.Millisecond
+	fastPollDuration = 5 * time.Second
+	slowPollInterval = 500 * time.Millisecond
+	fastDialTimeout  = 200 * time.Millisecond
+	slowDialTimeout  = 2 * time.Second
+	fastDialAttempts = 10
 )
 
 type ReadinessOptions struct {
@@ -33,23 +40,29 @@ func WaitForTCP(ctx context.Context, options ReadinessOptions) error {
 		return fmt.Errorf("timeout must be greater than zero")
 	}
 
-	pollInterval := options.PollInterval
-	if pollInterval <= 0 {
-		pollInterval = DefaultPollInterval
-	}
-	dialTimeout := options.DialTimeout
-	if dialTimeout <= 0 {
-		dialTimeout = DefaultDialTimeout
-	}
 	dial := options.Dial
 	if dial == nil {
 		dial = defaultDialContext
 	}
 
 	deadline := time.Now().Add(options.Timeout)
+	start := time.Now()
 	var lastErr error
+	attempts := 0
 
 	for {
+		attempts++
+
+		// Adaptive dial timeout: fast early, slow later.
+		dialTimeout := options.DialTimeout
+		if dialTimeout <= 0 {
+			if attempts <= fastDialAttempts {
+				dialTimeout = fastDialTimeout
+			} else {
+				dialTimeout = slowDialTimeout
+			}
+		}
+
 		attemptCtx, cancel := context.WithTimeout(ctx, dialTimeout)
 		conn, err := dial(attemptCtx, "tcp", options.Address)
 		cancel()
@@ -64,6 +77,16 @@ func WaitForTCP(ctx context.Context, options ReadinessOptions) error {
 		}
 		if time.Now().After(deadline) {
 			return fmt.Errorf("timed out waiting for tcp readiness on %s after %s: %w", options.Address, options.Timeout, lastErr)
+		}
+
+		// Adaptive poll interval: fast at start, slow later.
+		pollInterval := options.PollInterval
+		if pollInterval <= 0 {
+			if time.Since(start) < fastPollDuration {
+				pollInterval = fastPollInterval
+			} else {
+				pollInterval = slowPollInterval
+			}
 		}
 
 		select {

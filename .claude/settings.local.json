@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(go build *)",
+      "Bash(go test *)",
+      "Bash(go version *)",
+      "Bash(go mod *)",
+      "Bash(GOTOOLCHAIN=local go mod tidy)",
+      "Bash(go env *)",
+      "Bash(cat)",
+      "Bash(cp /tmp/go.mod.test /home/twarga/Projects/yeast/go.mod)",
+      "Bash(curl -sI https://go.dev/dl/go1.25.0.linux-amd64.tar.gz)",
+      "Bash(curl -sI https://go.dev/dl/go1.24.0.linux-amd64.tar.gz)",
+      "Bash(GOTOOLCHAIN=go1.22.0 go mod tidy)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "Bash(gh api *)",
+      "Bash(mkdir -p ~/.claude/skills)",
+      "Read(//home/twarga/.claude/skills/**)",
+      "Bash(go vet *)",
+      "Bash([ -f \"/home/twarga/Projects/yeast/scripts/smoke/$f\" ])",
+      "Bash(grep -iE '\\\\.\\(md|png|txt\\)$')"
+    ]
+  }
+}

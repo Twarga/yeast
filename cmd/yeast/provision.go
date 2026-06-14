@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"time"
 	"yeast/internal/app"
+	"yeast/internal/output"
 
 	"github.com/spf13/cobra"
 )
@@ -18,9 +20,13 @@ func newProvisionCmd(service *app.Service) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			start := time.Now()
 			events, err := eventSink(cmd.OutOrStdout())
 			if err != nil {
 				return err
+			}
+			if events == nil && !outputQuiet && !outputJSON {
+				events = output.NewProgressSink(cmd.ErrOrStderr())
 			}
 			options := app.ProvisionOptions{}
 			options.Events = events
@@ -31,7 +37,7 @@ func newProvisionCmd(service *app.Service) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return renderCommandOutput(cmd.OutOrStdout(), "provision", result)
+			return renderCommandOutputWithTiming(cmd.OutOrStdout(), "provision", result, time.Since(start))
 		},
 	}
 }

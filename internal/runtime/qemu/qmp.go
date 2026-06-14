@@ -83,12 +83,12 @@ func (c *qmpClient) execute(command string, args map[string]any) error {
 			return fmt.Errorf("read qmp response for %s: %w", command, err)
 		}
 		var resp struct {
-			Return  json.RawMessage `json:"return"`
+			Return json.RawMessage `json:"return"`
 			Error  *struct {
 				Class string `json:"class"`
 				Desc  string `json:"desc"`
 			} `json:"error"`
-			Event map[string]any `json:"event"`
+			Event json.RawMessage `json:"event"`
 		}
 		if err := json.Unmarshal(line, &resp); err != nil {
 			return fmt.Errorf("parse qmp response: %w", err)

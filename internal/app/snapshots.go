@@ -25,6 +25,7 @@ type DeleteSnapshotOptions struct {
 	ProjectRoot string
 	Target      string
 	Name        string
+	Events      EventSink
 }
 
 type DeleteSnapshotResult struct {
@@ -146,6 +147,12 @@ func (s *Service) DeleteSnapshot(ctx context.Context, options DeleteSnapshotOpti
 	if err := state.Save(paths.StateFile, currentState); err != nil {
 		return DeleteSnapshotResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+
+	emitEvent(options.Events, "delete-snapshot", EventSnapshotCreated, EventOptions{
+		ProjectID: metadata.ID,
+		Instance:  options.Target,
+		Message:   fmt.Sprintf("Snapshot %s deleted", options.Name),
+	})
 
 	return DeleteSnapshotResult{
 		ProjectID: metadata.ID,

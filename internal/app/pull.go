@@ -11,29 +11,69 @@ var ErrUnsupportedImage = errors.New("unsupported image")
 type PullOptions struct {
 	ImageName string
 	List      bool
+	Cached    bool
 }
 
 type PullResult struct {
-	List        bool     `json:"list,omitempty"`
-	Images      []string `json:"images,omitempty"`
-	ImageName   string   `json:"image_name,omitempty"`
-	ImagePath   string   `json:"image_path,omitempty"`
-	ManifestURL string   `json:"manifest_url,omitempty"`
-	SHA256      string   `json:"sha256,omitempty"`
+	List          bool              `json:"list,omitempty"`
+	Images        []string          `json:"images,omitempty"`
+	ImageGroups   []ImageGroup      `json:"image_groups,omitempty"`
+	ImageName     string            `json:"image_name,omitempty"`
+	ImagePath     string            `json:"image_path,omitempty"`
+	ManifestURL   string            `json:"manifest_url,omitempty"`
+	SHA256        string            `json:"sha256,omitempty"`
+	SearchResults []string          `json:"search_results,omitempty"`
+	ManualHint    string            `json:"manual_hint,omitempty"`
+	CachedImages  []CachedImageInfo `json:"cached_images,omitempty"`
+}
+
+type ImageGroup struct {
+	Category string                    `json:"category"`
+	Images   []images.TrustedImage     `json:"images"`
+}
+
+type CachedImageInfo struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
 }
 
 func (s *Service) Pull(options PullOptions) (PullResult, error) {
+	if options.Cached {
+		return s.pullCached()
+	}
+
 	if options.List {
-		return PullResult{
-			List:   true,
-			Images: images.SupportedImages(),
-		}, nil
+		return s.pullList(), nil
 	}
 
 	image, ok := images.Lookup(options.ImageName)
 	if !ok {
-		cause := fmt.Errorf("%w: %s", ErrUnsupportedImage, options.ImageName)
-		return PullResult{}, WrapError(ErrorCodeInvalidArgument, cause.Error(), cause)
+		matches := images.Search(options.ImageName)
+		if len(matches) == 1 {
+			image, _ = images.Lookup(matches[0])
+		} else if len(matches) > 1 {
+			return PullResult{SearchResults: matches}, nil
+		} else {
+			msg := fmt.Sprintf("image %q not found", options.ImageName)
+			suggestions := images.SuggestSimilar(options.ImageName, 3)
+			if len(suggestions) > 0 {
+				msg += "\n\nDid you mean?\n"
+				for _, s := range suggestions {
+					msg += fmt.Sprintf("  - %s\n", s)
+				}
+			}
+			msg += "\nRun \"yeast pull --list\" for all available images."
+			cause := fmt.Errorf("%w: %s", ErrUnsupportedImage, options.ImageName)
+			return PullResult{}, WrapError(ErrorCodeInvalidArgument, msg, cause)
+		}
+	}
+
+	// Manual images — show instructions instead of downloading.
+	if image.URL == "" && image.ManualInstructions != "" {
+		return PullResult{
+			ImageName:  image.Name,
+			ManualHint: image.ManualInstructions,
+		}, nil
 	}
 
 	cacheRoot, err := s.resolveYeastHome()
@@ -55,4 +95,52 @@ func (s *Service) Pull(options PullOptions) (PullResult, error) {
 		ManifestURL: image.URL,
 		SHA256:      image.SHA256,
 	}, nil
+}
+
+func (s *Service) pullList() PullResult {
+	categoryOrder := []images.ImageCategory{
+		images.CategoryGeneral,
+		images.CategoryDevOps,
+		images.CategoryEnterprise,
+		images.CategorySecurity,
+		images.CategoryMinimal,
+		images.CategoryNiche,
+	}
+
+	all := images.ListByCategory()
+	var groups []ImageGroup
+	for _, cat := range categoryOrder {
+		imgs, ok := all[cat]
+		if !ok || len(imgs) == 0 {
+			continue
+		}
+		groups = append(groups, ImageGroup{
+			Category: string(cat),
+			Images:   imgs,
+		})
+	}
+
+	return PullResult{
+		List:        true,
+		Images:      images.SupportedImages(),
+		ImageGroups: groups,
+	}
+}
+
+func (s *Service) pullCached() (PullResult, error) {
+	cacheRoot, err := s.resolveYeastHome()
+	if err != nil {
+		return PullResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	cacheDir := cacheRoot + "/cache/images"
+	cached := images.GetCachedImages(cacheDir)
+	var infos []CachedImageInfo
+	for _, name := range cached {
+		paths, _ := images.ResolveCachePaths(cacheDir, name)
+		infos = append(infos, CachedImageInfo{
+			Name: name,
+			Path: paths.ImageDir,
+		})
+	}
+	return PullResult{CachedImages: infos}, nil
 }

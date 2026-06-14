@@ -2,6 +2,7 @@ package images
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -46,4 +47,46 @@ func IsSafeImageName(name string) bool {
 		return false
 	}
 	return !strings.Contains(name, "..")
+}
+
+// RemoveCachedImage deletes a cached image directory and returns the freed size in bytes.
+func RemoveCachedImage(cacheRoot, imageName string) (int64, error) {
+	paths, err := ResolveCachePaths(cacheRoot, imageName)
+	if err != nil {
+		return 0, err
+	}
+	info, err := os.Stat(paths.ImageDir)
+	if err != nil {
+		return 0, fmt.Errorf("image %q not cached", imageName)
+	}
+	if !info.IsDir() {
+		return 0, fmt.Errorf("image %q not cached", imageName)
+	}
+	// Calculate size before removal.
+	var size int64
+	entries, _ := os.ReadDir(paths.ImageDir)
+	for _, entry := range entries {
+		fi, err := entry.Info()
+		if err == nil {
+			size += fi.Size()
+		}
+	}
+	if err := os.RemoveAll(paths.ImageDir); err != nil {
+		return 0, fmt.Errorf("remove cached image %s: %w", imageName, err)
+	}
+	return size, nil
+}
+
+// RemoveAllCached removes all cached images and returns total freed size in bytes.
+func RemoveAllCached(cacheRoot string) (int64, error) {
+	cached := GetCachedImages(cacheRoot)
+	var totalSize int64
+	for _, name := range cached {
+		size, err := RemoveCachedImage(cacheRoot, name)
+		if err != nil {
+			return totalSize, err
+		}
+		totalSize += size
+	}
+	return totalSize, nil
 }

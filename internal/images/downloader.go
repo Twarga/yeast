@@ -40,6 +40,10 @@ func Download(image TrustedImage, destination string, options DownloadOptions) e
 		return fmt.Errorf("create image cache directory for %s: %w", destination, err)
 	}
 
+	if err := VerifySHA256(destination, image.SHA256); err == nil {
+		return nil
+	}
+
 	tempPath := destination + ".part"
 	if err := os.Remove(tempPath); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("remove stale temp file %s: %w", tempPath, err)

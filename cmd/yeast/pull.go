@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"time"
 	"yeast/internal/app"
 
 	"github.com/spf13/cobra"
@@ -10,14 +11,15 @@ import (
 
 func newPullCmd(service *app.Service) *cobra.Command {
 	var list bool
+	var cached bool
 
 	cmd := &cobra.Command{
 		Use:   "pull [image]",
-		Short: "List or download trusted base images",
+		Short: "List, search, or download trusted base images",
 		Args: func(cmd *cobra.Command, args []string) error {
-			if list {
+			if list || cached {
 				if len(args) != 0 {
-					return fmt.Errorf("--list does not accept an image name")
+					return fmt.Errorf("--list and --cached do not accept an image name")
 				}
 				return nil
 			}
@@ -27,8 +29,9 @@ func newPullCmd(service *app.Service) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			options := app.PullOptions{List: list}
-			if !list {
+			start := time.Now()
+			options := app.PullOptions{List: list, Cached: cached}
+			if !list && !cached {
 				options.ImageName = args[0]
 			}
 
@@ -39,10 +42,11 @@ func newPullCmd(service *app.Service) *cobra.Command {
 				}
 				return err
 			}
-			return renderCommandOutput(cmd.OutOrStdout(), "pull", result)
+			return renderCommandOutputWithTiming(cmd.OutOrStdout(), "pull", result, time.Since(start))
 		},
 	}
 
-	cmd.Flags().BoolVar(&list, "list", false, "List supported images")
+	cmd.Flags().BoolVar(&list, "list", false, "List all supported images by category")
+	cmd.Flags().BoolVar(&cached, "cached", false, "Show locally cached images")
 	return cmd
 }

@@ -55,6 +55,29 @@ func TestStatusSortsInstancesByName(t *testing.T) {
 	}
 }
 
+func TestStatusAfterInitWithoutStateFile(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.runtime = &fakeStatusRuntime{}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+
+	result, err := service.Status(context.Background(), StatusOptions{ProjectRoot: root})
+	if err != nil {
+		t.Fatalf("Status returned error: %v", err)
+	}
+	if result.ProjectID == "" {
+		t.Fatal("expected project id to be set")
+	}
+	if len(result.Instances) != 0 {
+		t.Fatalf("expected no instances before first up, got %#v", result.Instances)
+	}
+}
+
 func TestStatusReconcilesDeadProcessesAndSavesState(t *testing.T) {
 	root := t.TempDir()
 	yeastHome := filepath.Join(root, "yeast-home")

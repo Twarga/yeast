@@ -16,6 +16,7 @@ import (
 type SSHOptions struct {
 	ProjectRoot string
 	Target      string
+	Verbose     bool
 }
 
 type SSHResult struct {
@@ -92,16 +93,28 @@ func (s *Service) SSH(ctx context.Context, options SSHOptions) (SSHResult, error
 	if !ok {
 		return SSHResult{}, WrapError(ErrorCodeNotFound, fmt.Sprintf("instance %q not found in config", selectedName), nil)
 	}
-	address, err := s.sshAddress(defaultManagementHost, selectedState.SSHPort)
+	managementHost := resolveManagementHost(cfg)
+	address, err := s.sshAddress(managementHost, selectedState.SSHPort)
 	if err != nil {
 		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
-	args, err := guest.BuildSSHArgs(instanceCfg.User, defaultManagementHost, selectedState.SSHPort)
+	args, err := guest.BuildSSHArgs(instanceCfg.User, managementHost, selectedState.SSHPort)
 	if err != nil {
 		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	if options.Verbose {
+		args = append([]string{"-v"}, args...)
 	}
 	if err := s.runSSH(ctx, args); err != nil {
-		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+		hint := fmt.Sprintf(
+			"SSH connection to %s failed.\n\nTroubleshooting:\n"+
+				"  - Check the VM is running: yeast status\n"+
+				"  - Ensure your SSH key exists: ~/.ssh/id_ed25519.pub\n"+
+				"  - Try verbose mode: yeast ssh %s --verbose\n"+
+				"  - View VM logs: yeast logs %s",
+			selectedName, selectedName, selectedName,
+		)
+		return SSHResult{}, WrapError(ErrorCodeInternal, hint, err)
 	}
 
 	return SSHResult{
