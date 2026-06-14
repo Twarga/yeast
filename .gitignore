@@ -16,6 +16,7 @@ vm_test*/
 # Re-allow the only public-facing markdown file
 !README.md
 !CHANGELOG.md
+!internal/docs/embedded/*.md
 
 # Allow docs-site markdown files
 !docs-site/**/*.md
