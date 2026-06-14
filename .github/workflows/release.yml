@@ -1,0 +1,136 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+            artifact: yeast_linux_amd64
+          - os: linux
+            arch: arm64
+            artifact: yeast_linux_arm64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.5'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-x86 qemu-kvm libvirt-daemon-system
+
+      - name: Build binary
+        env:
+          CGO_ENABLED: 1
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          go build -trimpath -ldflags \
+            "-s -w -X yeast/internal/app.Version=${VERSION}" \
+            -o dist/${{ matrix.artifact }} ./cmd/yeast
+
+      - name: Verify binary
+        run: |
+          ./dist/${{ matrix.artifact }} --version
+          ./dist/${{ matrix.artifact }} doctor
+
+      - name: Create checksums
+        run: |
+          cd dist
+          sha256sum ${{ matrix.artifact }} >> SHA256SUMS.txt
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}
+
+      - name: Upload checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: SHA256SUMS
+          path: dist/SHA256SUMS.txt
+
+  create-release:
+    name: Create GitHub Release
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Organize release files
+        run: |
+          mkdir -p release
+          for arch in amd64 arm64; do
+            cp dist/yeast_linux_${arch}/yeast_linux_${arch} release/
+          done
+          cp dist/SHA256SUMS/SHA256SUMS.txt release/
+          ls -la release/
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          cat <<EOF > release-notes.md
+          ## yeast v${VERSION}
+          
+          ### Changes
+          - Auto-download images on \`yeast up\`
+          - 22 pre-configured images across 6 categories
+          - Sequential VM boot with profiling support
+          - Fingerprint-based reprovisioning
+          - New \`yeast images\`, \`yeast completion\`, \`yeast update\` commands
+          - SSH transport refactor
+          - Expanded smoke tests
+
+          ### Installation
+          \`\`\`bash
+          curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
+          \`\`\`
+
+          ### Upgrade
+          \`\`\`bash
+          yeast update
+          \`\`\`
+
+          ### Assets
+          - \`yeast_linux_amd64\` — Linux x86_64
+          - \`yeast_linux_arm64\` — Linux ARM64
+          - \`SHA256SUMS.txt\` — Checksums for verification
+          EOF
+          cat release-notes.md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: yeast ${{ github.ref_name }}
+          body_path: release-notes.md
+          files: |
+            release/yeast_linux_amd64
+            release/yeast_linux_arm64
+            release/SHA256SUMS.txt
+          draft: false
+          prerelease: false

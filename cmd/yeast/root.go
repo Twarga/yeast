@@ -62,6 +62,7 @@ func newRootCmd(service *app.Service) *cobra.Command {
 	cmd.AddCommand(newSnapshotsCmd(service))
 	cmd.AddCommand(newSSHCmd(service))
 	cmd.AddCommand(newStatusCmd(service))
+	cmd.AddCommand(newUpdateCmd())
 	cmd.AddCommand(newUpCmd(service))
 	cmd.AddCommand(newVersionCmd(service))
 	return cmd
