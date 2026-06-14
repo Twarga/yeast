@@ -98,13 +98,10 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           # Extract the section for this version from CHANGELOG.md
-          awk -v ver="## [${VERSION}]" '
-            $0 ~ ver {found=1; next}
-            found && /^## \[/ {exit}
-            found {print}
-          ' CHANGELOG.md > release-notes.md
+          # Using sed: print lines between "## [vX.Y.Z]" and next "## ["
+          sed -n "/^## \[${VERSION}\]/,/^## \[/p" CHANGELOG.md | head -n -1 > release-notes.md
           
-          # If not found, use a fallback
+          # If not found or empty, use fallback
           if [ ! -s release-notes.md ]; then
             echo "## yeast v${VERSION}" > release-notes.md
             echo "" >> release-notes.md
