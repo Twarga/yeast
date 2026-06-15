@@ -43,6 +43,8 @@ vm_test*/
 !/docs/releases/*.md
 !/docs/archive/
 !/docs/archive/*.md
+!/docs/stylesheets/
+!/docs/stylesheets/*.css
 /internal/docs/
 !/internal/docs/
 !/internal/docs/embedded/
