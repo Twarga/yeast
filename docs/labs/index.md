@@ -1,10 +1,12 @@
 # Yeast Labs
 
-The Yeast labs are public documentation tutorials.
+The Yeast labs are a short public tutorial path for learning Yeast itself.
 
-They teach Yeast itself, not DevOps.
+They are not a DevOps course. They teach the Yeast workflows you will use in real projects: projects, images, lifecycle, cloud-init, provisioning, status, JSON output, snapshots, private networking, and templates.
 
-Follow them in order:
+## Learning Path
+
+Follow the labs in order:
 
 | # | Lab | What You Learn |
 |---:|---|---|
@@ -18,14 +20,33 @@ Follow them in order:
 
 ## Before You Start
 
-Install Yeast and run:
+You need Yeast installed on a Linux host with QEMU/KVM.
+
+Run:
 
 ```bash
 yeast doctor
 ```
 
-Fix blockers before starting the labs.
+Fix blockers before starting Lab 01.
 
-## Style
+## How To Use These Labs
 
-Each lab is practical and short enough to finish. You should be able to copy the commands, understand what Yeast is doing, verify the result, and clean up safely.
+Each lab is meant to be copy/paste friendly and safe to clean up.
+
+Use a new folder for each lab. That keeps project state, VM disks, and snapshots separate.
+
+Most labs end with:
+
+```bash
+yeast down
+yeast destroy
+```
+
+`yeast down` stops VMs and keeps disks. `yeast destroy` removes tracked runtime files and disks for that lab project.
+
+## What These Labs Do Not Teach
+
+These labs do not teach Nginx, Docker, Kubernetes, CI/CD, or production DevOps.
+
+Those topics belong in a separate course. Here, the job is simpler: become comfortable with Yeast as the local VM engine.

@@ -1,17 +1,34 @@
 # Lab 02: Cloud-Init Basics
 
-In this lab, you will see how Yeast prepares a VM for first boot.
+Customize first boot settings and verify them from inside the VM.
 
 You will learn:
 
 - how `hostname` becomes the guest hostname
-- how the default `yeast` user is created
-- how SSH key access is prepared
+- how `user` controls the Linux login user
+- how `sudo` changes privilege behavior
 - why cloud-init runs before Yeast provisioning
+- where cloud-init stops and provisioning begins
 
 ## What You Will Build
 
-One Ubuntu VM with a predictable hostname and SSH user.
+```text
+yeast-lab-02/
+└── web VM
+    ├── hostname: cloudinit-lab
+    ├── user: yeast
+    └── sudo: nopasswd
+```
+
+## Before You Start
+
+Run:
+
+```bash
+yeast doctor
+```
+
+You should already understand the basic loop from Lab 01.
 
 ## Step 1: Create The Project
 
@@ -21,7 +38,7 @@ cd yeast-lab-02
 yeast init
 ```
 
-Edit `yeast.yaml`:
+Replace `yeast.yaml` with:
 
 ```yaml
 version: 1
@@ -31,8 +48,9 @@ instances:
     image: ubuntu-24.04
     memory: 1024
     cpus: 1
+    disk_size: 20G
     user: yeast
-    sudo: none
+    sudo: nopasswd
 ```
 
 ## Step 2: Start The VM
@@ -41,23 +59,47 @@ instances:
 yeast up
 ```
 
-## Step 3: Verify The Guest
+Cloud-init runs during the guest's first boot. It prepares the hostname, user, SSH access, and sudo policy before Yeast can connect for guest operations.
+
+## Step 3: Verify The Hostname
 
 ```bash
 yeast exec web -- hostname
-yeast exec web -- whoami
 ```
 
-Expected:
+Expected output:
 
 ```text
 cloudinit-lab
+```
+
+## Step 4: Verify The User
+
+```bash
+yeast exec web -- whoami
+```
+
+Expected output:
+
+```text
 yeast
 ```
 
-## What Happened
+## Step 5: Verify Sudo Policy
 
-Yeast generated cloud-init data before starting QEMU. Cloud-init prepared the guest user, hostname, and SSH access during first boot.
+```bash
+yeast exec web -- sudo -n true
+```
+
+The command should exit successfully because `sudo: nopasswd` allows passwordless sudo for this lab.
+
+## Step 6: Inspect The VM
+
+```bash
+yeast inspect web
+```
+
+Use inspect when you want detailed state for one instance.
 
 ## Clean Up
 
@@ -66,4 +108,12 @@ yeast down
 yeast destroy
 ```
 
-Next: [Provisioning After Boot](03-provisioning-after-boot.md).
+## What You Learned
+
+Cloud-init is the first-boot setup layer. Yeast uses it to make the VM reachable and usable.
+
+Provisioning is different: provisioning happens after SSH is ready. You will use that next.
+
+## Next Lab
+
+Continue with [Provisioning After Boot](03-provisioning-after-boot.md).

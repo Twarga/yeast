@@ -1,27 +1,28 @@
 # Lab 01: First VM, First SSH
 
-In this lab, you will start one Ubuntu VM and connect to it with SSH.
+Start one Ubuntu VM, check that Yeast sees it, connect with SSH, then clean it up.
 
 You will learn:
 
-- `yeast init`
-- `yeast pull`
-- `yeast up`
-- `yeast status`
-- `yeast ssh`
-- `yeast down`
-- `yeast destroy`
+- how a folder becomes a Yeast project
+- how Yeast uses a trusted base image
+- how `yeast up` turns `yeast.yaml` into a running VM
+- how to enter the guest with `yeast ssh`
+- the difference between stopping and destroying a project
 
 ## What You Will Build
 
 ```text
-host
-└── Yeast project
+Linux host
+└── yeast-lab-01/
+    ├── yeast.yaml
     └── web VM
         └── Ubuntu 24.04
 ```
 
 ## Before You Start
+
+Run:
 
 ```bash
 yeast doctor
@@ -37,10 +38,31 @@ cd yeast-lab-01
 yeast init --template ubuntu-basic
 ```
 
+Check what Yeast created:
+
+```bash
+find . -maxdepth 3 -type f | sort
+sed -n '1,120p' yeast.yaml
+```
+
+Expected files:
+
+- `yeast.yaml`
+- `.yeast/project.json`
+- `README.md`
+
 ## Step 2: Pull The Image
 
 ```bash
 yeast pull ubuntu-24.04
+```
+
+This downloads and verifies the trusted base image if it is not already cached.
+
+Check the cache:
+
+```bash
+yeast pull --cached
 ```
 
 ## Step 3: Start The VM
@@ -49,15 +71,19 @@ yeast pull ubuntu-24.04
 yeast up
 ```
 
-Yeast creates the VM disk, generates cloud-init data, starts QEMU/KVM, and waits for SSH.
+Yeast validates the config, prepares a disk, generates cloud-init data, starts QEMU/KVM, waits for SSH, and records state for the project.
 
-## Step 4: Check Status
+## Step 4: Verify Status
 
 ```bash
 yeast status
 ```
 
-Expected result: one running instance named `web`.
+Expected result:
+
+- one instance named `web`
+- status is running
+- an SSH port is shown
 
 ## Step 5: SSH Into The VM
 
@@ -65,7 +91,7 @@ Expected result: one running instance named `web`.
 yeast ssh web
 ```
 
-Inside the guest:
+Inside the guest, run:
 
 ```bash
 hostname
@@ -73,19 +99,42 @@ whoami
 exit
 ```
 
-## Step 6: Clean Up
+The default user from the template is `yeast`.
+
+## Step 6: Stop The VM
+
+```bash
+yeast down
+```
+
+This stops the VM but keeps the project disk.
+
+You can start it again:
+
+```bash
+yeast up
+```
+
+## Clean Up
 
 ```bash
 yeast down
 yeast destroy
 ```
 
+!!! warning
+    `yeast destroy` removes tracked runtime files and disks for this project.
+
 ## What You Learned
 
-You learned the smallest complete Yeast workflow:
+You completed the smallest useful Yeast loop:
 
 ```text
 init -> pull -> up -> status -> ssh -> down -> destroy
 ```
 
-Next: [Cloud-Init Basics](02-cloud-init-basics.md).
+You also saw that Yeast projects are folder-based. The config lives in `yeast.yaml`, while runtime state is tracked separately.
+
+## Next Lab
+
+Continue with [Cloud-Init Basics](02-cloud-init-basics.md).
