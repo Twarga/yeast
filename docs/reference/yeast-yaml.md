@@ -2,6 +2,8 @@
 
 `yeast.yaml` describes the desired state of a Yeast project.
 
+Yeast reads this file when you run commands such as `yeast up`, `yeast provision`, and `yeast status`.
+
 ## Minimal Example
 
 ```yaml
@@ -54,6 +56,8 @@ instances:
         - caddy
 ```
 
+This example shows the supported v1.1 shape. You do not need every field in normal projects.
+
 ## Defaults
 
 | Field | Default |
@@ -65,6 +69,30 @@ instances:
 | `user` | `yeast` |
 | `sudo` | `none` |
 
+## Validation Rules
+
+Yeast validates config before starting VMs.
+
+| Area | Rule |
+|---|---|
+| `version` | must be `1` |
+| `management_host` | must be empty, `127.0.0.1`, `0.0.0.0`, or another valid IPv4 address |
+| project networks | at most one project network |
+| network CIDR | must be IPv4 CIDR |
+| instances | at least one instance is required |
+| instance names | unique; letters, numbers, `.`, `_`, and `-`; cannot contain `..` |
+| hostnames | same naming style as instance names |
+| memory | minimum `128` MiB when set |
+| CPUs | minimum `1` when set |
+| `ssh_port` | `1` through `65535` when set |
+| `disk_size` | number with optional `K`, `M`, `G`, `T`, or `P` suffix |
+| user | Linux-style user name, max 32 characters |
+| sudo | `none`, `password`, or `nopasswd` |
+| env keys | shell-style names such as `APP_ENV`; no newlines in values |
+| network attachments | at most one private network per instance |
+| static IPv4 | required for private attachments, inside the CIDR, not network/broadcast, and not duplicated |
+| file permissions | three or four octal digits, for example `"0644"` |
+
 ## Top-Level Fields
 
 | Field | Required | Purpose |
@@ -75,12 +103,37 @@ instances:
 | `provision` | no | Provisioning shared by instances. |
 | `instances` | yes | One or more VM definitions. |
 
+## Management Host
+
+`management_host` controls the host IP Yeast uses for management access such as SSH forwarding.
+
+Most users should keep the default:
+
+```yaml
+management_host: 127.0.0.1
+```
+
+Use `0.0.0.0` only when you intentionally want management ports bound on all host interfaces.
+
+!!! warning
+    Binding management ports broadly can expose guest SSH to your network. Prefer `127.0.0.1` unless you understand the risk.
+
 ## Network Fields
 
 | Field | Required | Purpose |
 |---|---:|---|
 | `networks[].name` | yes | Unique network name inside the project. |
 | `networks[].cidr` | yes | IPv4 CIDR for the private network. |
+
+Example:
+
+```yaml
+networks:
+  - name: lab
+    cidr: 10.10.10.0/24
+```
+
+In v1.1, every instance attached to this network must define a static `ipv4`.
 
 ## Provision Fields
 
@@ -94,6 +147,14 @@ Provisioning can be defined at the top level or per instance.
 | `provision.files[].destination` | yes | Guest destination path. |
 | `provision.files[].permissions` | no | File mode such as `"0644"`. Quote modes so YAML keeps them as strings. |
 | `provision.shell` | no | Shell commands to run after packages and files. |
+
+Provisioning order is:
+
+1. install packages
+2. copy files
+3. run shell commands
+
+Top-level provisioning applies to instances. Instance-level provisioning adds instance-specific work.
 
 ## Instance Fields
 
@@ -114,6 +175,53 @@ Provisioning can be defined at the top level or per instance.
 | `instances[].networks[].name` | yes | Name of the project network to attach. |
 | `instances[].networks[].ipv4` | no | Static IPv4 inside the network CIDR. |
 | `instances[].provision` | no | Instance-specific provisioning. |
+
+## Disk Size
+
+`disk_size` is used when Yeast creates the instance disk.
+
+Examples:
+
+```yaml
+disk_size: 20G
+disk_size: 512M
+```
+
+Changing `disk_size` later does not automatically resize an existing project disk. Recreate the instance disk if you need a different size.
+
+## Sudo Policy
+
+| Value | Meaning |
+|---|---|
+| `none` | no special sudo setup |
+| `password` | sudo requires password behavior from the image/user setup |
+| `nopasswd` | passwordless sudo for the configured user |
+
+Use `nopasswd` for labs where provisioning commands need `sudo`.
+
+## Environment Values
+
+`env` is a string map:
+
+```yaml
+env:
+  APP_ENV: dev
+  ROLE: web
+```
+
+Keys must look like shell variable names. Values cannot contain newlines.
+
+## Custom User Data
+
+`user_data` lets you provide custom cloud-init user data:
+
+```yaml
+user_data: |
+  #cloud-config
+  package_update: true
+```
+
+Use it carefully. If custom user data conflicts with Yeast's expected user or SSH setup, the VM may boot but Yeast may not be able to connect.
 
 ## Unsupported In v1.1
 
