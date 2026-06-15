@@ -190,7 +190,7 @@ After installation, verify that Yeast is working:
 
 ```bash
 # Check the version
-yeast --version
+yeast version
 
 # Check system requirements
 yeast doctor

@@ -47,4 +47,4 @@ yeast destroy
 
 ## Next Steps
 
-- [Tutorials Index](./index) - View all tutorials
+- [Tutorials Index](./) - View all tutorials

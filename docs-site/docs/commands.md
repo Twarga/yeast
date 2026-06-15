@@ -60,14 +60,20 @@ yeast pull ubuntu-24.04
 ```
 
 **Available images:**
-- `ubuntu-24.04`
-- `ubuntu-22.04`
+- `debian-12`, `debian-13`
+- `ubuntu-24.04`, `ubuntu-22.04`
+- `fedora-41`, `fedora-42`
+- `alma-9`, `amazon-linux-2023`, `centos-stream-9`, `rocky-9`
+- Manual/setup-only entries such as `kali-2026.1`, `parrot-security-7.1`, `alpine-3.21`, `arch-linux`, `nixos-24.11`
 
 **Options:**
 
 ```bash
 # List available images
 yeast pull --list
+
+# Show locally cached images
+yeast pull --cached
 ```
 
 **Output:**
@@ -103,6 +109,15 @@ yeast up
 ```bash
 # Force re-run provisioning
 yeast up --reprovision
+
+# Skip provisioning for this boot
+yeast up --no-provision
+
+# Boot VMs one at a time for easier debugging
+yeast up --sequential
+
+# Print a boot-time profile
+yeast up --profile
 
 # JSON output
 yeast up --json
@@ -227,6 +242,9 @@ yeast exec db -- psql -c "SELECT version();"
 ```bash
 # JSON output
 yeast exec web --json -- whoami
+
+# Fail if the command takes too long
+yeast exec web --timeout 30s -- systemctl status ssh
 ```
 
 ---
@@ -252,6 +270,9 @@ yeast copy web --from-guest /home/yeast/remote-file.txt ./local-file.txt
 ```bash
 # JSON output
 yeast copy web --json --to-guest ./file.txt /home/yeast/file.txt
+
+# Fail if the transfer takes too long
+yeast copy web --timeout 30s --from-guest /var/log/syslog ./syslog
 ```
 
 ---
@@ -328,9 +349,34 @@ yeast logs web
 ```bash
 # Show last N lines
 yeast logs web --tail 50
+```
 
-# Follow logs (like tail -f)
-yeast logs web --follow
+---
+
+## Provisioning Commands
+
+### yeast provision
+
+Rerun provisioning for a reachable running instance.
+
+```bash
+# Re-provision the only running instance
+yeast provision
+
+# Re-provision a specific instance
+yeast provision web
+```
+
+**Use when:** you changed `provision` steps in `yeast.yaml` and want to apply them without recreating the VM.
+
+**Options:**
+
+```bash
+# JSON output
+yeast provision web --json
+
+# JSON with event stream
+yeast provision web --json --events
 ```
 
 ---
@@ -420,23 +466,57 @@ System Check
 
 ---
 
-### yeast clean
-
-Clean up stale state and orphaned resources.
+### yeast images clean
 
 ```bash
-yeast clean
+# Remove one cached image
+yeast images clean ubuntu-24.04
+
+# Preview image cache cleanup
+yeast images clean ubuntu-24.04 --dry-run
+
+# Remove all cached images
+yeast images clean --all
+```
+
+**What it removes:**
+- Cached base images under `~/.yeast/cache/images`
+- Only image cache data, not project VM disks
+
+**When to use:**
+- To free disk space after testing multiple images
+- Before re-downloading a corrupted cached image
+
+---
+
+### yeast update
+
+Update the installed Yeast binary from GitHub releases.
+
+```bash
+# Check whether an update is available
+yeast update --check
+
+# Install the latest release
+yeast update
+
+# Install a specific version
+yeast update --version v1.1.0
+
+# Reinstall even if the version matches
+yeast update --force --version v1.1.0
 ```
 
 **What it does:**
-- Removes stale state files
-- Kills orphaned QEMU processes
-- Removes broken instance directories
+- Downloads the release tarball for your platform
+- Verifies it against `SHA256SUMS.txt`
+- Extracts the `yeast` binary
+- Replaces the currently running binary atomically
 
 **When to use:**
-- After a crash
-- When `yeast status` shows wrong information
-- Before starting fresh after manual QEMU intervention
+- After a new release is published
+- During release smoke testing
+- To recover from an older installed binary
 
 ---
 
@@ -450,7 +530,37 @@ yeast version
 
 **Output:**
 ```
-yeast version 1.0.1
+v1.1.0
+```
+
+---
+
+### yeast docs
+
+Render bundled docs in the terminal.
+
+```bash
+# List embedded docs topics
+yeast docs --list
+
+# Open a topic
+yeast docs quickstart
+yeast docs release-smoke
+```
+
+**Note:** `yeast docs` does not support `--json`.
+
+---
+
+### yeast completion
+
+Generate shell completion scripts.
+
+```bash
+yeast completion bash
+yeast completion zsh
+yeast completion fish
+yeast completion powershell
 ```
 
 ---
@@ -461,12 +571,12 @@ yeast version 1.0.1
 |---|---|---|
 | `--json` | Output JSON instead of human-readable | `yeast status --json` |
 | `--events` | Include event stream in JSON output | `yeast up --json --events` |
+| `--quiet`, `-q` | Suppress progress output | `yeast up --quiet` |
 | `--help`, `-h` | Show help for a command | `yeast up --help` |
-| `--version`, `-v` | Show version | `yeast --version` |
 
 ## JSON Output
 
-All commands (except `ssh`) support `--json` for machine-readable output:
+Most workflow commands support `--json` for machine-readable output. Interactive or terminal-rendering commands such as `ssh`, `docs`, and `completion` do not.
 
 ```bash
 yeast status --json
@@ -516,4 +626,4 @@ yeast status --json
 
 - [Configuration](./configuration) — yeast.yaml reference
 - [Troubleshooting](./troubleshooting) — Common issues and fixes
-- [Tutorials](/tutorials/) — Step-by-step guided labs
+- [Tutorials](./tutorials/) — Step-by-step guided labs

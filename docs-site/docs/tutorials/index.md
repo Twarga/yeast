@@ -10,7 +10,7 @@ Welcome to the Yeast tutorials! These hands-on labs will teach you how to use Ye
 ## Prerequisites
 
 Before starting the tutorials, make sure you have:
-- Yeast installed (`yeast --version`)
+- Yeast installed (`yeast version`)
 - KVM support enabled (`yeast doctor`)
 - SSH key configured
 - Basic command line knowledge

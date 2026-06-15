@@ -5,7 +5,7 @@ description: Take and restore snapshots to save VM state
 
 # Tutorial 03 - Snapshots And Reset
 
-This walkthrough builds on [Tutorial 02](02-provisioning.md) and the same Caddy example.
+This walkthrough builds on [Tutorial 02](./02-provisioning) and the same Caddy example.
 
 ## Create a clean baseline
 

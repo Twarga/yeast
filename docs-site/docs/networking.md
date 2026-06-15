@@ -379,5 +379,5 @@ Current networking limitations in Yeast v1:
 ## Next Steps
 
 - [Configuration](./configuration) — Full yeast.yaml reference
-- [Multi-VM Lab Tutorial](/tutorials/04-multi-vm-lab) — Build your first networked lab
+- [Multi-VM Lab Tutorial](./tutorials/04-multi-vm-lab) — Build your first networked lab
 - [Troubleshooting](./troubleshooting) — More network debugging tips

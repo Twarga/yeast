@@ -143,9 +143,10 @@ lsof -i :2222
    kill <PID>
    ```
 
-3. **Or clean up orphaned QEMU processes:**
+3. **Or stop orphaned QEMU processes manually:**
    ```bash
-   yeast clean
+   ps aux | grep qemu
+   kill <PID>
    ```
 
 ### VM Won't Start
@@ -322,13 +323,14 @@ ls yeast.yaml
 **Fix:**
 
 ```bash
-# Clean up orphaned processes
-yeast clean
-
-# Or manually kill QEMU processes
+# Find QEMU processes
 ps aux | grep qemu
+
+# Stop the matching process if you are sure it belongs to this lab
 kill <PID>
 ```
+
+If you no longer need the project disks, run `yeast destroy` from the project directory after stopping the orphaned process.
 
 ### State File Corrupted
 
@@ -337,12 +339,12 @@ kill <PID>
 **Fix:**
 
 ```bash
-# Remove state and let Yeast rebuild
+# Stop VMs first, then remove state only if you are intentionally recovering manually
+yeast down
 rm .yeast/state.json
-# Or: yeast clean
 ```
 
-**Warning:** `yeast clean` removes runtime state but keeps disks. `yeast destroy` removes everything.
+**Warning:** deleting state is a manual recovery step. `yeast destroy` removes tracked project runtime files and disks.
 
 ## Error Messages Reference
 
@@ -418,7 +420,7 @@ If you're still stuck:
 Before running Yeast:
 
 - [ ] `yeast doctor` passes all checks
-- [ ] Image is pulled (`yeast pull --list`)
+- [ ] Image is available or cached (`yeast pull --list`, `yeast pull --cached`)
 - [ ] `ssh_port` values are unique
 - [ ] `host_port` values are unique
 - [ ] Lab network IPs are within CIDR range

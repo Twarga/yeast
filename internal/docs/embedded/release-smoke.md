@@ -95,7 +95,6 @@ yeast restore web baseline
 yeast up
 yeast exec web -- test ! -e /home/yeast/broken-marker
 yeast down
-yeast clean
 yeast destroy
 cd "$YEAST_SMOKE_ROOT"
 ```
@@ -113,7 +112,6 @@ yeast exec target -- ping -c 2 10.10.10.10
 yeast status --json
 yeast inspect attacker --json
 yeast down
-yeast clean
 yeast destroy
 ```
 

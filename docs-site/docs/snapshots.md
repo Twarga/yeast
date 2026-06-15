@@ -239,7 +239,7 @@ Each snapshot is a full copy of the disk:
 **Tips for saving space:**
 - Use smaller `disk_size` for lab VMs
 - Delete snapshots you no longer need
-- Use `yeast clean` to remove orphaned resources
+- If QEMU is orphaned after a crash, stop the matching process manually before retrying
 
 ## Limitations
 
@@ -256,4 +256,4 @@ Current snapshot limitations in Yeast v1:
 - [Commands](./commands) — Complete CLI reference
 - [Configuration](./configuration) — yeast.yaml reference
 - [Troubleshooting](./troubleshooting) — Common issues and fixes
-- [Tutorials](/tutorials/) — Hands-on snapshot exercises
+- [Tutorials](./tutorials/) — Hands-on snapshot exercises

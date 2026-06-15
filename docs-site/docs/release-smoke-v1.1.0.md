@@ -25,7 +25,7 @@ The release is shippable when all of these pass:
 - guest control works: `exec`, `copy`, `logs`, `inspect`
 - stopped-VM snapshot and restore work
 - two-VM private networking works
-- `yeast down`, `yeast clean`, and `yeast destroy` finish cleanly
+- `yeast down` and `yeast destroy` finish cleanly
 
 ## 1. Prepare the Host
 
@@ -313,7 +313,6 @@ Clean up:
 
 ```bash
 yeast down
-yeast clean
 yeast destroy
 ```
 
@@ -364,7 +363,6 @@ Clean up:
 
 ```bash
 yeast down
-yeast clean
 yeast destroy
 ```
 
@@ -430,5 +428,6 @@ If cleanup leaves processes behind:
 
 ```bash
 ps -ef | grep qemu
-yeast clean
+# Stop only QEMU processes that belong to this smoke test.
+kill <PID>
 ```

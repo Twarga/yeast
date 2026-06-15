@@ -200,7 +200,7 @@ yeast destroy
 - [Provisioning](./provisioning) — Install packages and configure VMs automatically
 - [Networking](./networking) — Create private networks for multi-VM labs
 - [Snapshots](./snapshots) — Take and restore VM snapshots
-- [Tutorials](/tutorials/) — Step-by-step guided labs
+- [Tutorials](./tutorials/) — Step-by-step guided labs
 
 ## Common Issues
 
