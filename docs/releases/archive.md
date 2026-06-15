@@ -1,5 +1,9 @@
 # Release Archive
 
-Older release notes and planning documents are being consolidated during the docs rewrite.
+The public docs focus on the current supported release.
 
-The new public docs should focus on the current supported release.
+Current release docs:
+
+- [Yeast v1.1.0](v1.1.0.md)
+
+Older release notes and planning documents were consolidated during the docs rewrite. If you need historical detail, use the Git history and tags.
