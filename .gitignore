@@ -26,8 +26,26 @@ vm_test*/
 # Keep the private DevOps bootcamp local until it is tested and approved.
 /_private-devops-bootcamp/
 
-# Also hide the entire docs/ tree (which contains html/css/png too)
-/docs/
+# Also hide the old docs/ tree by default, then allow only the new
+# MkDocs source paths. This keeps legacy ignored docs from resurfacing.
+/docs/*
+!/docs/index.md
+!/docs/getting-started/
+!/docs/getting-started/*.md
+!/docs/concepts/
+!/docs/concepts/*.md
+!/docs/guides/
+!/docs/guides/*.md
+!/docs/reference/
+!/docs/reference/*.md
+!/docs/troubleshooting/
+!/docs/troubleshooting/*.md
+!/docs/labs/
+!/docs/labs/*.md
+!/docs/releases/
+!/docs/releases/*.md
+!/docs/archive/
+!/docs/archive/*.md
 /internal/docs/
 !/internal/docs/
 !/internal/docs/embedded/

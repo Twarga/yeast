@@ -1,0 +1,85 @@
+site_name: Yeast
+site_description: Linux-first local VM orchestration for QEMU/KVM
+site_url: https://twarga.github.io/yeast/
+repo_url: https://github.com/Twarga/yeast
+repo_name: Twarga/yeast
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: brown
+      accent: amber
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - What Is Yeast: getting-started/what-is-yeast.md
+      - Installation: getting-started/installation.md
+      - Quickstart: getting-started/quickstart.md
+      - First VM: getting-started/first-vm.md
+  - Concepts:
+      - Projects: concepts/projects.md
+      - Images: concepts/images.md
+      - Lifecycle: concepts/lifecycle.md
+      - Cloud-Init: concepts/cloud-init.md
+      - Provisioning: concepts/provisioning.md
+      - Networking: concepts/networking.md
+      - Snapshots: concepts/snapshots.md
+      - Guest Control: concepts/guest-control.md
+      - State And Files: concepts/state-and-files.md
+  - Labs:
+      - Overview: labs/index.md
+      - First VM, First SSH: labs/01-first-vm-first-ssh.md
+      - Cloud-Init Basics: labs/02-cloud-init-basics.md
+      - Provisioning After Boot: labs/03-provisioning-after-boot.md
+      - Status, Logs, Inspect, JSON: labs/04-status-logs-inspect-json.md
+      - Snapshots And Restore: labs/05-snapshots-and-restore.md
+      - Multi-VM Private Networking: labs/06-multi-vm-private-networking.md
+      - Templates And Reusable Labs: labs/07-templates-and-reusable-labs.md
+  - Guides:
+      - Templates: guides/templates.md
+      - Caddy Single VM: guides/caddy-single-vm.md
+      - Two VM Lab: guides/two-vm-lab.md
+      - Rerun Provisioning: guides/rerun-provisioning.md
+      - Automate With JSON: guides/automate-with-json.md
+      - Manage Image Cache: guides/manage-image-cache.md
+      - Update Yeast: guides/update-yeast.md
+      - Release Smoke Test: guides/release-smoke-v1.1.0.md
+  - Reference:
+      - v1.1 Feature Map: reference/v1.1-feature-map.md
+      - Commands: reference/commands.md
+      - yeast.yaml: reference/yeast-yaml.md
+      - Images: reference/images.md
+      - JSON Output: reference/json-output.md
+      - Events: reference/events.md
+      - Limitations: reference/limitations.md
+  - Troubleshooting:
+      - Start Here: troubleshooting/index.md
+      - KVM: troubleshooting/kvm.md
+      - SSH: troubleshooting/ssh.md
+      - Images: troubleshooting/images.md
+      - Provisioning: troubleshooting/provisioning.md
+      - Networking: troubleshooting/networking.md
+      - Snapshots: troubleshooting/snapshots.md
+  - Releases:
+      - v1.1.0: releases/v1.1.0.md
+      - Archive: releases/archive.md
