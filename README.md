@@ -611,7 +611,7 @@ yeast docs
 yeast docs --list
 yeast docs quickstart
 yeast docs installation
-yeast docs tutorial-test
+yeast docs release-smoke
 ```
 
 - [YEAST_VISION.md](YEAST_VISION.md)

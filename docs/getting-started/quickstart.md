@@ -12,6 +12,19 @@ You will:
 
 Expected time: 5-10 minutes after the image is cached.
 
+## What You Need
+
+- a Linux host
+- working KVM access
+- Yeast installed
+- an SSH public key
+
+If you are not sure, start with:
+
+```bash
+yeast doctor
+```
+
 ## 1. Check The Host
 
 ```bash
@@ -49,6 +62,8 @@ You can list available images with:
 yeast pull --list
 ```
 
+If you skip this step, `yeast up` can auto-download supported cloud images. Manual/setup-only images print instructions instead.
+
 ## 4. Start The VM
 
 ```bash
@@ -71,6 +86,12 @@ yeast status
 ```
 
 You should see one running instance named `web`.
+
+For scripts:
+
+```bash
+yeast status --json
+```
 
 ## 6. SSH Into The VM
 
@@ -102,6 +123,26 @@ yeast destroy
 
 !!! warning
     `yeast destroy` removes tracked VM runtime files and disks for this project.
+
+## Common Next Checks
+
+Read VM logs:
+
+```bash
+yeast logs web --tail 80
+```
+
+Inspect one VM:
+
+```bash
+yeast inspect web
+```
+
+See terminal docs:
+
+```bash
+yeast docs --list
+```
 
 ## Next Step
 

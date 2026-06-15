@@ -33,6 +33,10 @@ Useful flags:
 | `yeast docs` | `--list` |
 | `yeast completion` | `bash`, `zsh`, `fish`, `powershell` |
 
+Terminal docs are intentionally short offline help. Current topics are `quickstart`, `installation`, `config`, `troubleshooting`, and `release-smoke`.
+
+`yeast docs` does not support `--json`.
+
 ## Images
 
 | Command | Purpose |

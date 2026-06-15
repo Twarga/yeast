@@ -27,6 +27,8 @@ For an explicit release:
 curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_REF=v1.1.0 bash
 ```
 
+The installer is meant for fresh Linux hosts. It may install host packages, prepare the image cache directory, check SSH key availability, and run `yeast doctor`.
+
 ## Manual Release Install
 
 ```bash
@@ -38,6 +40,8 @@ tar -xzf yeast_linux_amd64.tar.gz
 sudo install -m 0755 yeast /usr/local/bin/yeast
 ```
 
+The release archive must extract a binary named `yeast`.
+
 ## Verify The Install
 
 ```bash
@@ -46,6 +50,12 @@ yeast doctor
 ```
 
 `yeast doctor` checks the host and reports blockers or warnings.
+
+If the version command fails, check that `/usr/local/bin` is in your `PATH`:
+
+```bash
+command -v yeast
+```
 
 ## Install Host Packages
 
@@ -78,6 +88,12 @@ sudo usermod -aG kvm "$USER"
 
 Then log out and back in.
 
+Check access again:
+
+```bash
+yeast doctor
+```
+
 ## SSH Key
 
 If you do not have an SSH key yet:
@@ -87,6 +103,20 @@ ssh-keygen -t ed25519
 ```
 
 Yeast uses your public key for guest access.
+
+## Update Later
+
+Check for a newer release:
+
+```bash
+yeast update --check
+```
+
+Update to a specific tag:
+
+```bash
+yeast update --version v1.1.0
+```
 
 ## Next Step
 

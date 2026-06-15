@@ -15,14 +15,11 @@ import (
 var content embed.FS
 
 var topics = map[string]string{
-	"architecture":    "embedded/architecture.md",
 	"config":          "embedded/config.md",
 	"installation":    "embedded/installation.md",
-	"limits":          "embedded/limits.md",
 	"quickstart":      "embedded/quickstart.md",
 	"release-smoke":   "embedded/release-smoke.md",
 	"troubleshooting": "embedded/troubleshooting.md",
-	"tutorial-test":   "embedded/tutorial-test.md",
 }
 
 func TopicNames() []string {
@@ -101,7 +98,6 @@ func IndexMarkdown() string {
 	b.WriteString("yeast docs quickstart\n")
 	b.WriteString("yeast docs installation\n")
 	b.WriteString("yeast docs release-smoke\n")
-	b.WriteString("yeast docs tutorial-test\n")
 	b.WriteString("yeast docs --list\n")
 	b.WriteString("```\n")
 	return b.String()

@@ -30,10 +30,22 @@ What Yeast handles:
 
 Use `yeast status --json` for automation.
 
+Use lifecycle events when another tool needs progress:
+
+```bash
+yeast up --json --events
+```
+
 Template commands:
 
 ```bash
 yeast init --list-templates
 yeast init --template caddy-single-vm
 yeast init --template two-vm-lab
+```
+
+List offline terminal docs:
+
+```bash
+yeast docs --list
 ```
