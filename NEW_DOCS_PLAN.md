@@ -162,6 +162,132 @@ docs/
   archive/
 ```
 
+## V1.1 Feature Coverage Checklist
+
+Every v1.1 feature must have a public docs home before the rewrite is considered complete.
+
+### CLI Commands
+
+| Command | Docs Home | Required Coverage |
+|---|---|---|
+| `yeast doctor` | `getting-started/installation.md`, `troubleshooting/index.md` | host readiness, KVM, QEMU, SSH key checks |
+| `yeast init` | `getting-started/quickstart.md`, `concepts/projects.md`, `guides/templates.md`, `reference/commands.md` | default project init, built-in templates, local templates |
+| `yeast pull` | `concepts/images.md`, `reference/images.md`, `reference/commands.md` | `--list`, `--cached`, auto images, manual images |
+| `yeast images clean` | `guides/manage-image-cache.md`, `reference/commands.md` | one-image cleanup, `--all`, `--dry-run` |
+| `yeast up` | `concepts/lifecycle.md`, `reference/commands.md`, labs | normal boot, `--no-provision`, `--reprovision`, `--sequential`, `--profile` |
+| `yeast down` | `concepts/lifecycle.md`, `reference/commands.md`, labs | graceful stop, preserves project disks |
+| `yeast destroy` | `concepts/lifecycle.md`, `reference/commands.md`, labs | destructive cleanup warning |
+| `yeast status` | `concepts/guest-control.md`, `labs/04-status-logs-inspect-json.md`, `reference/commands.md` | human status, JSON status |
+| `yeast inspect` | `concepts/guest-control.md`, `labs/04-status-logs-inspect-json.md`, `reference/commands.md` | detailed instance state |
+| `yeast logs` | `concepts/guest-control.md`, `troubleshooting/index.md`, `reference/commands.md` | runtime logs, `--tail` |
+| `yeast ssh` | `getting-started/first-vm.md`, `concepts/guest-control.md`, `reference/commands.md` | interactive guest shell |
+| `yeast exec` | `concepts/guest-control.md`, `labs/05-snapshots-and-restore.md`, `reference/commands.md` | one-shot commands, `--timeout` |
+| `yeast copy` | `concepts/guest-control.md`, `labs/04-status-logs-inspect-json.md`, `reference/commands.md` | `--to-guest`, `--from-guest`, `--timeout` |
+| `yeast provision` | `concepts/provisioning.md`, `guides/rerun-provisioning.md`, `reference/commands.md` | rerun provisioning on running instances |
+| `yeast snapshot` | `concepts/snapshots.md`, `labs/05-snapshots-and-restore.md`, `reference/commands.md` | stopped-VM snapshot, description |
+| `yeast snapshots` | `concepts/snapshots.md`, `reference/commands.md` | list snapshots |
+| `yeast restore` | `concepts/snapshots.md`, `labs/05-snapshots-and-restore.md`, `reference/commands.md` | stopped-VM restore, destructive warning |
+| `yeast delete-snapshot` | `concepts/snapshots.md`, `reference/commands.md` | remove snapshot metadata and disk copy |
+| `yeast update` | `guides/update-yeast.md`, `reference/commands.md` | `--check`, `--force`, `--version`, checksum-verified release update |
+| `yeast docs` | `getting-started/quickstart.md`, `reference/commands.md` | terminal docs topics, `--list`, no JSON support |
+| `yeast completion` | `reference/commands.md` | shell completion generation |
+| `yeast version` | `getting-started/installation.md`, `reference/commands.md` | installed version check |
+
+### Global Flags
+
+| Flag | Docs Home | Required Coverage |
+|---|---|---|
+| `--json` | `reference/json-output.md`, `labs/04-status-logs-inspect-json.md` | machine-readable output |
+| `--events` | `reference/events.md`, `labs/04-status-logs-inspect-json.md` | JSON Lines lifecycle events, requires JSON |
+| `--quiet`, `-q` | `reference/commands.md` | suppress progress output |
+| `--help`, `-h` | `reference/commands.md` | per-command help |
+
+### `yeast.yaml` Fields
+
+| Field | Docs Home | Required Coverage |
+|---|---|---|
+| `version` | `reference/yeast-yaml.md` | required, currently `1` |
+| `management_host` | `reference/yeast-yaml.md`, `concepts/networking.md` | management bind host, valid IPv4, default behavior |
+| `networks` | `concepts/networking.md`, `reference/yeast-yaml.md` | at most one private network |
+| `networks[].name` | `reference/yeast-yaml.md` | unique project network name |
+| `networks[].cidr` | `concepts/networking.md`, `reference/yeast-yaml.md` | IPv4 CIDR only |
+| `provision` | `concepts/provisioning.md`, `reference/yeast-yaml.md` | top-level provision shared by instances |
+| `provision.packages` | `concepts/provisioning.md`, `reference/yeast-yaml.md` | package install step |
+| `provision.files` | `concepts/provisioning.md`, `reference/yeast-yaml.md` | host-to-guest file copy |
+| `provision.files[].source` | `reference/yeast-yaml.md` | local source path |
+| `provision.files[].destination` | `reference/yeast-yaml.md` | guest destination path |
+| `provision.files[].permissions` | `reference/yeast-yaml.md` | octal file mode |
+| `provision.shell` | `concepts/provisioning.md`, `reference/yeast-yaml.md` | shell commands run after package/file steps |
+| `instances` | `concepts/projects.md`, `reference/yeast-yaml.md` | one or more VM definitions |
+| `instances[].name` | `reference/yeast-yaml.md` | unique instance name, naming rules |
+| `instances[].hostname` | `concepts/cloud-init.md`, `reference/yeast-yaml.md` | guest hostname |
+| `instances[].image` | `concepts/images.md`, `reference/yeast-yaml.md` | supported image name |
+| `instances[].memory` | `reference/yeast-yaml.md` | MiB, minimum 128 when set |
+| `instances[].cpus` | `reference/yeast-yaml.md` | vCPU count, minimum 1 when set |
+| `instances[].disk_size` | `reference/yeast-yaml.md` | overlay disk size, applies on first disk creation |
+| `instances[].ssh_port` | `concepts/networking.md`, `reference/yeast-yaml.md` | host management SSH port |
+| `instances[].user` | `concepts/cloud-init.md`, `reference/yeast-yaml.md` | Linux user, default behavior |
+| `instances[].sudo` | `concepts/cloud-init.md`, `reference/yeast-yaml.md` | `none`, `password`, `nopasswd` |
+| `instances[].env` | `concepts/provisioning.md`, `reference/yeast-yaml.md` | environment values for guest/cloud-init behavior |
+| `instances[].user_data` | `concepts/cloud-init.md`, `reference/yeast-yaml.md` | custom cloud-init user data behavior and cautions |
+| `instances[].networks` | `concepts/networking.md`, `reference/yeast-yaml.md` | at most one private network attachment |
+| `instances[].networks[].name` | `reference/yeast-yaml.md` | attached network name |
+| `instances[].networks[].ipv4` | `concepts/networking.md`, `reference/yeast-yaml.md` | static IPv4 inside network CIDR |
+| `instances[].provision` | `concepts/provisioning.md`, `reference/yeast-yaml.md` | instance-specific provision steps |
+
+Unsupported in v1.1 public docs:
+
+- `ports`
+- `host_port`
+- `guest_port`
+
+These appear in some older docs/examples but are not part of the current config model. Do not teach them as supported until implemented.
+
+## Current Supported Images
+
+This list must be checked against `internal/images/manifest.go` and `yeast pull --list` during the docs rewrite.
+
+### Auto-Download Images
+
+These images have direct URLs and checksums in the manifest. They are intended to be downloadable with `yeast pull <image>`.
+
+| Image | Category | Cloud-Init | Approx Size | Description |
+|---|---|---:|---:|---|
+| `debian-12` | General Purpose | yes | ~400MB | Debian 12 Bookworm, stable/minimal |
+| `debian-13` | General Purpose | yes | ~400MB | Debian 13 Trixie, newer packages |
+| `ubuntu-22.04` | General Purpose | yes | ~500MB | Ubuntu 22.04 LTS, legacy LTS |
+| `ubuntu-24.04` | General Purpose | yes | ~600MB | Ubuntu 24.04 LTS, default choice |
+| `fedora-41` | DevOps & Cloud | yes | ~500MB | Fedora 41, balanced stable/bleeding-edge |
+| `fedora-42` | DevOps & Cloud | yes | ~500MB | Fedora 42, newer tooling/kernels |
+| `alma-9` | Enterprise | yes | ~1GB | AlmaLinux 9, RHEL-compatible |
+| `centos-stream-9` | Enterprise | yes | ~800MB | CentOS Stream 9, upstream RHEL |
+| `rocky-9` | Enterprise | yes | ~1GB | Rocky Linux 9, RHEL-compatible |
+
+### Manual/Setup-Only Images
+
+These images are searchable and listed by Yeast, but require manual download or preparation before use.
+
+| Image | Category | Cloud-Init | Approx Size | Notes |
+|---|---|---:|---:|---|
+| `amazon-linux-2023` | Enterprise | yes | ~1.4GB | Manual QCOW2 download from Amazon Linux |
+| `opensuse-leap-15.6` | Enterprise | no | ~1GB | Manual setup/conversion required |
+| `kali-2026.1` | Security | no | ~3.6GB | Manual QEMU image download, default `kali/kali` credentials |
+| `parrot-security-7.1` | Security | no | ~11.7GB | Manual QCOW2 setup |
+| `alpine-3.21` | Minimal | no | ~50MB | Manual ISO/QCOW2 setup |
+| `arch-linux` | Niche | no | ~800MB | Manual arch-boxes or custom QCOW2 setup |
+| `nixos-24.11` | Niche | no | ~1GB | Manual NixOS generator/download setup |
+
+### Image Docs Requirements
+
+The new image docs must explain:
+
+- `yeast pull --list` shows all supported images.
+- `yeast pull --cached` shows locally cached images.
+- Auto-download images can be pulled directly.
+- Manual images print setup instructions instead of downloading.
+- Cloud-init support affects automatic user, SSH, and provisioning behavior.
+- Image cache cleanup uses `yeast images clean`.
+
 ## Public Yeast Mini Bootcamp
 
 The public Yeast mini bootcamp is a 7-lab documentation tutorial path.
