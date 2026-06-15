@@ -1,6 +1,6 @@
 site_name: Yeast
 site_description: Linux-first local VM orchestration for QEMU/KVM
-site_url: https://twarga.github.io/yeast/
+site_url: https://twarga.github.io/yeast/docs/
 repo_url: https://github.com/Twarga/yeast
 repo_name: Twarga/yeast
 

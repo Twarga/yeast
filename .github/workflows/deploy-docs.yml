@@ -5,9 +5,11 @@ on:
     branches:
       - main
     paths:
-      - docs-site/**
+      - docs/**
       - landing/**
       - assets/**
+      - mkdocs.yml
+      - requirements-docs.txt
       - .github/workflows/deploy-docs.yml
   workflow_dispatch:
 
@@ -30,28 +32,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          node-version: 20
+          python-version: "3.12"
 
-      - name: Install dependencies
-        run: npm install
-        working-directory: docs-site
+      - name: Install docs dependencies
+        run: python -m pip install --requirement requirements-docs.txt
 
-      - name: Build VitePress
-        run: npm run build
-        working-directory: docs-site
+      - name: Build MkDocs
+        run: mkdocs build --strict --site-dir site-docs
 
-      - name: Prepare dist
+      - name: Prepare Pages artifact
         run: |
-          mkdir -p dist
-          cp -r docs-site/.vitepress/dist/* dist/
-          mv dist/assets dist/docs/assets
-          mkdir -p dist/assets
+          mkdir -p dist/docs dist/assets
+          cp -r site-docs/* dist/docs/
           cp assets/logo.svg dist/assets/
           cp assets/favicon.ico dist/assets/
           cp landing/index.html dist/index.html
+          touch dist/.nojekyll
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

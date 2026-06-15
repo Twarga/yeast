@@ -1,6 +1,6 @@
 # New Yeast Docs Plan
 
-Status: planning
+Status: in progress
 Audience: public Yeast users and contributors
 Scope: public documentation, public Yeast tutorial labs, embedded terminal docs
 
@@ -564,6 +564,8 @@ Recommended topics:
 - Move source docs into MkDocs structure.
 - Remove or deprecate `docs-site/`.
 - Update GitHub Pages workflow.
+
+Status: active. MkDocs Material is now the public docs engine, the new docs source lives in `docs/`, and the Pages workflow should publish MkDocs under `/docs/` with the custom landing page at the site root.
 
 ### Phase 4: Validate
 
