@@ -1,6 +1,6 @@
 # New Yeast Docs Plan
 
-Status: in progress
+Status: complete
 Audience: public Yeast users and contributors
 Scope: public documentation, public Yeast tutorial labs, embedded terminal docs
 
@@ -565,7 +565,7 @@ Recommended topics:
 - Remove or deprecate `docs-site/`.
 - Update GitHub Pages workflow.
 
-Status: active. MkDocs Material is now the public docs engine, the new docs source lives in `docs/`, and the Pages workflow should publish MkDocs under `/docs/` with the custom landing page at the site root.
+Status: complete. MkDocs Material is now the public docs engine, the new docs source lives in `docs/`, and the Pages workflow publishes MkDocs under `/docs/` with the custom landing page at the site root.
 
 ### Phase 4: Validate
 
@@ -596,3 +596,39 @@ The new docs are ready when:
 - public Yeast labs teach Yeast, not DevOps
 - the docs build fails on broken links
 - embedded docs still pass tests
+
+## Completion Audit
+
+Completed on 2026-06-15.
+
+Evidence:
+
+- `docs-site/` was removed.
+- old tracked `tutorials/` docs were removed.
+- MkDocs Material is configured in `mkdocs.yml`.
+- GitHub Pages deployment builds MkDocs from `docs/` and keeps `landing/index.html` as the root page.
+- the public docs tree exists under `docs/`.
+- the 7 public Yeast labs exist under `docs/labs/` and follow the agreed tutorial structure.
+- `reference/v1.1-feature-map.md` maps v1.1 commands and config fields to docs homes.
+- `reference/images.md` lists all images from `internal/images/manifest.go`.
+- embedded terminal docs are limited to `quickstart`, `installation`, `config`, `troubleshooting`, and `release-smoke`.
+
+Final validation gates run:
+
+```bash
+mkdocs build --strict --site-dir /tmp/yeast-site-docs-final
+PATH=/tmp/yeast-go-check/go/bin:$PATH go test ./internal/docs -count=1
+git diff --check
+```
+
+Additional audit checks passed:
+
+- Markdown links resolve.
+- all visible `yeast` commands from `./yeast --help` have docs coverage.
+- all YAML tags from `internal/config/model.go` have docs coverage.
+- all image names from `internal/images/manifest.go` have docs coverage.
+- embedded docs topic map matches embedded docs files.
+- public docs do not reference invalid commands such as `yeast --version`, `yeast clean`, or `yeast logs --follow`.
+- unsupported `ports`, `host_port`, and `guest_port` only appear as explicit unsupported-feature warnings.
+- labs do not contain DevOps-course content.
+- simulated GitHub Pages artifact layout contains the landing page, docs index, labs index, quickstart page, logo, and favicon.
