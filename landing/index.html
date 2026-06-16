@@ -105,6 +105,36 @@
       color: var(--accent) !important;
     }
     .nav-get-started:hover { color: #8af75f !important; }
+    .nav-github {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font-body);
+      color: var(--text-primary);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .nav-github:hover {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .nav-github .stars {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding-left: 8px;
+      margin-left: 4px;
+      border-left: 1px solid rgba(34, 197, 94, 0.24);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
     .nav-hamburger {
       display: none;
       background: none;
@@ -181,6 +211,7 @@
       position: relative;
       z-index: 2;
       max-width: 520px;
+      animation: liftIn 0.8s ease both;
     }
     .hero h1 {
       font-size: clamp(36px, 5vw, 56px);
@@ -290,6 +321,7 @@
       display: grid;
       gap: 16px;
       align-self: start;
+      animation: liftIn 0.8s ease 0.1s both;
     }
 
     /* ── Terminal ── */
@@ -304,6 +336,7 @@
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 0 40px rgba(34, 197, 94, 0.05);
+      animation: glowPulse 6s ease-in-out infinite;
     }
     .terminal::after {
       content: '';
@@ -492,11 +525,21 @@
       padding: 26px 18px;
       text-align: center;
       border-right: 1px solid var(--border);
+      animation: liftIn 0.6s ease both;
+      transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
     }
     .proof-item:last-child { border-right: none; }
+    .proof-item:nth-child(2) { animation-delay: 0.08s; }
+    .proof-item:nth-child(3) { animation-delay: 0.16s; }
+    .proof-item:nth-child(4) { animation-delay: 0.24s; }
+    .proof-item:hover {
+      transform: translateY(-2px);
+      background: rgba(34, 197, 94, 0.03);
+      box-shadow: inset 0 1px 0 rgba(34, 197, 94, 0.08);
+    }
     .proof-icon {
-      width: 44px;
-      height: 44px;
+      width: 52px;
+      height: 52px;
       border: 1px solid var(--accent);
       color: var(--accent);
       border-radius: 12px;
@@ -505,8 +548,9 @@
       justify-content: center;
       margin-bottom: 12px;
       font-family: var(--font-mono);
-      font-size: 18px;
+      font-size: 13px;
       font-weight: 700;
+      letter-spacing: 0.8px;
       background: rgba(34, 197, 94, 0.06);
     }
     .proof-item h3 {
@@ -552,7 +596,13 @@
       border-radius: 12px;
       padding: 22px 20px;
       transition: all 0.3s;
+      animation: liftIn 0.6s ease both;
     }
+    .feature-card:nth-child(2) { animation-delay: 0.06s; }
+    .feature-card:nth-child(3) { animation-delay: 0.12s; }
+    .feature-card:nth-child(4) { animation-delay: 0.18s; }
+    .feature-card:nth-child(5) { animation-delay: 0.24s; }
+    .feature-card:nth-child(6) { animation-delay: 0.30s; }
     .feature-card:hover {
       border-color: var(--border-strong);
       transform: translateY(-2px);
@@ -568,7 +618,9 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      font-size: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
       color: var(--accent);
     }
     .feature-copy h3 {
@@ -596,6 +648,8 @@
       border-radius: 14px;
       overflow: hidden;
       box-shadow: 0 0 40px rgba(34, 197, 94, 0.05);
+      margin-top: 48px;
+      animation: liftIn 0.8s ease both;
     }
     .example-head {
       display: flex;
@@ -640,6 +694,20 @@
       flex-wrap: wrap;
     }
 
+    @keyframes liftIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.05); }
+      50% { box-shadow: 0 0 60px rgba(34, 197, 94, 0.12); }
+    }
+    @keyframes pulseRing {
+      0% { transform: scale(0.95); opacity: 0.5; }
+      50% { transform: scale(1.12); opacity: 0.15; }
+      100% { transform: scale(0.95); opacity: 0.5; }
+    }
+
     /* ── How It Works ── */
     .how-it-works { text-align: center; }
     .steps {
@@ -662,6 +730,20 @@
     .step {
       position: relative;
       z-index: 1;
+      padding: 22px 16px 18px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(17, 24, 21, 0.94), rgba(12, 16, 14, 0.94));
+      border: 1px solid var(--border);
+      animation: liftIn 0.65s ease both;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .step:nth-child(2) { animation-delay: 0.08s; }
+    .step:nth-child(3) { animation-delay: 0.16s; }
+    .step:nth-child(4) { animation-delay: 0.24s; }
+    .step:hover {
+      transform: translateY(-3px);
+      border-color: var(--border-strong);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
     }
     .step-num {
       width: 48px;
@@ -677,6 +759,15 @@
       font-weight: 700;
       font-size: 16px;
       color: var(--accent);
+      position: relative;
+    }
+    .step-num::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 1px solid rgba(34, 197, 94, 0.18);
+      animation: pulseRing 2.6s ease-in-out infinite;
     }
     .step-cmd {
       font-family: var(--font-mono);
@@ -802,7 +893,10 @@
     <div class="nav-links">
       <a href="#features">Features</a>
       <a href="/yeast/docs/">Docs</a>
-      <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener" class="nav-github">
+        GitHub project
+        <span class="stars">★ <span id="gh-stars">—</span></span>
+      </a>
       <a href="#install" class="nav-get-started">Get Started</a>
     </div>
     <button class="nav-hamburger" onclick="document.getElementById('mobile-menu').classList.add('open')" aria-label="Menu">
@@ -817,7 +911,7 @@
   </button>
   <a href="/yeast/docs/" onclick="this.parentElement.classList.remove('open')">Docs</a>
   <a href="#features" onclick="this.parentElement.classList.remove('open')">Features</a>
-  <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">GitHub</a>
+  <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">GitHub project</a>
   <a href="#install" onclick="this.parentElement.classList.remove('open')">Get Started</a>
 </div>
 
@@ -860,7 +954,7 @@
   <div class="container">
     <div class="proof-grid">
       <div class="proof-item">
-        <div class="proof-icon">&lt;/&gt;</div>
+        <div class="proof-icon">YAML</div>
         <h3>YAML-driven</h3>
       </div>
       <div class="proof-item">
@@ -868,11 +962,11 @@
         <h3>Real QEMU/KVM VMs</h3>
       </div>
       <div class="proof-item">
-        <div class="proof-icon">&#x2601;</div>
+        <div class="proof-icon">CI</div>
         <h3>Cloud-init provisioning</h3>
       </div>
       <div class="proof-item">
-        <div class="proof-icon">&gt;_</div>
+        <div class="proof-icon">SSH</div>
         <h3>SSH-ready</h3>
       </div>
     </div>
@@ -910,7 +1004,7 @@
         <div class="step-num">2</div>
         <div class="step-info">
           <div class="step-cmd">yeast up</div>
-          <div class="step-label">Boot real VMs</div>
+          <div class="step-label">Downloads and boots</div>
         </div>
       </div>
       <div class="step">
@@ -938,7 +1032,7 @@
     <h2 class="section-title">Everything you need for local VMs.</h2>
     <div class="feature-list">
       <div class="feature-card">
-        <div class="feature-icon">&#x1F4DD;</div>
+        <div class="feature-icon">&lt;/&gt;</div>
         <div class="feature-copy">
           <h3>YAML-driven labs</h3>
           <p>One file defines the whole project. Keep infrastructure in version control and avoid GUI drift.</p>
@@ -952,28 +1046,28 @@
         </div>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#x1F4BE;</div>
+        <div class="feature-icon">SN</div>
         <div class="feature-copy">
           <h3>Snapshots</h3>
           <p>Stop, save, restore, and clone VMs in seconds. Reset safely without rebuilding everything from scratch.</p>
         </div>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#x1F310;</div>
+        <div class="feature-icon">NW</div>
         <div class="feature-copy">
           <h3>Private networking</h3>
           <p>Lab VMs talk to each other on isolated networks with static IPs and predictable topology.</p>
         </div>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#x2699;</div>
+        <div class="feature-icon">CI</div>
         <div class="feature-copy">
           <h3>Cloud-init provisioning</h3>
           <p>Packages, users, files, and setup run automatically on first boot. No manual babysitting.</p>
         </div>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">&#x1F4CA;</div>
+        <div class="feature-icon">{ }</div>
         <div class="feature-copy">
           <h3>JSON automation</h3>
           <p>Stable machine-readable output and events make Yeast easy to script and integrate.</p>
@@ -988,29 +1082,19 @@
   <div class="container">
     <div class="section-label">Quick example</div>
     <h2 class="section-title">A folder becomes a running machine.</h2>
-    <div class="example-grid">
-      <div class="example-card">
-        <div class="example-head">
-          <span>terminal</span>
-          <span>project setup</span>
-        </div>
-        <div class="example-body">
-          <div class="example-line"><span class="prompt">$ </span><span class="cmd">mkdir my-lab &amp;&amp; cd my-lab</span></div>
-          <div class="example-line"><span class="prompt">$ </span><span class="cmd">yeast init</span></div>
-          <div class="example-line"><span class="out">Project initialized.</span></div>
-        </div>
+    <div class="example-card">
+      <div class="example-head">
+        <span>terminal</span>
+        <span>project flow</span>
       </div>
-      <div class="example-card">
-        <div class="example-head">
-          <span>terminal</span>
-          <span>runtime</span>
-        </div>
-        <div class="example-body">
-          <div class="example-line"><span class="prompt">$ </span><span class="cmd">yeast up</span></div>
-          <div class="example-line"><span class="out">Creating VM web-01 ...</span></div>
-          <div class="example-line"><span class="out">Provisioning with cloud-init ...</span></div>
-          <div class="example-line"><span class="good">web-01 is up and reachable via SSH</span></div>
-        </div>
+      <div class="example-body">
+        <div class="example-line"><span class="prompt">$ </span><span class="cmd">mkdir my-lab &amp;&amp; cd my-lab</span></div>
+        <div class="example-line"><span class="prompt">$ </span><span class="cmd">yeast init</span></div>
+        <div class="example-line"><span class="out">Project initialized.</span></div>
+        <div class="example-line"><span class="prompt">$ </span><span class="cmd">yeast up</span></div>
+        <div class="example-line"><span class="out">Downloading ubuntu-24.04 ...</span></div>
+        <div class="example-line"><span class="out">Provisioning with cloud-init ...</span></div>
+        <div class="example-line"><span class="good">web-01 is up and reachable via SSH</span></div>
       </div>
     </div>
   </div>
@@ -1049,9 +1133,9 @@ const lines = [
   { type: 'cmd', text: 'mkdir my-lab && cd my-lab' },
   { type: 'cmd', text: 'yeast init' },
   { type: 'output', text: 'Project initialized.' },
-  { type: 'cmd', text: 'yeast pull ubuntu-24.04' },
-  { type: 'output', text: 'Downloaded ubuntu-24.04.' },
   { type: 'cmd', text: 'yeast up' },
+  { type: 'output', text: 'Downloading ubuntu-24.04 ...' },
+  { type: 'output', text: 'Provisioning with cloud-init ...' },
   { type: 'success', text: 'web-01 is up and reachable via SSH.' },
   { type: 'cmd', text: 'yeast ssh' },
   { type: 'success', text: 'Connected. Welcome to Ubuntu.' },
@@ -1093,6 +1177,22 @@ function typeLine() {
 
 // Start typing after a short delay
 setTimeout(typeLine, 800);
+
+// ── GitHub stars badge ──
+fetch('https://api.github.com/repos/Twarga/yeast', {
+  headers: { Accept: 'application/vnd.github+json' }
+})
+  .then((response) => response.ok ? response.json() : Promise.reject(response.status))
+  .then((repo) => {
+    const stars = document.getElementById('gh-stars');
+    if (stars && typeof repo.stargazers_count === 'number') {
+      stars.textContent = String(repo.stargazers_count);
+    }
+  })
+  .catch(() => {
+    const stars = document.getElementById('gh-stars');
+    if (stars) stars.textContent = '—';
+  });
 
 // ── Copy install command ──
 function copyInstall() {
