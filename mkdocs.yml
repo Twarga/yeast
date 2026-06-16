@@ -9,6 +9,7 @@ theme:
   features:
     - navigation.sections
     - navigation.indexes
+    - navigation.expand
     - navigation.top
     - search.suggest
     - search.highlight
