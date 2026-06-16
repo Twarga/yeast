@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Yeast — Turn a folder into real VMs</title>
-  <meta name="description" content="Linux-first local VM orchestration for QEMU/KVM. One YAML file. One command. Real machines.">
+  <meta name="description" content="Linux-first local VM orchestration for QEMU/KVM. Real machines. Real labs.">
   <link rel="icon" type="image/x-icon" href="/yeast/assets/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -432,60 +432,80 @@
       background: var(--accent);
     }
 
-    /* ── What It Is ── */
-    .what-is { text-align: center; }
-    .what-is-grid {
+    /* ── Proof Strip ── */
+    .proof-strip {
+      padding-top: 0;
+    }
+    .proof-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-      margin-top: 48px;
+      grid-template-columns: repeat(4, 1fr);
+      margin-top: 18px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
-    .what-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+    .proof-item {
+      padding: 26px 18px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .proof-item:last-child { border-right: none; }
+    .proof-icon {
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--accent);
+      color: var(--accent);
       border-radius: 12px;
-      padding: 32px 24px;
-      text-align: left;
-      transition: all 0.3s;
-    }
-    .what-card:hover {
-      border-color: var(--border-strong);
-      transform: translateY(-2px);
-    }
-    .what-card-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: var(--accent-glow);
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 16px;
-      font-size: 20px;
-    }
-    .what-card h3 {
+      margin-bottom: 12px;
+      font-family: var(--font-mono);
       font-size: 18px;
       font-weight: 700;
-      margin-bottom: 8px;
+      background: rgba(34, 197, 94, 0.06);
     }
-    .what-card p {
-      color: var(--text-secondary);
-      font-size: 15px;
-      line-height: 1.6;
+    .proof-item h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
     }
 
-    /* ── Features ── */
-    .features-grid {
+    /* ── Statement ── */
+    .statement {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 64px;
+      align-items: center;
+    }
+    .statement-hero {
+      font-size: clamp(30px, 4vw, 48px);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -1px;
+    }
+    .statement-hero .accent { color: var(--accent); }
+    .statement-copy {
+      color: var(--text-secondary);
+      font-size: 18px;
+      line-height: 1.8;
+      max-width: 520px;
+    }
+
+    /* ── Feature List ── */
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
       margin-top: 48px;
     }
     .feature-card {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 28px 24px;
+      padding: 22px 20px;
       transition: all 0.3s;
     }
     .feature-card:hover {
@@ -494,26 +514,85 @@
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
     }
     .feature-icon {
-      width: 44px;
-      height: 44px;
+      width: 42px;
+      height: 42px;
       border-radius: 10px;
       background: var(--accent-glow);
       border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 16px;
-      font-size: 22px;
+      flex-shrink: 0;
+      font-size: 20px;
+      color: var(--accent);
     }
-    .feature-card h3 {
+    .feature-copy h3 {
       font-size: 17px;
       font-weight: 700;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
-    .feature-card p {
+    .feature-copy p {
       color: var(--text-secondary);
       font-size: 14px;
-      line-height: 1.6;
+      line-height: 1.7;
+    }
+
+    /* ── Quick Example ── */
+    .example-section { text-align: center; }
+    .example-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-top: 48px;
+    }
+    .example-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(34, 197, 94, 0.05);
+    }
+    .example-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: rgba(34, 197, 94, 0.04);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .example-body {
+      padding: 18px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--text-secondary);
+      text-align: left;
+    }
+    .example-line { white-space: nowrap; }
+    .example-line .prompt { color: var(--accent); font-weight: 700; }
+    .example-line .cmd { color: var(--text-primary); }
+    .example-line .out { color: var(--text-secondary); }
+    .example-line .good { color: var(--accent); }
+
+    /* ── CTA ── */
+    .cta {
+      text-align: center;
+      padding-top: 40px;
+    }
+    .cta h2 {
+      font-size: clamp(26px, 4vw, 40px);
+      line-height: 1.15;
+      margin-bottom: 22px;
+      letter-spacing: -0.5px;
+    }
+    .cta-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
     }
 
     /* ── How It Works ── */
@@ -566,41 +645,6 @@
       color: var(--text-secondary);
     }
 
-    /* ── Use Cases ── */
-    .use-cases { text-align: center; }
-    .cases-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-      margin-top: 48px;
-    }
-    .case-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 32px 24px;
-      text-align: left;
-      transition: all 0.3s;
-    }
-    .case-card:hover {
-      border-color: var(--border-strong);
-      transform: translateY(-2px);
-    }
-    .case-icon {
-      font-size: 32px;
-      margin-bottom: 16px;
-    }
-    .case-card h3 {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    .case-card p {
-      color: var(--text-secondary);
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
     /* ── Footer ── */
     footer {
       border-top: 1px solid var(--border);
@@ -643,9 +687,15 @@
         gap: 32px;
       }
       .terminal-wrapper { order: -1; }
-      .features-grid,
-      .what-is-grid,
-      .cases-grid { grid-template-columns: 1fr; }
+      .proof-grid,
+      .feature-list,
+      .example-grid,
+      .statement { grid-template-columns: 1fr; }
+      .proof-item {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .proof-item:last-child { border-bottom: none; }
       .steps { grid-template-columns: repeat(2, 1fr); }
       .steps::before { display: none; }
       .install-cmd {
@@ -672,8 +722,9 @@
       .steps { grid-template-columns: 1fr 1fr; gap: 16px; }
       .install-cmd { font-size: 11px; padding: 12px 14px; }
       .install-badges { flex-wrap: wrap; justify-content: center; }
-      .what-card, .feature-card, .case-card { padding: 24px 20px; }
-      .case-icon { font-size: 28px; }
+      .proof-item { padding: 20px 14px; }
+      .feature-card { padding: 18px 16px; }
+      .example-body { padding: 16px; }
     }
     @media (max-width: 480px) {
       section { padding: 48px 0; }
@@ -737,7 +788,7 @@
     <div class="hero-content">
       <div class="hero-eyebrow">TwargaOps Local VM Engine</div>
       <h1>Turn a folder<br>into <span>real VMs</span>.</h1>
-      <p class="hero-sub">Linux-first local VM orchestration for QEMU/KVM. One YAML file. One command. Real machines.</p>
+      <p class="hero-sub">Linux-first local VM orchestration for QEMU/KVM.</p>
       <div class="hero-actions">
         <a href="/yeast/docs/getting-started/quickstart/" class="btn btn-primary">Get Started</a>
         <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener" class="btn btn-ghost">
@@ -784,67 +835,40 @@
   </div>
 </section>
 
-<!-- ── What It Is ── -->
-<section class="what-is">
+<!-- ── Proof Strip ── -->
+<section class="proof-strip">
   <div class="container">
-    <div class="section-label">What It Is</div>
-    <h2 class="section-title">Not a cloud platform. Not containers.<br>Real VMs.</h2>
-    <div class="what-is-grid">
-      <div class="what-card">
-        <div class="what-card-icon">&#x25B6;</div>
-        <h3>Define machines in yeast.yaml</h3>
-        <p>One YAML file describes your entire lab. Names, images, resources, networking, provisioning. Version control your infrastructure.</p>
+    <div class="proof-grid">
+      <div class="proof-item">
+        <div class="proof-icon">&lt;/&gt;</div>
+        <h3>YAML-driven</h3>
       </div>
-      <div class="what-card">
-        <div class="what-card-icon">&#x26A1;</div>
-        <h3>Run yeast up</h3>
-        <p>One command boots real QEMU/KVM virtual machines with cloud-init provisioning. No GUI. No clicks. No hidden steps.</p>
+      <div class="proof-item">
+        <div class="proof-icon">VM</div>
+        <h3>Real QEMU/KVM VMs</h3>
       </div>
-      <div class="what-card">
-        <div class="what-card-icon">&#x1F510;</div>
-        <h3>Get SSH-ready machines</h3>
-        <p>VMs are reachable by SSH in seconds. Provisioned, configured, and ready to work. Built for developers who want real Linux.</p>
+      <div class="proof-item">
+        <div class="proof-icon">&#x2601;</div>
+        <h3>Cloud-init provisioning</h3>
+      </div>
+      <div class="proof-item">
+        <div class="proof-icon">&gt;_</div>
+        <h3>SSH-ready</h3>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── Features ── -->
-<section class="features">
+<!-- ── Statement ── -->
+<section>
   <div class="container">
-    <div class="section-label">Features</div>
-    <h2 class="section-title">Everything you need for local VMs.</h2>
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">&#x1F4DD;</div>
-        <h3>YAML-Driven</h3>
-        <p>One yeast.yaml defines your entire lab. Version control your infrastructure. No GUI needed.</p>
+    <div class="statement">
+      <div class="statement-hero">
+        Not containers.<br>
+        Not fake shells.<br>
+        <span class="accent">Real Linux machines.</span>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">&#x1F5A5;</div>
-        <h3>Real VMs</h3>
-        <p>Full hardware virtualization with QEMU/KVM. Not containers. Real Linux machines with real kernels.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">&#x1F4BE;</div>
-        <h3>Snapshots</h3>
-        <p>Stop VMs, take snapshots, restore to any state. Safe lab reset in seconds. Provisioned state preserved.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">&#x1F310;</div>
-        <h3>Private Networking</h3>
-        <p>Private lab networks for multi-VM environments. Static IPs. VM-to-VM communication out of the box.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">&#x2699;</div>
-        <h3>Cloud-Init Provisioning</h3>
-        <p>VMs are provisioned with cloud-init on first boot. Packages, files, shell commands. No manual setup.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">&#x1F4CA;</div>
-        <h3>JSON Automation</h3>
-        <p>Stable JSON output and event streams for scripting. Integrate with LabsBackery, MCP, or your own tools.</p>
-      </div>
+      <p class="statement-copy">Yeast orchestrates real QEMU/KVM virtual machines from a simple folder. You get isolated environments with full Linux userspace, systemd, cloud-init, and everything you expect from real machines.</p>
     </div>
   </div>
 </section>
@@ -887,27 +911,98 @@
   </div>
 </section>
 
-<!-- ── Use Cases ── -->
-<section class="use-cases">
+<!-- ── Key Features ── -->
+<section>
   <div class="container">
-    <div class="section-label">Use Cases</div>
-    <h2 class="section-title">Built for real work.</h2>
-    <div class="cases-grid">
-      <div class="case-card">
-        <div class="case-icon">&#x1F4BB;</div>
-        <h3>Developers</h3>
-        <p>Test against real Linux environments. Reproduce production-like setups locally. Ship infrastructure with your code.</p>
+    <div class="section-label">Key Features</div>
+    <h2 class="section-title">Everything you need for local VMs.</h2>
+    <div class="feature-list">
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F4DD;</div>
+        <div class="feature-copy">
+          <h3>YAML-driven labs</h3>
+          <p>One file defines the whole project. Keep infrastructure in version control and avoid GUI drift.</p>
+        </div>
       </div>
-      <div class="case-card">
-        <div class="case-icon">&#x1F6E0;</div>
-        <h3>DevOps Learners</h3>
-        <p>Practice infrastructure safely. Break things. Restore snapshots. Learn Kubernetes, Docker, CI/CD on real VMs.</p>
+      <div class="feature-card">
+        <div class="feature-icon">VM</div>
+        <div class="feature-copy">
+          <h3>Real VMs</h3>
+          <p>Full hardware virtualization with QEMU/KVM. Real kernels, real isolation, real Linux userspace.</p>
+        </div>
       </div>
-      <div class="case-card">
-        <div class="case-icon">&#x1F6E1;</div>
-        <h3>Security Students</h3>
-        <p>Build attacker/target labs. Private networking between VMs. Reset to clean state after every exercise.</p>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F4BE;</div>
+        <div class="feature-copy">
+          <h3>Snapshots</h3>
+          <p>Stop, save, restore, and clone VMs in seconds. Reset safely without rebuilding everything from scratch.</p>
+        </div>
       </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F310;</div>
+        <div class="feature-copy">
+          <h3>Private networking</h3>
+          <p>Lab VMs talk to each other on isolated networks with static IPs and predictable topology.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x2699;</div>
+        <div class="feature-copy">
+          <h3>Cloud-init provisioning</h3>
+          <p>Packages, users, files, and setup run automatically on first boot. No manual babysitting.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F4CA;</div>
+        <div class="feature-copy">
+          <h3>JSON automation</h3>
+          <p>Stable machine-readable output and events make Yeast easy to script and integrate.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Quick Example ── -->
+<section class="example-section">
+  <div class="container">
+    <div class="section-label">Quick Example</div>
+    <h2 class="section-title">A folder becomes a running machine.</h2>
+    <div class="example-grid">
+      <div class="example-card">
+        <div class="example-head">
+          <span>terminal</span>
+          <span>project setup</span>
+        </div>
+        <div class="example-body">
+          <div class="example-line"><span class="prompt">$ </span><span class="cmd">mkdir my-lab &amp;&amp; cd my-lab</span></div>
+          <div class="example-line"><span class="prompt">$ </span><span class="cmd">yeast init</span></div>
+          <div class="example-line"><span class="out">Project initialized.</span></div>
+        </div>
+      </div>
+      <div class="example-card">
+        <div class="example-head">
+          <span>terminal</span>
+          <span>runtime</span>
+        </div>
+        <div class="example-body">
+          <div class="example-line"><span class="prompt">$ </span><span class="cmd">yeast up</span></div>
+          <div class="example-line"><span class="out">Creating VM web-01 ...</span></div>
+          <div class="example-line"><span class="out">Provisioning with cloud-init ...</span></div>
+          <div class="example-line"><span class="good">web-01 is up and reachable via SSH</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="cta">
+  <div class="container">
+    <h2>Ready to turn folders into real machines?</h2>
+    <div class="cta-actions">
+      <a href="#install" class="btn btn-primary">Install Yeast</a>
+      <a href="/yeast/docs/" class="btn btn-ghost">Read the Docs</a>
     </div>
   </div>
 </section>
@@ -923,6 +1018,7 @@
       <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">GitHub</a>
       <a href="/yeast/docs/">Docs</a>
       <a href="/yeast/docs/labs/">Tutorials</a>
+      <a href="/yeast/docs/releases/v1.1.0/">Changelog</a>
     </div>
   </div>
 </footer>
@@ -932,11 +1028,11 @@
 const lines = [
   { type: 'cmd', text: 'mkdir my-lab && cd my-lab' },
   { type: 'cmd', text: 'yeast init' },
-  { type: 'output', text: 'Created yeast.yaml and .yeast/project.json' },
+  { type: 'output', text: 'Project initialized.' },
   { type: 'cmd', text: 'yeast pull ubuntu-24.04' },
-  { type: 'output', text: 'Downloaded ubuntu-24.04 (2.1 GB)' },
+  { type: 'output', text: 'Downloaded ubuntu-24.04.' },
   { type: 'cmd', text: 'yeast up' },
-  { type: 'success', text: 'Started web (127.0.0.1:2222)' },
+  { type: 'success', text: 'web-01 is up and reachable via SSH.' },
   { type: 'cmd', text: 'yeast ssh' },
   { type: 'success', text: 'Connected. Welcome to Ubuntu.' },
 ];
