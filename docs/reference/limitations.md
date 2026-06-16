@@ -5,6 +5,7 @@ Current Yeast v1.1 limits:
 - Linux host only
 - AMD64/x86_64 only
 - QEMU/KVM runtime
+- no native Windows or macOS host support; WSL is beta only
 - one private network per project
 - at most one private network attachment per VM
 - static IPv4 only for private networks

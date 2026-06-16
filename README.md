@@ -52,7 +52,7 @@ Yeast `v1.1.0` is the current stable local engine release. It covers one complet
 
 | Area | Current status |
 |---|---|
-| Host support | Linux only |
+| Host support | Linux native; WSL beta docs available |
 | Runtime | QEMU + KVM |
 | VM model | Project-local instances from `yeast.yaml` |
 | Base images | Trusted shared cache in `~/.yeast/cache/images` |
@@ -67,6 +67,11 @@ Yeast `v1.1.0` is the current stable local engine release. It covers one complet
 | Templates | Built-in `ubuntu-basic`, `caddy-single-vm`, and `two-vm-lab`; local template directories |
 | LabsBakery integration | Stable local-engine contract, lab package convention, and first attacker/target example package |
 | Examples | Single-VM Ubuntu, Caddy provisioning/reset, first two-VM lab example, and LabsBakery package example |
+
+If you are installing Yeast:
+
+- [Install on Linux](docs/getting-started/installation-linux.md)
+- [Install on Windows with WSL (beta)](docs/getting-started/installation-windows-wsl.md)
 
 ### What works now
 
@@ -597,7 +602,7 @@ Current known limits:
 
 - Linux host only
 - QEMU/KVM only
-- no Windows or macOS host support
+- no native Windows or macOS host support; WSL is beta only
 - no VirtualBox backend
 - some image entries are manual/setup-only and cannot be auto-downloaded
 - snapshots are stopped-VM and per-instance only

@@ -1,123 +1,38 @@
 # Installation
 
-Yeast runs on Linux hosts with QEMU/KVM.
+Choose the path that matches your machine.
 
-## Requirements
+!!! note
+    Yeast is Linux-first. Native Linux is the supported path.
+    Windows users can try Yeast through WSL 2, but that path is beta and may be unpredictable.
+    macOS is not covered yet.
 
-You need:
+## Pick Your Path
 
-- Linux
-- AMD64/x86_64
-- `/dev/kvm` for fast hardware virtualization
-- `qemu-system-x86_64`
-- `qemu-img`
-- `genisoimage` or `mkisofs`
-- `ssh`
-- an SSH public key at `~/.ssh/id_ed25519.pub` or `~/.ssh/id_rsa.pub`
+| Path | Status | Best For | Read |
+|---|---|---|---|
+| [Linux](installation-linux.md) | Supported | Native Linux hosts with QEMU/KVM | Install on Linux |
+| [Windows with WSL 2](installation-windows-wsl.md) | Beta | Windows users who want to experiment | Install on Windows with WSL |
 
-## Install With The Script
+If you are not sure, use the Linux path.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
-```
+## Before You Install
 
-For an explicit release:
+You should be able to run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_REF=v1.1.0 bash
+yeast doctor
 ```
 
-The installer is meant for fresh Linux hosts. It may install host packages, prepare the image cache directory, check SSH key availability, and run `yeast doctor`.
+If Yeast is not installed yet, read the page for your operating system first.
 
-## Manual Release Install
+## After Installation
 
-```bash
-VERSION="v1.1.0"
-curl -LO "https://github.com/Twarga/yeast/releases/download/${VERSION}/yeast_linux_amd64.tar.gz"
-curl -LO "https://github.com/Twarga/yeast/releases/download/${VERSION}/SHA256SUMS.txt"
-grep "yeast_linux_amd64.tar.gz" SHA256SUMS.txt | sha256sum -c -
-tar -xzf yeast_linux_amd64.tar.gz
-sudo install -m 0755 yeast /usr/local/bin/yeast
-```
-
-The release archive must extract a binary named `yeast`.
-
-## Verify The Install
+Verify the install:
 
 ```bash
 yeast version
 yeast doctor
 ```
 
-`yeast doctor` checks the host and reports blockers or warnings.
-
-If the version command fails, check that `/usr/local/bin` is in your `PATH`:
-
-```bash
-command -v yeast
-```
-
-## Install Host Packages
-
-On Ubuntu or Debian:
-
-```bash
-sudo apt update
-sudo apt install -y qemu-kvm qemu-utils genisoimage openssh-client
-```
-
-On Fedora:
-
-```bash
-sudo dnf install -y qemu-kvm qemu-img genisoimage openssh-clients
-```
-
-On Arch Linux:
-
-```bash
-sudo pacman -S qemu-full cdrtools openssh
-```
-
-## KVM Access
-
-If `/dev/kvm` exists but your user cannot access it, add yourself to the `kvm` group:
-
-```bash
-sudo usermod -aG kvm "$USER"
-```
-
-Then log out and back in.
-
-Check access again:
-
-```bash
-yeast doctor
-```
-
-## SSH Key
-
-If you do not have an SSH key yet:
-
-```bash
-ssh-keygen -t ed25519
-```
-
-Yeast uses your public key for guest access.
-
-## Update Later
-
-Check for a newer release:
-
-```bash
-yeast update --check
-```
-
-Update to a specific tag:
-
-```bash
-yeast update --version v1.1.0
-```
-
-## Next Step
-
-Continue with the [Quickstart](quickstart.md).
+Then continue with the [Quickstart](quickstart.md).

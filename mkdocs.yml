@@ -36,7 +36,10 @@ nav:
   - Home: index.md
   - Getting Started:
       - What Is Yeast: getting-started/what-is-yeast.md
-      - Installation: getting-started/installation.md
+      - Installation:
+          - Overview: getting-started/installation.md
+          - Linux: getting-started/installation-linux.md
+          - Windows With WSL (Beta): getting-started/installation-windows-wsl.md
       - Quickstart: getting-started/quickstart.md
       - Write yeast.yaml: getting-started/write-yeast-yaml.md
       - First VM: getting-started/first-vm.md
