@@ -21,8 +21,8 @@ check() {
 
 echo ""
 echo "1. Monitor Stack"
-check "Prometheus UI" curl -sf http://127.0.0.1:9090
-check "Grafana UI" curl -sf http://127.0.0.1:3030
+check "Prometheus UI" yeast exec monitor -- curl -sf http://localhost:9090
+check "Grafana UI" yeast exec monitor -- curl -sf http://localhost:3000
 
 echo ""
 echo "2. Node Exporters"
@@ -33,7 +33,13 @@ check "cache exporter" yeast exec cache -- systemctl is-active prometheus-node-e
 echo ""
 echo "3. Prometheus Scrapes"
 for target in 192.168.2.11:9100 192.168.2.12:9100 192.168.2.13:9100; do
-  check "Scrape $target" curl -sf "http://127.0.0.1:9090/api/v1/query?query=up{instance=\"$target\"}" | grep -q '"value":\["1"'
+  echo -n "  [Scrape $target] ... "
+  if yeast exec monitor -- curl -sf "http://localhost:9090/api/v1/query?query=up{instance=\"$target\"}" | grep -q '"value":\["1"'; then
+    echo "OK"
+  else
+    echo "FAIL"
+    FAIL=1
+  fi
 done
 
 echo ""

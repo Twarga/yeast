@@ -39,10 +39,11 @@ yeast init --template /path/to/yeast/examples/labsbackery-attacker-target-basic
 
 ```bash
 yeast doctor
-yeast pull ubuntu-24.04
 yeast up --json --events
 yeast status --json
 ```
+
+`yeast up` downloads the Ubuntu image automatically if it is not cached yet.
 
 Expected `status --json` data:
 

@@ -12,9 +12,6 @@ instances:
     ssh_port: 2222
     user: yeast
     sudo: nopasswd
-    ports:
-      - host_port: 5432
-        guest_port: 5432
     networks:
       - name: backend
         ipv4: 192.168.2.50
@@ -46,9 +43,6 @@ instances:
     ssh_port: 2223
     user: yeast
     sudo: nopasswd
-    ports:
-      - host_port: 3000
-        guest_port: 3000
     networks:
       - name: backend
         ipv4: 192.168.2.10
@@ -92,7 +86,7 @@ instances:
         - sudo systemctl daemon-reload
         - |
           for i in $(seq 1 30); do
-            yeast exec db -- pg_isready -h localhost -p 5432 -U postgres > /dev/null 2>&1 && break
+            timeout 2 bash -c '</dev/tcp/192.168.2.50/5432' > /dev/null 2>&1 && break
             echo "Waiting for PostgreSQL... ($i/30)"
             sleep 10
           done

@@ -29,13 +29,13 @@ check "web2 responds" yeast exec web2 -- curl -sf http://localhost:8080
 echo ""
 echo "2. Proxy / Load Balancer"
 check "Caddy running" yeast exec proxy -- systemctl is-active caddy
-check "Proxy HTTP 200" curl -sf http://127.0.0.1:8080
+check "Proxy HTTP 200" yeast exec proxy -- curl -sf http://localhost
 
 echo ""
 echo "3. Round-Robin Distribution"
-R1=$(curl -sf http://127.0.0.1:8080 | grep -o 'web[12]' || true)
-R2=$(curl -sf http://127.0.0.1:8080 | grep -o 'web[12]' || true)
-R3=$(curl -sf http://127.0.0.1:8080 | grep -o 'web[12]' || true)
+R1=$(yeast exec proxy -- curl -sf http://localhost | grep -o 'web[12]' || true)
+R2=$(yeast exec proxy -- curl -sf http://localhost | grep -o 'web[12]' || true)
+R3=$(yeast exec proxy -- curl -sf http://localhost | grep -o 'web[12]' || true)
 if [[ "$R1" == "web1" && "$R2" == "web2" && "$R3" == "web1" ]] || \
    [[ "$R1" == "web2" && "$R2" == "web1" && "$R3" == "web2" ]]; then
   echo "  [Round-robin alternates] ... OK"

@@ -5,7 +5,7 @@ This guide starts one Ubuntu VM with Yeast.
 You will:
 
 - create a Yeast project
-- download a trusted cloud image
+- let `yeast up` download the trusted cloud image if needed
 - boot a real QEMU/KVM VM
 - SSH into the guest
 - stop and destroy the project safely
@@ -35,6 +35,8 @@ Fix any blockers before continuing.
 
 ## 2. Create A Project
 
+Run this from a normal host terminal:
+
 ```bash
 mkdir my-lab
 cd my-lab
@@ -48,21 +50,35 @@ This creates:
 | `yeast.yaml` | VM configuration |
 | `.yeast/project.json` | project identity |
 
-## 3. Pull An Image
+## 3. Look At `yeast.yaml`
 
 ```bash
-yeast pull ubuntu-24.04
+sed -n '1,120p' yeast.yaml
 ```
 
-Images are cached under `~/.yeast/cache/images` and reused across projects.
+You should see one VM named `web`.
 
-You can list available images with:
+The important part looks like this:
 
-```bash
-yeast pull --list
+```yaml
+version: 1
+instances:
+  - name: web
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    disk_size: 20G
 ```
 
-If you skip this step, `yeast up` can auto-download supported cloud images. Manual/setup-only images print instructions instead.
+This means:
+
+| Field | Meaning |
+|---|---|
+| `name: web` | The VM is called `web`. Commands use this name, for example `yeast ssh web`. |
+| `image: ubuntu-24.04` | The VM uses the trusted Ubuntu 24.04 cloud image. |
+| `memory: 1024` | The VM gets 1024 MiB of RAM. |
+| `cpus: 1` | The VM gets one vCPU. |
+| `disk_size: 20G` | The VM disk starts at 20 GiB when the disk is created. |
 
 ## 4. Start The VM
 
@@ -78,6 +94,8 @@ Yeast will:
 4. start QEMU/KVM
 5. wait for SSH
 6. run provisioning if configured
+
+If the image is not cached yet, Yeast downloads it during this step.
 
 ## 5. Check Status
 
@@ -104,8 +122,15 @@ Inside the VM:
 ```bash
 hostname
 whoami
+ip addr
 exit
 ```
+
+Expected result:
+
+- `hostname` prints `web` unless you changed `hostname`
+- `whoami` prints `yeast` unless you changed `user`
+- `ip addr` shows normal Linux network interfaces
 
 ## 7. Stop Or Destroy
 
@@ -144,6 +169,14 @@ See terminal docs:
 yeast docs --list
 ```
 
+List supported images:
+
+```bash
+yeast pull --list
+```
+
+Manual `yeast pull <image>` is optional for supported auto-download images. Use it when you want to warm the cache before `yeast up`.
+
 ## Next Step
 
-Follow [First VM](first-vm.md) for a slower walkthrough, or start the [Yeast Labs](../labs/index.md).
+Read [Write `yeast.yaml`](write-yeast-yaml.md) next. That page explains how to edit RAM, CPU, disk size, images, provisioning, users, and networks.

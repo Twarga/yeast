@@ -51,15 +51,17 @@ Expected files:
 - `.yeast/project.json`
 - `README.md`
 
-## Step 2: Pull The Image
+## Step 2: Check Supported Images
 
 ```bash
-yeast pull ubuntu-24.04
+yeast pull --list
 ```
 
-This downloads and verifies the trusted base image if it is not already cached.
+This shows the trusted images Yeast knows how to use.
 
-Check the cache:
+You do not need to download `ubuntu-24.04` manually for this lab. If the image is not cached yet, `yeast up` downloads and verifies it automatically.
+
+Optional cache check:
 
 ```bash
 yeast pull --cached
@@ -130,7 +132,7 @@ yeast destroy
 You completed the smallest useful Yeast loop:
 
 ```text
-init -> pull -> up -> status -> ssh -> down -> destroy
+init -> up -> status -> ssh -> down -> destroy
 ```
 
 You also saw that Yeast projects are folder-based. The config lives in `yeast.yaml`, while runtime state is tracked separately.

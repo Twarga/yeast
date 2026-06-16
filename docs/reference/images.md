@@ -16,7 +16,7 @@ yeast pull --cached
 
 ## Auto-Download Images
 
-These images can be downloaded directly with `yeast pull <image>`.
+These images are downloaded automatically by `yeast up` when missing. You can also pre-cache one with `yeast pull <image>`.
 
 | Image | Category | Cloud-Init | Approx Size | Description |
 |---|---|---:|---:|---|

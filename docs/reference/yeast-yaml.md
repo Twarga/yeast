@@ -4,6 +4,8 @@
 
 Yeast reads this file when you run commands such as `yeast up`, `yeast provision`, and `yeast status`.
 
+If this is your first time editing the file, start with [Write `yeast.yaml`](../getting-started/write-yeast-yaml.md). This page is the complete reference after you know the basic shape.
+
 ## Minimal Example
 
 ```yaml
@@ -57,6 +59,22 @@ instances:
 ```
 
 This example shows the supported v1.1 shape. You do not need every field in normal projects.
+
+## Everyday Edit Cheat Sheet
+
+Most projects only need one or two of these edits:
+
+| Goal | Field | Example |
+|---|---|---|
+| Change RAM | `instances[].memory` | `memory: 2048` |
+| Change CPU count | `instances[].cpus` | `cpus: 2` |
+| Change disk size for a new disk | `instances[].disk_size` | `disk_size: 30G` |
+| Change image | `instances[].image` | `image: debian-12` |
+| Pin host SSH port | `instances[].ssh_port` | `ssh_port: 2222` |
+| Change login user | `instances[].user` | `user: operator` |
+| Allow passwordless sudo | `instances[].sudo` | `sudo: nopasswd` |
+| Add packages/files/shell | `instances[].provision` | see [Provision Fields](#provision-fields) |
+| Add a private lab IP | `instances[].networks[].ipv4` | `ipv4: 10.10.10.10` |
 
 ## Defaults
 
@@ -173,7 +191,7 @@ Top-level provisioning applies to instances. Instance-level provisioning adds in
 | `instances[].user_data` | no | Custom cloud-init user data. Use carefully because it can override generated guest setup expectations. |
 | `instances[].networks` | no | Private network attachments. v1.1 supports at most one attachment. |
 | `instances[].networks[].name` | yes | Name of the project network to attach. |
-| `instances[].networks[].ipv4` | no | Static IPv4 inside the network CIDR. |
+| `instances[].networks[].ipv4` | yes | Static IPv4 inside the network CIDR. |
 | `instances[].provision` | no | Instance-specific provisioning. |
 
 ## Disk Size

@@ -8,10 +8,18 @@ List supported images:
 yeast pull --list
 ```
 
-Download an auto-downloadable image:
+Start a project with an auto-downloadable image:
 
 ```bash
-yeast pull ubuntu-24.04
+yeast up
+```
+
+If the image is not cached yet, `yeast up` downloads it before booting the VM.
+
+Pre-cache an image manually when you want the download to happen before `yeast up`:
+
+```bash
+yeast pull <image>
 ```
 
 Show cached images:

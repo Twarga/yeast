@@ -30,8 +30,8 @@ Yeast is the local VM engine for TwargaOps.
 At the user level, Yeast gives you a simple model:
 
 - define machines in `yeast.yaml`
-- pull a trusted base image
 - run `yeast up`
+- let Yeast download supported images when needed
 - connect with `yeast ssh`
 - stop with `yeast down`
 - clean up with `yeast destroy`
@@ -199,30 +199,41 @@ instances:
     cpus: 1
 ```
 
-### 3. List supported images
+### 3. Review the generated config
+
+```bash
+sed -n '1,120p' yeast.yaml
+```
+
+The important fields are:
+
+| Field | Meaning |
+|---|---|
+| `name` | VM name used by commands such as `yeast ssh web` |
+| `image` | supported base image, for example `ubuntu-24.04` |
+| `memory` | RAM in MiB |
+| `cpus` | virtual CPU count |
+
+### 4. Optional: list supported images
 
 ```bash
 yeast pull --list
 ```
 
-Yeast includes 16 trusted image entries:
+Yeast includes trusted image entries:
 
 - Auto-downloadable cloud images: `ubuntu-24.04`, `ubuntu-22.04`, `debian-12`, `debian-13`, `fedora-42`, `fedora-41`, `rocky-9`, `alma-9`, and `centos-stream-9`
 - Manual/setup-only image entries: `amazon-linux-2023`, `kali-2026.1`, `parrot-security-7.1`, `alpine-3.21`, `arch-linux`, `nixos-24.11`, and `opensuse-leap-15.6`
-
-### 4. Pull one image, or let `up` auto-pull it
-
-```bash
-yeast pull ubuntu-24.04
-```
-
-This pre-caches the image. If the image is not cached yet, `yeast up` can also download supported cloud images automatically. Manual images print setup instructions instead of downloading.
 
 ### 5. Start the project
 
 ```bash
 yeast up
 ```
+
+If the image is not cached yet, `yeast up` downloads supported cloud images automatically. Manual images print setup instructions instead of downloading.
+
+If you want to warm the image cache before booting, use `yeast pull <image>`.
 
 Expected human output shape includes progress lines and a final summary:
 
@@ -388,7 +399,7 @@ Then log out and back in before your first `yeast up`.
 | `yeast init --list-templates` | List built-in project templates |
 | `yeast init --template <name-or-path>` | Create a project from a built-in or local template |
 | `yeast pull --list` | List supported trusted images |
-| `yeast pull <image>` | Download a trusted base image |
+| `yeast pull <image>` | Pre-cache an auto-download image or print setup instructions for manual images |
 | `yeast up` | Start all instances in the project |
 | `yeast provision [instance]` | Rerun post-boot provisioning for a running instance |
 | `yeast status` | Show tracked instance state |

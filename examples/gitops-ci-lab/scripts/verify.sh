@@ -21,12 +21,12 @@ check() {
 
 echo ""
 echo "1. Gitea Git Server"
-check "Gitea UI" curl -sf http://127.0.0.1:3000
-check "Gitea API up" curl -sf http://127.0.0.1:3000/api/v1/node/info
+check "Gitea UI" yeast exec gitea -- curl -sf http://localhost:3000
+check "Gitea API up" yeast exec gitea -- curl -sf http://localhost:3000/api/v1/node/info
 
 echo ""
 echo "2. Docker Registry"
-check "Registry UI" curl -sf http://127.0.0.1:5000/v2/
+check "Registry UI" yeast exec registry -- curl -sf http://localhost:5000/v2/
 
 echo ""
 echo "3. Runner"

@@ -38,6 +38,7 @@ nav:
       - What Is Yeast: getting-started/what-is-yeast.md
       - Installation: getting-started/installation.md
       - Quickstart: getting-started/quickstart.md
+      - Write yeast.yaml: getting-started/write-yeast-yaml.md
       - First VM: getting-started/first-vm.md
   - Concepts:
       - Projects: concepts/projects.md

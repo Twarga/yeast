@@ -41,11 +41,12 @@ Then run:
 
 ```bash
 yeast doctor
-yeast pull ubuntu-24.04
 yeast up
 yeast status
 yeast ssh web
 ```
+
+`yeast up` downloads the Ubuntu image automatically if it is not cached yet.
 
 Expected result:
 

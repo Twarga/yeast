@@ -7,7 +7,7 @@ A 2-VM database + application stack for Yeast.
 - `db` — PostgreSQL with a `todo` database and seeded data
 - `app` — Node.js Express API that reads/writes todos via PostgreSQL
 
-Host accesses the API at `http://127.0.0.1:3000/todos`.
+Verify the API through `yeast exec app -- curl http://localhost:3000/todos`. Public host port mappings are not part of Yeast v1.1.
 
 ## Quick start
 
@@ -15,11 +15,12 @@ Host accesses the API at `http://127.0.0.1:3000/todos`.
 mkdir my-db-lab && cd my-db-lab
 yeast init
 cp -r /path/to/yeast/examples/database-app-stack/* ./
-yeast pull ubuntu-24.04
 yeast up
 bash scripts/verify.sh
 ```
 
-## Full tutorial
+`yeast up` downloads the Ubuntu image automatically if it is not cached yet.
 
-See [Tutorial 11: Database + App Stack](../../tutorials/11-database-app-stack.md).
+## Note
+
+This is an advanced example, not part of the beginner docs path yet.

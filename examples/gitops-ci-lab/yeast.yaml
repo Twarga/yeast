@@ -12,9 +12,6 @@ instances:
     ssh_port: 2222
     user: yeast
     sudo: nopasswd
-    ports:
-      - host_port: 3000
-        guest_port: 3000
     networks:
       - name: backend
         ipv4: 192.168.2.50
@@ -76,7 +73,7 @@ instances:
         - sudo cp /home/yeast/runner/* /opt/runner/
         - |
           for i in $(seq 1 30); do
-            yeast exec gitea -- curl -sf http://localhost:3000 > /dev/null 2>&1 && break
+            curl -sf http://192.168.2.50:3000 > /dev/null 2>&1 && break
             echo "Waiting for Gitea before starting runner... ($i/30)"
             sleep 10
           done
@@ -90,9 +87,6 @@ instances:
     ssh_port: 2224
     user: yeast
     sudo: nopasswd
-    ports:
-      - host_port: 5000
-        guest_port: 5000
     networks:
       - name: backend
         ipv4: 192.168.2.12

@@ -20,13 +20,15 @@ yeast pull --list
 yeast pull --cached
 ```
 
-## Pull An Image
+## Pre-Cache An Image
 
 ```bash
-yeast pull ubuntu-24.04
+yeast pull <image>
 ```
 
-Auto-download images are downloaded and checksum-verified. Manual/setup-only images print instructions instead.
+This is optional for supported auto-download images because `yeast up` downloads missing images automatically.
+
+Auto-download images are downloaded and checksum-verified. Manual/setup-only images print setup instructions instead.
 
 ## Preview Cleanup
 
@@ -58,7 +60,7 @@ Clean cached images when:
 - you need disk space
 - an image download was interrupted
 - a checksum verification failed and left a broken cache entry
-- you want to force a fresh pull
+- you want to force a fresh image download before the next `yeast up`
 
 ## What Not To Delete Manually
 

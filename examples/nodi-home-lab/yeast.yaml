@@ -11,9 +11,6 @@ instances:
     ssh_port: 2222
     user: yeast
     sudo: nopasswd
-    ports:
-      - host_port: 8080
-        guest_port: 80
     networks:
       - name: home
         ipv4: 192.168.2.1
@@ -42,13 +39,6 @@ instances:
     ssh_port: 2223
     user: yeast
     sudo: nopasswd
-    ports:
-      - host_port: 7319
-        guest_port: 7319
-      - host_port: 2049
-        guest_port: 2049
-      - host_port: 445
-        guest_port: 445
     networks:
       - name: home
         ipv4: 192.168.2.50

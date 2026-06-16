@@ -10,6 +10,8 @@ A 3-VM WireGuard VPN mesh for Yeast.
 
 Spokes connect to hub. Once connected, all nodes can reach each other over the encrypted tunnel using `10.200.200.x` addresses.
 
+Public host UDP port mappings are not part of Yeast v1.1. This example verifies tunnel behavior from inside the guests with `yeast exec`.
+
 ## IMPORTANT: Generate Real Keys
 
 The included `wg0.conf` files contain **dummy keys** for structure demonstration only. WireGuard will not establish a real tunnel with these keys.
@@ -32,11 +34,12 @@ mkdir my-wg-lab && cd my-wg-lab
 yeast init
 cp -r /path/to/yeast/examples/wireguard-vpn-mesh/* ./
 # Generate real keys first!
-yeast pull ubuntu-24.04
 yeast up
 bash scripts/verify.sh
 ```
 
-## Full tutorial
+`yeast up` downloads the Ubuntu image automatically if it is not cached yet.
 
-See [Tutorial 13: WireGuard VPN Mesh](../../tutorials/13-wireguard-vpn-mesh.md).
+## Note
+
+This is an advanced example, not part of the beginner docs path yet.

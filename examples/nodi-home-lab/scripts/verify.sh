@@ -24,12 +24,12 @@ check() {
 
 echo ""
 echo "1. Gateway Landing Page"
-check "HTTP 200" curl -sf http://127.0.0.1:8080
-check "Contains 'Yeast'" grep -q "Yeast" <<< "$(curl -sf http://127.0.0.1:8080)"
+check "HTTP 200" yeast exec gateway -- curl -sf http://localhost
+check "Contains 'Yeast'" grep -q "Yeast" <<< "$(yeast exec gateway -- curl -sf http://localhost)"
 
 echo ""
 echo "2. Storage Services"
-check "Nodi UI reachable" curl -sf http://127.0.0.1:7319
+check "Nodi UI reachable" yeast exec storage -- curl -sf http://localhost:7319
 
 echo ""
 echo "3. Alpha (Dev Workstation)"

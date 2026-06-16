@@ -39,9 +39,11 @@ Terminal docs are intentionally short offline help. Current topics are `quicksta
 
 ## Images
 
+`yeast up` auto-downloads supported cloud images when they are missing. Use `yeast pull` when you want to list images, check the cache, pre-cache an image, or see manual setup instructions.
+
 | Command | Purpose |
 |---|---|
-| `yeast pull [image]` | List, search, or download trusted base images |
+| `yeast pull [image]` | List, search, pre-cache, or get setup instructions for trusted base images |
 | `yeast images clean [image]` | Remove cached VM images |
 
 Useful flags:

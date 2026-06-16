@@ -4,23 +4,27 @@ Yeast turns a folder into real Linux VMs.
 
 Define machines in `yeast.yaml`, run `yeast up`, and get SSH-ready QEMU/KVM guests with cloud-init, provisioning, snapshots, private networking, and JSON output for automation.
 
-## Start Here
+## Learn Yeast In Order
 
-If you are new to Yeast, follow this path:
+If you are new, follow this path. It is ordered so each page teaches one layer before the next one.
 
-1. [What Is Yeast?](getting-started/what-is-yeast.md)
-2. [Installation](getting-started/installation.md)
-3. [Quickstart](getting-started/quickstart.md)
-4. [First VM](getting-started/first-vm.md)
-5. [Yeast Labs](labs/index.md)
+| Step | Read | You learn |
+|---:|---|---|
+| 1 | [What Is Yeast?](getting-started/what-is-yeast.md) | What problem Yeast solves |
+| 2 | [Installation](getting-started/installation.md) | How to get the CLI and check your host |
+| 3 | [Quickstart](getting-started/quickstart.md) | The shortest working loop |
+| 4 | [Write `yeast.yaml`](getting-started/write-yeast-yaml.md) | How to edit RAM, CPU, disk, image, users, provisioning, and networking |
+| 5 | [First VM](getting-started/first-vm.md) | A slower first-machine walkthrough |
+| 6 | [Yeast Labs](labs/index.md) | Guided tutorials that build confidence |
 
 ## The Short Version
+
+Run these commands from a new project folder:
 
 ```bash
 mkdir my-lab
 cd my-lab
 yeast init --template ubuntu-basic
-yeast pull ubuntu-24.04
 yeast up
 yeast ssh web
 ```
@@ -31,6 +35,37 @@ When you are done:
 yeast down
 yeast destroy
 ```
+
+`yeast up` downloads supported cloud images automatically when they are missing.
+
+## The File You Edit Most
+
+Most Yeast work happens in `yeast.yaml`.
+
+This small file says what machines you want:
+
+```yaml
+version: 1
+instances:
+  - name: web
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    disk_size: 20G
+```
+
+Common edits:
+
+| Want to change | Edit |
+|---|---|
+| RAM | `memory: 2048` |
+| CPU count | `cpus: 2` |
+| disk size | `disk_size: 30G` |
+| image | `image: debian-12` |
+| VM name | `name: web` |
+| host SSH port | `ssh_port: 2222` |
+
+Read [Write `yeast.yaml`](getting-started/write-yeast-yaml.md) when you want to understand every field without jumping straight into reference docs.
 
 ## What Yeast Handles
 

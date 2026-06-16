@@ -4,11 +4,11 @@ A 3-VM load balancer lab for Yeast.
 
 ## What it does
 
-- `proxy` — Caddy reverse proxy with round-robin load balancing
+- `proxy` — Caddy reverse proxy with round-robin load balancing inside the lab network
 - `web1` — Python Flask app returning "web1"
 - `web2` — Python Flask app returning "web2"
 
-The host accesses `http://127.0.0.1:8080` and requests alternate between `web1` and `web2`.
+Verify the proxy through `yeast exec proxy -- curl http://localhost`. Public host port mappings are not part of Yeast v1.1.
 
 ## Quick start
 
@@ -16,17 +16,18 @@ The host accesses `http://127.0.0.1:8080` and requests alternate between `web1` 
 mkdir my-lb-lab && cd my-lb-lab
 yeast init
 cp -r /path/to/yeast/examples/load-balancer-lab/* ./
-yeast pull ubuntu-24.04
 yeast up
 bash scripts/verify.sh
 ```
 
-## Browse
+`yeast up` downloads the Ubuntu image automatically if it is not cached yet.
 
+## Verify Manually
+
+```bash
+yeast exec proxy -- curl -fsS http://localhost
 ```
-http://127.0.0.1:8080
-```
 
-## Full tutorial
+## Note
 
-See [Tutorial 10: Load Balancer Lab](../../tutorials/10-load-balancer-lab.md) for the complete educational walkthrough.
+This is an advanced example, not part of the beginner docs path yet.

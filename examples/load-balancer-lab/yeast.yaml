@@ -11,9 +11,6 @@ instances:
     ssh_port: 2222
     user: yeast
     sudo: nopasswd
-    ports:
-      - host_port: 8080
-        guest_port: 80
     networks:
       - name: backend
         ipv4: 192.168.2.10

@@ -28,11 +28,11 @@ check "todo database exists" yeast exec db -- sudo -u postgres psql -d todo -c "
 echo ""
 echo "2. Application"
 check "Node app running" yeast exec app -- systemctl is-active todoapp
-check "App HTTP 200" curl -sf http://127.0.0.1:3000/
+check "App HTTP 200" yeast exec app -- curl -sf http://localhost:3000/
 
 echo ""
 echo "3. API Endpoints"
-RESULT=$(curl -sf http://127.0.0.1:3000/todos | jq '. | length')
+RESULT=$(yeast exec app -- curl -sf http://localhost:3000/todos | jq '. | length')
 if [ "$RESULT" -ge 3 ]; then
   echo "  [GET /todos returns items] ... OK ($RESULT items)"
 else
@@ -47,8 +47,14 @@ check "db pings app" yeast exec db -- ping -c 1 -W 3 192.168.2.10
 
 echo ""
 echo "5. Data Persistence Check"
- yeast exec app -- curl -sf -X POST http://localhost:3000/todos -H "Content-Type: application/json" -d '{"title":"test from verify"}' > /dev/null
-check "New todo created" yeast exec app -- curl -sf http://localhost:3000/todos | jq -e 'map(select(.title == "test from verify")) | length > 0'
+yeast exec app -- curl -sf -X POST http://localhost:3000/todos -H "Content-Type: application/json" -d '{"title":"test from verify"}' > /dev/null
+echo -n "  [New todo created] ... "
+if yeast exec app -- curl -sf http://localhost:3000/todos | jq -e 'map(select(.title == "test from verify")) | length > 0' > /dev/null 2>&1; then
+  echo "OK"
+else
+  echo "FAIL"
+  FAIL=1
+fi
 
 echo ""
 echo "=========================================="

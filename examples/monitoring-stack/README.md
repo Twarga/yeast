@@ -14,16 +14,21 @@ A 4-VM monitoring stack for Yeast.
 mkdir my-monitor-lab && cd my-monitor-lab
 yeast init
 cp -r /path/to/yeast/examples/monitoring-stack/* ./
-yeast pull ubuntu-24.04
 yeast up
 bash scripts/verify.sh
 ```
 
-## Browse
+`yeast up` downloads the Ubuntu image automatically if it is not cached yet.
 
-- Prometheus: http://127.0.0.1:9090
-- Grafana: http://127.0.0.1:3030 (admin/admin)
+## Inspect
 
-## Full tutorial
+Public host port mappings are not part of Yeast v1.1. Inspect the services from inside the monitor VM:
 
-See [Tutorial 12: Monitoring Stack](../../tutorials/12-monitoring-stack.md).
+```bash
+yeast exec monitor -- curl -fsS http://localhost:9090
+yeast exec monitor -- curl -fsS http://localhost:3000
+```
+
+## Note
+
+This is an advanced example, not part of the beginner docs path yet.
