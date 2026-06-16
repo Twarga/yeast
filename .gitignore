@@ -19,6 +19,7 @@ vm_test*/
 !NEW_DOCS_PLAN.md
 !DEVOPS_BOOTCAMP_PLAN.md
 !internal/docs/embedded/*.md
+!examples/labsbackery-attacker-target-basic/scenario/instructions.md
 
 # Keep the private DevOps bootcamp local until it is tested and approved.
 /_private-devops-bootcamp/
