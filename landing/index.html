@@ -101,35 +101,10 @@
       transition: color 0.2s;
     }
     .nav-links a:hover { color: var(--accent); }
-    .nav-github {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
-      border: 1px solid var(--border-strong);
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 500;
-      font-family: var(--font-body);
-      color: var(--text-primary);
-      text-decoration: none;
-      transition: all 0.2s;
+    .nav-get-started {
+      color: var(--accent) !important;
     }
-    .nav-github:hover {
-      background: var(--accent-glow);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-    .nav-github svg { width: 16px; height: 16px; }
-    .nav-stars {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      font-size: 12px;
-    }
-    .nav-stars svg { width: 12px; height: 12px; color: #e2b340; }
+    .nav-get-started:hover { color: #8af75f !important; }
     .nav-hamburger {
       display: none;
       background: none;
@@ -198,19 +173,14 @@
     }
     .hero .container {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 60px;
+      grid-template-columns: 1.02fr 0.98fr;
+      gap: 56px;
       align-items: center;
     }
-    .hero-content { position: relative; z-index: 2; }
-    .hero-eyebrow {
-      font-family: var(--font-mono);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--accent);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 16px;
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 520px;
     }
     .hero h1 {
       font-size: clamp(36px, 5vw, 56px);
@@ -232,6 +202,57 @@
       gap: 12px;
       flex-wrap: wrap;
     }
+    .hero-install {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-top: 28px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      width: 100%;
+      max-width: 470px;
+    }
+    .hero-install:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.1);
+    }
+    .hero-install .prompt { color: var(--accent); font-weight: 700; }
+    .hero-install .code {
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hero-install .copy-icon {
+      color: var(--text-muted);
+      font-size: 13px;
+      transition: color 0.2s;
+      flex-shrink: 0;
+    }
+    .hero-install:hover .copy-icon { color: var(--accent); }
+    .hero-install .install-copied {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: var(--bg-deep);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+    .hero-install .install-copied.show { opacity: 1; }
     .btn {
       display: inline-flex;
       align-items: center;
@@ -264,17 +285,81 @@
       border-color: var(--accent);
     }
 
+    /* ── Hero Visual ── */
+    .hero-visual {
+      display: grid;
+      gap: 16px;
+      align-self: start;
+    }
+    .code-preview {
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(34, 197, 94, 0.05);
+    }
+    .code-preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      background: rgba(34, 197, 94, 0.03);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .code-preview-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .code-preview-body {
+      padding: 18px 20px 16px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+    .code-row {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 10px;
+      white-space: nowrap;
+    }
+    .code-ln {
+      color: rgba(240, 253, 244, 0.45);
+      text-align: right;
+      padding-right: 4px;
+    }
+    .code-line { color: #dba4df; }
+    .code-key { color: #dba4df; }
+    .code-value { color: #f5ae3d; }
+    .code-blank { color: transparent; }
+
     /* ── Terminal ── */
     .terminal-wrapper {
       position: relative;
       z-index: 2;
     }
     .terminal {
+      position: relative;
       background: var(--bg-card);
       border: 1px solid var(--border-strong);
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 0 40px rgba(34, 197, 94, 0.05);
+    }
+    .terminal::after {
+      content: '';
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
     }
     .terminal-header {
       display: flex;
@@ -360,7 +445,8 @@
 
     /* ── Install ── */
     .install { text-align: center; }
-    .install-cmd {
+    .install-cmd,
+    .hero-install {
       display: inline-flex;
       align-items: center;
       gap: 12px;
@@ -375,18 +461,23 @@
       transition: all 0.2s;
       position: relative;
     }
-    .install-cmd:hover {
+    .install-cmd:hover,
+    .hero-install:hover {
       border-color: var(--accent);
       box-shadow: 0 0 20px rgba(34, 197, 94, 0.1);
     }
-    .install-cmd .prompt { color: var(--accent); font-weight: 700; }
-    .install-cmd .code { color: var(--text-primary); }
-    .install-cmd .copy-icon {
+    .install-cmd .prompt,
+    .hero-install .prompt { color: var(--accent); font-weight: 700; }
+    .install-cmd .code,
+    .hero-install .code { color: var(--text-primary); }
+    .install-cmd .copy-icon,
+    .hero-install .copy-icon {
       color: var(--text-muted);
       font-size: 13px;
       transition: color 0.2s;
     }
-    .install-cmd:hover .copy-icon { color: var(--accent); }
+    .install-cmd:hover .copy-icon,
+    .hero-install:hover .copy-icon { color: var(--accent); }
     .install-copied {
       position: absolute;
       top: -30px;
@@ -755,16 +846,10 @@
       east
     </a>
     <div class="nav-links">
+      <a href="#features">Features</a>
       <a href="/yeast/docs/">Docs</a>
-      <a href="/yeast/docs/labs/">Tutorials</a>
-      <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener" class="nav-github">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-        GitHub
-        <span class="nav-stars">
-          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
-          <span id="gh-stars">—</span>
-        </span>
-      </a>
+      <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">GitHub</a>
+      <a href="#install" class="nav-get-started">Get Started</a>
     </div>
     <button class="nav-hamburger" onclick="document.getElementById('mobile-menu').classList.add('open')" aria-label="Menu">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -777,8 +862,9 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
   </button>
   <a href="/yeast/docs/" onclick="this.parentElement.classList.remove('open')">Docs</a>
-  <a href="/yeast/docs/labs/" onclick="this.parentElement.classList.remove('open')">Tutorials</a>
+  <a href="#features" onclick="this.parentElement.classList.remove('open')">Features</a>
   <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">GitHub</a>
+  <a href="#install" onclick="this.parentElement.classList.remove('open')">Get Started</a>
 </div>
 
 <!-- ── Hero ── -->
@@ -786,7 +872,6 @@
   <div class="hero-glow"></div>
   <div class="container">
     <div class="hero-content">
-      <div class="hero-eyebrow">TwargaOps Local VM Engine</div>
       <h1>Turn a folder<br>into <span>real VMs</span>.</h1>
       <p class="hero-sub">Linux-first local VM orchestration for QEMU/KVM.</p>
       <div class="hero-actions">
@@ -796,41 +881,42 @@
           View on GitHub
         </a>
       </div>
-    </div>
-
-    <div class="terminal-wrapper">
-      <div class="terminal">
-        <div class="terminal-header">
-          <div class="terminal-dot red"></div>
-          <div class="terminal-dot yellow"></div>
-          <div class="terminal-dot green"></div>
-          <span class="terminal-title">yeast</span>
-        </div>
-        <div class="terminal-body" id="terminal-body">
-          <!-- Lines injected by JS -->
-        </div>
+      <div class="hero-install" onclick="copyInstall()" id="install">
+        <span class="install-copied" id="install-copied">Copied!</span>
+        <span class="prompt">$</span>
+        <span class="code">curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash</span>
+        <span class="copy-icon">&#x2398;</span>
       </div>
     </div>
-  </div>
-</section>
 
-<!-- ── Install ── -->
-<section class="install" id="install">
-  <div class="container">
-    <div class="section-label">Install</div>
-    <h2 class="section-title">One command. You're ready.</h2>
-    <div class="install-cmd" onclick="copyInstall()" id="install-cmd">
-      <span class="install-copied" id="install-copied">Copied!</span>
-      <span class="prompt">$</span>
-      <span class="code">curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash</span>
-      <span class="copy-icon">&#x2398;</span>
-    </div>
-    <p class="install-note">Linux only. QEMU/KVM required.</p>
-    <div class="install-badges">
-      <span class="badge"><span class="badge-dot"></span> apt</span>
-      <span class="badge"><span class="badge-dot"></span> dnf</span>
-      <span class="badge"><span class="badge-dot"></span> pacman</span>
-      <span class="badge"><span class="badge-dot"></span> zypper</span>
+    <div class="hero-visual">
+      <div class="code-preview">
+        <div class="code-preview-header">
+          <span>yeast.yaml</span>
+          <span class="code-preview-dot"></span>
+        </div>
+        <div class="code-preview-body" aria-label="Yeast configuration example">
+          <div class="code-row"><span class="code-ln">1</span><span><span class="code-key">vm:</span></span></div>
+          <div class="code-row"><span class="code-ln">2</span><span>&nbsp;&nbsp;<span class="code-key">name:</span> <span class="code-value">web-01</span></span></div>
+          <div class="code-row"><span class="code-ln">3</span><span>&nbsp;&nbsp;<span class="code-key">image:</span> <span class="code-value">ubuntu-24.04</span></span></div>
+          <div class="code-row"><span class="code-ln">4</span><span class="code-blank">&nbsp;</span></div>
+          <div class="code-row"><span class="code-ln">5</span><span><span class="code-key">resources:</span></span></div>
+          <div class="code-row"><span class="code-ln">6</span><span>&nbsp;&nbsp;<span class="code-key">cpu:</span> <span class="code-value">2</span></span></div>
+          <div class="code-row"><span class="code-ln">7</span><span>&nbsp;&nbsp;<span class="code-key">memory:</span> <span class="code-value">2048</span></span></div>
+          <div class="code-row"><span class="code-ln">8</span><span class="code-blank">&nbsp;</span></div>
+          <div class="code-row"><span class="code-ln">9</span><span><span class="code-key">network:</span></span></div>
+          <div class="code-row"><span class="code-ln">10</span><span>&nbsp;&nbsp;<span class="code-key">type:</span> <span class="code-value">user</span></span></div>
+          <div class="code-row"><span class="code-ln">11</span><span class="code-blank">&nbsp;</span></div>
+        </div>
+      </div>
+
+      <div class="terminal-wrapper">
+        <div class="terminal">
+          <div class="terminal-body" id="terminal-body">
+            <!-- Lines injected by JS -->
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -876,7 +962,7 @@
 <!-- ── How It Works ── -->
 <section class="how-it-works">
   <div class="container">
-    <div class="section-label">How It Works</div>
+    <div class="section-label">How it works</div>
     <h2 class="section-title">From zero to running VMs.</h2>
     <div class="steps">
       <div class="step">
@@ -912,9 +998,9 @@
 </section>
 
 <!-- ── Key Features ── -->
-<section>
+<section id="features">
   <div class="container">
-    <div class="section-label">Key Features</div>
+    <div class="section-label">Key features</div>
     <h2 class="section-title">Everything you need for local VMs.</h2>
     <div class="feature-list">
       <div class="feature-card">
@@ -966,7 +1052,7 @@
 <!-- ── Quick Example ── -->
 <section class="example-section">
   <div class="container">
-    <div class="section-label">Quick Example</div>
+    <div class="section-label">Quick example</div>
     <h2 class="section-title">A folder becomes a running machine.</h2>
     <div class="example-grid">
       <div class="example-card">
@@ -1015,10 +1101,10 @@
       MIT License &middot; TwargaOps
     </div>
     <div class="footer-links">
-      <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">GitHub</a>
       <a href="/yeast/docs/">Docs</a>
-      <a href="/yeast/docs/labs/">Tutorials</a>
-      <a href="/yeast/docs/releases/v1.1.0/">Changelog</a>
+      <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">GitHub</a>
+      <a href="/yeast/docs/releases/archive/">Changelog</a>
+      <a href="https://github.com/Twarga/yeast/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
     </div>
   </div>
 </footer>
@@ -1083,18 +1169,6 @@ function copyInstall() {
     setTimeout(() => copied.classList.remove('show'), 2000);
   });
 }
-</script>
-
-<script>
-fetch('https://api.github.com/repos/Twarga/yeast')
-  .then(r => r.json())
-  .then(d => {
-    const el = document.getElementById('gh-stars');
-    if (el && d.stargazers_count !== undefined) {
-      el.textContent = d.stargazers_count.toLocaleString();
-    }
-  })
-  .catch(() => {});
 </script>
 
 </body>
