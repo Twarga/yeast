@@ -291,52 +291,6 @@
       gap: 16px;
       align-self: start;
     }
-    .code-preview {
-      background: var(--bg-card);
-      border: 1px solid var(--border-strong);
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 0 40px rgba(34, 197, 94, 0.05);
-    }
-    .code-preview-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 18px;
-      background: rgba(34, 197, 94, 0.03);
-      border-bottom: 1px solid var(--border);
-      font-family: var(--font-mono);
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-    .code-preview-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--accent);
-    }
-    .code-preview-body {
-      padding: 18px 20px 16px;
-      font-family: var(--font-mono);
-      font-size: 13px;
-      line-height: 1.7;
-      color: var(--text-secondary);
-    }
-    .code-row {
-      display: grid;
-      grid-template-columns: 24px 1fr;
-      gap: 10px;
-      white-space: nowrap;
-    }
-    .code-ln {
-      color: rgba(240, 253, 244, 0.45);
-      text-align: right;
-      padding-right: 4px;
-    }
-    .code-line { color: #dba4df; }
-    .code-key { color: #dba4df; }
-    .code-value { color: #f5ae3d; }
-    .code-blank { color: transparent; }
 
     /* ── Terminal ── */
     .terminal-wrapper {
@@ -890,26 +844,6 @@
     </div>
 
     <div class="hero-visual">
-      <div class="code-preview">
-        <div class="code-preview-header">
-          <span>yeast.yaml</span>
-          <span class="code-preview-dot"></span>
-        </div>
-        <div class="code-preview-body" aria-label="Yeast configuration example">
-          <div class="code-row"><span class="code-ln">1</span><span><span class="code-key">vm:</span></span></div>
-          <div class="code-row"><span class="code-ln">2</span><span>&nbsp;&nbsp;<span class="code-key">name:</span> <span class="code-value">web-01</span></span></div>
-          <div class="code-row"><span class="code-ln">3</span><span>&nbsp;&nbsp;<span class="code-key">image:</span> <span class="code-value">ubuntu-24.04</span></span></div>
-          <div class="code-row"><span class="code-ln">4</span><span class="code-blank">&nbsp;</span></div>
-          <div class="code-row"><span class="code-ln">5</span><span><span class="code-key">resources:</span></span></div>
-          <div class="code-row"><span class="code-ln">6</span><span>&nbsp;&nbsp;<span class="code-key">cpu:</span> <span class="code-value">2</span></span></div>
-          <div class="code-row"><span class="code-ln">7</span><span>&nbsp;&nbsp;<span class="code-key">memory:</span> <span class="code-value">2048</span></span></div>
-          <div class="code-row"><span class="code-ln">8</span><span class="code-blank">&nbsp;</span></div>
-          <div class="code-row"><span class="code-ln">9</span><span><span class="code-key">network:</span></span></div>
-          <div class="code-row"><span class="code-ln">10</span><span>&nbsp;&nbsp;<span class="code-key">type:</span> <span class="code-value">user</span></span></div>
-          <div class="code-row"><span class="code-ln">11</span><span class="code-blank">&nbsp;</span></div>
-        </div>
-      </div>
-
       <div class="terminal-wrapper">
         <div class="terminal">
           <div class="terminal-body" id="terminal-body">
