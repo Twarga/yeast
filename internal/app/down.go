@@ -69,6 +69,11 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 	if err != nil {
 		return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+	if s.reconcileStateWithRuntime(ctx, &currentState) {
+		if err := state.Save(paths.StateFile, currentState); err != nil {
+			return DownResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+		}
+	}
 
 	managementHost := defaultManagementHost
 	if cfg, err := config.Load(filepath.Join(absoluteRoot, ConfigFileName)); err == nil {

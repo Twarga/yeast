@@ -80,3 +80,78 @@ func TestReconcileRunningAliveInstanceUnchanged(t *testing.T) {
 		t.Fatalf("expected pid to remain 1234, got %d", instance.PID)
 	}
 }
+
+func TestReconcileStoppedInstanceRevivesWhenRuntimeDirProcessFound(t *testing.T) {
+	state := New("proj_0123456789abcdef01234567")
+	state.Instances["web"] = InstanceState{
+		Status:     "stopped",
+		RuntimeDir: "/tmp/web",
+		LastError:  "process not running",
+	}
+
+	changed := Reconcile(&state, ReconcileOptions{
+		IsProcessAlive: func(pid int) bool { return false },
+		FindProcessByRuntimeDir: func(name, runtimeDir string) (int, bool) {
+			if name == "web" && runtimeDir == "/tmp/web" {
+				return 5151, true
+			}
+			return 0, false
+		},
+	})
+	if !changed {
+		t.Fatal("expected reconcile to report a change")
+	}
+
+	instance := state.Instances["web"]
+	if instance.Status != "running" {
+		t.Fatalf("expected running status, got %q", instance.Status)
+	}
+	if instance.PID != 5151 {
+		t.Fatalf("expected pid 5151, got %d", instance.PID)
+	}
+	if instance.LastError != "" {
+		t.Fatalf("expected last error to be cleared, got %q", instance.LastError)
+	}
+}
+
+func TestReconcileReplacesDeadPIDWhenRuntimeDirProcessFound(t *testing.T) {
+	state := New("proj_0123456789abcdef01234567")
+	state.Instances["web"] = InstanceState{
+		Status:       "running",
+		PID:          1111,
+		RuntimeDir:   "/tmp/web",
+		ManagementIP: "127.0.0.1",
+		SSHPort:      2222,
+		LastError:    "old pid missing",
+	}
+
+	changed := Reconcile(&state, ReconcileOptions{
+		IsProcessAlive: func(pid int) bool { return false },
+		FindProcessByRuntimeDir: func(name, runtimeDir string) (int, bool) {
+			if name == "web" && runtimeDir == "/tmp/web" {
+				return 5151, true
+			}
+			return 0, false
+		},
+	})
+	if !changed {
+		t.Fatal("expected reconcile to report a change")
+	}
+
+	instance := state.Instances["web"]
+	if instance.Status != "running" {
+		t.Fatalf("expected running status, got %q", instance.Status)
+	}
+	if instance.PID != 5151 {
+		t.Fatalf("expected pid 5151, got %d", instance.PID)
+	}
+	if instance.ManagementIP != "127.0.0.1" {
+		t.Fatalf("expected management ip to be preserved, got %q", instance.ManagementIP)
+	}
+	if instance.SSHPort != 2222 {
+		t.Fatalf("expected ssh port to be preserved, got %d", instance.SSHPort)
+	}
+	if instance.LastError != "" {
+		t.Fatalf("expected last error to be cleared, got %q", instance.LastError)
+	}
+}

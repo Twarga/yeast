@@ -471,7 +471,12 @@ func renderDestroy(w io.Writer, theme humanTheme, value app.DestroyResult) error
 		rows = append(rows, []string{name, status})
 	}
 
-	lines := []string{theme.Success.Render("✓") + " " + theme.Header.Render("All instances destroyed")}
+	title := "All instances destroyed"
+	if !value.FilesDeleted {
+		title = "Instances stopped (files kept)"
+	}
+
+	lines := []string{theme.Success.Render("✓") + " " + theme.Header.Render(title)}
 	lines = append(lines, "")
 	lines = append(lines, renderRows(theme, rows)...)
 	return writeBlock(w, theme, lines)
