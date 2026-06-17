@@ -121,7 +121,7 @@ func runUpdate(cmd *cobra.Command, force, check bool, targetVersion string) erro
 			hex.EncodeToString(expectedHash), hex.EncodeToString(actualHash))
 	}
 
-	binaryBytes, err := extractBinaryFromTarGz(binaryData, "yeast")
+	binaryBytes, err := extractBinaryFromTarGz(binaryData, "yeast", strings.TrimSuffix(binaryName, ".tar.gz"))
 	if err != nil {
 		return fmt.Errorf("extract binary: %w", err)
 	}
@@ -220,12 +220,20 @@ func binaryNameForPlatform() string {
 	return ""
 }
 
-func extractBinaryFromTarGz(data []byte, binaryName string) ([]byte, error) {
+func extractBinaryFromTarGz(data []byte, binaryNames ...string) ([]byte, error) {
 	gzr, err := gzip.NewReader(bytes.NewReader(data))
 	if err != nil {
 		return nil, err
 	}
 	defer gzr.Close()
+
+	candidates := make(map[string]struct{}, len(binaryNames))
+	for _, name := range binaryNames {
+		if name == "" {
+			continue
+		}
+		candidates[name] = struct{}{}
+	}
 
 	tr := tar.NewReader(gzr)
 	for {
@@ -236,11 +244,11 @@ func extractBinaryFromTarGz(data []byte, binaryName string) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		if filepath.Base(header.Name) == binaryName {
+		if _, ok := candidates[filepath.Base(header.Name)]; ok {
 			return io.ReadAll(tr)
 		}
 	}
-	return nil, fmt.Errorf("binary %s not found in archive", binaryName)
+	return nil, fmt.Errorf("binary %s not found in archive", strings.Join(binaryNames, ", "))
 }
 
 func findBinaryPath() (string, error) {

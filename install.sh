@@ -204,10 +204,20 @@ verify_release_artifact() {
 }
 
 extract_and_install_binary() {
+  local extracted_binary=""
   tar -xzf "${WORKDIR}/${RELEASE_ARTIFACT}" -C "${WORKDIR}"
-  [[ -f "${WORKDIR}/yeast" ]] || die "binary not found after extracting ${RELEASE_ARTIFACT}"
+  for candidate in \
+    "${WORKDIR}/yeast" \
+    "${WORKDIR}/${RELEASE_ARTIFACT%.tar.gz}" \
+    "${WORKDIR}/yeast_linux_${YEAST_ARCH}"; do
+    if [[ -f "${candidate}" ]]; then
+      extracted_binary="${candidate}"
+      break
+    fi
+  done
+  [[ -n "${extracted_binary}" ]] || die "binary not found after extracting ${RELEASE_ARTIFACT}"
   need_root install -d "${YEAST_INSTALL_DIR}"
-  need_root install -m 0755 "${WORKDIR}/yeast" "${YEAST_BIN_PATH}"
+  need_root install -m 0755 "${extracted_binary}" "${YEAST_BIN_PATH}"
 }
 
 install_from_release() {

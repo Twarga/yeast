@@ -41,6 +41,26 @@ bash -c 'source install.sh && YEAST_ARCH=amd64 && compute_release_artifact && [[
     || fail "compute_release_artifact produced the wrong amd64 artifact name"
 pass "Release artifact naming works"
 
+echo "Testing legacy release archive extraction..."
+bash -c '
+    source install.sh
+    tmp_dir="$(mktemp -d)"
+    export WORKDIR="${tmp_dir}"
+    export YEAST_ARCH="amd64"
+    export RELEASE_ARTIFACT="yeast_linux_amd64.tar.gz"
+    export YEAST_INSTALL_DIR="${tmp_dir}/bin"
+    export YEAST_BIN_PATH="${YEAST_INSTALL_DIR}/yeast"
+    need_root() {
+        "$@"
+    }
+    mkdir -p "${tmp_dir}/package"
+    printf "fake-binary" > "${tmp_dir}/package/yeast_linux_amd64"
+    tar -czf "${tmp_dir}/${RELEASE_ARTIFACT}" -C "${tmp_dir}/package" yeast_linux_amd64
+    extract_and_install_binary
+    [[ -f "${YEAST_BIN_PATH}" ]]
+' || fail "extract_and_install_binary did not tolerate the legacy release binary name"
+pass "Legacy release archive extraction works"
+
 echo "Testing post-install doctor fix flow..."
 bash -c '
     source install.sh
