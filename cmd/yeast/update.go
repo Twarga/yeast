@@ -60,12 +60,11 @@ type Asset struct {
 }
 
 func runUpdate(cmd *cobra.Command, force, check bool, targetVersion string) error {
+	w := cmd.OutOrStdout()
 	currentVersion := app.Version
 	if currentVersion == "" {
 		currentVersion = "dev"
 	}
-
-	fmt.Printf("Current version: %s\n", currentVersion)
 
 	if targetVersion != "" {
 		if !strings.HasPrefix(targetVersion, "v") {
@@ -79,20 +78,18 @@ func runUpdate(cmd *cobra.Command, force, check bool, targetVersion string) erro
 		targetVersion = info.TagName
 	}
 
-	if !force && targetVersion == currentVersion {
-		fmt.Println("Already on latest version.")
-		return nil
-	}
+	alreadyLatest := !force && targetVersion == currentVersion
+	updateAvailable := targetVersion != currentVersion
 
-	fmt.Printf("Target version: %s\n", targetVersion)
-
-	if check {
-		if targetVersion != currentVersion {
-			fmt.Println("Update available!")
-		} else {
-			fmt.Println("No update available.")
+	if check || alreadyLatest {
+		result := app.UpdateResult{
+			CurrentVersion:  currentVersion,
+			TargetVersion:   targetVersion,
+			UpdateAvailable: updateAvailable,
+			AlreadyLatest:   alreadyLatest,
+			CheckOnly:       check,
 		}
-		return nil
+		return renderCommandOutput(w, "update", result)
 	}
 
 	binaryName := binaryNameForPlatform()
@@ -103,13 +100,11 @@ func runUpdate(cmd *cobra.Command, force, check bool, targetVersion string) erro
 	assetURL := fmt.Sprintf("https://github.com/Twarga/yeast/releases/download/%s/%s", targetVersion, binaryName)
 	checksumsURL := fmt.Sprintf("https://github.com/Twarga/yeast/releases/download/%s/SHA256SUMS.txt", targetVersion)
 
-	fmt.Printf("Downloading %s...\n", binaryName)
 	binaryData, err := downloadFile(assetURL)
 	if err != nil {
 		return fmt.Errorf("download binary: %w", err)
 	}
 
-	fmt.Println("Downloading checksums...")
 	checksumsData, err := downloadFile(checksumsURL)
 	if err != nil {
 		return fmt.Errorf("download checksums: %w", err)
@@ -120,16 +115,13 @@ func runUpdate(cmd *cobra.Command, force, check bool, targetVersion string) erro
 		return fmt.Errorf("parse checksums: %w", err)
 	}
 
-	fmt.Println("Verifying checksum...")
 	actualHash := sha256Sum(binaryData)
 	if !bytes.Equal(expectedHash, actualHash) {
-		return fmt.Errorf("checksum mismatch: expected %s, got %s", hex.EncodeToString(expectedHash), hex.EncodeToString(actualHash))
+		return fmt.Errorf("checksum mismatch: expected %s, got %s",
+			hex.EncodeToString(expectedHash), hex.EncodeToString(actualHash))
 	}
-	fmt.Println("Checksum verified!")
 
-	var binaryBytes []byte
-	fmt.Println("Extracting archive...")
-	binaryBytes, err = extractBinaryFromTarGz(binaryData, "yeast")
+	binaryBytes, err := extractBinaryFromTarGz(binaryData, "yeast")
 	if err != nil {
 		return fmt.Errorf("extract binary: %w", err)
 	}
@@ -139,13 +131,19 @@ func runUpdate(cmd *cobra.Command, force, check bool, targetVersion string) erro
 		return fmt.Errorf("find binary path: %w", err)
 	}
 
-	fmt.Printf("Installing to %s...\n", binaryPath)
 	if err := atomicReplaceBinary(binaryPath, binaryBytes); err != nil {
 		return fmt.Errorf("replace binary: %w", err)
 	}
 
-	fmt.Printf("Successfully updated to %s!\n", targetVersion)
-	return nil
+	result := app.UpdateResult{
+		CurrentVersion:   currentVersion,
+		TargetVersion:    targetVersion,
+		UpdateAvailable:  true,
+		ChecksumVerified: true,
+		BinaryPath:       binaryPath,
+		Success:          true,
+	}
+	return renderCommandOutput(w, "update", result)
 }
 
 func fetchLatestRelease() (*ReleaseInfo, error) {

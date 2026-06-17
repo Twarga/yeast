@@ -41,7 +41,7 @@ mkdir -p installer-test
 cd installer-test
 curl -fsSL "https://raw.githubusercontent.com/Twarga/yeast/${YEAST_SMOKE_VERSION}/install.sh" -o install.sh
 bash -n install.sh
-YEAST_REF="${YEAST_SMOKE_VERSION}" YEAST_EXPECTED_VERSION="${YEAST_SMOKE_VERSION}" bash install.sh
+YEAST_VERSION="${YEAST_SMOKE_VERSION}" bash install.sh
 hash -r
 yeast version
 yeast doctor
@@ -76,7 +76,6 @@ Single-VM check:
 mkdir -p vm-basic
 cd vm-basic
 yeast init --template ubuntu-basic
-yeast pull ubuntu-24.04
 yeast up
 yeast status
 yeast inspect web

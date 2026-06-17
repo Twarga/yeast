@@ -93,7 +93,7 @@ func TestRenderHumanStatusResult(t *testing.T) {
 
 	got := stripANSI(buf.String())
 	for _, want := range []string{
-		"Project status",
+		"Status",
 		"NAME",
 		"STATUS",
 		"SSH",
@@ -423,6 +423,33 @@ func TestRenderHumanDeleteSnapshotResult(t *testing.T) {
 		if !strings.Contains(got, want) {
 			t.Fatalf("expected output to contain %q, got:\n%s", want, got)
 		}
+	}
+}
+
+func TestRenderHumanDoctorPlainDoesNotLeakANSI(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+	err := RenderHuman(&buf, "doctor", app.DoctorResult{
+		Environment: "container",
+		SupportTier: "C",
+		Checks: []app.DoctorCheck{
+			{
+				Name:    "qemu-system-x86_64",
+				Status:  app.CheckStatusOK,
+				Details: "/usr/bin/qemu-system-x86_64",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("RenderHuman returned error: %v", err)
+	}
+
+	if ansiPattern.MatchString(buf.String()) {
+		t.Fatalf("expected plain doctor output to avoid ANSI escapes, got:\n%s", buf.String())
+	}
+	if !strings.Contains(buf.String(), "Tier C") {
+		t.Fatalf("expected doctor output to include support tier text, got:\n%s", buf.String())
 	}
 }
 

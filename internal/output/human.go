@@ -3,13 +3,12 @@ package output
 import (
 	"fmt"
 	"io"
-	"os"
 	"sort"
 	"strings"
 	"yeast/internal/app"
+	"yeast/internal/ui"
 
 	"charm.land/lipgloss/v2"
-	"golang.org/x/term"
 )
 
 func RenderHuman(w io.Writer, command string, data any) error {
@@ -55,89 +54,37 @@ func RenderHuman(w io.Writer, command string, data any) error {
 		return renderDestroy(w, theme, value)
 	case app.ImageCleanResult:
 		return renderImageClean(w, theme, value)
+	case app.UpdateResult:
+		return renderUpdate(w, theme, value)
 	default:
 		return fmt.Errorf("unsupported human render type for %s: %T", command, data)
 	}
 }
 
+// humanTheme wraps ui.Theme and adds a Value style alias for backwards compat
+// with render functions that use theme.Value instead of theme.Text.
 type humanTheme struct {
-	Title   lipgloss.Style
-	Muted   lipgloss.Style
-	Label   lipgloss.Style
-	Value   lipgloss.Style
-	Success lipgloss.Style
-	Warning lipgloss.Style
-	Blocker lipgloss.Style
-	Border  lipgloss.Style
-	Header  lipgloss.Style
-	Box     lipgloss.Style
+	ui.Theme
+	Value lipgloss.Style
 }
 
 func newHumanTheme(w io.Writer) humanTheme {
-	box := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		Padding(1, 2)
-
-	if !terminalStylingEnabled(w) {
-		style := lipgloss.NewStyle()
-		return humanTheme{
-			Title:   style,
-			Muted:   style,
-			Label:   style,
-			Value:   style,
-			Success: style,
-			Warning: style,
-			Blocker: style,
-			Border:  style,
-			Header:  style,
-			Box:     box,
-		}
-	}
-
+	t := ui.NewTheme(w)
 	return humanTheme{
-		Title: lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#F5F0E8")),
-		Muted: lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#8C7355")),
-		Label: lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#D6A85F")),
-		Value: lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#F5F0E8")),
-		Success: lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#14B8A6")),
-		Warning: lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#D6A85F")),
-		Blocker: lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#EF4852")),
-		Border: lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#3A352F")),
-		Header: lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#D6A85F")),
-		Box: box.
-			BorderForeground(lipgloss.Color("#3A352F")),
+		Theme: t,
+		Value: t.Text,
 	}
 }
 
+// terminalStylingEnabled delegates to ui.StylingEnabled. Kept for use by
+// progress.go which imports this package.
 func terminalStylingEnabled(w io.Writer) bool {
-	if os.Getenv("NO_COLOR") != "" || os.Getenv("TERM") == "dumb" {
-		return false
-	}
-	file, ok := w.(interface{ Fd() uintptr })
-	if !ok {
-		return false
-	}
-	return term.IsTerminal(int(file.Fd()))
+	return ui.StylingEnabled(w)
 }
 
 func renderInit(w io.Writer, theme humanTheme, value app.InitResult) error {
 	lines := []string{
-		theme.Success.Render("OK") + " " + theme.Title.Render("Project initialized"),
+		theme.Success.Render("✓") + " " + theme.Header.Render("Project initialized"),
 		keyValue(theme, "config", value.ConfigPath),
 		keyValue(theme, "metadata", value.MetadataPath),
 		keyValue(theme, "project", value.ProjectID),
@@ -145,6 +92,15 @@ func renderInit(w io.Writer, theme humanTheme, value app.InitResult) error {
 	if value.Template != "" {
 		lines = append(lines, keyValue(theme, "template", value.Template))
 	}
+	lines = append(lines,
+		"",
+		theme.Header.Render("Next steps"),
+		fmt.Sprintf("  %s %s", theme.Muted.Render("1."), theme.Text.Render("Review and edit yeast.yaml")),
+		fmt.Sprintf("  %s %s", theme.Muted.Render("2."), theme.Text.Render("yeast up")),
+		fmt.Sprintf("  %s %s", theme.Muted.Render("3."), theme.Text.Render("yeast ssh <instance-name>")),
+		"",
+		"  "+theme.Muted.Render("Docs: yeast docs quickstart"),
+	)
 	return writeBlock(w, theme, lines)
 }
 
@@ -159,14 +115,14 @@ func renderTemplateList(w io.Writer, theme humanTheme, value app.TemplateListRes
 		})
 	}
 
-	lines := []string{theme.Title.Render("Project templates")}
+	lines := []string{theme.Header.Render("Project templates")}
 	lines = append(lines, renderRows(theme, rows)...)
 	return writeBlock(w, theme, lines)
 }
 
 func renderPull(w io.Writer, theme humanTheme, value app.PullResult) error {
 	if value.List && len(value.ImageGroups) > 0 {
-		lines := []string{theme.Title.Render("Available images")}
+		lines := []string{theme.Header.Render("Available images")}
 		lines = append(lines, "")
 		categoryLabels := map[string]string{
 			"general":    "General Purpose",
@@ -201,7 +157,7 @@ func renderPull(w io.Writer, theme humanTheme, value app.PullResult) error {
 	}
 
 	if value.List {
-		lines := []string{theme.Title.Render("Available images")}
+		lines := []string{theme.Header.Render("Available images")}
 		for _, image := range value.Images {
 			lines = append(lines, "  "+theme.Success.Render("*")+" "+theme.Value.Render(image))
 		}
@@ -230,7 +186,7 @@ func renderPull(w io.Writer, theme humanTheme, value app.PullResult) error {
 	}
 
 	if len(value.CachedImages) > 0 {
-		lines := []string{theme.Title.Render("Cached images")}
+		lines := []string{theme.Header.Render("Cached images")}
 		lines = append(lines, "")
 		for _, img := range value.CachedImages {
 			lines = append(lines, fmt.Sprintf("  %s  %s",
@@ -244,7 +200,7 @@ func renderPull(w io.Writer, theme humanTheme, value app.PullResult) error {
 	}
 
 	lines := []string{
-		theme.Success.Render("OK") + " " + theme.Title.Render("Image pulled"),
+		theme.Success.Render("OK") + " " + theme.Header.Render("Image pulled"),
 		keyValue(theme, "image", value.ImageName),
 		keyValue(theme, "path", value.ImagePath),
 	}
@@ -260,20 +216,49 @@ func splitLines(s string) []string {
 }
 
 func renderDoctor(w io.Writer, theme humanTheme, value app.DoctorResult) error {
-	lines := []string{theme.Title.Render("Host doctor")}
+	lines := []string{theme.Header.Render("Host doctor")}
+
+	// Environment and support tier summary.
+	if value.Environment != "" {
+		lines = append(lines, keyValue(theme, "environment", value.Environment))
+	}
+	if value.SupportTier != "" {
+		lines = append(lines, keyValue(theme, "support", theme.SupportTierBadge(value.SupportTier)))
+	}
+	lines = append(lines, "")
+
+	// Checks table.
 	for _, check := range value.Checks {
+		badge := doctorBadge(theme, check.Status)
 		lines = append(lines, fmt.Sprintf(
-			"  %s  %s  %s",
-			doctorBadge(theme, check.Status),
+			"  %s  %-24s  %s",
+			badge,
 			theme.Label.Render(check.Name),
 			theme.Muted.Render(check.Details),
 		))
 	}
-	lines = append(lines,
-		"",
-		keyValue(theme, "blockers", fmt.Sprintf("%d", value.Blockers)),
-		keyValue(theme, "warnings", fmt.Sprintf("%d", value.Warnings)),
-	)
+
+	lines = append(lines, "")
+
+	// Summary line.
+	switch {
+	case value.Blockers > 0:
+		lines = append(lines, fmt.Sprintf("  %s  %s  %s",
+			theme.Blocker.Render(fmt.Sprintf("%d blocker(s)", value.Blockers)),
+			theme.Muted.Render("|"),
+			theme.Warning.Render(fmt.Sprintf("%d warning(s)", value.Warnings)),
+		))
+		lines = append(lines, "")
+		lines = append(lines, "  "+theme.Muted.Render("Fix blockers before running 'yeast up'."))
+	case value.Warnings > 0:
+		lines = append(lines, fmt.Sprintf("  %s  %s",
+			theme.Warning.Render(fmt.Sprintf("%d warning(s)", value.Warnings)),
+			theme.Muted.Render("— host is usable but review warnings above"),
+		))
+	default:
+		lines = append(lines, "  "+theme.Success.Render("✓")+" "+theme.Text.Render("Host is ready."))
+	}
+
 	return writeBlock(w, theme, lines)
 }
 
@@ -287,19 +272,22 @@ func renderUp(w io.Writer, theme humanTheme, value app.UpResult) error {
 		rows = append(rows, []string{instance.Name, instance.Status, ssh})
 	}
 
-	lines := []string{theme.Success.Render("✓") + " " + theme.Title.Render("All instances ready")}
+	lines := []string{theme.Success.Render("✓") + " " + theme.Header.Render("All instances ready")}
 	lines = append(lines, "")
 	lines = append(lines, renderRows(theme, rows)...)
 
-	// Connect hint for the first instance.
-	if len(value.Instances) > 0 {
-		first := value.Instances[0]
-		if first.SSHAddress != "" {
-			lines = append(lines, "")
-			lines = append(lines, fmt.Sprintf("  %s %s",
-				theme.Muted.Render("Connect:"),
-				theme.Value.Render("yeast ssh "+first.Name),
-			))
+	// Connect hints for all running instances.
+	var sshHints []string
+	for _, inst := range value.Instances {
+		if inst.SSHAddress != "" {
+			sshHints = append(sshHints, "yeast ssh "+inst.Name)
+		}
+	}
+	if len(sshHints) > 0 {
+		lines = append(lines, "")
+		lines = append(lines, theme.Header.Render("Connect"))
+		for _, hint := range sshHints {
+			lines = append(lines, fmt.Sprintf("  %s %s", theme.Muted.Render("$"), theme.Value.Render(hint)))
 		}
 	}
 
@@ -320,14 +308,19 @@ func renderStatus(w io.Writer, theme humanTheme, value app.StatusResult) error {
 		rows = append(rows, []string{instance.Name, instance.Status, ssh, labIP})
 	}
 
-	lines := []string{theme.Title.Render("Project status")}
+	lines := []string{theme.Header.Render("Status")}
 	lines = append(lines, renderRows(theme, rows)...)
+
+	if len(instances) == 0 {
+		lines = append(lines, "  "+theme.Muted.Render("No instances. Run 'yeast up' to start."))
+	}
+
 	return writeBlock(w, theme, lines)
 }
 
 func renderProvision(w io.Writer, theme humanTheme, value app.ProvisionResult) error {
 	lines := []string{
-		theme.Success.Render("OK") + " " + theme.Title.Render("Provisioning finished"),
+		theme.Success.Render("OK") + " " + theme.Header.Render("Provisioning finished"),
 		keyValue(theme, "instance", value.Instance.Name),
 		keyValue(theme, "status", string(value.Instance.ProvisioningStatus)),
 		keyValue(theme, "ssh", value.Instance.SSHAddress),
@@ -341,7 +334,7 @@ func renderProvision(w io.Writer, theme humanTheme, value app.ProvisionResult) e
 
 func renderExec(w io.Writer, theme humanTheme, value app.ExecResult) error {
 	lines := []string{
-		theme.Success.Render("OK") + " " + theme.Title.Render("Command finished"),
+		theme.Success.Render("OK") + " " + theme.Header.Render("Command finished"),
 		keyValue(theme, "instance", value.Instance),
 		keyValue(theme, "command", value.Run.Command),
 		keyValue(theme, "exit_code", fmt.Sprintf("%d", value.Run.ExitCode)),
@@ -361,7 +354,7 @@ func renderExec(w io.Writer, theme humanTheme, value app.ExecResult) error {
 
 func renderCopy(w io.Writer, theme humanTheme, value app.CopyResult) error {
 	lines := []string{
-		theme.Success.Render("OK") + " " + theme.Title.Render("Copy finished"),
+		theme.Success.Render("OK") + " " + theme.Header.Render("Copy finished"),
 		keyValue(theme, "instance", value.Instance),
 		keyValue(theme, "direction", string(value.Direction)),
 		keyValue(theme, "source", value.Source),
@@ -373,7 +366,7 @@ func renderCopy(w io.Writer, theme humanTheme, value app.CopyResult) error {
 
 func renderInspect(w io.Writer, theme humanTheme, value app.InspectResult) error {
 	lines := []string{
-		theme.Title.Render("Instance inspect"),
+		theme.Header.Render("Instance inspect"),
 		keyValue(theme, "name", value.Instance.Name),
 		keyValue(theme, "status", value.Instance.Status),
 		keyValue(theme, "ssh", sshAddress(value.Instance.ManagementIP, value.Instance.SSHPort)),
@@ -394,7 +387,7 @@ func renderInspect(w io.Writer, theme humanTheme, value app.InspectResult) error
 
 func renderLogs(w io.Writer, theme humanTheme, value app.LogsResult) error {
 	lines := []string{
-		theme.Title.Render("Instance logs"),
+		theme.Header.Render("Instance logs"),
 		keyValue(theme, "instance", value.Instance),
 		keyValue(theme, "path", value.LogPath),
 	}
@@ -406,7 +399,7 @@ func renderLogs(w io.Writer, theme humanTheme, value app.LogsResult) error {
 
 func renderSnapshot(w io.Writer, theme humanTheme, value app.SnapshotResult) error {
 	lines := []string{
-		theme.Success.Render("OK") + " " + theme.Title.Render("Snapshot created"),
+		theme.Success.Render("OK") + " " + theme.Header.Render("Snapshot created"),
 		keyValue(theme, "instance", value.Instance),
 		keyValue(theme, "snapshot", value.Snapshot.Name),
 		keyValue(theme, "path", value.Snapshot.DiskPath),
@@ -420,7 +413,7 @@ func renderSnapshot(w io.Writer, theme humanTheme, value app.SnapshotResult) err
 
 func renderRestore(w io.Writer, theme humanTheme, value app.RestoreResult) error {
 	lines := []string{
-		theme.Success.Render("OK") + " " + theme.Title.Render("Snapshot restored"),
+		theme.Success.Render("OK") + " " + theme.Header.Render("Snapshot restored"),
 		keyValue(theme, "instance", value.Instance),
 		keyValue(theme, "snapshot", value.Snapshot.Name),
 		keyValue(theme, "path", value.Snapshot.DiskPath),
@@ -440,7 +433,7 @@ func renderSnapshots(w io.Writer, theme humanTheme, value app.SnapshotsResult) e
 	}
 
 	lines := []string{
-		theme.Title.Render("Instance snapshots"),
+		theme.Header.Render("Instance snapshots"),
 		keyValue(theme, "instance", value.Instance),
 	}
 	lines = append(lines, renderRows(theme, rows)...)
@@ -449,7 +442,7 @@ func renderSnapshots(w io.Writer, theme humanTheme, value app.SnapshotsResult) e
 
 func renderDeleteSnapshot(w io.Writer, theme humanTheme, value app.DeleteSnapshotResult) error {
 	lines := []string{
-		theme.Success.Render("OK") + " " + theme.Title.Render("Snapshot deleted"),
+		theme.Success.Render("OK") + " " + theme.Header.Render("Snapshot deleted"),
 		keyValue(theme, "instance", value.Instance),
 		keyValue(theme, "snapshot", value.Snapshot),
 	}
@@ -463,7 +456,7 @@ func renderDown(w io.Writer, theme humanTheme, value app.DownResult) error {
 		rows = append(rows, []string{name, status})
 	}
 
-	lines := []string{theme.Success.Render("✓") + " " + theme.Title.Render("All instances stopped")}
+	lines := []string{theme.Success.Render("✓") + " " + theme.Header.Render("All instances stopped")}
 	lines = append(lines, "")
 	lines = append(lines, renderRows(theme, rows)...)
 	return writeBlock(w, theme, lines)
@@ -476,7 +469,7 @@ func renderDestroy(w io.Writer, theme humanTheme, value app.DestroyResult) error
 		rows = append(rows, []string{name, status})
 	}
 
-	lines := []string{theme.Success.Render("✓") + " " + theme.Title.Render("All instances destroyed")}
+	lines := []string{theme.Success.Render("✓") + " " + theme.Header.Render("All instances destroyed")}
 	lines = append(lines, "")
 	lines = append(lines, renderRows(theme, rows)...)
 	return writeBlock(w, theme, lines)
@@ -484,7 +477,7 @@ func renderDestroy(w io.Writer, theme humanTheme, value app.DestroyResult) error
 
 func renderImageClean(w io.Writer, theme humanTheme, value app.ImageCleanResult) error {
 	if value.DryRun {
-		lines := []string{theme.Title.Render("Would remove")}
+		lines := []string{theme.Header.Render("Would remove")}
 		lines = append(lines, "")
 		for _, item := range value.Removed {
 			lines = append(lines, fmt.Sprintf("  %s  %s",
@@ -502,7 +495,7 @@ func renderImageClean(w io.Writer, theme humanTheme, value app.ImageCleanResult)
 		return writeBlock(w, theme, lines)
 	}
 
-	lines := []string{theme.Success.Render("✓") + " " + theme.Title.Render("Cached images removed")}
+	lines := []string{theme.Success.Render("✓") + " " + theme.Header.Render("Cached images removed")}
 	lines = append(lines, "")
 	for _, item := range value.Removed {
 		lines = append(lines, fmt.Sprintf("  %s  %s freed",
@@ -623,4 +616,53 @@ func writeBlock(w io.Writer, theme humanTheme, lines []string) error {
 	box := theme.Box.Render(content)
 	_, err := fmt.Fprintln(w, box)
 	return err
+}
+
+func renderUpdate(w io.Writer, theme humanTheme, value app.UpdateResult) error {
+	var lines []string
+
+	switch {
+	case value.Success:
+		lines = []string{
+			theme.Success.Render("✓") + " " + theme.Header.Render("Updated"),
+			keyValue(theme, "from", value.CurrentVersion),
+			keyValue(theme, "to", value.TargetVersion),
+		}
+		if value.ChecksumVerified {
+			lines = append(lines, keyValue(theme, "checksum", theme.Success.Render("verified")))
+		}
+		if value.BinaryPath != "" {
+			lines = append(lines, keyValue(theme, "binary", value.BinaryPath))
+		}
+
+	case value.AlreadyLatest:
+		lines = []string{
+			theme.Success.Render("✓") + " " + theme.Header.Render("Already up to date"),
+			keyValue(theme, "version", value.CurrentVersion),
+		}
+
+	case value.CheckOnly && value.UpdateAvailable:
+		lines = []string{
+			theme.Warning.Render("!") + " " + theme.Header.Render("Update available"),
+			keyValue(theme, "current", value.CurrentVersion),
+			keyValue(theme, "latest", value.TargetVersion),
+			"",
+			"  " + theme.Muted.Render("Run 'yeast update' to install."),
+		}
+
+	case value.CheckOnly && !value.UpdateAvailable:
+		lines = []string{
+			theme.Success.Render("✓") + " " + theme.Header.Render("Up to date"),
+			keyValue(theme, "version", value.CurrentVersion),
+		}
+
+	default:
+		lines = []string{
+			theme.Header.Render("Update"),
+			keyValue(theme, "current", value.CurrentVersion),
+			keyValue(theme, "target", value.TargetVersion),
+		}
+	}
+
+	return writeBlock(w, theme, lines)
 }

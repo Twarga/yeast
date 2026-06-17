@@ -1,37 +1,47 @@
 # Install on Linux
 
-This is the normal Yeast install path.
+This is the standard Yeast install path.
 
-Yeast runs on Linux hosts with QEMU/KVM.
+Yeast runs on Linux hosts with QEMU/KVM. First-class support is Ubuntu and Debian. Fedora and Arch are supported. Other distros are best-effort.
 
 ## Requirements
 
-You need:
-
-- Linux
-- AMD64/x86_64
-- `/dev/kvm` for fast hardware virtualization
-- `qemu-system-x86_64`
-- `qemu-img`
-- `genisoimage` or `mkisofs`
+- Linux (x86_64 recommended; see note on arm64 below)
+- `/dev/kvm` for hardware-accelerated VMs
+- `qemu-system-x86_64` and `qemu-img`
+- `genisoimage`, `mkisofs`, or `xorriso`
 - `ssh`
 - an SSH public key at `~/.ssh/id_ed25519.pub` or `~/.ssh/id_rsa.pub`
 
-## Install With The Script
+## Option 1: Install Script (recommended)
+
+One command installs the release binary, prepares `~/.yeast`, bootstraps an SSH key if needed, and runs `yeast doctor --fix --yes`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
 ```
 
-For an explicit release:
+The script downloads the pre-built binary from GitHub releases, verifies its checksum, and then asks Yeast itself to install any missing supported host packages it can fix automatically. It does not install Go and does not build from source in the normal path.
+
+To pin a specific version:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_REF=v1.1.0 bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_VERSION=v1.1.0 bash
 ```
 
-The installer is meant for fresh Linux hosts. It may install host packages, prepare the image cache directory, check SSH key availability, and run `yeast doctor`.
+**Environment variables:**
 
-## Manual Release Install
+| Variable | Default | Purpose |
+|---|---|---|
+| `YEAST_VERSION` | `v1.1.0` | Release tag to install |
+| `YEAST_INSTALL_DIR` | `/usr/local/bin` | Where to place the binary |
+| `YEAST_INSTALL_MODE` | `binary` | Set to `source` for source build (advanced) |
+| `YEAST_SKIP_DOCTOR` | `0` | Set to `1` to skip the post-install doctor check |
+| `YEAST_INSTALL_VERBOSE` | `0` | Set to `1` for verbose step output |
+
+## Option 2: Manual Release Install
+
+Download, verify, and install the binary directly:
 
 ```bash
 VERSION="v1.1.0"
@@ -42,9 +52,7 @@ tar -xzf yeast_linux_amd64.tar.gz
 sudo install -m 0755 yeast /usr/local/bin/yeast
 ```
 
-The release archive must extract a binary named `yeast`.
-
-## Verify The Install
+## Verify the Install
 
 ```bash
 yeast version
@@ -60,6 +68,8 @@ command -v yeast
 ```
 
 ## Install Host Packages
+
+The install script now attempts this automatically on supported distros by running `yeast doctor --fix --yes`. If you prefer to install the packages yourself, use the commands below:
 
 On Ubuntu or Debian:
 
@@ -82,15 +92,13 @@ sudo pacman -S qemu-full cdrtools openssh
 
 ## KVM Access
 
-If `/dev/kvm` exists but your user cannot access it, add yourself to the `kvm` group:
+If `/dev/kvm` exists but your user cannot access it:
 
 ```bash
 sudo usermod -aG kvm "$USER"
 ```
 
-Then log out and back in.
-
-Check access again:
+Log out and back in, then check:
 
 ```bash
 yeast doctor
@@ -104,7 +112,11 @@ If you do not have an SSH key yet:
 ssh-keygen -t ed25519
 ```
 
-Yeast uses your public key for guest access.
+The install script and `yeast doctor --fix --yes` both try to create this automatically when it is missing.
+
+## Architecture Notes
+
+x86_64 (amd64) is the primary supported host target. A release binary exists for arm64, but full runtime validation on arm64 hosts has not been completed. If you are on arm64, run `yeast doctor` after installing and verify your results before relying on it.
 
 ## Update Later
 
@@ -114,11 +126,21 @@ Check for a newer release:
 yeast update --check
 ```
 
-Update to a specific tag:
+Update to a specific version:
 
 ```bash
 yeast update --version v1.1.0
 ```
+
+## Source Build (advanced)
+
+If you need to build from source — for example to test unreleased changes or contribute — use:
+
+```bash
+YEAST_INSTALL_MODE=source bash install.sh
+```
+
+This installs Go, clones the repository, and compiles the binary. Normal users do not need this.
 
 ## Next Step
 

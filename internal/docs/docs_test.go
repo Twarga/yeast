@@ -33,6 +33,60 @@ func TestReadTopic(t *testing.T) {
 	}
 }
 
+func TestQuickstartNoLongerRequiresManualImagePull(t *testing.T) {
+	t.Parallel()
+
+	body, err := ReadTopic("quickstart")
+	if err != nil {
+		t.Fatalf("ReadTopic returned error: %v", err)
+	}
+
+	if strings.Contains(body, "yeast pull ubuntu-24.04") {
+		t.Fatalf("quickstart still requires manual image pull:\n%s", body)
+	}
+	if !strings.Contains(body, "yeast up") {
+		t.Fatalf("expected quickstart to keep yeast up flow, got %q", body)
+	}
+}
+
+func TestOfflineInstallationTopicMatchesBinaryFirstInstaller(t *testing.T) {
+	t.Parallel()
+
+	body, err := ReadTopic("installation")
+	if err != nil {
+		t.Fatalf("ReadTopic returned error: %v", err)
+	}
+
+	if strings.Contains(body, "YEAST_REF=") {
+		t.Fatalf("installation topic still uses stale YEAST_REF pinning:\n%s", body)
+	}
+	if strings.Contains(body, "install or bootstrap Go when needed") {
+		t.Fatalf("installation topic still describes the old Go-bootstrap installer:\n%s", body)
+	}
+	if !strings.Contains(body, "YEAST_VERSION=") {
+		t.Fatalf("expected installation topic to document YEAST_VERSION pinning, got %q", body)
+	}
+}
+
+func TestReleaseSmokeUsesCurrentInstallerAndAutoPullFlow(t *testing.T) {
+	t.Parallel()
+
+	body, err := ReadTopic("release-smoke")
+	if err != nil {
+		t.Fatalf("ReadTopic returned error: %v", err)
+	}
+
+	if strings.Contains(body, "YEAST_REF=") {
+		t.Fatalf("release-smoke topic still uses stale installer env vars:\n%s", body)
+	}
+	if strings.Contains(body, "yeast pull ubuntu-24.04") {
+		t.Fatalf("release-smoke topic still requires manual image pull:\n%s", body)
+	}
+	if !strings.Contains(body, "YEAST_VERSION=") {
+		t.Fatalf("expected release-smoke topic to use YEAST_VERSION pinning, got %q", body)
+	}
+}
+
 func TestRenderWritesMarkdownForNonTerminal(t *testing.T) {
 	t.Parallel()
 

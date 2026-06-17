@@ -45,13 +45,17 @@ List current images:
 yeast pull --list
 ```
 
+If a trusted image is missing, `yeast up` downloads it automatically.
+
 Useful image/cache commands:
 
 ```bash
-yeast pull ubuntu-24.04
 yeast pull --cached
+yeast pull ubuntu-24.04
 yeast images clean ubuntu-24.04 --dry-run
 ```
+
+Use `yeast pull <image>` when you want to warm the cache before `yeast up`.
 
 Not supported in v1.1 config:
 

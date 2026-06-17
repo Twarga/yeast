@@ -1,6 +1,6 @@
 # Yeast Installation
 
-Yeast targets Linux hosts with KVM.
+Yeast targets Linux hosts with QEMU/KVM.
 
 Install the latest stable release:
 
@@ -11,19 +11,39 @@ curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
 Install the explicit v1.1.0 release:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_REF=v1.1.0 bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_VERSION=v1.1.0 bash
 ```
 
-The installer attempts to:
+The default installer:
 
-- detect the package manager
-- install QEMU/KVM and SSH tooling
-- install or bootstrap Go when needed
-- create `~/.yeast/cache/images`
-- generate an SSH key if missing
-- run `yeast doctor`
+- downloads the release binary
+- verifies the checksum
+- creates `~/.yeast/cache/images`
+- creates a default SSH key if needed
+- runs `yeast doctor --fix --yes`
 
-If the installer adds your user to the KVM group, log out and back in before running `yeast up`.
+It does not build from source or install Go in the normal path.
+
+If you prefer to install host packages yourself instead of letting `yeast doctor --fix --yes` do it, use:
+
+```bash
+sudo apt update
+sudo apt install -y qemu-kvm qemu-utils genisoimage openssh-client
+```
+
+If `/dev/kvm` exists but your user cannot access it:
+
+```bash
+sudo usermod -aG kvm "$USER"
+```
+
+Then log out and back in before running `yeast up`.
+
+Source-build mode is still available for contributors:
+
+```bash
+YEAST_INSTALL_MODE=source bash install.sh
+```
 
 Check the result:
 
