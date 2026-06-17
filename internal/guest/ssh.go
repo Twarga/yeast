@@ -37,6 +37,7 @@ func BuildSSHArgs(user, host string, port int) ([]string, error) {
 		"-p", fmt.Sprintf("%d", port),
 		"-o", "StrictHostKeyChecking=no",
 		"-o", "UserKnownHostsFile=/dev/null",
+		"-o", "LogLevel=ERROR",
 		fmt.Sprintf("%s@%s", user, host),
 	}, nil
 }
