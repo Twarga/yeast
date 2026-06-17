@@ -20,6 +20,18 @@ echo "Testing source guard..."
 bash -c 'source install.sh >/dev/null 2>&1' || fail "install.sh should be safe to source"
 pass "install.sh is safe to source"
 
+echo "Testing piped execution guard..."
+bash -lc '
+    awk '\''{
+        if ($0 == "  main \"$@\"") {
+            print "  printf \"MAIN_RAN\\n\""
+            next
+        }
+        print
+    }'\'' install.sh | bash
+' | grep -qx "MAIN_RAN" || fail "install.sh piped execution guard still breaks or does not enter main"
+pass "Piped execution guard works"
+
 echo "Testing distro detection..."
 bash -c 'source install.sh && detect_distro && [[ -n "${PKG_MANAGER}" ]]' || fail "detect_distro did not set PKG_MANAGER"
 pass "Distro detection works"
