@@ -1,4 +1,5 @@
 /yeast
+.worktrees/
 artifacts/
 dist/
 *.state
