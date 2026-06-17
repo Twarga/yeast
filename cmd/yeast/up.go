@@ -26,6 +26,11 @@ func newUpCmd(service *app.Service) *cobra.Command {
 			}
 			start := time.Now()
 			w := cmd.OutOrStdout()
+			if shouldCheckUpdateNotice() && service != nil {
+				if notice, noticeErr := service.CheckForUpdateNotice(cmd.Context(), app.UpdateNoticeOptions{}); noticeErr == nil && notice != nil {
+					_ = output.RenderHuman(cmd.ErrOrStderr(), "update-notice", *notice)
+				}
+			}
 			events, err := eventSink(w)
 			if err != nil {
 				return err
@@ -68,4 +73,8 @@ func newUpCmd(service *app.Service) *cobra.Command {
 	cmd.Flags().BoolVar(&profile, "profile", false, "Show boot-time profiling breakdown")
 
 	return cmd
+}
+
+func shouldCheckUpdateNotice() bool {
+	return !outputQuiet && !outputJSON && !outputEvents
 }

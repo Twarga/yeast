@@ -56,6 +56,8 @@ func RenderHuman(w io.Writer, command string, data any) error {
 		return renderImageClean(w, theme, value)
 	case app.UpdateResult:
 		return renderUpdate(w, theme, value)
+	case app.UpdateNotice:
+		return renderUpdateNotice(w, theme, value)
 	default:
 		return fmt.Errorf("unsupported human render type for %s: %T", command, data)
 	}
@@ -664,5 +666,16 @@ func renderUpdate(w io.Writer, theme humanTheme, value app.UpdateResult) error {
 		}
 	}
 
+	return writeBlock(w, theme, lines)
+}
+
+func renderUpdateNotice(w io.Writer, theme humanTheme, value app.UpdateNotice) error {
+	lines := []string{
+		theme.Warning.Render("!") + " " + theme.Header.Render("Update available"),
+		keyValue(theme, "current", value.CurrentVersion),
+		keyValue(theme, "latest", value.LatestVersion),
+		"",
+		"  " + theme.Muted.Render("Run 'yeast update' to install."),
+	}
 	return writeBlock(w, theme, lines)
 }

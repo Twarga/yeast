@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v1.1.2] - 2026-06-17
+
+### Added
+- **Daily update notice on `yeast up`**: human `yeast up` runs a quiet update check at most once per day and shows a small banner when a newer Yeast release is available
+- **Update-check cache**: Yeast stores the latest release check in `~/.yeast/cache/update-check.json` to avoid repeated GitHub requests
+
+### Changed
+- **Automation-safe output**: update notices are hidden for `--json`, `--events`, and `--quiet` so scripts keep stable output
+- **Current stable release**: install examples and release smoke docs now target `v1.1.2`
+
+[v1.1.2]: https://github.com/Twarga/yeast/releases/tag/v1.1.2
+
 ## [v1.1.1] - 2026-06-17
 
 ### Fixed

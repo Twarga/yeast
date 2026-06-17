@@ -32,6 +32,8 @@ type Service struct {
 	provisionTransport      provssh.Transport
 	runtime                 rtm.Runtime
 	httpClient              *http.Client
+	latestReleaseURL        string
+	now                     func() time.Time
 }
 
 func NewService() *Service {
@@ -50,6 +52,8 @@ func NewService() *Service {
 		sleep:               time.Sleep,
 		runtime:             qemu.NewRuntime(),
 		httpClient:          http.DefaultClient,
+		latestReleaseURL:    defaultLatestReleaseURL,
+		now:                 time.Now,
 	}
 }
 

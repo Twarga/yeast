@@ -12,7 +12,7 @@
 set -euo pipefail
 
 # ─── Configuration ─────────────────────────────────────────���────────────────
-YEAST_VERSION="${YEAST_VERSION:-v1.1.1}"
+YEAST_VERSION="${YEAST_VERSION:-v1.1.2}"
 YEAST_INSTALL_DIR="${YEAST_INSTALL_DIR:-/usr/local/bin}"
 YEAST_BIN_PATH="${YEAST_INSTALL_DIR}/yeast"
 YEAST_INSTALL_MODE="${YEAST_INSTALL_MODE:-binary}"

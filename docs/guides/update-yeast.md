@@ -21,13 +21,13 @@ yeast update
 ## Install A Specific Version
 
 ```bash
-yeast update --version v1.1.1
+yeast update --version v1.1.2
 ```
 
 ## Force Reinstall
 
 ```bash
-yeast update --force --version v1.1.1
+yeast update --force --version v1.1.2
 ```
 
 Use `--force` when you want to reinstall the same version or replace a local smoke-test binary.
@@ -49,4 +49,4 @@ If update fails:
 4. confirm the release has `SHA256SUMS.txt`
 5. run `yeast version` to see what is still installed
 
-For release validation, see [Release Smoke Test](release-smoke-v1.1.1.md).
+For release validation, see [Release Smoke Test](release-smoke-v1.1.2.md).

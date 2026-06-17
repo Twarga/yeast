@@ -88,6 +88,6 @@ It is a Linux-first local VM engine for repeatable real-machine labs.
 
 ## Current Release
 
-The current docs target Yeast `v1.1.1`.
+The current docs target Yeast `v1.1.2`.
 
 Start with [Quickstart](getting-started/quickstart.md), or jump to the [command reference](reference/commands.md).

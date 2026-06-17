@@ -111,6 +111,33 @@ func TestRenderHumanStatusResult(t *testing.T) {
 	}
 }
 
+func TestRenderHumanUpdateNotice(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+	err := RenderHuman(&buf, "update-notice", app.UpdateNotice{
+		CurrentVersion: "v1.1.0",
+		LatestVersion:  "v1.1.1",
+	})
+	if err != nil {
+		t.Fatalf("RenderHuman returned error: %v", err)
+	}
+
+	got := stripANSI(buf.String())
+	for _, want := range []string{
+		"Update available",
+		"current:",
+		"v1.1.0",
+		"latest:",
+		"v1.1.1",
+		"yeast update",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, got)
+		}
+	}
+}
+
 func TestRenderHumanProvisionResult(t *testing.T) {
 	t.Parallel()
 
