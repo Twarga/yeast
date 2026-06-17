@@ -77,7 +77,7 @@ func (r *Runtime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeou
 		return fmt.Errorf("runtime instance pid is required")
 	}
 
-	running, err := processRunning(instance.PID)
+	running, err := processRunningFn(instance.PID)
 	if err != nil {
 		return fmt.Errorf("inspect process %d: %w", instance.PID, err)
 	}
@@ -103,19 +103,19 @@ func (r *Runtime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeou
 	if termTimeout < 0 {
 		termTimeout = 0
 	}
-	if err := signalProcess(instance.PID, syscall.SIGTERM); err != nil && !isNoSuchProcess(err) {
+	if err := signalProcessFn(instance.PID, syscall.SIGTERM); err != nil && !isNoSuchProcess(err) {
 		return fmt.Errorf("send SIGTERM to process %d: %w", instance.PID, err)
 	}
-	if err := waitForProcessExit(ctx, instance.PID, termTimeout); err == nil {
+	if err := waitForProcessExitFn(ctx, instance.PID, termTimeout); err == nil {
 		return nil
 	} else if err != context.DeadlineExceeded {
 		return fmt.Errorf("wait for process %d after SIGTERM: %w", instance.PID, err)
 	}
 
-	if err := signalProcess(instance.PID, syscall.SIGKILL); err != nil && !isNoSuchProcess(err) {
+	if err := signalProcessFn(instance.PID, syscall.SIGKILL); err != nil && !isNoSuchProcess(err) {
 		return fmt.Errorf("send SIGKILL to process %d: %w", instance.PID, err)
 	}
-	if err := waitForProcessExit(ctx, instance.PID, 5*time.Second); err != nil && err != context.DeadlineExceeded {
+	if err := waitForProcessExitFn(ctx, instance.PID, 5*time.Second); err != nil {
 		return fmt.Errorf("wait for process %d after SIGKILL: %w", instance.PID, err)
 	}
 	_ = removeStaleQMPSocket(instance.RuntimeDir)
@@ -142,7 +142,7 @@ func (r *Runtime) gracefulPowerdown(ctx context.Context, instance rtm.RuntimeIns
 		return fmt.Errorf("send system_powerdown: %w", err)
 	}
 
-	if err := waitForProcessExit(ctx, instance.PID, timeout); err != nil {
+	if err := waitForProcessExitFn(ctx, instance.PID, timeout); err != nil {
 		return fmt.Errorf("wait for process exit after powerdown: %w", err)
 	}
 	return nil
@@ -169,7 +169,7 @@ func (r *Runtime) Inspect(ctx context.Context, instance rtm.RuntimeInstance) (rt
 		return rtm.ProcessInfo{}, fmt.Errorf("runtime instance pid is required")
 	}
 
-	running, err := processRunning(instance.PID)
+	running, err := processRunningFn(instance.PID)
 	if err != nil {
 		return rtm.ProcessInfo{}, fmt.Errorf("inspect process %d: %w", instance.PID, err)
 	}
@@ -199,9 +199,20 @@ func (r *Runtime) DeleteSnapshot(ctx context.Context, snapshotPath string) error
 }
 
 func (r *Runtime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) error {
+	if instance.PID <= 0 && instance.RuntimeDir != "" {
+		results, err := r.FindProcesses(ctx, []rtm.CleanupTarget{{Name: instance.Name, RuntimeDir: instance.RuntimeDir}})
+		if err == nil {
+			for _, result := range results {
+				if result.Name == instance.Name && result.PID > 0 {
+					instance.PID = result.PID
+					break
+				}
+			}
+		}
+	}
 	if instance.PID > 0 {
 		if err := r.Stop(ctx, instance, 5*time.Second); err != nil {
-			running, inspectErr := processRunning(instance.PID)
+			running, inspectErr := processRunningFn(instance.PID)
 			if inspectErr != nil || running {
 				return err
 			}

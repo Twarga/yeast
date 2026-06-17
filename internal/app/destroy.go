@@ -16,6 +16,7 @@ type DestroyOptions struct {
 	ProjectRoot string
 	Timeout     time.Duration
 	Events      EventSink
+	KeepFiles   bool
 }
 
 type DestroyInstanceResult struct {
@@ -24,8 +25,9 @@ type DestroyInstanceResult struct {
 }
 
 type DestroyResult struct {
-	ProjectID string                  `json:"project_id"`
-	Instances []DestroyInstanceResult `json:"instances"`
+	ProjectID    string                  `json:"project_id"`
+	Instances    []DestroyInstanceResult `json:"instances"`
+	FilesDeleted bool                    `json:"files_deleted"`
 }
 
 func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (DestroyResult, error) {
@@ -68,10 +70,21 @@ func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (DestroyR
 	if err != nil {
 		return DestroyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
+	if s.reconcileStateWithRuntime(ctx, &currentState) {
+		if err := state.Save(paths.StateFile, currentState); err != nil {
+			return DestroyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+		}
+	}
+
+	timeout := options.Timeout
+	if timeout <= 0 {
+		timeout = time.Minute
+	}
 
 	result := DestroyResult{
-		ProjectID: metadata.ID,
-		Instances: make([]DestroyInstanceResult, 0, len(currentState.Instances)),
+		ProjectID:    metadata.ID,
+		Instances:    make([]DestroyInstanceResult, 0, len(currentState.Instances)),
+		FilesDeleted: !options.KeepFiles,
 	}
 
 	names := make([]string, 0, len(currentState.Instances))
@@ -86,6 +99,39 @@ func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (DestroyR
 			Name:       name,
 			RuntimeDir: instance.RuntimeDir,
 			PID:        instance.PID,
+		}
+
+		if options.KeepFiles {
+			status := "already_stopped"
+			if instance.Status == "running" && instance.PID > 0 {
+				if err := s.runtime.Stop(ctx, runtimeInstance, timeout); err != nil {
+					return DestroyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+				}
+				status = "stopped"
+			}
+
+			instance.Status = "stopped"
+			instance.PID = 0
+			instance.ManagementIP = ""
+			instance.SSHPort = 0
+			instance.LastError = ""
+			currentState.Instances[name] = instance
+
+			result.Instances = append(result.Instances, DestroyInstanceResult{
+				Name:   name,
+				Status: status,
+			})
+			emitEvent(options.Events, "destroy", EventInstanceStopped, EventOptions{
+				ProjectID: metadata.ID,
+				Instance:  name,
+				Message:   "Instance stopped (files kept)",
+				Data: map[string]any{
+					"status":        status,
+					"files_kept":    true,
+					"files_deleted": false,
+				},
+			})
+			continue
 		}
 
 		if instance.Status == "running" && instance.PID > 0 {
@@ -108,7 +154,8 @@ func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (DestroyR
 			Instance:  name,
 			Message:   "Instance destroyed",
 			Data: map[string]any{
-				"status": "destroyed",
+				"status":        "destroyed",
+				"files_deleted": true,
 			},
 		})
 	}

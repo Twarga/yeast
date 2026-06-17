@@ -104,6 +104,49 @@ func TestDownHandlesAlreadyStoppedInstances(t *testing.T) {
 	}
 }
 
+func TestDownStopsRecoveredRunningInstanceByRuntimeDir(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.managementPortAvailable = func(port int) bool { return true }
+	service.sleep = func(time.Duration) {}
+	fakeRuntime := &fakeDownRuntime{
+		found: []rtm.CleanupResult{{Name: "web", PID: 5151}},
+	}
+	service.runtime = fakeRuntime
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	metadata, err := project.LoadMetadata(root)
+	if err != nil {
+		t.Fatalf("LoadMetadata returned error: %v", err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		t.Fatalf("NewPaths returned error: %v", err)
+	}
+
+	current := state.New(metadata.ID)
+	current.Instances["web"] = state.InstanceState{Status: "stopped", RuntimeDir: "/tmp/web"}
+	if err := state.Save(paths.StateFile, current); err != nil {
+		t.Fatalf("Save returned error: %v", err)
+	}
+
+	result, err := service.Down(context.Background(), DownOptions{ProjectRoot: root, Timeout: 5 * time.Second})
+	if err != nil {
+		t.Fatalf("Down returned error: %v", err)
+	}
+	if len(fakeRuntime.stoppedPIDs) != 1 || fakeRuntime.stoppedPIDs[0] != 5151 {
+		t.Fatalf("expected recovered pid 5151 to be stopped, got %#v", fakeRuntime.stoppedPIDs)
+	}
+	if len(result.Instances) != 1 || result.Instances[0].Status != "stopped" {
+		t.Fatalf("expected stopped result, got %#v", result.Instances)
+	}
+}
+
 func TestDownUsesLongDefaultShutdownTimeout(t *testing.T) {
 	root := t.TempDir()
 	yeastHome := filepath.Join(root, "yeast-home")
@@ -366,6 +409,8 @@ type fakeDownRuntime struct {
 	stoppedPIDs  []int
 	stopTimeouts []time.Duration
 	stopErr      error
+	found        []rtm.CleanupResult
+	findErr      error
 }
 
 func (f *fakeDownRuntime) PrepareDisk(ctx context.Context, plan rtm.MachinePlan) (rtm.DiskPlan, error) {
@@ -383,7 +428,11 @@ func (f *fakeDownRuntime) Stop(ctx context.Context, instance rtm.RuntimeInstance
 }
 
 func (f *fakeDownRuntime) Inspect(ctx context.Context, instance rtm.RuntimeInstance) (rtm.ProcessInfo, error) {
-	return rtm.ProcessInfo{}, nil
+	state := rtm.ProcessStateStopped
+	if instance.PID > 0 {
+		state = rtm.ProcessStateRunning
+	}
+	return rtm.ProcessInfo{PID: instance.PID, State: state}, nil
 }
 
 func (f *fakeDownRuntime) CreateSnapshot(ctx context.Context, plan rtm.SnapshotPlan) error {
@@ -400,4 +449,8 @@ func (f *fakeDownRuntime) DeleteSnapshot(ctx context.Context, snapshotPath strin
 
 func (f *fakeDownRuntime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) error {
 	return nil
+}
+
+func (f *fakeDownRuntime) FindProcesses(ctx context.Context, targets []rtm.CleanupTarget) ([]rtm.CleanupResult, error) {
+	return f.found, f.findErr
 }

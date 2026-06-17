@@ -255,6 +255,72 @@ func TestRuntimeStopKillsAfterTimeout(t *testing.T) {
 	}
 }
 
+func TestRuntimeStopReturnsErrorWhenProcessStillRunningAfterSIGKILL(t *testing.T) {
+	previousProcessRunning := processRunningFn
+	previousSignalProcess := signalProcessFn
+	previousWaitForProcessExit := waitForProcessExitFn
+	defer func() {
+		processRunningFn = previousProcessRunning
+		signalProcessFn = previousSignalProcess
+		waitForProcessExitFn = previousWaitForProcessExit
+	}()
+
+	processRunningFn = func(pid int) (bool, error) {
+		return true, nil
+	}
+	signalProcessFn = func(pid int, sig syscall.Signal) error {
+		return nil
+	}
+	waitForProcessExitFn = func(ctx context.Context, pid int, timeout time.Duration) error {
+		return context.DeadlineExceeded
+	}
+
+	err := NewRuntime().Stop(context.Background(), rtm.RuntimeInstance{PID: 4242}, 2*time.Second)
+	if err == nil {
+		t.Fatal("expected stop to fail when process survives SIGKILL")
+	}
+	if !strings.Contains(err.Error(), "after SIGKILL") {
+		t.Fatalf("expected SIGKILL wait error, got %v", err)
+	}
+}
+
+func TestRuntimeFindProcessesByRuntimeDir(t *testing.T) {
+	t.Parallel()
+
+	runtimeDir := filepath.Join(t.TempDir(), "instances", "web")
+	socketArg := "unix:" + qmpSocketPath(runtimeDir) + ",server,nowait"
+
+	cmd := exec.Command("sh", "-c", `while :; do sleep 1; done`, "sh", socketArg)
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("start helper process: %v", err)
+	}
+	defer func() {
+		_ = cmd.Process.Kill()
+		_, _ = cmd.Process.Wait()
+	}()
+
+	results, err := NewRuntime().FindProcesses(context.Background(), []rtm.CleanupTarget{
+		{Name: "web", RuntimeDir: runtimeDir},
+	})
+	if err != nil {
+		t.Fatalf("FindProcesses returned error: %v", err)
+	}
+	if len(results) == 0 {
+		t.Fatal("expected a matching process to be found")
+	}
+
+	found := false
+	for _, result := range results {
+		if result.Name == "web" && result.PID == cmd.Process.Pid {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected pid %d in results, got %#v", cmd.Process.Pid, results)
+	}
+}
+
 func TestRuntimeInspectReportsRunningAndStopped(t *testing.T) {
 	t.Parallel()
 

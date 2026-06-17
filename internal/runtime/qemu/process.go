@@ -21,6 +21,9 @@ type processHandle interface {
 type processStarter func(ctx context.Context, name string, args []string, stdout, stderr *os.File) (processHandle, error)
 
 var startProcess processStarter = startCommandContext
+var processRunningFn = processRunning
+var signalProcessFn = signalProcess
+var waitForProcessExitFn = waitForProcessExit
 
 type cmdProcess struct {
 	cmd *exec.Cmd
