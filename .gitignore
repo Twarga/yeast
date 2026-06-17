@@ -1,4 +1,5 @@
 /yeast
+.claude/
 .worktrees/
 artifacts/
 dist/
