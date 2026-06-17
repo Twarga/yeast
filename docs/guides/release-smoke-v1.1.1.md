@@ -1,6 +1,10 @@
-# Yeast v1.1.1 Release Smoke Test
+# Release Smoke Test v1.1.1
 
-Run this on a fresh Linux/KVM host before calling `v1.1.1` shippable.
+This guide is for maintainers validating `v1.1.1` on a real Linux/KVM host.
+
+Run it on a fresh machine when possible. The goal is to prove fresh install, update, artifact download, VM lifecycle, guest control, snapshots, and private networking.
+
+## Prepare
 
 ```bash
 export YEAST_SMOKE_VERSION="v1.1.1"
@@ -17,7 +21,7 @@ ls -l /dev/kvm || true
 id
 ```
 
-Artifact check:
+## Artifact Check
 
 ```bash
 mkdir -p artifact-test
@@ -34,7 +38,9 @@ yeast version
 cd "$YEAST_SMOKE_ROOT"
 ```
 
-Installer check:
+The tarball must contain a binary named `yeast`.
+
+## Installer Check
 
 ```bash
 mkdir -p installer-test
@@ -48,29 +54,16 @@ yeast doctor
 cd "$YEAST_SMOKE_ROOT"
 ```
 
-Updater check:
+## Updater Check
 
 ```bash
-mkdir -p update-test
-cd update-test
-git clone --depth 1 --branch "${YEAST_SMOKE_VERSION}" https://github.com/Twarga/yeast.git source
-cd source
-GO_BIN="$(command -v go || true)"
-if [ -z "$GO_BIN" ] && [ -x /usr/local/lib/yeast/go/go1.25.0/bin/go ]; then
-  GO_BIN="/usr/local/lib/yeast/go/go1.25.0/bin/go"
-fi
-"$GO_BIN" build -trimpath -ldflags "-s -w -X yeast/internal/app.Version=${YEAST_SMOKE_VERSION}-smoke-old" -o /tmp/yeast-smoke-old ./cmd/yeast
-sudo install -m 0755 /tmp/yeast-smoke-old /usr/local/bin/yeast
-hash -r
-yeast version
+yeast update --check --version "${YEAST_SMOKE_VERSION}"
 sudo yeast update --force --version "${YEAST_SMOKE_VERSION}"
 hash -r
 yeast version
-yeast update --check --version "${YEAST_SMOKE_VERSION}"
-cd "$YEAST_SMOKE_ROOT"
 ```
 
-Single-VM check:
+## Single VM Check
 
 ```bash
 mkdir -p vm-basic
@@ -98,7 +91,7 @@ yeast destroy
 cd "$YEAST_SMOKE_ROOT"
 ```
 
-Two-VM networking check:
+## Two VM Networking Check
 
 ```bash
 mkdir -p vm-network
@@ -114,12 +107,21 @@ yeast down
 yeast destroy
 ```
 
-Pass criteria:
+## Pass Criteria
 
 - artifact download and checksum pass
+- tarball extracts `yeast`
 - installed version is `v1.1.1`
-- update replaces the smoke-old binary
+- update path completes
 - `yeast doctor` has no blockers
 - Ubuntu image pulls and verifies
-- single VM boots, accepts guest control, snapshots, restores, and cleans up
+- single VM boots and accepts guest control
+- copy to/from guest works
+- snapshot/restore removes the marker file
 - two VMs can ping over the private lab network
+
+The embedded terminal version is available with:
+
+```bash
+yeast docs release-smoke
+```

@@ -71,7 +71,7 @@ nav:
       - Automate With JSON: guides/automate-with-json.md
       - Manage Image Cache: guides/manage-image-cache.md
       - Update Yeast: guides/update-yeast.md
-      - Release Smoke Test: guides/release-smoke-v1.1.0.md
+      - Release Smoke Test: guides/release-smoke-v1.1.1.md
   - Reference:
       - v1.1 Feature Map: reference/v1.1-feature-map.md
       - Commands: reference/commands.md
@@ -89,5 +89,5 @@ nav:
       - Networking: troubleshooting/networking.md
       - Snapshots: troubleshooting/snapshots.md
   - Releases:
-      - v1.1.0: releases/v1.1.0.md
+      - v1.1.1: releases/v1.1.1.md
       - Archive: releases/archive.md

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v1.1.1] - 2026-06-17
+
+### Fixed
+- **Release tarball packaging**: release artifacts now contain the `yeast` binary expected by the installer and updater
+- **`yeast update` reliability**: the updater and release artifacts now agree on the binary name and checksum path
+- **Stale VM cleanup**: `yeast down` and `yeast destroy` recover hidden running VMs even when state is stale
+- **SSH command noise**: SSH-backed commands no longer print the repeated known-host warning on every guest control call
+- **Release docs and installer defaults**: the current stable install and smoke-check docs now point at `v1.1.1`
+
+### Changed
+- **Current stable release**: Yeast docs and install examples now target `v1.1.1`
+- **Release smoke validation**: fresh-install and update validation docs were refreshed for the patch release
+
+[v1.1.1]: https://github.com/Twarga/yeast/releases/tag/v1.1.1
+
 ## [v1.1.0] - 2026-06-14
 
 ### Added
