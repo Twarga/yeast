@@ -1,0 +1,21 @@
+version: 1
+
+instances:
+  - name: managed
+    hostname: managed
+    image: ubuntu-22.04
+    memory: 1024
+    cpus: 2
+    disk_size: 20G
+    ssh_port: 2210
+    user: ubuntu
+    sudo: nopasswd
+
+    provision:
+      packages:
+        - python3
+      shell:
+        - hostnamectl set-hostname managed
+        - timedatectl set-timezone UTC
+        - ufw allow OpenSSH
+        - ufw --force enable

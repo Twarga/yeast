@@ -1,0 +1,28 @@
+version: 1
+
+instances:
+  - name: tf
+    hostname: tf
+    image: ubuntu-22.04
+    memory: 1024
+    cpus: 2
+    disk_size: 20G
+    ssh_port: 2238
+    user: ubuntu
+    sudo: nopasswd
+
+    provision:
+      packages:
+        - curl
+        - unzip
+        - vim
+        - git
+      shell:
+        - hostnamectl set-hostname tf
+        - timedatectl set-timezone UTC
+        - ufw allow OpenSSH
+        - ufw --force enable
+        - curl -fsSL https://releases.hashicorp.com/terraform/1.8.5/terraform_1.8.5_linux_amd64.zip -o /tmp/terraform.zip
+        - unzip -q /tmp/terraform.zip -d /usr/local/bin/
+        - rm /tmp/terraform.zip
+        - terraform version

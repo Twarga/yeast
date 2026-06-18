@@ -1,0 +1,81 @@
+version: 1
+
+networks:
+  - name: internal
+    cidr: 192.168.20.0/24
+
+instances:
+  - name: proxy
+    hostname: proxy
+    image: ubuntu-22.04
+    memory: 1024
+    cpus: 2
+    disk_size: 20G
+    ssh_port: 2205
+    user: ubuntu
+    sudo: nopasswd
+    networks:
+      - name: internal
+        ipv4: 192.168.20.10
+
+    provision:
+      packages:
+        - nginx
+        - curl
+      shell:
+        - hostnamectl set-hostname proxy
+        - timedatectl set-timezone UTC
+        - ufw allow OpenSSH
+        - ufw allow 'Nginx Full'
+        - ufw --force enable
+        - systemctl enable --now nginx
+
+  - name: app
+    hostname: app
+    image: ubuntu-22.04
+    memory: 1024
+    cpus: 2
+    disk_size: 20G
+    ssh_port: 2206
+    user: ubuntu
+    sudo: nopasswd
+    networks:
+      - name: internal
+        ipv4: 192.168.20.20
+
+    provision:
+      packages:
+        - python3
+        - python3-pip
+        - curl
+      shell:
+        - hostnamectl set-hostname app
+        - timedatectl set-timezone UTC
+        - ufw allow OpenSSH
+        - ufw allow 8000
+        - ufw --force enable
+
+  - name: db
+    hostname: db
+    image: ubuntu-22.04
+    memory: 1024
+    cpus: 2
+    disk_size: 20G
+    ssh_port: 2207
+    user: ubuntu
+    sudo: nopasswd
+    networks:
+      - name: internal
+        ipv4: 192.168.20.30
+
+    provision:
+      packages:
+        - postgresql
+        - postgresql-contrib
+      shell:
+        - hostnamectl set-hostname db
+        - timedatectl set-timezone UTC
+        - ufw allow OpenSSH
+        - ufw allow 5432
+        - ufw --force enable
+        - systemctl enable --now postgresql

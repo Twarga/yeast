@@ -82,3 +82,108 @@
 .md-typeset summary {
   background-color: var(--yeast-accent-glow);
 }
+
+.academy-hero {
+  margin: 1.5rem 0 2rem;
+  padding: 1.5rem 1.5rem 1.25rem;
+  border: 1px solid var(--yeast-border);
+  border-radius: 1rem;
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 40%),
+    linear-gradient(180deg, rgba(17, 24, 21, 0.98), rgba(10, 14, 12, 0.96));
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
+}
+
+.academy-hero__eyebrow,
+.academy-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--yeast-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.academy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.academy-card {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--yeast-border);
+  border-radius: 0.9rem;
+  background: rgba(10, 14, 12, 0.86);
+}
+
+.academy-card h2,
+.academy-card h3 {
+  margin-top: 0;
+}
+
+.academy-pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.academy-pill-list li {
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--yeast-border);
+  background: rgba(34, 197, 94, 0.08);
+  color: var(--yeast-text-secondary);
+  font-size: 0.9rem;
+}
+
+.academy-link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+}
+
+.academy-link-grid a {
+  display: block;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--yeast-border);
+  border-radius: 0.8rem;
+  text-decoration: none;
+  background: rgba(34, 197, 94, 0.05);
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.academy-link-grid a:hover {
+  transform: translateY(-1px);
+  border-color: var(--yeast-border-strong);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.academy-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0 0;
+}
+
+.academy-table th,
+.academy-table td {
+  padding: 0.8rem 0.75rem;
+  border-top: 1px solid var(--yeast-border);
+  vertical-align: top;
+}
+
+.academy-table th {
+  color: var(--yeast-text-primary);
+}
+
+.academy-table td {
+  color: var(--yeast-text-secondary);
+}

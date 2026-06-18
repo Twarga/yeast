@@ -1,0 +1,91 @@
+version: 1
+
+networks:
+  - name: internal
+    cidr: 192.168.80.0/24
+
+instances:
+  - name: tracing
+    hostname: tracing
+    image: ubuntu-22.04
+    memory: 2048
+    cpus: 2
+    disk_size: 30G
+    ssh_port: 2230
+    user: ubuntu
+    sudo: nopasswd
+    networks:
+      - name: internal
+        ipv4: 192.168.80.10
+
+    provision:
+      packages:
+        - curl
+        - ca-certificates
+        - gnupg
+      shell:
+        - hostnamectl set-hostname tracing
+        - timedatectl set-timezone UTC
+        - ufw allow OpenSSH
+        - ufw allow 16686
+        - ufw allow 4317
+        - ufw allow 4318
+        - ufw --force enable
+        - install -m 0755 -d /etc/apt/keyrings
+        - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        - chmod a+r /etc/apt/keyrings/docker.asc
+        - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
+        - apt-get update -qq
+        - apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin
+        - usermod -aG docker ubuntu
+        - systemctl enable --now docker
+
+  - name: svc-a
+    hostname: svc-a
+    image: ubuntu-22.04
+    memory: 1024
+    cpus: 2
+    disk_size: 20G
+    ssh_port: 2231
+    user: ubuntu
+    sudo: nopasswd
+    networks:
+      - name: internal
+        ipv4: 192.168.80.21
+
+    provision:
+      packages:
+        - python3
+        - python3-pip
+        - curl
+      shell:
+        - hostnamectl set-hostname svc-a
+        - timedatectl set-timezone UTC
+        - ufw allow OpenSSH
+        - ufw allow 8001
+        - ufw --force enable
+
+  - name: svc-b
+    hostname: svc-b
+    image: ubuntu-22.04
+    memory: 1024
+    cpus: 2
+    disk_size: 20G
+    ssh_port: 2232
+    user: ubuntu
+    sudo: nopasswd
+    networks:
+      - name: internal
+        ipv4: 192.168.80.22
+
+    provision:
+      packages:
+        - python3
+        - python3-pip
+        - curl
+      shell:
+        - hostnamectl set-hostname svc-b
+        - timedatectl set-timezone UTC
+        - ufw allow OpenSSH
+        - ufw allow 8002
+        - ufw --force enable

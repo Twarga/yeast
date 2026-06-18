@@ -4,6 +4,15 @@ Yeast turns a folder into real Linux VMs.
 
 Define machines in `yeast.yaml`, run `yeast up`, and get SSH-ready QEMU/KVM guests with cloud-init, provisioning, snapshots, private networking, and JSON output for automation.
 
+## Twarga Academy
+
+The DevOps bootcamp lives in its own course area so the Yeast product docs stay clean.
+
+- [Academy Home](academy/index.md) - start the course
+- [Curriculum](academy/curriculum/index.md) - see the full learning path
+- [Labs](academy/labs/index.md) - open the mirrored lab set
+- [Source Contract](academy/support/index.md) - read the course rules and source docs
+
 ## Learn Yeast In Order
 
 If you are new, follow this path. It is ordered so each page teaches one layer before the next one.

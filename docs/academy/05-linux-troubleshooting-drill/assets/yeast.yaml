@@ -1,0 +1,31 @@
+version: 1
+
+instances:
+  - name: drill
+    hostname: drill
+    image: ubuntu-22.04
+    memory: 1024
+    cpus: 2
+    disk_size: 20G
+    ssh_port: 2208
+    user: ubuntu
+    sudo: nopasswd
+
+    provision:
+      packages:
+        - nginx
+        - postgresql
+        - curl
+        - vim
+        - htop
+        - lsof
+        - strace
+        - net-tools
+      shell:
+        - hostnamectl set-hostname drill
+        - timedatectl set-timezone UTC
+        - ufw allow OpenSSH
+        - ufw allow 'Nginx Full'
+        - ufw --force enable
+        - systemctl enable --now nginx
+        - systemctl enable --now postgresql

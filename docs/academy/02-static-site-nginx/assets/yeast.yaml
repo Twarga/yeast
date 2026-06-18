@@ -1,0 +1,25 @@
+version: 1
+
+instances:
+  - name: web
+    hostname: web
+    image: ubuntu-22.04
+    memory: 1024
+    cpus: 2
+    disk_size: 20G
+    ssh_port: 2202
+    user: ubuntu
+    sudo: nopasswd
+
+    provision:
+      packages:
+        - nginx
+        - curl
+        - vim
+      shell:
+        - hostnamectl set-hostname web
+        - timedatectl set-timezone UTC
+        - ufw allow OpenSSH
+        - ufw allow 'Nginx Full'
+        - ufw --force enable
+        - systemctl enable --now nginx

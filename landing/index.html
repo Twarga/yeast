@@ -3,8 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Yeast - Local real VMs</title>
-  <meta name="description" content="Yeast is Linux-first local VM orchestration for QEMU/KVM. Define VMs in a folder and run real SSH-ready Linux machines.">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Yeast turns a folder into real Linux VMs on QEMU/KVM. YAML-driven, SSH-ready, snapshot-friendly, and built for local labs and automation.">
+  <meta name="theme-color" content="#07100c">
+  <title>Yeast - Local VM orchestration for QEMU/KVM</title>
+  <script>
+    document.documentElement.classList.add("js");
+  </script>
   <link rel="icon" type="image/x-icon" href="/yeast/assets/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,38 +20,71 @@
     }
 
     :root {
-      --bg: #070b09;
-      --panel: #0d1511;
-      --panel-2: #101b15;
-      --line: rgba(74, 222, 128, 0.18);
-      --line-strong: rgba(74, 222, 128, 0.42);
-      --green: #22c55e;
-      --green-soft: rgba(34, 197, 94, 0.14);
-      --text: #f1fff6;
-      --muted: #b5d2c2;
-      --dim: #789887;
-      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      --sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --bg: #060907;
+      --bg-alt: #09110d;
+      --panel: rgba(13, 20, 17, 0.88);
+      --panel-strong: rgba(17, 27, 22, 0.98);
+      --line: rgba(142, 255, 184, 0.12);
+      --line-strong: rgba(142, 255, 184, 0.24);
+      --green: #25d26f;
+      --green-bright: #a8ffc9;
+      --green-soft: rgba(37, 210, 111, 0.13);
+      --text: #effaf2;
+      --muted: #b4cdb8;
+      --dim: #7f9784;
+      --shadow: 0 28px 90px rgba(0, 0, 0, 0.34);
+      --mono: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+      --sans: "IBM Plex Sans", "Segoe UI", sans-serif;
     }
 
     html {
       scroll-behavior: smooth;
+      color-scheme: dark;
     }
 
     body {
       margin: 0;
       min-height: 100vh;
-      background:
-        linear-gradient(rgba(34, 197, 94, 0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(34, 197, 94, 0.04) 1px, transparent 1px),
-        radial-gradient(circle at 65% 28%, rgba(34, 197, 94, 0.16), transparent 34%),
-        var(--bg);
-      background-size: 62px 62px, 62px 62px, 100% 100%, auto;
       color: var(--text);
       font-family: var(--sans);
-      line-height: 1.55;
+      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
-      animation: grid-drift 26s linear infinite;
+      background:
+        radial-gradient(circle at 20% 14%, rgba(37, 210, 111, 0.18), transparent 26%),
+        radial-gradient(circle at 78% 8%, rgba(68, 255, 158, 0.12), transparent 24%),
+        radial-gradient(circle at 50% 100%, rgba(37, 210, 111, 0.07), transparent 32%),
+        linear-gradient(rgba(37, 210, 111, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37, 210, 111, 0.045) 1px, transparent 1px),
+        linear-gradient(180deg, #050806, var(--bg));
+      background-size: auto, auto, auto, 68px 68px, 68px 68px, auto;
+      background-position: center, center, center, 0 0, 0 0, center;
+      animation: drift 28s linear infinite;
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::before {
+      background:
+        radial-gradient(circle at 25% 18%, rgba(37, 210, 111, 0.12), transparent 26%),
+        radial-gradient(circle at 74% 24%, rgba(37, 210, 111, 0.08), transparent 28%);
+      filter: blur(18px);
+      opacity: 0.9;
+    }
+
+    body::after {
+      background:
+        linear-gradient(130deg, transparent 0 42%, rgba(255, 255, 255, 0.02) 50%, transparent 58%),
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02), transparent 58%);
+      opacity: 0.65;
+      mix-blend-mode: screen;
     }
 
     a {
@@ -54,122 +92,190 @@
     }
 
     .container {
-      width: min(1120px, calc(100% - 48px));
+      width: min(1180px, calc(100% - 48px));
       margin: 0 auto;
+      position: relative;
+      z-index: 1;
     }
 
     .nav {
       position: sticky;
       top: 0;
-      z-index: 10;
-      border-bottom: 1px solid var(--line);
-      background: rgba(7, 11, 9, 0.88);
-      backdrop-filter: blur(16px);
+      z-index: 20;
+      border-bottom: 1px solid rgba(142, 255, 184, 0.08);
+      background: rgba(6, 9, 7, 0.86);
+      backdrop-filter: blur(18px);
     }
 
     .nav-inner {
-      height: 72px;
+      min-height: 76px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 24px;
+      gap: 22px;
+      padding: 12px 0;
     }
 
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       text-decoration: none;
+      color: var(--text);
       font-family: var(--mono);
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 700;
-      letter-spacing: 0;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
     }
 
     .brand img {
-      width: 30px;
-      height: 30px;
-    }
-
-    .brand img,
-    .status-dot {
-      filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.42));
+      width: 32px;
+      height: 32px;
+      filter: drop-shadow(0 0 12px rgba(37, 210, 111, 0.35));
     }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 22px;
-      color: var(--muted);
-      font-size: 15px;
-      font-weight: 500;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
-    .nav-links a {
-      text-decoration: none;
-      transition: color 160ms ease, transform 160ms ease;
-    }
-
-    .nav-links a:hover {
-      color: var(--text);
-      transform: translateY(-1px);
-    }
-
-    .github-link {
+    .nav-link,
+    .nav-github {
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      padding: 7px 10px 7px 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      color: var(--text);
-      background: rgba(16, 27, 21, 0.74);
-      font-family: var(--mono);
-      font-size: 13px;
+      min-height: 44px;
+      padding: 0 14px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      text-decoration: none;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease, box-shadow 180ms ease;
     }
 
-    .github-stars {
-      display: inline-flex;
+    .nav-link {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .nav-link:hover,
+    .nav-github:hover {
+      transform: translateY(-1px);
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      border-color: var(--line);
+      background: rgba(17, 27, 22, 0.65);
+    }
+
+    .nav-link--cta {
+      color: #07110b;
+      background: linear-gradient(135deg, var(--green), #98ffbf);
+      border-color: transparent;
+      box-shadow: 0 10px 24px rgba(37, 210, 111, 0.18);
+    }
+
+    .nav-link--cta:hover {
+      background: linear-gradient(135deg, #2fe878, #b6ffd4);
+      color: #041008;
+      box-shadow: 0 14px 28px rgba(37, 210, 111, 0.24);
+    }
+
+    .academy-banner {
+      margin: 18px 0 0;
+      padding: 12px 16px;
+      border: 1px solid rgba(142, 255, 184, 0.14);
+      border-radius: 18px;
+      background: rgba(15, 23, 18, 0.7);
+      color: var(--muted);
+      display: flex;
       align-items: center;
-      gap: 5px;
-      min-height: 24px;
-      padding: 0 8px;
-      border-radius: 6px;
-      background: var(--green-soft);
-      color: var(--green);
-      font-size: 12px;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+    }
+
+    .academy-banner strong {
+      color: var(--text);
       font-weight: 700;
     }
 
-    .github-stars::before {
-      content: "star";
-      color: var(--muted);
-      font-family: var(--sans);
-      font-size: 11px;
+    .academy-banner a {
+      color: var(--green-bright);
+      text-decoration: none;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .academy-banner a:hover {
+      color: #d6ffe5;
+    }
+
+    .nav-github {
+      padding: 0 16px 0 14px;
+      color: var(--text);
+      background: rgba(16, 25, 20, 0.78);
+      border-color: var(--line);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    }
+
+    .nav-github__label {
+      font-size: 14px;
       font-weight: 600;
     }
 
-    .nav-cta {
-      color: var(--green) !important;
+    .nav-github__meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding-left: 10px;
+      border-left: 1px solid rgba(142, 255, 184, 0.12);
+      color: var(--green-bright);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      font-variant-numeric: tabular-nums;
     }
 
     .hero {
-      padding: 48px 0 26px;
-      border-bottom: 1px solid var(--line);
+      padding: 58px 0 28px;
+      position: relative;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 14% 20%, rgba(37, 210, 111, 0.1), transparent 22%),
+        radial-gradient(circle at 82% 12%, rgba(37, 210, 111, 0.09), transparent 20%);
+      opacity: 0.95;
     }
 
     .hero-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(360px, 520px);
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 540px);
       gap: 44px;
       align-items: center;
     }
 
-    .hero-grid > * {
-      animation: rise-in 520ms ease both;
+    .hero-copy-block,
+    .hero-stage {
+      position: relative;
+      z-index: 1;
+      animation: rise-in 720ms ease both;
     }
 
-    .hero-grid > *:nth-child(2) {
+    .hero-stage {
       animation-delay: 120ms;
     }
 
@@ -186,47 +292,48 @@
       letter-spacing: 0.08em;
     }
 
-    .eyebrow::before {
-      content: "";
+    .eyebrow-dot {
       width: 8px;
       height: 8px;
-      border-radius: 50%;
+      border-radius: 999px;
       background: var(--green);
-      box-shadow: 0 0 18px rgba(34, 197, 94, 0.8);
+      box-shadow: 0 0 16px rgba(37, 210, 111, 0.85);
     }
 
     h1 {
       margin: 0;
-      max-width: 780px;
-      font-size: 60px;
-      line-height: 0.96;
-      letter-spacing: 0;
+      max-width: 820px;
+      font-size: clamp(3.35rem, 7vw, 6rem);
+      line-height: 0.94;
+      letter-spacing: -0.04em;
       font-weight: 700;
     }
 
     h1 span {
-      color: var(--green);
+      color: var(--green-bright);
     }
 
     .hero-copy {
       margin: 20px 0 0;
-      max-width: 620px;
+      max-width: 690px;
       color: var(--muted);
-      font-size: 21px;
+      font-size: clamp(1.05rem, 2vw, 1.22rem);
+      line-height: 1.7;
     }
 
     .hero-copy code,
-    .install-command code {
+    .install-line code,
+    .terminal-text code {
       font-family: var(--mono);
       color: var(--text);
-      font-size: 0.94em;
+      font-size: 0.95em;
     }
 
     .hero-actions {
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 12px;
       margin-top: 26px;
     }
 
@@ -235,87 +342,185 @@
       align-items: center;
       justify-content: center;
       min-height: 52px;
-      padding: 0 20px;
-      border: 1px solid var(--line-strong);
-      border-radius: 8px;
+      padding: 0 18px;
+      border-radius: 14px;
       text-decoration: none;
       font-weight: 700;
-      transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
-    }
-
-    .button.primary {
-      background: var(--green);
-      color: #041008;
-      border-color: var(--green);
-    }
-
-    .button.secondary {
-      color: var(--text);
-      background: rgba(13, 21, 17, 0.76);
+      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease, color 180ms ease;
     }
 
     .button:hover {
       transform: translateY(-2px);
-      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
     }
 
-    .install-command {
+    .button.primary {
+      color: #041008;
+      background: linear-gradient(135deg, var(--green), #9bffc0);
+      border: 1px solid rgba(126, 255, 175, 0.35);
+      box-shadow: 0 14px 30px rgba(37, 210, 111, 0.18);
+    }
+
+    .button.primary:hover {
+      box-shadow: 0 16px 36px rgba(37, 210, 111, 0.24);
+      background: linear-gradient(135deg, #30ea78, #b8ffdb);
+    }
+
+    .button.secondary {
+      color: var(--text);
+      background: rgba(16, 25, 20, 0.78);
+      border: 1px solid var(--line);
+    }
+
+    .button.secondary:hover {
+      border-color: var(--line-strong);
+      background: rgba(18, 29, 23, 0.96);
+    }
+
+    .hero-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
       margin-top: 18px;
-      width: min(100%, 680px);
-      border: 1px solid var(--line-strong);
-      border-radius: 8px;
-      background: rgba(13, 21, 17, 0.82);
-      overflow: hidden;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(15, 23, 18, 0.55);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.3;
     }
 
-    .install-label {
+    .hero-note strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .hero-note::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 14px rgba(37, 210, 111, 0.8);
+      flex: none;
+    }
+
+    .install-card {
+      margin-top: 22px;
+      width: min(100%, 720px);
+      border: 1px solid var(--line-strong);
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(17, 27, 22, 0.88), rgba(10, 16, 13, 0.96));
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    .install-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top left, rgba(37, 210, 111, 0.12), transparent 24%),
+        linear-gradient(140deg, transparent 0 38%, rgba(255, 255, 255, 0.02) 50%, transparent 62%);
+      pointer-events: none;
+    }
+
+    .install-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--line);
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(142, 255, 184, 0.1);
       color: var(--dim);
       font-family: var(--mono);
       font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
     }
 
     .copy-button {
-      border: 0;
-      background: transparent;
-      color: var(--green);
+      border: 1px solid rgba(142, 255, 184, 0.14);
+      background: rgba(14, 21, 17, 0.92);
+      color: var(--green-bright);
+      border-radius: 999px;
+      min-height: 32px;
+      padding: 0 12px;
       font-family: var(--mono);
+      font-size: 11px;
       font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       cursor: pointer;
-      transition: color 160ms ease;
+      transition: transform 160ms ease, border-color 160ms ease, color 160ms ease, background 160ms ease;
     }
 
     .copy-button:hover {
+      transform: translateY(-1px);
       color: var(--text);
+      border-color: var(--line-strong);
+      background: rgba(18, 27, 22, 0.96);
     }
 
     .install-line {
-      display: block;
-      padding: 16px 18px;
-      overflow-x: auto;
-      white-space: nowrap;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 16px 18px 18px;
       font-family: var(--mono);
       font-size: 14px;
+      line-height: 1.7;
+      overflow-x: auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .install-line code {
+      min-width: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .prompt {
       color: var(--green);
       font-weight: 700;
-      margin-right: 10px;
+      flex: none;
+      user-select: none;
     }
 
-    .terminal {
+    .install-foot {
+      padding: 0 18px 18px;
+      color: var(--dim);
+      font-size: 13px;
+      line-height: 1.55;
+      position: relative;
+      z-index: 1;
+    }
+
+    .terminal-shell {
       border: 1px solid var(--line-strong);
-      border-radius: 8px;
-      background: linear-gradient(180deg, rgba(16, 27, 21, 0.96), rgba(10, 16, 13, 0.98));
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(17, 27, 22, 0.96), rgba(7, 12, 9, 0.98));
+      box-shadow: var(--shadow);
       overflow: hidden;
-      animation: terminal-glow 4.8s ease-in-out infinite;
+      position: relative;
+      transform: translateZ(0);
+    }
+
+    .terminal-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 28% 0%, rgba(37, 210, 111, 0.16), transparent 28%),
+        radial-gradient(circle at 88% 12%, rgba(37, 210, 111, 0.09), transparent 24%),
+        linear-gradient(140deg, transparent 0 40%, rgba(255, 255, 255, 0.02) 50%, transparent 62%);
+      pointer-events: none;
     }
 
     .terminal-top {
@@ -323,269 +528,590 @@
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      padding: 13px 16px;
-      border-bottom: 1px solid var(--line);
+      padding: 15px 16px;
+      border-bottom: 1px solid rgba(142, 255, 184, 0.1);
       color: var(--dim);
       font-family: var(--mono);
       font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
+      flex-wrap: wrap;
+    }
+
+    .terminal-top-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .terminal-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--green-bright);
+      font-variant-numeric: tabular-nums;
     }
 
     .status-dot {
       width: 9px;
       height: 9px;
-      border-radius: 50%;
+      border-radius: 999px;
       background: var(--green);
-      animation: pulse-dot 2.4s ease-in-out infinite;
+      box-shadow: 0 0 16px rgba(37, 210, 111, 0.82);
+      animation: pulse 2.8s ease-in-out infinite;
+    }
+
+    .terminal-pills {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .terminal-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(142, 255, 184, 0.12);
+      background: rgba(14, 22, 17, 0.66);
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.03em;
     }
 
     .terminal-body {
-      padding: 22px;
+      padding: 22px 22px 24px;
       font-family: var(--mono);
       font-size: 14px;
       line-height: 1.8;
-      overflow-x: auto;
+      position: relative;
+      z-index: 1;
     }
 
-    .terminal-line {
-      opacity: 0;
-      transform: translateX(-8px);
+    .terminal-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      min-height: 1.8em;
+      opacity: 1;
+      transform: none;
+      transition: opacity 360ms ease, transform 360ms ease;
       white-space: nowrap;
-      animation: terminal-row 420ms ease forwards;
     }
 
-    .terminal-line:nth-child(1) { animation-delay: 260ms; }
-    .terminal-line:nth-child(2) { animation-delay: 620ms; }
-    .terminal-line:nth-child(3) { animation-delay: 980ms; }
-    .terminal-line:nth-child(4) { animation-delay: 1340ms; }
-    .terminal-line:nth-child(5) { animation-delay: 1700ms; }
-    .terminal-line:nth-child(6) { animation-delay: 2060ms; }
-    .terminal-line:nth-child(7) { animation-delay: 2420ms; }
-    .terminal-line:nth-child(8) { animation-delay: 2780ms; }
-    .terminal-line:nth-child(9) { animation-delay: 3140ms; }
-    .terminal-line:nth-child(10) { animation-delay: 3500ms; }
+    .js .terminal-row {
+      opacity: 0;
+      transform: translateY(8px);
+      transition-delay: var(--delay, 0ms);
+    }
 
-    .terminal-line.success::after {
-      content: "";
+    .js .terminal-row.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .terminal-row + .terminal-row {
+      margin-top: 2px;
+    }
+
+    .terminal-mark {
+      width: 14px;
+      flex: none;
+      color: var(--green);
+      text-align: right;
+      user-select: none;
+    }
+
+    .terminal-mark--success {
+      color: var(--green-bright);
+    }
+
+    .terminal-row.command .terminal-text {
+      color: var(--text);
+    }
+
+    .terminal-text {
       display: inline-block;
-      width: 8px;
-      height: 1.05em;
-      margin-left: 5px;
-      background: var(--green);
-      vertical-align: -0.18em;
-      animation: cursor-blink 850ms steps(2, end) infinite;
+      white-space: nowrap;
+      will-change: clip-path;
     }
 
-    .terminal-line.output {
+    .js .terminal-text {
+      clip-path: inset(0 100% 0 0);
+    }
+
+    .js .terminal-row.is-visible .terminal-text {
+      animation: terminal-reveal 620ms steps(28, end) forwards;
+      animation-delay: calc(var(--delay, 0ms) + 90ms);
+    }
+
+    .js .terminal-row.output .terminal-text {
+      animation-duration: 520ms;
+    }
+
+    .js .terminal-row.command .terminal-text {
+      animation-duration: 760ms;
+    }
+
+    .terminal-row.output .terminal-text {
       color: var(--muted);
     }
 
-    .terminal-line.success {
-      color: var(--green);
+    .terminal-row.success .terminal-text {
+      color: var(--green-bright);
       font-weight: 700;
     }
 
-    .proof {
-      padding: 24px 0;
-      border-bottom: 1px solid var(--line);
-      background: rgba(5, 10, 8, 0.54);
+    .terminal-cursor {
+      width: 8px;
+      height: 1.05em;
+      margin-left: 2px;
+      background: var(--green);
+      border-radius: 2px;
+      vertical-align: -0.18em;
+      animation: blink 1s steps(2, end) infinite;
+      opacity: 0;
+      flex: none;
     }
 
-    .proof-grid {
+    .terminal-row.command.terminal-row--final .terminal-cursor {
+      opacity: 1;
+    }
+
+    .capabilities {
+      padding: 18px 0 24px;
+      position: relative;
+    }
+
+    .cap-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .cap-card {
+      min-height: 178px;
+      padding: 20px 20px 18px;
       border: 1px solid var(--line);
-      background: var(--line);
-      border-radius: 8px;
+      border-radius: 20px;
+      background:
+        radial-gradient(circle at top left, rgba(37, 210, 111, 0.1), transparent 30%),
+        linear-gradient(180deg, rgba(15, 23, 18, 0.92), rgba(10, 16, 12, 0.95));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+      position: relative;
       overflow: hidden;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
     }
 
-    .proof-item {
-      background: rgba(13, 21, 17, 0.92);
-      padding: 20px;
-      transition: background 180ms ease, transform 180ms ease;
+    .cap-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(120deg, transparent 0 42%, rgba(255, 255, 255, 0.015) 50%, transparent 58%),
+        linear-gradient(180deg, rgba(37, 210, 111, 0.08), transparent 38%);
+      pointer-events: none;
     }
 
-    .proof-item:hover {
-      background: rgba(18, 32, 24, 0.98);
-      transform: translateY(-2px);
+    .cap-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--line-strong);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 18px 34px rgba(0, 0, 0, 0.18);
     }
 
-    .proof-kicker {
-      color: var(--green);
+    .cap-tag,
+    .feature-kicker,
+    .why-kicker,
+    .section-label {
       font-family: var(--mono);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
-      margin-bottom: 6px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
-    .proof-title {
-      margin: 0;
+    .cap-tag {
+      color: var(--green);
+    }
+
+    .cap-card h3,
+    .feature-card h3,
+    .why-card h3,
+    .step-card h3,
+    .comparison-panel h3 {
+      margin: 10px 0 0;
       color: var(--text);
-      font-size: 17px;
-      font-weight: 700;
+      font-size: 18px;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+
+    .cap-card p,
+    .feature-card p,
+    .why-card p,
+    .step-card p,
+    .comparison-copy,
+    .section-copy {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
     }
 
     section {
-      padding: 88px 0;
+      padding: 84px 0;
+      position: relative;
+    }
+
+    section + section {
+      border-top: 1px solid rgba(142, 255, 184, 0.06);
+    }
+
+    section[id] {
+      scroll-margin-top: 96px;
     }
 
     .section-head {
-      max-width: 760px;
-      margin-bottom: 36px;
+      max-width: 820px;
+      margin-bottom: 32px;
     }
 
     .section-label {
       color: var(--green);
-      font-family: var(--mono);
-      font-size: 13px;
-      font-weight: 700;
       margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
     }
 
     h2 {
       margin: 0;
       color: var(--text);
-      font-size: 44px;
-      line-height: 1.08;
-      letter-spacing: 0;
+      font-size: clamp(2.35rem, 4.5vw, 4.1rem);
+      line-height: 1.02;
+      letter-spacing: -0.03em;
       font-weight: 700;
     }
 
     .section-copy {
-      margin: 14px 0 0;
-      color: var(--muted);
-      font-size: 18px;
+      max-width: 720px;
+      font-size: 17px;
+      margin-top: 14px;
     }
 
-    .steps {
+    .split {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
+      grid-template-columns: minmax(0, 0.92fr) minmax(320px, 1.08fr);
+      gap: 28px;
+      align-items: start;
     }
 
-    .step {
-      min-height: 190px;
+    .split .section-head {
+      margin-bottom: 0;
+      position: sticky;
+      top: 106px;
+    }
+
+    .comparison-panel {
+      border: 1px solid var(--line-strong);
+      border-radius: 26px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(15, 23, 18, 0.92), rgba(8, 13, 10, 0.96));
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+    }
+
+    .comparison-side {
+      padding: 24px;
+      min-height: 100%;
+    }
+
+    .comparison-side + .comparison-side {
+      border-left: 1px solid rgba(142, 255, 184, 0.08);
+    }
+
+    .comparison-side--muted {
+      color: var(--muted);
+      background: rgba(12, 19, 15, 0.72);
+    }
+
+    .comparison-side--accent {
+      background:
+        radial-gradient(circle at top right, rgba(37, 210, 111, 0.12), transparent 26%),
+        linear-gradient(180deg, rgba(18, 29, 23, 0.98), rgba(11, 17, 13, 0.98));
+    }
+
+    .comparison-label {
+      color: var(--green-bright);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .comparison-grid {
+      display: grid;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .comparison-item {
+      padding-top: 18px;
+      border-top: 1px solid rgba(142, 255, 184, 0.08);
+    }
+
+    .comparison-item:first-child {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .comparison-item h3 {
+      margin-top: 0;
+      font-size: 16px;
+    }
+
+    .comparison-item p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .comparison-note {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(142, 255, 184, 0.08);
+      color: var(--dim);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .timeline {
+      position: relative;
+    }
+
+    .timeline-track,
+    .timeline-progress {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 26px;
+      height: 1px;
+      border-radius: 999px;
+      transform-origin: left center;
+    }
+
+    .timeline-track {
+      background: rgba(142, 255, 184, 0.08);
+    }
+
+    .timeline-progress {
+      width: 0;
+      background: linear-gradient(90deg, var(--green), rgba(168, 255, 201, 0.85));
+      box-shadow: 0 0 18px rgba(37, 210, 111, 0.16);
+      transition: width 1200ms ease;
+    }
+
+    .timeline.is-visible .timeline-progress {
+      width: calc(100% - 24px);
+    }
+
+    .step-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-card {
+      min-height: 220px;
       padding: 22px;
       border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(13, 21, 17, 0.74);
-      transition: border-color 180ms ease, transform 180ms ease, background 180ms ease;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at top left, rgba(37, 210, 111, 0.1), transparent 32%),
+        linear-gradient(180deg, rgba(15, 23, 18, 0.92), rgba(8, 13, 10, 0.95));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+      display: flex;
+      flex-direction: column;
     }
 
-    .step:hover {
-      border-color: var(--line-strong);
-      background: rgba(16, 27, 21, 0.94);
+    .step-card:hover {
       transform: translateY(-3px);
+      border-color: var(--line-strong);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 18px 32px rgba(0, 0, 0, 0.18);
     }
 
-    .step-num {
-      color: var(--green);
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      border: 1px solid rgba(142, 255, 184, 0.18);
+      background: var(--green-soft);
+      color: var(--green-bright);
       font-family: var(--mono);
-      font-size: 34px;
+      font-size: 13px;
       font-weight: 700;
-      line-height: 1;
-      margin-bottom: 28px;
+      letter-spacing: 0.02em;
     }
 
-    .step h3,
-    .feature h3 {
-      margin: 0 0 8px;
-      color: var(--text);
-      font-size: 19px;
-      line-height: 1.25;
-    }
-
-    .step p,
-    .feature p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 15px;
+    .step-foot {
+      margin-top: auto;
+      padding-top: 18px;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
     }
 
     .features {
-      background: rgba(5, 10, 8, 0.44);
-      border-top: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(7, 11, 8, 0.94), rgba(9, 14, 11, 0.98)),
+        linear-gradient(rgba(142, 255, 184, 0.04) 1px, transparent 1px);
     }
 
     .feature-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 16px;
     }
 
-    .feature {
-      min-height: 176px;
+    .feature-card {
+      min-height: 224px;
       padding: 22px;
       border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(13, 21, 17, 0.78);
-      transition: border-color 180ms ease, transform 180ms ease, background 180ms ease;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at top left, rgba(37, 210, 111, 0.12), transparent 30%),
+        linear-gradient(180deg, rgba(15, 23, 18, 0.92), rgba(8, 13, 10, 0.96));
+      position: relative;
+      overflow: hidden;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+      display: flex;
+      flex-direction: column;
     }
 
-    .feature:hover {
-      border-color: var(--line-strong);
-      background: rgba(16, 27, 21, 0.94);
+    .feature-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(115deg, transparent 0 44%, rgba(255, 255, 255, 0.014) 50%, transparent 56%),
+        radial-gradient(circle at 82% 12%, rgba(37, 210, 111, 0.06), transparent 24%);
+      pointer-events: none;
+    }
+
+    .feature-card:hover {
       transform: translateY(-3px);
+      border-color: var(--line-strong);
+      box-shadow: 0 20px 32px rgba(0, 0, 0, 0.18);
     }
 
-    .feature-code {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      height: 30px;
-      min-width: 48px;
-      padding: 0 10px;
-      margin-bottom: 18px;
-      border: 1px solid var(--line-strong);
-      border-radius: 6px;
+    .feature-card:nth-child(3n + 1) {
+      background:
+        radial-gradient(circle at top left, rgba(37, 210, 111, 0.16), transparent 28%),
+        linear-gradient(180deg, rgba(16, 25, 20, 0.96), rgba(8, 13, 10, 0.98));
+    }
+
+    .feature-card:nth-child(3n + 2) {
+      background:
+        radial-gradient(circle at top left, rgba(168, 255, 201, 0.1), transparent 30%),
+        linear-gradient(180deg, rgba(14, 22, 17, 0.94), rgba(8, 13, 10, 0.98));
+    }
+
+    .feature-card:nth-child(3n) {
+      background:
+        radial-gradient(circle at top left, rgba(37, 210, 111, 0.08), transparent 30%),
+        linear-gradient(180deg, rgba(13, 21, 17, 0.9), rgba(8, 13, 10, 0.98));
+    }
+
+    .feature-kicker {
       color: var(--green);
-      background: var(--green-soft);
+      position: relative;
+      z-index: 1;
+    }
+
+    .feature-card p {
+      position: relative;
+      z-index: 1;
+    }
+
+    .feature-foot {
+      margin-top: auto;
+      padding-top: 18px;
+      color: var(--dim);
       font-family: var(--mono);
       font-size: 12px;
-      font-weight: 700;
-      box-shadow: inset 0 0 18px rgba(34, 197, 94, 0.08);
-      transition: box-shadow 180ms ease, transform 180ms ease;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
     }
 
-    .feature:hover .feature-code,
-    .step:hover .step-num {
-      text-shadow: 0 0 18px rgba(34, 197, 94, 0.45);
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
     }
 
-    .reveal {
-      opacity: 0;
-      transform: translateY(18px);
-      transition: opacity 640ms ease, transform 640ms ease;
+    .why-card {
+      min-height: 196px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at top left, rgba(37, 210, 111, 0.1), transparent 28%),
+        linear-gradient(180deg, rgba(15, 23, 18, 0.9), rgba(8, 13, 10, 0.95));
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
     }
 
-    .reveal.is-visible {
-      opacity: 1;
-      transform: translateY(0);
+    .why-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--line-strong);
+      box-shadow: 0 18px 32px rgba(0, 0, 0, 0.18);
     }
 
-    .cta {
+    .why-kicker {
+      color: var(--green-bright);
+    }
+
+    .why-card .hero-note {
+      margin-top: 16px;
+    }
+
+    .cta-panel {
+      border: 1px solid var(--line-strong);
+      border-radius: 28px;
+      padding: 34px;
+      background:
+        radial-gradient(circle at top left, rgba(37, 210, 111, 0.14), transparent 30%),
+        linear-gradient(180deg, rgba(15, 23, 18, 0.94), rgba(8, 13, 10, 0.98));
+      box-shadow: var(--shadow);
       text-align: center;
-    }
-
-    .cta .container {
-      max-width: 780px;
     }
 
     .cta-actions {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 14px;
-      margin-top: 28px;
+      gap: 12px;
+      margin-top: 26px;
     }
 
-    footer {
-      border-top: 1px solid var(--line);
-      padding: 32px 0;
+    .footer {
+      border-top: 1px solid rgba(142, 255, 184, 0.08);
+      padding: 30px 0 40px;
       color: var(--dim);
     }
 
@@ -593,48 +1119,74 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 20px;
+      gap: 18px;
       flex-wrap: wrap;
     }
 
     .footer-brand {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       font-family: var(--mono);
       font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
     }
 
     .footer-brand img {
       width: 22px;
       height: 22px;
+      filter: drop-shadow(0 0 10px rgba(37, 210, 111, 0.32));
     }
 
     .footer-links {
       display: flex;
-      gap: 20px;
+      align-items: center;
       flex-wrap: wrap;
+      gap: 16px;
       font-size: 14px;
     }
 
     .footer-links a {
       color: var(--muted);
       text-decoration: none;
+      transition: color 160ms ease;
     }
 
-    @keyframes grid-drift {
+    .footer-links a:hover {
+      color: var(--text);
+    }
+
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
+
+    .js .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 720ms ease, transform 720ms ease;
+      transition-delay: var(--delay, 0ms);
+    }
+
+    .js .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes drift {
       from {
-        background-position: 0 0, 0 0, 50% 0, 0 0;
+        background-position: center, center, center, 0 0, 0 0, center;
       }
       to {
-        background-position: 62px 62px, 62px 62px, 45% 18px, 0 0;
+        background-position: center, center, center, 68px 68px, 68px 68px, center;
       }
     }
 
     @keyframes rise-in {
       from {
         opacity: 0;
-        transform: translateY(14px);
+        transform: translateY(18px);
       }
       to {
         opacity: 1;
@@ -642,132 +1194,139 @@
       }
     }
 
-    @keyframes terminal-glow {
-      0%, 100% {
-        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35), 0 0 0 rgba(34, 197, 94, 0);
-      }
-      50% {
-        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35), 0 0 36px rgba(34, 197, 94, 0.14);
-      }
-    }
-
-    @keyframes terminal-row {
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-
-    @keyframes pulse-dot {
-      0%, 100% {
+    @keyframes pulse {
+      0%,
+      100% {
         opacity: 0.72;
-        transform: scale(0.92);
+        transform: scale(0.96);
       }
       50% {
         opacity: 1;
-        transform: scale(1.12);
+        transform: scale(1.08);
       }
     }
 
-    @keyframes cursor-blink {
-      0%, 45% {
+    @keyframes blink {
+      0%,
+      45% {
         opacity: 1;
       }
-      46%, 100% {
+      46%,
+      100% {
         opacity: 0;
       }
     }
 
+    @keyframes terminal-reveal {
+      from {
+        clip-path: inset(0 100% 0 0);
+      }
+      to {
+        clip-path: inset(0 0 0 0);
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
       *, *::before, *::after {
         animation-duration: 1ms !important;
         animation-iteration-count: 1 !important;
-        scroll-behavior: auto !important;
         transition-duration: 1ms !important;
+        scroll-behavior: auto !important;
       }
     }
 
-    @media (max-width: 960px) {
+    @media (max-width: 1080px) {
       .hero-grid,
-      .steps,
-      .feature-grid {
+      .split {
         grid-template-columns: 1fr;
       }
 
-      h1 {
-        font-size: 58px;
+      .split .section-head {
+        position: static;
       }
 
-      .terminal {
-        margin-top: 8px;
-      }
-
-      .proof-grid {
-        grid-template-columns: repeat(2, 1fr);
+      .cap-grid,
+      .step-grid,
+      .feature-grid,
+      .why-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
-    @media (max-width: 700px) {
+    @media (max-width: 760px) {
       .container {
-        width: min(100% - 28px, 1120px);
+        width: min(100% - 28px, 1180px);
       }
 
       .nav-inner {
-        height: auto;
-        min-height: 68px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 14px 0 12px;
       }
 
-      .nav-links a:not(.nav-cta):not(.github-link) {
-        display: none;
-      }
-
-      .github-link {
-        display: none;
+      .nav-links {
+        width: 100%;
+        justify-content: flex-start;
       }
 
       .hero {
-        padding: 54px 0 38px;
+        padding-top: 40px;
       }
 
       .hero-grid {
-        gap: 34px;
+        gap: 30px;
       }
 
       h1 {
-        font-size: 42px;
-        line-height: 1.02;
+        font-size: clamp(2.8rem, 13vw, 4.2rem);
       }
 
-      h2 {
-        font-size: 32px;
-      }
-
-      .hero-copy,
-      .section-copy {
-        font-size: 17px;
+      .hero-copy {
+        font-size: 1.05rem;
       }
 
       .hero-actions,
       .cta-actions {
-        align-items: stretch;
         flex-direction: column;
+        align-items: stretch;
       }
 
       .button {
         width: 100%;
       }
 
-      .proof-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .terminal-body,
       .install-line {
         font-size: 12px;
       }
 
+      .terminal-body {
+        font-size: 12px;
+        padding: 18px 16px 20px;
+      }
+
+      .cap-grid,
+      .step-grid,
+      .feature-grid,
+      .why-grid,
+      .comparison-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .comparison-side + .comparison-side {
+        border-left: 0;
+        border-top: 1px solid rgba(142, 255, 184, 0.08);
+      }
+
       section {
-        padding: 58px 0;
+        padding: 60px 0;
+      }
+
+      .cta-panel {
+        padding: 28px 20px;
       }
     }
   </style>
@@ -776,160 +1335,334 @@
   <nav class="nav">
     <div class="container nav-inner">
       <a class="brand" href="/yeast/" aria-label="Yeast home">
-        <img src="/yeast/assets/logo.svg" alt="" width="30" height="30">
-        <span>east</span>
+        <img src="/yeast/assets/logo.svg" alt="" width="32" height="32">
+        <span>Yeast</span>
       </a>
       <div class="nav-links">
-        <a href="#features">Features</a>
-        <a href="/yeast/docs/">Docs</a>
-        <a class="github-link" href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">
-          GitHub <span class="github-stars"><span id="gh-stars">--</span></span>
+        <a class="nav-link" href="#features">Features</a>
+        <a class="nav-link" href="/yeast/docs/academy/">Academy</a>
+        <a class="nav-link" href="/yeast/docs/">Docs</a>
+        <a class="nav-github" href="https://github.com/Twarga/yeast" target="_blank" rel="noopener noreferrer">
+          <span class="nav-github__label">GitHub</span>
+          <span class="nav-github__meta"><span id="gh-stars">--</span> stars</span>
         </a>
-        <a class="nav-cta" href="#install">Get Started</a>
+        <a class="nav-link nav-link--cta" href="#install">Get Started</a>
       </div>
     </div>
   </nav>
 
   <main>
+    <div class="container">
+      <div class="academy-banner">
+        <span><strong>Free Twarga Academy bootcamp</strong> for learning DevOps with Yeast.</span>
+        <a href="/yeast/docs/academy/">Enter the course</a>
+      </div>
+    </div>
+
     <section class="hero">
       <div class="container hero-grid">
-        <div>
-          <div class="eyebrow">Linux-first QEMU/KVM labs</div>
-          <h1>Yeast turns a folder into <span>real Linux VMs</span>.</h1>
+        <div class="hero-copy-block">
+          <div class="eyebrow"><span class="eyebrow-dot"></span>Linux-first local VM orchestration</div>
+          <h1>Turn a folder into <span>real Linux VMs</span>.</h1>
           <p class="hero-copy">
-            Define machines in <code>yeast.yaml</code>, run <code>yeast up</code>, and get SSH-ready local VMs. Yeast downloads trusted images automatically when a VM needs them.
+            Yeast is YAML-driven QEMU/KVM orchestration for local labs, testing, multi-VM setups, and automation.
+            Define machines in <code>yeast.yaml</code>, run <code>yeast up</code>, and land on SSH-ready Linux guests
+            with snapshots, private networking, and stable JSON/events output.
           </p>
 
           <div class="hero-actions">
-            <a class="button primary" href="/yeast/docs/getting-started/quickstart/">Get Started</a>
-            <a class="button secondary" href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">View GitHub Project</a>
+            <a class="button primary" href="/yeast/docs/academy/">Enter Twarga Academy</a>
+            <a class="button secondary" href="/yeast/docs/">Read Yeast Docs</a>
           </div>
 
-          <div class="install-command" id="install">
-            <div class="install-label">
+          <div class="hero-note">
+            <strong>Trusted images auto-download in <code>yeast up</code></strong>
+            <span><code>yeast pull</code> stays optional for cache warming or browsing images.</span>
+          </div>
+
+          <div class="install-card" id="install">
+            <div class="install-head">
               <span>Install Yeast</span>
-              <button class="copy-button" type="button" onclick="copyInstall()">Copy</button>
+              <button class="copy-button" type="button" onclick="copyInstall(this)">Copy</button>
             </div>
             <div class="install-line">
-              <span class="prompt">$</span><code>curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash</code>
+              <span class="prompt">$</span>
+              <code>curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash</code>
+            </div>
+            <div class="install-foot">
+              One command installs the release binary, prepares <code>~/.yeast</code>, bootstraps an SSH key if needed,
+              and runs host checks after install.
             </div>
           </div>
         </div>
 
-        <div class="terminal" aria-label="Yeast terminal flow">
-          <div class="terminal-top">
-            <span>terminal</span>
-            <span class="status-dot" aria-hidden="true"></span>
-          </div>
-          <div class="terminal-body">
-            <div class="terminal-line"><span class="prompt">$</span>mkdir my-lab &amp;&amp; cd my-lab</div>
-            <div class="terminal-line"><span class="prompt">$</span>yeast init</div>
-            <div class="terminal-line output">created yeast.yaml</div>
-            <div class="terminal-line"><span class="prompt">$</span>yeast up</div>
-            <div class="terminal-line output">image ubuntu-24.04 missing; downloading trusted image...</div>
-            <div class="terminal-line output">creating VM web-01</div>
-            <div class="terminal-line output">provisioning with cloud-init</div>
-            <div class="terminal-line success">web-01 is up and reachable via SSH</div>
-            <div class="terminal-line"><span class="prompt">$</span>yeast ssh web-01</div>
+        <div class="hero-stage">
+          <div class="terminal-shell" aria-label="Yeast quickstart terminal flow">
+            <div class="terminal-top">
+              <div class="terminal-top-left">
+                <span>Quickstart flow</span>
+                <span class="terminal-status"><span class="status-dot" aria-hidden="true"></span> live demo</span>
+              </div>
+              <div class="terminal-pills" aria-hidden="true">
+                <span class="terminal-pill">QEMU/KVM</span>
+                <span class="terminal-pill">cloud-init</span>
+                <span class="terminal-pill">SSH</span>
+              </div>
+            </div>
+            <div class="terminal-body">
+              <div class="terminal-row command" data-terminal-row data-kind="command" data-text="mkdir my-lab && cd my-lab" data-pause="160">
+                <span class="terminal-mark">$</span>
+                <span class="terminal-text" data-terminal-text></span>
+                <span class="terminal-cursor" aria-hidden="true"></span>
+              </div>
+              <div class="terminal-row command" data-terminal-row data-kind="command" data-text="yeast init" data-pause="160">
+                <span class="terminal-mark">$</span>
+                <span class="terminal-text" data-terminal-text></span>
+                <span class="terminal-cursor" aria-hidden="true"></span>
+              </div>
+              <div class="terminal-row output" data-terminal-row data-kind="output" data-text="created yeast.yaml" data-pause="150">
+                <span class="terminal-mark terminal-mark--success">✓</span>
+                <span class="terminal-text" data-terminal-text></span>
+              </div>
+              <div class="terminal-row command" data-terminal-row data-kind="command" data-text="edit yeast.yaml" data-pause="180">
+                <span class="terminal-mark">$</span>
+                <span class="terminal-text" data-terminal-text></span>
+                <span class="terminal-cursor" aria-hidden="true"></span>
+              </div>
+              <div class="terminal-row command" data-terminal-row data-kind="command" data-text="yeast up" data-pause="180">
+                <span class="terminal-mark">$</span>
+                <span class="terminal-text" data-terminal-text></span>
+                <span class="terminal-cursor" aria-hidden="true"></span>
+              </div>
+              <div class="terminal-row output" data-terminal-row data-kind="output" data-text="Downloading ubuntu-24.04" data-pause="160">
+                <span class="terminal-mark terminal-mark--success">✓</span>
+                <span class="terminal-text" data-terminal-text></span>
+              </div>
+              <div class="terminal-row output" data-terminal-row data-kind="output" data-text="Creating vm web-01" data-pause="160">
+                <span class="terminal-mark terminal-mark--success">✓</span>
+                <span class="terminal-text" data-terminal-text></span>
+              </div>
+              <div class="terminal-row output" data-terminal-row data-kind="output" data-text="Provisioning with cloud-init" data-pause="160">
+                <span class="terminal-mark terminal-mark--success">✓</span>
+                <span class="terminal-text" data-terminal-text></span>
+              </div>
+              <div class="terminal-row output" data-terminal-row data-kind="output" data-text="VM web-01 is running" data-pause="170">
+                <span class="terminal-mark terminal-mark--success">✓</span>
+                <span class="terminal-text" data-terminal-text></span>
+              </div>
+              <div class="terminal-row command terminal-row--final" data-terminal-row data-kind="command" data-text="yeast ssh web-01" data-pause="0">
+                <span class="terminal-mark">$</span>
+                <span class="terminal-text" data-terminal-text></span>
+                <span class="terminal-cursor" aria-hidden="true"></span>
+              </div>
+              <div class="terminal-row output" data-terminal-row data-kind="output" data-text="SSH session ready" data-pause="0">
+                <span class="terminal-mark terminal-mark--success">✓</span>
+                <span class="terminal-text" data-terminal-text></span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="proof">
+    <section class="capabilities">
       <div class="container">
-        <div class="proof-grid">
-          <div class="proof-item">
-            <div class="proof-kicker">YAML</div>
-            <p class="proof-title">One file per lab</p>
+        <div class="cap-grid">
+          <article class="cap-card reveal" data-reveal>
+            <div class="cap-tag">YAML</div>
+            <h3>One folder, one lab definition</h3>
+            <p>Keep the whole machine layout in version control with <code>yeast.yaml</code>.</p>
+          </article>
+          <article class="cap-card reveal" data-reveal>
+            <div class="cap-tag">KVM</div>
+            <h3>Real Linux guests</h3>
+            <p>Yeast boots full QEMU/KVM VMs with their own kernel, disk, and boot flow.</p>
+          </article>
+          <article class="cap-card reveal" data-reveal>
+            <div class="cap-tag">SSH</div>
+            <h3>SSH-ready when boot finishes</h3>
+            <p>Connect to a real machine instead of a fake shell or browser-only demo.</p>
+          </article>
+          <article class="cap-card reveal" data-reveal>
+            <div class="cap-tag">JSON</div>
+            <h3>Stable automation output</h3>
+            <p>Use versioned JSON and JSON Lines events from scripts, agents, and CI jobs.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="truth">
+      <div class="container split">
+        <div class="section-head reveal" data-reveal>
+          <div class="section-label">Why it feels different</div>
+          <h2>Not containers. Real Linux machines.</h2>
+          <p class="section-copy">
+            Yeast is for people who want a local lab host, not a fake shell. It boots full Linux VMs on QEMU/KVM,
+            provisions them with cloud-init, and leaves you with SSH, snapshots, private networking, and machine-readable output.
+          </p>
+        </div>
+
+        <div class="comparison-panel reveal" data-reveal>
+          <div class="comparison-side comparison-side--muted">
+            <div class="comparison-label">Not this</div>
+            <div class="comparison-grid">
+              <div class="comparison-item">
+                <h3>Shared kernel</h3>
+                <p>No guest kernel, no VM disk, and no independent boot process.</p>
+              </div>
+              <div class="comparison-item">
+                <h3>Fake shell</h3>
+                <p>Yeast does not wrap a browser terminal around a demo environment.</p>
+              </div>
+              <div class="comparison-item">
+                <h3>Ad hoc setup</h3>
+                <p>Projects stay repeatable because the config lives in the folder with the lab.</p>
+              </div>
+            </div>
           </div>
-          <div class="proof-item">
-            <div class="proof-kicker">KVM</div>
-            <p class="proof-title">Real QEMU/KVM VMs</p>
-          </div>
-          <div class="proof-item">
-            <div class="proof-kicker">INIT</div>
-            <p class="proof-title">Cloud-init provisioning</p>
-          </div>
-          <div class="proof-item">
-            <div class="proof-kicker">SSH</div>
-            <p class="proof-title">Ready to connect</p>
+
+          <div class="comparison-side comparison-side--accent">
+            <div class="comparison-label">Yeast</div>
+            <div class="comparison-grid">
+              <div class="comparison-item">
+                <h3>Own kernel and disk</h3>
+                <p>QEMU/KVM boots a real Linux guest that behaves like a real machine.</p>
+              </div>
+              <div class="comparison-item">
+                <h3>Boot-time provisioning</h3>
+                <p><code>yeast up</code> downloads trusted images automatically when needed and runs cloud-init.</p>
+              </div>
+              <div class="comparison-item">
+                <h3>Work like a lab host</h3>
+                <p>Use SSH, snapshots, private networking, and stable output without leaving the local machine.</p>
+              </div>
+            </div>
+            <div class="comparison-note">
+              Built for labs, testing, multi-VM setups, automation, and local infrastructure work.
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section>
+    <section id="how">
       <div class="container">
-        <div class="section-head">
+        <div class="section-head reveal" data-reveal>
           <div class="section-label">How it works</div>
-          <h2>From zero to running VMs.</h2>
-          <p class="section-copy">Yeast keeps the flow short: describe the lab, start it, then work inside real Linux machines.</p>
+          <h2>Short path from install to SSH.</h2>
+          <p class="section-copy">Yeast keeps the loop tight: install, initialize, describe the lab, boot it, and connect to the running machine.</p>
         </div>
 
-        <div class="steps">
-          <article class="step">
-            <div class="step-num">1</div>
-            <h3>Write yeast.yaml</h3>
-            <p>Declare images, CPU, memory, disks, networks, and provisioning in the project folder.</p>
-          </article>
-          <article class="step">
-            <div class="step-num">2</div>
-            <h3>Run yeast up</h3>
-            <p>Yeast prepares the VM, downloads the image if needed, and boots it on QEMU/KVM.</p>
-          </article>
-          <article class="step">
-            <div class="step-num">3</div>
-            <h3>Provision on boot</h3>
-            <p>Cloud-init configures users, keys, packages, files, and first-boot setup.</p>
-          </article>
-          <article class="step">
-            <div class="step-num">4</div>
-            <h3>SSH and build</h3>
-            <p>Connect to real Linux machines and use them for labs, testing, automation, and learning.</p>
-          </article>
+        <div class="timeline reveal" data-reveal>
+          <div class="timeline-track" aria-hidden="true"></div>
+          <div class="timeline-progress" aria-hidden="true"></div>
+          <div class="step-grid">
+            <article class="step-card reveal" data-reveal>
+              <div class="step-number">01</div>
+              <h3>Create a project</h3>
+              <p>Start in a normal folder. Yeast keeps project metadata and runtime state beside the lab itself.</p>
+              <div class="step-foot">mkdir my-lab && cd my-lab</div>
+            </article>
+            <article class="step-card reveal" data-reveal>
+              <div class="step-number">02</div>
+              <h3>Describe the machines</h3>
+              <p>Use <code>yeast init</code> and edit <code>yeast.yaml</code> to define the VMs, disks, and networking.</p>
+              <div class="step-foot">yeast init</div>
+            </article>
+            <article class="step-card reveal" data-reveal>
+              <div class="step-number">03</div>
+              <h3>Boot with one command</h3>
+              <p><code>yeast up</code> validates the config, downloads trusted images if needed, starts QEMU/KVM, and runs cloud-init.</p>
+              <div class="step-foot">yeast up</div>
+            </article>
+            <article class="step-card reveal" data-reveal>
+              <div class="step-number">04</div>
+              <h3>SSH into a real VM</h3>
+              <p>Once the guest is ready, use <code>yeast ssh web-01</code> and keep working inside Linux.</p>
+              <div class="step-foot">yeast ssh web-01</div>
+            </article>
+          </div>
         </div>
       </div>
     </section>
 
     <section class="features" id="features">
       <div class="container">
-        <div class="section-head">
-          <div class="section-label">Features</div>
-          <h2>Built for local infrastructure labs.</h2>
-          <p class="section-copy">The feature set is focused on repeatable VM environments, not fake shells or container-only demos.</p>
+        <div class="section-head reveal" data-reveal>
+          <div class="section-label">Key features</div>
+          <h2>Everything in Yeast v1.1 stays focused on the local engine.</h2>
+          <p class="section-copy">
+            Yeast ships the pieces that matter for repeatable local labs: project-local config, trusted image flow, first-boot provisioning, snapshots, private networking, and machine-readable output.
+          </p>
         </div>
 
         <div class="feature-grid">
-          <article class="feature">
-            <div class="feature-code">YAML</div>
-            <h3>Project configuration</h3>
-            <p>Keep VM definitions in version control and rebuild the same lab from the same folder.</p>
+          <article class="feature-card reveal" data-reveal>
+            <div class="feature-kicker">01 / Project-local</div>
+            <h3>YAML-driven configuration</h3>
+            <p>Describe the lab once in <code>yeast.yaml</code> and keep the whole setup beside the code it supports.</p>
+            <div class="feature-foot">Version control friendly</div>
           </article>
-          <article class="feature">
-            <div class="feature-code">VM</div>
-            <h3>Real virtualization</h3>
-            <p>Run full Linux machines through QEMU/KVM with systemd, kernels, disks, and isolation.</p>
+          <article class="feature-card reveal" data-reveal>
+            <div class="feature-kicker">02 / Auto-download</div>
+            <h3>Trusted images on demand</h3>
+            <p><code>yeast up</code> downloads supported cloud images automatically when they are missing. <code>yeast pull</code> is optional.</p>
+            <div class="feature-foot">Cache warming and browsing remain available</div>
           </article>
-          <article class="feature">
-            <div class="feature-code">NET</div>
-            <h3>Private networking</h3>
-            <p>Create multi-VM labs with predictable networking for app, database, proxy, and cluster setups.</p>
+          <article class="feature-card reveal" data-reveal>
+            <div class="feature-kicker">03 / First boot</div>
+            <h3>cloud-init provisioning</h3>
+            <p>Provision users, SSH keys, packages, files, and shell steps as the guest boots for the first time.</p>
+            <div class="feature-foot">Repeatable setup</div>
           </article>
-          <article class="feature">
-            <div class="feature-code">INIT</div>
-            <h3>Cloud-init provisioning</h3>
-            <p>Bootstrap users, SSH keys, packages, commands, and files automatically on first boot.</p>
-          </article>
-          <article class="feature">
-            <div class="feature-code">SNAP</div>
+          <article class="feature-card reveal" data-reveal>
+            <div class="feature-kicker">04 / Recovery</div>
             <h3>Snapshots and restore</h3>
-            <p>Save known-good states, test risky changes, and return to a clean machine quickly.</p>
+            <p>Save a known-good state, test something risky, and jump back to the clean machine when you need to.</p>
+            <div class="feature-foot">Stopped-VM snapshots</div>
           </article>
-          <article class="feature">
-            <div class="feature-code">JSON</div>
-            <h3>Automation output</h3>
-            <p>Use machine-readable output for scripts, checks, agents, CI jobs, and repeatable workflows.</p>
+          <article class="feature-card reveal" data-reveal>
+            <div class="feature-kicker">05 / Networking</div>
+            <h3>Private lab networking</h3>
+            <p>Build multi-VM labs with one project-level network and predictable per-instance IPv4 addresses.</p>
+            <div class="feature-foot">Good for app, DB, and proxy topologies</div>
+          </article>
+          <article class="feature-card reveal" data-reveal>
+            <div class="feature-kicker">06 / Automation</div>
+            <h3>Stable JSON and events</h3>
+            <p>Consume a versioned JSON contract and JSON Lines lifecycle events from tooling, scripts, and agents.</p>
+            <div class="feature-foot">Machine-readable by design</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="why">
+      <div class="container">
+        <div class="section-head reveal" data-reveal>
+          <div class="section-label">Why Yeast</div>
+          <h2>Made for labs, testing, and local infra work.</h2>
+          <p class="section-copy">
+            Yeast is a local tool for people who need actual guests, not disposable abstractions. It is useful when the workflow needs to be repeatable, observable, and close to the metal.
+          </p>
+        </div>
+
+        <div class="why-grid">
+          <article class="why-card reveal" data-reveal>
+            <div class="why-kicker">Labs</div>
+            <h3>Practice against real machines</h3>
+            <p>Spin up a reproducible Linux environment for tutorials, self-study, and hands-on practice.</p>
+          </article>
+          <article class="why-card reveal" data-reveal>
+            <div class="why-kicker">Multi-VM</div>
+            <h3>Run small topologies locally</h3>
+            <p>Set up app, database, proxy, or client/server layouts with private networking and snapshots.</p>
+          </article>
+          <article class="why-card reveal" data-reveal>
+            <div class="why-kicker">Automation</div>
+            <h3>Let tools read the output</h3>
+            <p>Use JSON and events when scripts, CI jobs, or agents need stable state instead of terminal scraping.</p>
           </article>
         </div>
       </div>
@@ -937,68 +1670,97 @@
 
     <section class="cta">
       <div class="container">
-        <div class="section-label">Start building</div>
-        <h2>Make a folder. Run Yeast. Get real VMs.</h2>
-        <p class="section-copy">Use the docs for the first VM tutorial, then grow into multi-VM labs, snapshots, templates, and automation.</p>
-        <div class="cta-actions">
-          <a class="button primary" href="/yeast/docs/getting-started/quickstart/">Read the Quickstart</a>
-          <a class="button secondary" href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">Open GitHub Project</a>
+        <div class="cta-panel reveal" data-reveal>
+          <div class="section-label">Get started</div>
+          <h2>Make a folder. Run Yeast. Get real VMs.</h2>
+          <p class="section-copy">
+            Start the DevOps bootcamp in Twarga Academy, then come back to Yeast docs when you want product reference or installation detail.
+          </p>
+          <div class="cta-actions">
+            <a class="button primary" href="/yeast/docs/academy/">Enter Twarga Academy</a>
+            <a class="button secondary" href="https://github.com/Twarga/yeast" target="_blank" rel="noopener noreferrer">Open GitHub</a>
+          </div>
         </div>
       </div>
     </section>
   </main>
 
-  <footer>
+  <footer class="footer">
     <div class="container footer-inner">
       <div class="footer-brand">
         <img src="/yeast/assets/logo.svg" alt="" width="22" height="22">
-        <span>Yeast by TwargaOps</span>
+        <span>Yeast</span>
       </div>
       <div class="footer-links">
         <a href="/yeast/docs/">Docs</a>
-        <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener noreferrer">GitHub</a>
         <a href="/yeast/docs/releases/archive/">Changelog</a>
-        <a href="https://github.com/Twarga/yeast/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+        <a href="https://github.com/Twarga/yeast/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">License</a>
       </div>
     </div>
   </footer>
 
   <script>
     const installCommand = "curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash";
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const revealTargets = Array.from(document.querySelectorAll("[data-reveal]"));
+    const terminalRows = Array.from(document.querySelectorAll("[data-terminal-row]"));
 
-    function copyInstall() {
-      navigator.clipboard.writeText(installCommand);
+    function activateTerminal() {
+      const step = prefersReducedMotion ? 0 : 220;
+
+      terminalRows.forEach((row, index) => {
+        row.style.setProperty("--delay", `${index * step}ms`);
+        row.classList.add("is-visible");
+        const target = row.querySelector("[data-terminal-text]");
+        if (target) {
+          target.textContent = row.dataset.text || "";
+        }
+      });
     }
 
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const revealItems = document.querySelectorAll(".proof-item, .section-head, .step, .feature, .cta .container");
+    function revealAll() {
+      revealTargets.forEach((item, index) => {
+        item.style.setProperty("--delay", prefersReducedMotion ? "0ms" : `${Math.min(index * 70, 560)}ms`);
+      });
+      revealTargets.forEach((item) => item.classList.add("is-visible"));
+    }
 
-    if (prefersReducedMotion || !("IntersectionObserver" in window)) {
-      revealItems.forEach((item) => item.classList.add("is-visible"));
-    } else {
-      revealItems.forEach((item) => item.classList.add("reveal"));
+    revealAll();
+    activateTerminal();
 
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.16 });
-
-      revealItems.forEach((item) => observer.observe(item));
+    async function copyInstall(button) {
+      try {
+        await navigator.clipboard.writeText(installCommand);
+        const original = button.textContent;
+        button.textContent = "Copied";
+        window.setTimeout(() => {
+          button.textContent = original;
+        }, 1500);
+      } catch (error) {
+        const original = button.textContent;
+        button.textContent = "Copy failed";
+        window.setTimeout(() => {
+          button.textContent = original;
+        }, 1500);
+      }
     }
 
     fetch("https://api.github.com/repos/Twarga/yeast", {
       headers: { Accept: "application/vnd.github+json" }
     })
-      .then((response) => response.ok ? response.json() : Promise.reject(response.status))
+      .then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
       .then((repo) => {
         const stars = document.getElementById("gh-stars");
-        if (stars && typeof repo.stargazers_count === "number") {
-          stars.textContent = String(repo.stargazers_count);
+        if (!stars || typeof repo.stargazers_count !== "number") {
+          return;
         }
+
+        const formatted = new Intl.NumberFormat("en", {
+          notation: "compact",
+          maximumFractionDigits: 1
+        }).format(repo.stargazers_count);
+        stars.textContent = formatted;
       })
       .catch(() => {});
   </script>

@@ -1,0 +1,22 @@
+version: 1
+
+instances:
+  - name: automate
+    hostname: automate
+    image: ubuntu-22.04
+    memory: 1024
+    cpus: 2
+    disk_size: 20G
+    ssh_port: 2209
+    user: ubuntu
+    sudo: nopasswd
+
+    provision:
+      packages:
+        - curl
+        - vim
+      shell:
+        - hostnamectl set-hostname automate
+        - timedatectl set-timezone UTC
+        - ufw allow OpenSSH
+        - ufw --force enable

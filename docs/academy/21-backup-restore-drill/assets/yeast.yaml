@@ -1,0 +1,55 @@
+version: 1
+
+networks:
+  - name: internal
+    cidr: 192.168.90.0/24
+
+instances:
+  - name: primary
+    hostname: primary
+    image: ubuntu-22.04
+    memory: 1024
+    cpus: 2
+    disk_size: 30G
+    ssh_port: 2234
+    user: ubuntu
+    sudo: nopasswd
+    networks:
+      - name: internal
+        ipv4: 192.168.90.10
+
+    provision:
+      packages:
+        - postgresql
+        - postgresql-contrib
+        - curl
+      shell:
+        - hostnamectl set-hostname primary
+        - timedatectl set-timezone UTC
+        - ufw allow OpenSSH
+        - ufw --force enable
+        - systemctl enable --now postgresql
+
+  - name: backup
+    hostname: backup
+    image: ubuntu-22.04
+    memory: 1024
+    cpus: 2
+    disk_size: 40G
+    ssh_port: 2235
+    user: ubuntu
+    sudo: nopasswd
+    networks:
+      - name: internal
+        ipv4: 192.168.90.20
+
+    provision:
+      packages:
+        - postgresql-client
+        - rsync
+        - curl
+      shell:
+        - hostnamectl set-hostname backup
+        - timedatectl set-timezone UTC
+        - ufw allow OpenSSH
+        - ufw --force enable

@@ -1,0 +1,29 @@
+version: 1
+
+instances:
+  - name: baseline
+    hostname: baseline
+    image: ubuntu-22.04
+    memory: 1024
+    cpus: 2
+    disk_size: 20G
+    ssh_port: 2201
+    user: ubuntu
+    sudo: nopasswd
+
+    provision:
+      packages:
+        - curl
+        - wget
+        - vim
+        - htop
+        - ufw
+        - unattended-upgrades
+        - fail2ban
+      shell:
+        - hostnamectl set-hostname baseline
+        - timedatectl set-timezone UTC
+        - ufw allow OpenSSH
+        - ufw --force enable
+        - systemctl enable --now fail2ban
+        - systemctl enable --now unattended-upgrades
