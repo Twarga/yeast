@@ -1,0 +1,55 @@
+/* Make the academy site feel like a standalone course shell instead of a docs subsection. */
+.md-sidebar--primary,
+.md-sidebar--secondary,
+.md-header__button[for="__drawer"],
+.md-header__button[for="__search"],
+.md-search,
+.md-header__source {
+  display: none !important;
+}
+
+.md-grid,
+.md-main__inner {
+  max-width: none;
+}
+
+.md-main__inner {
+  margin: 0;
+  padding: 0;
+}
+
+.md-content {
+  margin: 0;
+}
+
+.md-content__inner {
+  margin: 0;
+  padding: 0;
+}
+
+.md-content__inner > :first-child {
+  margin-top: 0;
+}
+
+.md-header {
+  border-bottom-color: rgba(34, 197, 94, 0.18);
+}
+
+.md-header__inner {
+  justify-content: center;
+}
+
+.md-header__title {
+  margin: 0 auto;
+}
+
+.md-header__ellipsis {
+  display: flex;
+  justify-content: center;
+}
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3 {
+  letter-spacing: -0.02em;
+}
