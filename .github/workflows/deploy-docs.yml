@@ -59,6 +59,7 @@ jobs:
           cp assets/twarga-academy-logo.png dist/assets/
           cp assets/favicon.ico dist/assets/
           cp landing/index.html dist/index.html
+          cp academy-landing/index.html dist/bootcamp/index.html
           touch dist/.nojekyll
 
       - name: Configure Pages
