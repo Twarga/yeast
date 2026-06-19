@@ -153,36 +153,77 @@
       color: var(--green) !important;
     }
 
-    .academy-banner {
-      margin: 18px 0 0;
-      padding: 12px 16px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: rgba(16, 27, 21, 0.72);
-      color: var(--muted);
-      font-size: 15px;
-      line-height: 1.4;
+    /* ── Announcement bar ──────────────────────────────────────── */
+    .announce-bar {
+      position: relative;
+      z-index: 20;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       gap: 14px;
-      flex-wrap: wrap;
+      min-height: 44px;
+      padding: 9px 52px 9px 16px;
+      background: rgba(12, 20, 15, 0.97);
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+      overflow: hidden;
     }
 
-    .academy-banner strong {
+    .announce-bar strong {
       color: var(--text);
-      font-weight: 700;
     }
 
-    .academy-banner a {
+    .announce-bar a.announce-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border: 1px solid rgba(34, 197, 94, 0.38);
+      border-radius: 6px;
+      background: rgba(34, 197, 94, 0.1);
       color: var(--green);
-      text-decoration: none;
       font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
       white-space: nowrap;
+      transition: background 160ms ease, border-color 160ms ease;
     }
 
-    .academy-banner a:hover {
+    .announce-bar a.announce-cta:hover {
+      background: rgba(34, 197, 94, 0.18);
+      border-color: rgba(34, 197, 94, 0.6);
       color: var(--text);
+    }
+
+    .announce-bar__close {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--dim);
+      cursor: pointer;
+      font-size: 15px;
+      line-height: 1;
+      transition: background 160ms ease, color 160ms ease;
+    }
+
+    .announce-bar__close:hover {
+      background: rgba(34, 197, 94, 0.1);
+      color: var(--text);
+    }
+
+    .announce-bar.is-hidden {
+      display: none;
     }
 
     .hero {
@@ -198,11 +239,7 @@
     }
 
     .hero-grid > * {
-      animation: rise-in 520ms ease both;
-    }
-
-    .hero-grid > *:nth-child(2) {
-      animation-delay: 120ms;
+      opacity: 0;
     }
 
     .eyebrow {
@@ -380,21 +417,8 @@
 
     .terminal-line {
       opacity: 0;
-      transform: translateX(-8px);
       white-space: nowrap;
-      animation: terminal-row 420ms ease forwards;
     }
-
-    .terminal-line:nth-child(1) { animation-delay: 260ms; }
-    .terminal-line:nth-child(2) { animation-delay: 620ms; }
-    .terminal-line:nth-child(3) { animation-delay: 980ms; }
-    .terminal-line:nth-child(4) { animation-delay: 1340ms; }
-    .terminal-line:nth-child(5) { animation-delay: 1700ms; }
-    .terminal-line:nth-child(6) { animation-delay: 2060ms; }
-    .terminal-line:nth-child(7) { animation-delay: 2420ms; }
-    .terminal-line:nth-child(8) { animation-delay: 2780ms; }
-    .terminal-line:nth-child(9) { animation-delay: 3140ms; }
-    .terminal-line:nth-child(10) { animation-delay: 3500ms; }
 
     .terminal-line.success::after {
       content: "";
@@ -588,15 +612,9 @@
       text-shadow: 0 0 18px rgba(34, 197, 94, 0.45);
     }
 
-    .reveal {
-      opacity: 0;
-      transform: translateY(18px);
-      transition: opacity 640ms ease, transform 640ms ease;
-    }
-
-    .reveal.is-visible {
-      opacity: 1;
-      transform: translateY(0);
+    .feature, .step {
+      will-change: transform;
+      transform-style: preserve-3d;
     }
 
     .cta {
@@ -805,6 +823,12 @@
   </style>
 </head>
 <body>
+  <div class="announce-bar" id="announce-bar" role="banner">
+    <span><strong>Twarga Academy</strong> — Free DevOps bootcamp using Yeast.</span>
+    <a class="announce-cta" href="/yeast/bootcamp/">Enter the course →</a>
+    <button class="announce-bar__close" id="announce-close" aria-label="Dismiss">✕</button>
+  </div>
+
   <nav class="nav">
     <div class="container nav-inner">
       <a class="brand" href="/yeast/" aria-label="Yeast home">
@@ -823,13 +847,6 @@
   </nav>
 
   <main>
-    <div class="container">
-      <div class="academy-banner">
-        <span><strong>Free Twarga Academy bootcamp</strong> for learning DevOps with Yeast.</span>
-        <a href="/yeast/bootcamp/">Enter the course</a>
-      </div>
-    </div>
-
     <section class="hero">
       <div class="container hero-grid">
         <div>
@@ -1002,6 +1019,8 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
   <script>
     const installCommand = "curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash";
 
@@ -1010,36 +1029,160 @@
     }
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const revealItems = document.querySelectorAll(".proof-item, .section-head, .step, .feature, .cta .container");
 
-    if (prefersReducedMotion || !("IntersectionObserver" in window)) {
-      revealItems.forEach((item) => item.classList.add("is-visible"));
-    } else {
-      revealItems.forEach((item) => item.classList.add("reveal"));
+    /* ── Announcement bar dismiss ─────────────────────────────── */
+    const ANNOUNCE_KEY = "yeast-academy-bar-dismissed";
+    const announceBar  = document.getElementById("announce-bar");
+    const announceClose = document.getElementById("announce-close");
 
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.16 });
-
-      revealItems.forEach((item) => observer.observe(item));
+    if (announceBar && localStorage.getItem(ANNOUNCE_KEY)) {
+      announceBar.classList.add("is-hidden");
     }
 
+    if (announceClose && announceBar) {
+      announceClose.addEventListener("click", () => {
+        const hide = () => {
+          announceBar.classList.add("is-hidden");
+          localStorage.setItem(ANNOUNCE_KEY, "1");
+        };
+        if (prefersReducedMotion || typeof gsap === "undefined") {
+          hide();
+        } else {
+          gsap.to(announceBar, {
+            height: 0, minHeight: 0,
+            paddingTop: 0, paddingBottom: 0,
+            opacity: 0,
+            duration: 0.28, ease: "power2.inOut",
+            onComplete: hide
+          });
+        }
+      });
+    }
+
+    /* ── GitHub stars ─────────────────────────────────────────── */
     fetch("https://api.github.com/repos/Twarga/yeast", {
       headers: { Accept: "application/vnd.github+json" }
     })
-      .then((response) => response.ok ? response.json() : Promise.reject(response.status))
-      .then((repo) => {
-        const stars = document.getElementById("gh-stars");
-        if (stars && typeof repo.stargazers_count === "number") {
-          stars.textContent = String(repo.stargazers_count);
-        }
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(repo => {
+        const el = document.getElementById("gh-stars");
+        if (el && typeof repo.stargazers_count === "number")
+          el.textContent = String(repo.stargazers_count);
       })
       .catch(() => {});
+
+    /* ── Animations ───────────────────────────────────────────── */
+    if (prefersReducedMotion) {
+      document.querySelectorAll(".hero-grid > *, .terminal-line, .proof-item, .section-head, .step, .feature, .cta .container")
+        .forEach(el => { el.style.opacity = 1; el.style.transform = "none"; });
+    } else {
+      gsap.registerPlugin(ScrollTrigger);
+
+      /* Hero entrance — left column words, then terminal */
+      const heroLeft = document.querySelector(".hero-grid > :first-child");
+      const heroRight = document.querySelector(".terminal");
+
+      /* Split h1 into word spans for staggered word reveal */
+      const h1 = document.querySelector("h1");
+      if (h1) {
+        h1.innerHTML = h1.innerHTML
+          .replace(/<span>(.*?)<\/span>/g, (_, inner) =>
+            inner.split(/(\s+)/).map(w =>
+              w.trim() ? `<span class="hw" style="display:inline-block"><span style="color:#22c55e">${w}</span></span>` : w
+            ).join("")
+          )
+          .replace(/(?<![>])(\b(?!<)[\w''.,!?-]+\b)/g, (w) =>
+            `<span class="hw" style="display:inline-block">${w}</span>`
+          );
+
+        gsap.from(".hw", {
+          y: 36, opacity: 0, rotationX: -22,
+          duration: 0.65, stagger: 0.055,
+          ease: "power3.out", delay: 0.18,
+          transformPerspective: 600
+        });
+      }
+
+      /* Hero subtext + buttons + install */
+      gsap.from([
+        heroLeft && heroLeft.querySelector(".hero-copy"),
+        heroLeft && heroLeft.querySelector(".hero-actions"),
+        heroLeft && heroLeft.querySelector(".install-command")
+      ].filter(Boolean), {
+        y: 22, opacity: 0,
+        duration: 0.7, stagger: 0.12,
+        ease: "power2.out", delay: 0.7
+      });
+
+      /* Terminal box */
+      gsap.from(heroRight, {
+        x: 30, opacity: 0,
+        duration: 0.8, ease: "power3.out", delay: 0.28
+      });
+
+      /* Terminal lines — typewriter stagger */
+      const termLines = document.querySelectorAll(".terminal-line");
+      termLines.forEach((line, i) => {
+        gsap.fromTo(line,
+          { opacity: 0, x: -10 },
+          { opacity: 1, x: 0, duration: 0.32, ease: "power2.out", delay: 0.7 + i * 0.34 }
+        );
+      });
+
+      /* Proof grid — stagger slide up */
+      gsap.from(".proof-item", {
+        y: 24, opacity: 0,
+        duration: 0.55, stagger: 0.07, ease: "power2.out",
+        scrollTrigger: { trigger: ".proof-grid", start: "top 88%", once: true }
+      });
+
+      /* Section headings */
+      document.querySelectorAll(".section-head").forEach(el => {
+        gsap.from(el, {
+          y: 22, opacity: 0, duration: 0.7, ease: "power2.out",
+          scrollTrigger: { trigger: el, start: "top 85%", once: true }
+        });
+      });
+
+      /* Steps — cascade left to right */
+      gsap.from(".step", {
+        y: 30, opacity: 0,
+        duration: 0.6, stagger: 0.1, ease: "power2.out",
+        scrollTrigger: { trigger: ".steps", start: "top 82%", once: true }
+      });
+
+      /* Feature cards — stagger + 3D tilt hover */
+      gsap.from(".feature", {
+        y: 28, opacity: 0,
+        duration: 0.6, stagger: 0.075, ease: "power2.out",
+        scrollTrigger: { trigger: ".feature-grid", start: "top 82%", once: true }
+      });
+
+      document.querySelectorAll(".feature").forEach(card => {
+        card.addEventListener("mousemove", e => {
+          const r = card.getBoundingClientRect();
+          const x = (e.clientX - r.left) / r.width  - 0.5;
+          const y = (e.clientY - r.top)  / r.height - 0.5;
+          gsap.to(card, {
+            rotationY: x * 10, rotationX: -y * 10,
+            transformPerspective: 700,
+            duration: 0.25, ease: "power2.out"
+          });
+        });
+        card.addEventListener("mouseleave", () => {
+          gsap.to(card, {
+            rotationY: 0, rotationX: 0,
+            duration: 0.45, ease: "power2.out"
+          });
+        });
+      });
+
+      /* CTA */
+      gsap.from(".cta .container", {
+        y: 22, opacity: 0, duration: 0.7, ease: "power2.out",
+        scrollTrigger: { trigger: ".cta", start: "top 85%", once: true }
+      });
+    }
   </script>
 </body>
 </html>

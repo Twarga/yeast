@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <filter id="glow-ta" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glow-ta-soft" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="14" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer glow halo -->
+  <rect x="8" y="8" width="184" height="184" rx="44"
+        fill="none" stroke="#f59e0b" stroke-width="2" opacity="0.22" filter="url(#glow-ta-soft)"/>
+
+  <!-- Rounded square border -->
+  <rect x="8" y="8" width="184" height="184" rx="44"
+        fill="#110d04" stroke="#f59e0b" stroke-width="7" filter="url(#glow-ta)"/>
+
+  <!-- Letter T — horizontal bar + vertical stem -->
+  <line x1="38" y1="57" x2="92" y2="57"
+        stroke="#f59e0b" stroke-width="15" stroke-linecap="round"/>
+  <line x1="65" y1="57" x2="65" y2="148"
+        stroke="#f59e0b" stroke-width="15" stroke-linecap="round"/>
+
+  <!-- Letter A — two diagonals + crossbar -->
+  <line x1="108" y1="148" x2="137" y2="57"
+        stroke="#f59e0b" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="137" y1="57" x2="166" y2="148"
+        stroke="#f59e0b" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="118" y1="114" x2="156" y2="114"
+        stroke="#f59e0b" stroke-width="13" stroke-linecap="round"/>
+</svg>
