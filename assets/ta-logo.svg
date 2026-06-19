@@ -25,17 +25,21 @@
   <rect x="8" y="8" width="184" height="184" rx="44"
         fill="#110d04" stroke="#f59e0b" stroke-width="7" filter="url(#glow-ta)"/>
 
-  <!-- Letter T — horizontal bar + vertical stem -->
-  <line x1="38" y1="57" x2="92" y2="57"
-        stroke="#f59e0b" stroke-width="15" stroke-linecap="round"/>
-  <line x1="65" y1="57" x2="65" y2="148"
+  <!-- T+A ligature: shared vertical stem forms the backbone -->
+
+  <!-- T crossbar: wide horizontal at top -->
+  <line x1="36" y1="54" x2="96" y2="54"
         stroke="#f59e0b" stroke-width="15" stroke-linecap="round"/>
 
-  <!-- Letter A — two diagonals + crossbar -->
-  <line x1="108" y1="148" x2="137" y2="57"
-        stroke="#f59e0b" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
-  <line x1="137" y1="57" x2="166" y2="148"
-        stroke="#f59e0b" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
-  <line x1="118" y1="114" x2="156" y2="114"
-        stroke="#f59e0b" stroke-width="13" stroke-linecap="round"/>
+  <!-- Shared stem: T's vertical plus A's left leg -->
+  <line x1="66" y1="54" x2="66" y2="152"
+        stroke="#f59e0b" stroke-width="15" stroke-linecap="round"/>
+
+  <!-- A right diagonal from top of stem area to bottom-right -->
+  <line x1="82" y1="54" x2="164" y2="152"
+        stroke="#f59e0b" stroke-width="15" stroke-linecap="round"/>
+
+  <!-- A crossbar across the A triangle -->
+  <line x1="84" y1="114" x2="138" y2="114"
+        stroke="#f59e0b" stroke-width="11" stroke-linecap="round"/>
 </svg>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Twarga Academy — Free DevOps Bootcamp</title>
+  <title>Twarga Academy - Free DevOps Bootcamp</title>
   <meta name="description" content="30 hands-on labs. Five phases from Linux fundamentals to Kubernetes and AI ops. Free DevOps bootcamp powered by Yeast.">
   <link rel="icon" type="image/x-icon" href="/yeast/assets/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,7 +51,7 @@
       margin: 0 auto;
     }
 
-    /* ── Nav ───────────────────────────────────────────────────── */
+    /* -- Nav ----------------------------------------------------- */
     .nav {
       position: sticky;
       top: 0;
@@ -77,7 +77,7 @@
       font-family: var(--mono);
       font-size: 17px;
       font-weight: 700;
-      letter-spacing: -0.01em;
+      letter-spacing: 0;
     }
 
     .brand img {
@@ -132,7 +132,7 @@
 
     .back-link:hover { color: var(--muted); }
 
-    /* ── Hero ──────────────────────────────────────────────────── */
+    /* -- Hero ---------------------------------------------------- */
     .hero {
       padding: 96px 0 80px;
       border-bottom: 1px solid var(--line);
@@ -173,7 +173,7 @@
       font-size: clamp(42px, 6vw, 72px);
       font-weight: 700;
       line-height: 1.04;
-      letter-spacing: -0.02em;
+      letter-spacing: 0;
       color: var(--text);
     }
 
@@ -249,7 +249,7 @@
       font-family: var(--mono);
     }
 
-    /* Hero right — course card */
+    /* Hero right - course card */
     .hero-card {
       padding: 28px;
       border: 1px solid var(--line-strong);
@@ -312,7 +312,7 @@
       font-size: 11px;
     }
 
-    /* ── Stats strip ───────────────────────────────────────────── */
+    /* -- Stats strip --------------------------------------------- */
     .stats {
       border-bottom: 1px solid var(--line);
       background: rgba(5,4,10,0.6);
@@ -341,7 +341,7 @@
       font-weight: 700;
       color: var(--amber);
       line-height: 1;
-      letter-spacing: -0.02em;
+      letter-spacing: 0;
     }
 
     .stat-label {
@@ -351,7 +351,7 @@
       font-size: 13px;
     }
 
-    /* ── Section base ──────────────────────────────────────────── */
+    /* -- Section base -------------------------------------------- */
     section { padding: 88px 0; }
 
     .section-eyebrow {
@@ -370,7 +370,7 @@
       font-size: clamp(28px, 4vw, 44px);
       font-weight: 700;
       line-height: 1.1;
-      letter-spacing: -0.02em;
+      letter-spacing: 0;
       color: var(--text);
     }
 
@@ -387,7 +387,7 @@
       max-width: 580px;
     }
 
-    /* ── Phase strip ───────────────────────────────────────────── */
+    /* -- Phase strip --------------------------------------------- */
     .phases { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: rgba(5,4,10,0.4); }
 
     .phase-strip {
@@ -469,14 +469,14 @@
     }
 
     .phase-card-topics li::before {
-      content: "–";
+      content: "-";
       position: absolute;
       left: 0;
       color: var(--amber);
       opacity: 0.5;
     }
 
-    /* ── What you build ────────────────────────────────────────── */
+    /* -- What you build ------------------------------------------ */
     .outcomes-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -507,7 +507,7 @@
       opacity: 0.3;
       line-height: 1;
       margin-bottom: 12px;
-      letter-spacing: -0.03em;
+      letter-spacing: 0;
     }
 
     .outcome-title {
@@ -515,7 +515,7 @@
       font-size: 20px;
       font-weight: 700;
       color: var(--text);
-      letter-spacing: -0.01em;
+      letter-spacing: 0;
       line-height: 1.25;
     }
 
@@ -526,7 +526,7 @@
       line-height: 1.65;
     }
 
-    /* ── Course path ───────────────────────────────────────────── */
+    /* -- Course path --------------------------------------------- */
     .path { border-top: 1px solid var(--line); }
 
     .path-grid {
@@ -545,6 +545,10 @@
     }
 
     .path-block:hover { border-color: var(--line-strong); }
+
+    .path-block-wide {
+      grid-column: 1 / -1;
+    }
 
     .path-block-header {
       display: flex;
@@ -573,7 +577,7 @@
       font-size: 17px;
       font-weight: 700;
       color: var(--text);
-      letter-spacing: -0.01em;
+      letter-spacing: 0;
     }
 
     .path-block-range {
@@ -622,7 +626,13 @@
       opacity: 0.7;
     }
 
-    /* ── CTA ───────────────────────────────────────────────────── */
+    .path-lab-list-split {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px 32px;
+    }
+
+    /* -- CTA ----------------------------------------------------- */
     .cta-section {
       border-top: 1px solid var(--line);
       text-align: center;
@@ -639,7 +649,7 @@
       margin-top: 32px;
     }
 
-    /* ── Footer ────────────────────────────────────────────────── */
+    /* -- Footer -------------------------------------------------- */
     footer {
       border-top: 1px solid var(--line);
       padding: 32px 0;
@@ -678,7 +688,7 @@
 
     .footer-links a:hover { color: var(--text); }
 
-    /* ── Responsive ────────────────────────────────────────────── */
+    /* -- Responsive ---------------------------------------------- */
     @media (max-width: 960px) {
       .hero-inner { grid-template-columns: 1fr; }
       .hero-card  { display: none; }
@@ -686,6 +696,7 @@
       .stats-grid  { grid-template-columns: repeat(2, 1fr); }
       .outcomes-grid { grid-template-columns: 1fr; }
       .path-grid   { grid-template-columns: 1fr; }
+      .path-lab-list-split { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 640px) {
@@ -706,7 +717,7 @@
         <span>Twarga Academy</span>
       </a>
       <div class="nav-links">
-        <a class="back-link" href="/yeast/">← Yeast</a>
+        <a class="back-link" href="/yeast/">Back to Yeast</a>
         <a href="/yeast/bootcamp/curriculum/">Curriculum</a>
         <a href="/yeast/bootcamp/labs/">Labs</a>
         <a class="nav-pill" href="/yeast/bootcamp/labs/#lab-01">Start Lab 01</a>
@@ -714,16 +725,16 @@
     </div>
   </nav>
 
-  <!-- ── Hero ─────────────────────────────────────────────────── -->
+  <!-- -- Hero --------------------------------------------------- -->
   <section class="hero">
     <div class="container">
       <div class="hero-inner">
         <div class="hero-copy">
-          <div class="hero-eyebrow">Twarga Academy · Free bootcamp</div>
+          <div class="hero-eyebrow">Twarga Academy - Free bootcamp</div>
           <h1>Learn <em>real DevOps</em><br>on real machines.</h1>
           <p class="hero-sub">
             30 hands-on labs. Five phases from Linux baseline to Kubernetes delivery and AI ops.
-            Every lab runs on local VMs — no cloud account, no fake shells.
+            Every lab runs on local VMs - no cloud account, no fake shells.
           </p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="/yeast/bootcamp/curriculum/">View curriculum</a>
@@ -772,7 +783,7 @@
     </div>
   </section>
 
-  <!-- ── Stats ─────────────────────────────────────────────────── -->
+  <!-- -- Stats --------------------------------------------------- -->
   <div class="stats">
     <div class="container">
       <div class="stats-grid">
@@ -796,7 +807,7 @@
     </div>
   </div>
 
-  <!-- ── Phase strip ───────────────────────────────────────────── -->
+  <!-- -- Phase strip --------------------------------------------- -->
   <section class="phases">
     <div class="container">
       <div class="section-eyebrow">Five phases</div>
@@ -810,7 +821,7 @@
         <div class="phase-card">
           <div class="phase-card-num">1</div>
           <span class="phase-card-name">Systems</span>
-          <span class="phase-card-range">Labs 01–05</span>
+          <span class="phase-card-range">Labs 01-05</span>
           <ul class="phase-card-topics">
             <li>Linux server baseline</li>
             <li>Nginx &amp; reverse proxy</li>
@@ -821,7 +832,7 @@
         <div class="phase-card">
           <div class="phase-card-num">2</div>
           <span class="phase-card-name">Automation</span>
-          <span class="phase-card-range">Labs 06–09</span>
+          <span class="phase-card-range">Labs 06-09</span>
           <ul class="phase-card-topics">
             <li>Bash scripting</li>
             <li>Ansible single-VM</li>
@@ -832,7 +843,7 @@
         <div class="phase-card">
           <div class="phase-card-num">3</div>
           <span class="phase-card-name">Containers &amp; Delivery</span>
-          <span class="phase-card-range">Labs 10–16</span>
+          <span class="phase-card-range">Labs 10-16</span>
           <ul class="phase-card-topics">
             <li>Docker &amp; Compose</li>
             <li>Container hardening</li>
@@ -843,7 +854,7 @@
         <div class="phase-card">
           <div class="phase-card-num">4</div>
           <span class="phase-card-name">Operations</span>
-          <span class="phase-card-range">Labs 17–22</span>
+          <span class="phase-card-range">Labs 17-22</span>
           <ul class="phase-card-topics">
             <li>Prometheus &amp; Grafana</li>
             <li>Centralized logging</li>
@@ -854,7 +865,7 @@
         <div class="phase-card">
           <div class="phase-card-num">5</div>
           <span class="phase-card-name">Platform</span>
-          <span class="phase-card-range">Labs 23–30</span>
+          <span class="phase-card-range">Labs 23-30</span>
           <ul class="phase-card-topics">
             <li>Terraform IaC</li>
             <li>GitOps &amp; Argo CD</li>
@@ -866,7 +877,7 @@
     </div>
   </section>
 
-  <!-- ── What you build ─────────────────────────────────────────── -->
+  <!-- -- What you build ------------------------------------------- -->
   <section>
     <div class="container">
       <div class="section-eyebrow">What you build</div>
@@ -896,7 +907,7 @@
     </div>
   </section>
 
-  <!-- ── Course path ────────────────────────────────────────────── -->
+  <!-- -- Course path ---------------------------------------------- -->
   <section class="path">
     <div class="container">
       <div class="section-eyebrow">Course path</div>
@@ -907,7 +918,7 @@
           <div class="path-block-header">
             <span class="path-block-num">1</span>
             <span class="path-block-title">Systems</span>
-            <span class="path-block-range">01–05</span>
+            <span class="path-block-range">01-05</span>
           </div>
           <ul class="path-lab-list">
             <li><a href="/yeast/bootcamp/01-linux-server-baseline/lab/"><span class="lab-n">01</span>Linux Server Baseline</a></li>
@@ -922,7 +933,7 @@
           <div class="path-block-header">
             <span class="path-block-num">2</span>
             <span class="path-block-title">Automation</span>
-            <span class="path-block-range">06–09</span>
+            <span class="path-block-range">06-09</span>
           </div>
           <ul class="path-lab-list">
             <li><a href="/yeast/bootcamp/06-bash-automation-server-setup/lab/"><span class="lab-n">06</span>Bash Automation For Server Setup</a></li>
@@ -936,7 +947,7 @@
           <div class="path-block-header">
             <span class="path-block-num">3</span>
             <span class="path-block-title">Containers &amp; Delivery</span>
-            <span class="path-block-range">10–16</span>
+            <span class="path-block-range">10-16</span>
           </div>
           <ul class="path-lab-list">
             <li><a href="/yeast/bootcamp/10-docker-fundamentals-vm/lab/"><span class="lab-n">10</span>Docker Fundamentals On A VM</a></li>
@@ -953,7 +964,7 @@
           <div class="path-block-header">
             <span class="path-block-num">4</span>
             <span class="path-block-title">Operations</span>
-            <span class="path-block-range">17–22</span>
+            <span class="path-block-range">17-22</span>
           </div>
           <ul class="path-lab-list">
             <li><a href="/yeast/bootcamp/17-prometheus-grafana-monitoring/lab/"><span class="lab-n">17</span>Prometheus And Grafana Monitoring</a></li>
@@ -965,13 +976,13 @@
           </ul>
         </div>
 
-        <div class="path-block" style="grid-column: 1 / -1;">
+        <div class="path-block path-block-wide">
           <div class="path-block-header">
             <span class="path-block-num">5</span>
             <span class="path-block-title">Platform</span>
-            <span class="path-block-range">23–30</span>
+            <span class="path-block-range">23-30</span>
           </div>
-          <ul class="path-lab-list" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 32px;">
+          <ul class="path-lab-list path-lab-list-split">
             <li><a href="/yeast/bootcamp/23-terraform-fundamentals/lab/"><span class="lab-n">23</span>Terraform Fundamentals</a></li>
             <li><a href="/yeast/bootcamp/24-terraform-modules-environments/lab/"><span class="lab-n">24</span>Terraform Modules And Environments</a></li>
             <li><a href="/yeast/bootcamp/25-gitops-argocd-flux/lab/"><span class="lab-n">25</span>GitOps With Argo CD</a></li>
@@ -986,7 +997,7 @@
     </div>
   </section>
 
-  <!-- ── CTA ───────────────────────────────────────────────────── -->
+  <!-- -- CTA ----------------------------------------------------- -->
   <section class="cta-section">
     <div class="container">
       <div class="section-eyebrow">Start now</div>
@@ -1026,7 +1037,7 @@
     if (!reduced && typeof gsap !== "undefined") {
       gsap.registerPlugin(ScrollTrigger);
 
-      /* ── Hero entrance ──────────────────────────────────────── */
+      /* -- Hero entrance ---------------------------------------- */
       const heroTl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
       heroTl
@@ -1042,35 +1053,35 @@
         x: 14, opacity: 0, duration: 0.45, stagger: 0.07, delay: 0.6, ease: "power2.out"
       });
 
-      /* ── Stats count-up ──────────────────────────────────────── */
+      /* -- Stats count-up ---------------------------------------- */
       document.querySelectorAll(".stat-value[data-count]").forEach(el => {
         const target = parseInt(el.dataset.count, 10);
         gsap.from({ v: 0 }, {
           v: target, duration: 1.4, ease: "power2.out",
-          scrollTrigger: { trigger: el, start: "top 88%", once: true },
+          scrollTrigger: { trigger: el, start: "top 72%", once: true },
           onUpdate() { el.textContent = Math.round(this.targets()[0].v); }
         });
       });
 
-      /* ── Phase strip ─────────────────────────────────────────── */
+      /* -- Phase strip ------------------------------------------- */
       gsap.from(".phase-card", {
         y: 28, opacity: 0, duration: 0.55, stagger: 0.09, ease: "power2.out",
         scrollTrigger: { trigger: ".phase-strip", start: "top 84%", once: true }
       });
 
-      /* ── Outcome cards ───────────────────────────────────────── */
+      /* -- Outcome cards ----------------------------------------- */
       gsap.from(".outcome-card", {
         y: 32, opacity: 0, duration: 0.65, stagger: 0.12, ease: "power2.out",
         scrollTrigger: { trigger: ".outcomes-grid", start: "top 82%", once: true }
       });
 
-      /* ── Path blocks ─────────────────────────────────────────── */
+      /* -- Path blocks ------------------------------------------- */
       gsap.from(".path-block", {
         y: 24, opacity: 0, duration: 0.6, stagger: 0.1, ease: "power2.out",
         scrollTrigger: { trigger: ".path-grid", start: "top 84%", once: true }
       });
 
-      /* ── Section headings ────────────────────────────────────── */
+      /* -- Section headings -------------------------------------- */
       document.querySelectorAll(".section-title, .section-eyebrow, .section-body").forEach(el => {
         gsap.from(el, {
           y: 18, opacity: 0, duration: 0.65, ease: "power2.out",
@@ -1078,13 +1089,13 @@
         });
       });
 
-      /* ── CTA ─────────────────────────────────────────────────── */
+      /* -- CTA --------------------------------------------------- */
       gsap.from(".cta-section .btn", {
         y: 18, opacity: 0, duration: 0.6, stagger: 0.1, ease: "power2.out",
         scrollTrigger: { trigger: ".cta-actions", start: "top 88%", once: true }
       });
 
-      /* ── Outcome card hover tilt ─────────────────────────────── */
+      /* -- Outcome card hover tilt ------------------------------- */
       document.querySelectorAll(".outcome-card").forEach(card => {
         card.addEventListener("mousemove", e => {
           const r = card.getBoundingClientRect();

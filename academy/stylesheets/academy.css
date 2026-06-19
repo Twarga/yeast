@@ -1,4 +1,4 @@
-/* ─── Design tokens ──────────────────────────────────────────────────────── */
+/* --- Design tokens -------------------------------------------------------- */
 :root {
   --yeast-bg-deep:         #0a0e0c;
   --yeast-bg-card:         #111815;
@@ -17,7 +17,7 @@
   --md-accent-fg-color:        var(--yeast-accent);
 }
 
-/* ─── MkDocs Material dark overrides ─────────────────────────────────────── */
+/* --- MkDocs Material dark overrides --------------------------------------- */
 .md-header {
   background: rgba(10, 14, 12, 0.92);
   color: var(--yeast-text-primary);
@@ -73,10 +73,10 @@
 .md-typeset h2,
 .md-typeset h3 {
   color: var(--yeast-text-primary);
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
-/* ─── Chrome hiding: make every academy page feel like a standalone shell ─ */
+/* --- Chrome hiding: make every academy page feel like a standalone shell - */
 .md-sidebar--primary,
 .md-sidebar--secondary,
 .md-header__button[for="__drawer"],
@@ -128,7 +128,7 @@
   justify-content: center;
 }
 
-/* ─── Full-page shell ────────────────────────────────────────────────────── */
+/* --- Full-page shell ------------------------------------------------------ */
 .academy-shell {
   margin: 0;
   width: 100%;
@@ -146,7 +146,7 @@
   margin: 0 auto;
 }
 
-/* ─── Hero ───────────────────────────────────────────────────────────────── */
+/* --- Hero ----------------------------------------------------------------- */
 .academy-hero {
   margin: 0 0 2rem;
   padding: 1.5rem 1.5rem 1.25rem;
@@ -176,7 +176,7 @@
   color: var(--yeast-text-primary);
   font-size: clamp(2.3rem, 5vw, 4.1rem);
   line-height: 1.02;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 .academy-hero--intro p {
@@ -204,7 +204,7 @@
   line-height: 1.65;
 }
 
-/* ─── Page hero (inner pages) ────────────────────────────────────────────── */
+/* --- Page hero (inner pages) ---------------------------------------------- */
 .academy-page-hero {
   margin: 0 0 2rem;
   padding: 2rem 2rem 1.75rem;
@@ -220,7 +220,7 @@
   color: var(--yeast-text-primary);
   font-size: clamp(1.8rem, 4vw, 2.8rem);
   line-height: 1.06;
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
 }
 
 .academy-page-hero p {
@@ -231,7 +231,7 @@
   max-width: 56rem;
 }
 
-/* ─── Labels, eyebrows ───────────────────────────────────────────────────── */
+/* --- Labels, eyebrows ----------------------------------------------------- */
 .academy-hero__eyebrow,
 .academy-section-label {
   display: inline-flex;
@@ -245,7 +245,7 @@
   text-transform: uppercase;
 }
 
-/* ─── CTAs ───────────────────────────────────────────────────────────────── */
+/* --- CTAs ----------------------------------------------------------------- */
 .academy-actions {
   display: flex;
   flex-wrap: wrap;
@@ -282,7 +282,7 @@
   background: rgba(10, 14, 12, 0.74);
 }
 
-/* ─── Meta badges ────────────────────────────────────────────────────────── */
+/* --- Meta badges ---------------------------------------------------------- */
 .academy-meta {
   display: flex;
   flex-wrap: wrap;
@@ -302,7 +302,7 @@
   font-size: 0.92rem;
 }
 
-/* ─── Course map route ───────────────────────────────────────────────────── */
+/* --- Course map route ----------------------------------------------------- */
 .academy-route {
   display: grid;
   gap: 0.55rem;
@@ -346,7 +346,7 @@
   line-height: 1.45;
 }
 
-/* ─── Sections ───────────────────────────────────────────────────────────── */
+/* --- Sections ------------------------------------------------------------- */
 .academy-section {
   margin-top: 2rem;
 }
@@ -356,7 +356,7 @@
   color: var(--yeast-text-primary);
   font-size: 1.7rem;
   line-height: 1.15;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .academy-section p {
@@ -365,7 +365,7 @@
   line-height: 1.65;
 }
 
-/* ─── Grid layouts ───────────────────────────────────────────────────────── */
+/* --- Grid layouts --------------------------------------------------------- */
 .academy-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -381,7 +381,7 @@
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
-/* ─── Cards ──────────────────────────────────────────────────────────────── */
+/* --- Cards ---------------------------------------------------------------- */
 .academy-card {
   padding: 1.25rem 1.25rem 1rem;
   border: 1px solid var(--yeast-border);
@@ -435,7 +435,7 @@
   transform: translateY(-2px);
 }
 
-/* ─── Module number badge ────────────────────────────────────────────────── */
+/* --- Module number badge -------------------------------------------------- */
 .academy-module-badge {
   display: inline-flex;
   align-items: center;
@@ -458,7 +458,7 @@
   font-size: 1.05rem;
   font-weight: 700;
   line-height: 1.25;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .academy-module-range {
@@ -492,14 +492,14 @@
 }
 
 .academy-module-topics li::before {
-  content: "–";
+  content: "-";
   position: absolute;
   left: 0;
   color: var(--yeast-accent);
   opacity: 0.6;
 }
 
-/* ─── Phase header ───────────────────────────────────────────────────────── */
+/* --- Phase header --------------------------------------------------------- */
 .academy-phase-header {
   display: flex;
   align-items: center;
@@ -533,7 +533,7 @@
   color: var(--yeast-text-primary);
   font-size: 1.1rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .academy-phase-header span {
@@ -541,7 +541,7 @@
   font-size: 0.9rem;
 }
 
-/* ─── Lab grid (labs index) ──────────────────────────────────────────────── */
+/* --- Lab grid (labs index) ------------------------------------------------ */
 .academy-lab-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -583,7 +583,7 @@
   line-height: 1.35;
 }
 
-/* ─── Pill list ──────────────────────────────────────────────────────────── */
+/* --- Pill list ------------------------------------------------------------ */
 .academy-pill-list {
   display: flex;
   flex-wrap: wrap;
@@ -602,7 +602,7 @@
   font-size: 0.9rem;
 }
 
-/* ─── Link grid ──────────────────────────────────────────────────────────── */
+/* --- Link grid ------------------------------------------------------------ */
 .academy-link-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -633,7 +633,7 @@
     rgba(34, 197, 94, 0.05);
 }
 
-/* ─── Table ──────────────────────────────────────────────────────────────── */
+/* --- Table ---------------------------------------------------------------- */
 .academy-table {
   width: 100%;
   border-collapse: collapse;
@@ -686,7 +686,7 @@
   background: rgba(34, 197, 94, 0.04);
 }
 
-/* ─── Contract / support page ────────────────────────────────────────────── */
+/* --- Contract / support page ---------------------------------------------- */
 .academy-rule-list {
   margin: 1rem 0 0;
   padding: 0;
@@ -710,13 +710,13 @@
 }
 
 .academy-rule-list li::before {
-  content: "—";
+  content: "-";
   color: var(--yeast-accent);
   flex-shrink: 0;
   font-weight: 700;
 }
 
-/* ─── Breadcrumb / back link ─────────────────────────────────────────────── */
+/* --- Breadcrumb / back link ----------------------------------------------- */
 .academy-back {
   display: inline-flex;
   align-items: center;
@@ -734,10 +734,10 @@
 }
 
 .academy-back::before {
-  content: "←";
+  content: "<";
 }
 
-/* ─── Responsive ─────────────────────────────────────────────────────────── */
+/* --- Responsive ----------------------------------------------------------- */
 @media screen and (max-width: 960px) {
   .academy-shell__inner {
     width: min(1120px, calc(100% - 32px));
