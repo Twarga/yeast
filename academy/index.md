@@ -7,6 +7,7 @@ hide:
   <div class="academy-shell__inner">
     <div class="academy-hero academy-hero--intro">
       <div class="academy-hero__copy">
+        <img class="academy-brand-lockup" src="assets/twarga-academy-logo.png" alt="Twarga Academy">
         <div class="academy-hero__eyebrow">Twarga Academy · Free course</div>
         <h1>Learn DevOps with Yeast.</h1>
         <p>
