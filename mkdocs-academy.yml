@@ -21,7 +21,6 @@ theme:
       accent: green
 
 extra_css:
-  - ../docs/stylesheets/extra.css
   - stylesheets/academy.css
 
 markdown_extensions:
