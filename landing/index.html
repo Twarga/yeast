@@ -239,7 +239,7 @@
     }
 
     .hero-grid > * {
-      opacity: 0;
+      opacity: 1;
     }
 
     .eyebrow {
@@ -416,7 +416,6 @@
     }
 
     .terminal-line {
-      opacity: 0;
       white-space: nowrap;
     }
 
@@ -1072,115 +1071,74 @@
       .catch(() => {});
 
     /* ── Animations ───────────────────────────────────────────── */
-    if (prefersReducedMotion) {
-      document.querySelectorAll(".hero-grid > *, .terminal-line, .proof-item, .section-head, .step, .feature, .cta .container")
-        .forEach(el => { el.style.opacity = 1; el.style.transform = "none"; });
-    } else {
+    if (!prefersReducedMotion && typeof gsap !== "undefined") {
       gsap.registerPlugin(ScrollTrigger);
 
-      /* Hero entrance — left column words, then terminal */
-      const heroLeft = document.querySelector(".hero-grid > :first-child");
-      const heroRight = document.querySelector(".terminal");
-
-      /* Split h1 into word spans for staggered word reveal */
-      const h1 = document.querySelector("h1");
-      if (h1) {
-        h1.innerHTML = h1.innerHTML
-          .replace(/<span>(.*?)<\/span>/g, (_, inner) =>
-            inner.split(/(\s+)/).map(w =>
-              w.trim() ? `<span class="hw" style="display:inline-block"><span style="color:#22c55e">${w}</span></span>` : w
-            ).join("")
-          )
-          .replace(/(?<![>])(\b(?!<)[\w''.,!?-]+\b)/g, (w) =>
-            `<span class="hw" style="display:inline-block">${w}</span>`
-          );
-
-        gsap.from(".hw", {
-          y: 36, opacity: 0, rotationX: -22,
-          duration: 0.65, stagger: 0.055,
-          ease: "power3.out", delay: 0.18,
-          transformPerspective: 600
-        });
-      }
-
-      /* Hero subtext + buttons + install */
-      gsap.from([
-        heroLeft && heroLeft.querySelector(".hero-copy"),
-        heroLeft && heroLeft.querySelector(".hero-actions"),
-        heroLeft && heroLeft.querySelector(".install-command")
-      ].filter(Boolean), {
-        y: 22, opacity: 0,
-        duration: 0.7, stagger: 0.12,
-        ease: "power2.out", delay: 0.7
-      });
-
-      /* Terminal box */
-      gsap.from(heroRight, {
-        x: 30, opacity: 0,
-        duration: 0.8, ease: "power3.out", delay: 0.28
-      });
-
-      /* Terminal lines — typewriter stagger */
-      const termLines = document.querySelectorAll(".terminal-line");
-      termLines.forEach((line, i) => {
-        gsap.fromTo(line,
-          { opacity: 0, x: -10 },
-          { opacity: 1, x: 0, duration: 0.32, ease: "power2.out", delay: 0.7 + i * 0.34 }
-        );
-      });
-
-      /* Proof grid — stagger slide up */
-      gsap.from(".proof-item", {
+      /* Hero — eyebrow, h1, copy, actions, install stagger in */
+      gsap.from([".eyebrow", "h1", ".hero-copy", ".hero-actions", ".install-command"], {
         y: 24, opacity: 0,
-        duration: 0.55, stagger: 0.07, ease: "power2.out",
+        duration: 0.7, stagger: 0.1,
+        ease: "power3.out", delay: 0.1
+      });
+
+      /* Terminal slides in from right */
+      gsap.from(".terminal", {
+        x: 30, opacity: 0,
+        duration: 0.85, ease: "power3.out", delay: 0.2
+      });
+
+      /* Terminal lines typewriter */
+      document.querySelectorAll(".terminal-line").forEach((line, i) => {
+        gsap.from(line, {
+          opacity: 0, x: -8,
+          duration: 0.28, ease: "power2.out",
+          delay: 0.6 + i * 0.32
+        });
+      });
+
+      /* Proof grid */
+      gsap.from(".proof-item", {
+        y: 20, opacity: 0, duration: 0.5, stagger: 0.07, ease: "power2.out",
         scrollTrigger: { trigger: ".proof-grid", start: "top 88%", once: true }
       });
 
       /* Section headings */
       document.querySelectorAll(".section-head").forEach(el => {
         gsap.from(el, {
-          y: 22, opacity: 0, duration: 0.7, ease: "power2.out",
-          scrollTrigger: { trigger: el, start: "top 85%", once: true }
+          y: 18, opacity: 0, duration: 0.65, ease: "power2.out",
+          scrollTrigger: { trigger: el, start: "top 86%", once: true }
         });
       });
 
-      /* Steps — cascade left to right */
+      /* Steps */
       gsap.from(".step", {
-        y: 30, opacity: 0,
-        duration: 0.6, stagger: 0.1, ease: "power2.out",
+        y: 26, opacity: 0, duration: 0.6, stagger: 0.1, ease: "power2.out",
         scrollTrigger: { trigger: ".steps", start: "top 82%", once: true }
       });
 
-      /* Feature cards — stagger + 3D tilt hover */
+      /* Feature cards */
       gsap.from(".feature", {
-        y: 28, opacity: 0,
-        duration: 0.6, stagger: 0.075, ease: "power2.out",
+        y: 24, opacity: 0, duration: 0.55, stagger: 0.075, ease: "power2.out",
         scrollTrigger: { trigger: ".feature-grid", start: "top 82%", once: true }
       });
 
+      /* Feature card 3D tilt on hover */
       document.querySelectorAll(".feature").forEach(card => {
         card.addEventListener("mousemove", e => {
           const r = card.getBoundingClientRect();
           const x = (e.clientX - r.left) / r.width  - 0.5;
           const y = (e.clientY - r.top)  / r.height - 0.5;
-          gsap.to(card, {
-            rotationY: x * 10, rotationX: -y * 10,
-            transformPerspective: 700,
-            duration: 0.25, ease: "power2.out"
-          });
+          gsap.to(card, { rotationY: x * 10, rotationX: -y * 10, transformPerspective: 700, duration: 0.25, ease: "power2.out" });
         });
         card.addEventListener("mouseleave", () => {
-          gsap.to(card, {
-            rotationY: 0, rotationX: 0,
-            duration: 0.45, ease: "power2.out"
-          });
+          gsap.to(card, { rotationY: 0, rotationX: 0, duration: 0.45, ease: "power2.out" });
         });
       });
 
       /* CTA */
       gsap.from(".cta .container", {
-        y: 22, opacity: 0, duration: 0.7, ease: "power2.out",
-        scrollTrigger: { trigger: ".cta", start: "top 85%", once: true }
+        y: 18, opacity: 0, duration: 0.65, ease: "power2.out",
+        scrollTrigger: { trigger: ".cta", start: "top 86%", once: true }
       });
     }
   </script>
