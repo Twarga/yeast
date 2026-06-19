@@ -448,6 +448,7 @@
     .proof-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
+      align-items: stretch;
       gap: 1px;
       border: 1px solid var(--line);
       background: var(--line);
@@ -456,6 +457,10 @@
     }
 
     .proof-item {
+      min-height: 96px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       background: rgba(13, 21, 17, 0.92);
       padding: 20px;
       transition: background 180ms ease, transform 180ms ease;
@@ -1097,8 +1102,8 @@
       });
 
       /* Proof grid */
-      gsap.from(".proof-item", {
-        y: 20, opacity: 0, duration: 0.5, stagger: 0.07, ease: "power2.out",
+      gsap.from(".proof-grid", {
+        y: 14, opacity: 0, duration: 0.55, ease: "power2.out",
         scrollTrigger: { trigger: ".proof-grid", start: "top 88%", once: true }
       });
 
