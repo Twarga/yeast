@@ -6,7 +6,7 @@ hide:
 <div class="academy-shell">
   <div class="academy-shell__inner">
 
-    <a class="academy-back" href="../index.md">Academy home</a>
+    <a class="academy-back" href="../">Academy home</a>
 
     <div class="academy-page-hero">
       <div class="academy-section-label">Twarga Academy · Modules</div>
@@ -33,7 +33,7 @@ hide:
             <li>Linux troubleshooting drill</li>
           </ul>
           <div class="academy-actions" style="margin-top:auto;padding-top:1rem">
-            <a class="academy-button academy-button--secondary" href="../01-linux-server-baseline/lab.md">Start lab 01</a>
+            <a class="academy-button academy-button--secondary" href="../01-linux-server-baseline/lab/">Start lab 01</a>
           </div>
         </div>
 
@@ -48,7 +48,7 @@ hide:
             <li>Secrets and configuration management</li>
           </ul>
           <div class="academy-actions" style="margin-top:auto;padding-top:1rem">
-            <a class="academy-button academy-button--secondary" href="../06-bash-automation-server-setup/lab.md">Start lab 06</a>
+            <a class="academy-button academy-button--secondary" href="../06-bash-automation-server-setup/lab/">Start lab 06</a>
           </div>
         </div>
 
@@ -66,7 +66,7 @@ hide:
             <li>Progressive delivery and rollback</li>
           </ul>
           <div class="academy-actions" style="margin-top:auto;padding-top:1rem">
-            <a class="academy-button academy-button--secondary" href="../10-docker-fundamentals-vm/lab.md">Start lab 10</a>
+            <a class="academy-button academy-button--secondary" href="../10-docker-fundamentals-vm/lab/">Start lab 10</a>
           </div>
         </div>
 
@@ -83,7 +83,7 @@ hide:
             <li>Chaos and failure recovery drill</li>
           </ul>
           <div class="academy-actions" style="margin-top:auto;padding-top:1rem">
-            <a class="academy-button academy-button--secondary" href="../17-prometheus-grafana-monitoring/lab.md">Start lab 17</a>
+            <a class="academy-button academy-button--secondary" href="../17-prometheus-grafana-monitoring/lab/">Start lab 17</a>
           </div>
         </div>
 
@@ -102,7 +102,7 @@ hide:
             <li>AI-assisted DevOps and local LLM ops</li>
           </ul>
           <div class="academy-actions" style="margin-top:auto;padding-top:1rem">
-            <a class="academy-button academy-button--secondary" href="../23-terraform-fundamentals/lab.md">Start lab 23</a>
+            <a class="academy-button academy-button--secondary" href="../23-terraform-fundamentals/lab/">Start lab 23</a>
           </div>
         </div>
 
@@ -112,9 +112,9 @@ hide:
     <div class="academy-section">
       <div class="academy-section-label">Where to go next</div>
       <div class="academy-link-grid academy-link-grid--emphasis">
-        <a href="../curriculum/index.md"><strong>Curriculum</strong><br><span style="color:var(--yeast-text-secondary);font-weight:400">See every lab in one table.</span></a>
-        <a href="../labs/index.md"><strong>Labs</strong><br><span style="color:var(--yeast-text-secondary);font-weight:400">Jump straight to the hands-on set.</span></a>
-        <a href="../support/index.md"><strong>Source contract</strong><br><span style="color:var(--yeast-text-secondary);font-weight:400">Read the course rules.</span></a>
+        <a href="../curriculum/"><strong>Curriculum</strong><br><span style="color:var(--yeast-text-secondary);font-weight:400">See every lab in one table.</span></a>
+        <a href="../labs/"><strong>Labs</strong><br><span style="color:var(--yeast-text-secondary);font-weight:400">Jump straight to the hands-on set.</span></a>
+        <a href="../support/"><strong>Source contract</strong><br><span style="color:var(--yeast-text-secondary);font-weight:400">Read the course rules.</span></a>
       </div>
     </div>
 

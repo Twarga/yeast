@@ -15,8 +15,8 @@ hide:
           the Yeast product docs.
         </p>
         <div class="academy-actions">
-          <a class="academy-button academy-button--primary" href="curriculum/index.md">Start curriculum</a>
-          <a class="academy-button academy-button--secondary" href="labs/index.md">Open first lab</a>
+          <a class="academy-button academy-button--primary" href="curriculum/">Start curriculum</a>
+          <a class="academy-button academy-button--secondary" href="01-linux-server-baseline/lab/">Open first lab</a>
         </div>
         <div class="academy-meta">
           <span>30 labs</span>
@@ -64,10 +64,10 @@ hide:
       <h2>Follow the course in order.</h2>
       <p>Open the curriculum first, then move into the labs and source contract when you want the hands-on flow.</p>
       <div class="academy-link-grid academy-link-grid--emphasis">
-        <a href="curriculum/index.md"><strong>Curriculum</strong><br>See the full 30-lab map.</a>
-        <a href="modules/index.md"><strong>Modules</strong><br>Read the course in themed blocks.</a>
-        <a href="labs/index.md"><strong>Labs</strong><br>Open the mirrored lab set.</a>
-        <a href="support/index.md"><strong>Source contract</strong><br>Read the course rules and source docs.</a>
+        <a href="curriculum/"><strong>Curriculum</strong><br>See the full 30-lab map.</a>
+        <a href="modules/"><strong>Modules</strong><br>Read the course in themed blocks.</a>
+        <a href="labs/"><strong>Labs</strong><br>Open the mirrored lab set.</a>
+        <a href="support/"><strong>Source contract</strong><br>Read the course rules and source docs.</a>
       </div>
     </div>
   </div>

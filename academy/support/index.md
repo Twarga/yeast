@@ -6,7 +6,7 @@ hide:
 <div class="academy-shell">
   <div class="academy-shell__inner">
 
-    <a class="academy-back" href="../index.md">Academy home</a>
+    <a class="academy-back" href="../">Academy home</a>
 
     <div class="academy-page-hero">
       <div class="academy-section-label">Twarga Academy · Source Contract</div>
@@ -33,23 +33,23 @@ hide:
     <div class="academy-section">
       <div class="academy-section-label">Source documents</div>
       <div class="academy-link-grid">
-        <a href="../CURRICULUM.md">
+        <a href="../CURRICULUM/">
           <strong>CURRICULUM.md</strong><br>
           <span style="color:var(--yeast-text-secondary);font-weight:400;font-size:0.9rem">The authoritative 30-lab course outline and lab structure rules.</span>
         </a>
-        <a href="../ACCESS.md">
+        <a href="../ACCESS/">
           <strong>ACCESS.md</strong><br>
           <span style="color:var(--yeast-text-secondary);font-weight:400;font-size:0.9rem">Browser and service exposure rules — how to reach guest services from the laptop.</span>
         </a>
-        <a href="../SUPPORTED_YEAST_V1_1.md">
+        <a href="../SUPPORTED_YEAST_V1_1/">
           <strong>SUPPORTED_YEAST_V1_1.md</strong><br>
           <span style="color:var(--yeast-text-secondary);font-weight:400;font-size:0.9rem">The exact Yeast v1.1 surface the course is allowed to use.</span>
         </a>
-        <a href="../HARDENING_PLAN.md">
+        <a href="../HARDENING_PLAN/">
           <strong>HARDENING_PLAN.md</strong><br>
           <span style="color:var(--yeast-text-secondary);font-weight:400;font-size:0.9rem">Known gaps and the plan for closing them before public launch.</span>
         </a>
-        <a href="../PROGRESS.md">
+        <a href="../PROGRESS/">
           <strong>PROGRESS.md</strong><br>
           <span style="color:var(--yeast-text-secondary);font-weight:400;font-size:0.9rem">Lab completion status and current progress through the 30-lab set.</span>
         </a>
@@ -77,9 +77,9 @@ hide:
     <div class="academy-section">
       <div class="academy-section-label">Continue the course</div>
       <div class="academy-link-grid academy-link-grid--emphasis">
-        <a href="../curriculum/index.md"><strong>Curriculum</strong><br><span style="color:var(--yeast-text-secondary);font-weight:400">Full 30-lab map with phase overview.</span></a>
-        <a href="../modules/index.md"><strong>Modules</strong><br><span style="color:var(--yeast-text-secondary);font-weight:400">Browse the course in five themed blocks.</span></a>
-        <a href="../labs/index.md"><strong>Labs</strong><br><span style="color:var(--yeast-text-secondary);font-weight:400">Open the hands-on lab set.</span></a>
+        <a href="../curriculum/"><strong>Curriculum</strong><br><span style="color:var(--yeast-text-secondary);font-weight:400">Full 30-lab map with phase overview.</span></a>
+        <a href="../modules/"><strong>Modules</strong><br><span style="color:var(--yeast-text-secondary);font-weight:400">Browse the course in five themed blocks.</span></a>
+        <a href="../labs/"><strong>Labs</strong><br><span style="color:var(--yeast-text-secondary);font-weight:400">Open the hands-on lab set.</span></a>
       </div>
     </div>
 
