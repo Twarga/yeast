@@ -78,12 +78,6 @@ func newHumanTheme(w io.Writer) humanTheme {
 	}
 }
 
-// terminalStylingEnabled delegates to ui.StylingEnabled. Kept for use by
-// progress.go which imports this package.
-func terminalStylingEnabled(w io.Writer) bool {
-	return ui.StylingEnabled(w)
-}
-
 func renderInit(w io.Writer, theme humanTheme, value app.InitResult) error {
 	lines := []string{
 		theme.Success.Render("✓") + " " + theme.Header.Render("Project initialized"),
