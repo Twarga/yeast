@@ -1,0 +1,42 @@
+site_name: Twarga Academy
+site_description: Free DevOps bootcamp with Yeast
+site_url: https://twarga.github.io/yeast/bootcamp/
+repo_url: https://github.com/Twarga/yeast
+repo_name: Twarga/yeast
+docs_dir: academy
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: green
+      accent: green
+
+extra_css:
+  - ../docs/stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+
+nav:
+  - Home: index.md
+  - Curriculum: curriculum/index.md
+  - Modules: modules/index.md
+  - Labs: labs/index.md
+  - Source Contract: support/index.md
