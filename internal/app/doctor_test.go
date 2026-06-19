@@ -14,9 +14,13 @@ import (
 func TestDoctorReportsHealthyHost(t *testing.T) {
 	previousLookPath := lookPath
 	previousStatPath := statPath
+	previousDetectHostEnvironment := detectHostEnvironment
+	previousRunHostChecks := runHostChecks
 	defer func() {
 		lookPath = previousLookPath
 		statPath = previousStatPath
+		detectHostEnvironment = previousDetectHostEnvironment
+		runHostChecks = previousRunHostChecks
 	}()
 
 	lookPath = func(file string) (string, error) {
@@ -30,6 +34,23 @@ func TestDoctorReportsHealthyHost(t *testing.T) {
 			return fakeFileInfo{name: "images", mode: os.ModeDir}, nil
 		}
 		return nil, os.ErrNotExist
+	}
+	detectHostEnvironment = func() host.Environment {
+		return host.Environment{
+			Type:        host.EnvironmentNativeLinux,
+			Arch:        host.ArchAMD64,
+			SupportTier: host.SupportTierA,
+			Distro:      host.Distro{Family: host.FamilyDebian},
+		}
+	}
+	runHostChecks = func(env host.Environment, lookPath func(string) (string, error), statPath func(string) (os.FileInfo, error)) []host.CheckResult {
+		return []host.CheckResult{
+			{Name: host.DepQEMUSystem, Severity: host.SeverityOK, Detail: "/usr/bin/qemu-system-x86_64"},
+			{Name: host.DepQEMUImg, Severity: host.SeverityOK, Detail: "/usr/bin/qemu-img"},
+			{Name: host.DepISOBuilder, Severity: host.SeverityOK, Detail: "xorriso at /usr/bin/xorriso"},
+			{Name: host.DepSSH, Severity: host.SeverityOK, Detail: "/usr/bin/ssh"},
+			{Name: host.DepKVM, Severity: host.SeverityOK, Detail: "present and accessible"},
+		}
 	}
 
 	service := NewService()
