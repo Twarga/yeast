@@ -9,9 +9,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script>
-    document.documentElement.classList.add("js");
-  </script>
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -19,20 +16,17 @@
 
     :root {
       --bg: #050806;
-      --bg-soft: #080d0a;
-      --panel: rgba(12, 18, 14, 0.78);
-      --panel-solid: #0d1510;
-      --panel-raised: #111b15;
-      --line: rgba(181, 210, 194, 0.12);
+      --panel: #09100c;
+      --panel-2: #0c1510;
+      --panel-3: #101b15;
+      --line: rgba(214, 246, 226, 0.11);
       --line-strong: rgba(74, 222, 128, 0.32);
       --green: #22c55e;
       --green-bright: #4ade80;
-      --green-soft: rgba(34, 197, 94, 0.13);
-      --green-faint: rgba(34, 197, 94, 0.055);
-      --text: #f4fff8;
-      --muted: #b7cdbf;
-      --dim: #718878;
-      --shadow: rgba(0, 0, 0, 0.42);
+      --green-soft: rgba(34, 197, 94, 0.12);
+      --text: #f5fff8;
+      --muted: #b8cebf;
+      --dim: #6f8575;
       --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       --sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
@@ -44,13 +38,13 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background:
-        linear-gradient(180deg, rgba(34, 197, 94, 0.065), transparent 420px),
-        linear-gradient(rgba(244, 255, 248, 0.024) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(244, 255, 248, 0.024) 1px, transparent 1px),
-        var(--bg);
-      background-size: auto, 76px 76px, 76px 76px, auto;
       color: var(--text);
+      background:
+        linear-gradient(180deg, rgba(34, 197, 94, 0.1), transparent 320px),
+        linear-gradient(rgba(245, 255, 248, 0.026) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245, 255, 248, 0.026) 1px, transparent 1px),
+        var(--bg);
+      background-size: auto, 72px 72px, 72px 72px, auto;
       font-family: var(--sans);
       line-height: 1.55;
       letter-spacing: 0;
@@ -65,9 +59,10 @@
       z-index: -1;
       pointer-events: none;
       background:
-        radial-gradient(circle at 50% 0%, rgba(74, 222, 128, 0.14), transparent 34%),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03), transparent 28%, transparent 72%, rgba(255, 255, 255, 0.025));
-      opacity: 0.86;
+        radial-gradient(circle at 50% -10%, rgba(74, 222, 128, 0.18), transparent 36%),
+        radial-gradient(circle at 50% 24%, rgba(255, 255, 255, 0.055), transparent 28%),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04), transparent 28%, transparent 72%, rgba(255, 255, 255, 0.035));
+      opacity: 0.9;
     }
 
     a {
@@ -79,7 +74,7 @@
     }
 
     .container {
-      width: min(1160px, calc(100% - 48px));
+      width: min(1120px, calc(100% - 44px));
       margin: 0 auto;
     }
 
@@ -89,11 +84,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 14px;
-      min-height: 42px;
-      padding: 8px 52px 8px 16px;
+      gap: 12px;
+      min-height: 40px;
+      padding: 8px 48px 8px 16px;
       border-bottom: 1px solid var(--line);
-      background: rgba(5, 8, 6, 0.94);
+      background: rgba(5, 8, 6, 0.92);
       color: var(--muted);
       font-size: 14px;
       text-align: center;
@@ -107,42 +102,34 @@
     .announce-cta {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 5px 12px;
-      border: 1px solid rgba(74, 222, 128, 0.28);
+      min-height: 28px;
+      padding: 0 12px;
+      border: 1px solid rgba(74, 222, 128, 0.25);
       border-radius: 999px;
-      background: rgba(34, 197, 94, 0.09);
+      background: rgba(34, 197, 94, 0.08);
       color: var(--green-bright);
       font-size: 13px;
       font-weight: 700;
       text-decoration: none;
       white-space: nowrap;
-      transition: border-color 180ms ease, background 180ms ease, color 180ms ease;
-    }
-
-    .announce-cta:hover {
-      border-color: rgba(74, 222, 128, 0.52);
-      background: rgba(34, 197, 94, 0.16);
-      color: var(--text);
     }
 
     .announce-bar__close {
       position: absolute;
       top: 50%;
       right: 10px;
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       border: 0;
       border-radius: 999px;
       background: transparent;
       color: var(--dim);
       cursor: pointer;
       transform: translateY(-50%);
-      transition: background 180ms ease, color 180ms ease;
     }
 
     .announce-bar__close:hover {
-      background: rgba(255, 255, 255, 0.055);
+      background: rgba(255, 255, 255, 0.06);
       color: var(--text);
     }
 
@@ -155,16 +142,16 @@
       top: 0;
       z-index: 20;
       border-bottom: 1px solid var(--line);
-      background: rgba(5, 8, 6, 0.82);
+      background: rgba(5, 8, 6, 0.78);
       backdrop-filter: blur(18px);
     }
 
     .nav-inner {
-      min-height: 70px;
+      min-height: 68px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 28px;
+      gap: 24px;
     }
 
     .brand {
@@ -183,9 +170,9 @@
       place-items: center;
       width: 34px;
       height: 34px;
-      border: 1px solid rgba(74, 222, 128, 0.22);
+      border: 1px solid rgba(74, 222, 128, 0.26);
       border-radius: 10px;
-      background: rgba(34, 197, 94, 0.07);
+      background: rgba(34, 197, 94, 0.08);
       box-shadow: inset 0 0 18px rgba(34, 197, 94, 0.08);
     }
 
@@ -221,7 +208,7 @@
       padding: 0 12px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.025);
+      background: rgba(255, 255, 255, 0.028);
       color: var(--text);
       font-family: var(--mono);
       font-size: 12px;
@@ -254,8 +241,9 @@
     .hero {
       position: relative;
       overflow: hidden;
-      padding: 94px 0 8px;
+      padding: 82px 0 0;
       border-bottom: 1px solid var(--line);
+      text-align: center;
     }
 
     .hero::after {
@@ -265,25 +253,19 @@
       right: 0;
       bottom: 0;
       height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(74, 222, 128, 0.44), transparent);
+      background: linear-gradient(90deg, transparent, rgba(74, 222, 128, 0.42), transparent);
     }
 
-    .hero-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 0.98fr) minmax(380px, 0.82fr);
-      gap: 58px;
-      align-items: center;
-    }
-
-    .hero-grid > * {
-      min-width: 0;
-    }
-
-    .eyebrow {
+    .hero-lockup {
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 18px;
+      min-height: 34px;
+      margin-bottom: 24px;
+      padding: 0 13px;
+      border: 1px solid rgba(74, 222, 128, 0.22);
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.075);
       color: var(--green-bright);
       font-family: var(--mono);
       font-size: 12px;
@@ -292,30 +274,30 @@
       letter-spacing: 0.08em;
     }
 
-    .eyebrow::before {
+    .hero-lockup::before {
       content: "";
       width: 7px;
       height: 7px;
       border-radius: 999px;
       background: var(--green-bright);
-      box-shadow: 0 0 20px rgba(74, 222, 128, 0.58);
+      box-shadow: 0 0 18px rgba(74, 222, 128, 0.68);
     }
 
     h1 {
-      margin: 0;
-      max-width: 760px;
+      margin: 0 auto;
+      max-width: 960px;
       color: var(--text);
-      font-size: clamp(52px, 7vw, 92px);
-      line-height: 1.04;
+      font-size: clamp(82px, 15vw, 190px);
+      line-height: 0.88;
       font-weight: 700;
       letter-spacing: 0;
     }
 
     .hero-copy {
-      margin: 24px 0 0;
-      max-width: 640px;
+      margin: 28px auto 0;
+      max-width: 700px;
       color: var(--muted);
-      font-size: 20px;
+      font-size: 21px;
       line-height: 1.7;
     }
 
@@ -327,6 +309,7 @@
     .hero-actions {
       display: flex;
       align-items: center;
+      justify-content: center;
       flex-wrap: wrap;
       gap: 12px;
       margin-top: 30px;
@@ -349,26 +332,136 @@
       border-color: var(--green);
       background: var(--green);
       color: #041008;
-      box-shadow: 0 14px 42px rgba(34, 197, 94, 0.2);
+      box-shadow: 0 16px 44px rgba(34, 197, 94, 0.22);
     }
 
     .button.secondary {
-      background: rgba(255, 255, 255, 0.035);
+      background: rgba(255, 255, 255, 0.032);
       color: var(--text);
     }
 
     .button:hover {
       transform: translateY(-2px);
-      border-color: rgba(74, 222, 128, 0.52);
+      border-color: rgba(74, 222, 128, 0.55);
+    }
+
+    .command-stage {
+      position: relative;
+      width: min(980px, 100%);
+      margin: 54px auto 0;
+      padding: 1px;
+      border-radius: 8px 8px 0 0;
+      background: linear-gradient(180deg, rgba(74, 222, 128, 0.42), rgba(245, 255, 248, 0.09));
+      box-shadow: 0 32px 110px rgba(0, 0, 0, 0.5);
+      text-align: left;
+    }
+
+    .command-stage-inner {
+      border-radius: 7px 7px 0 0;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.052), transparent 46%),
+        rgba(4, 8, 5, 0.94);
+      overflow: hidden;
+    }
+
+    .command-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--line);
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .command-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--green-bright);
+      font-weight: 700;
+    }
+
+    .command-status::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--green-bright);
+      box-shadow: 0 0 18px rgba(74, 222, 128, 0.66);
+    }
+
+    .command-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .terminal {
+      min-width: 0;
+      padding: 26px;
+      border-right: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.85;
+      overflow-x: auto;
+    }
+
+    .terminal-line {
+      white-space: nowrap;
+    }
+
+    .terminal-line.output {
+      color: #92aa99;
+    }
+
+    .terminal-line.success {
+      color: var(--green-bright);
+      font-weight: 700;
+    }
+
+    .prompt {
+      color: var(--green-bright);
+      font-weight: 700;
+      margin-right: 10px;
+    }
+
+    .install-panel {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 26px;
+      background:
+        linear-gradient(rgba(245, 255, 248, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245, 255, 248, 0.03) 1px, transparent 1px),
+        rgba(255, 255, 255, 0.018);
+      background-size: 36px 36px;
+    }
+
+    .install-panel h2 {
+      margin: 0;
+      color: var(--text);
+      font-size: 22px;
+      line-height: 1.25;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .install-panel p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
     }
 
     .install-command {
-      width: min(100%, 650px);
-      min-width: 0;
-      margin-top: 26px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.026);
+      background: rgba(0, 0, 0, 0.22);
       overflow: hidden;
     }
 
@@ -376,8 +469,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      padding: 10px 14px;
+      gap: 14px;
+      padding: 10px 12px;
       border-bottom: 1px solid var(--line);
       color: var(--dim);
       font-family: var(--mono);
@@ -395,166 +488,16 @@
 
     .install-line {
       display: block;
-      padding: 16px 18px;
+      padding: 14px 12px;
       overflow-wrap: anywhere;
-      white-space: normal;
       color: var(--text);
       font-family: var(--mono);
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1.7;
     }
 
-    .prompt {
-      color: var(--green-bright);
-      font-weight: 700;
-      margin-right: 10px;
-    }
-
-    .brand-panel {
-      position: relative;
-      width: 100%;
-      min-width: 0;
-      min-height: 476px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 34%),
-        linear-gradient(135deg, rgba(34, 197, 94, 0.08), transparent 44%),
-        rgba(8, 13, 10, 0.82);
-      box-shadow: 0 34px 100px var(--shadow);
-      overflow: hidden;
-    }
-
-    .brand-panel::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(rgba(244, 255, 248, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(244, 255, 248, 0.035) 1px, transparent 1px);
-      background-size: 42px 42px;
-      mask-image: linear-gradient(to bottom, black, transparent 82%);
-      opacity: 0.65;
-    }
-
-    .brand-panel-inner {
-      position: relative;
-      z-index: 1;
-      min-height: inherit;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 24px;
-    }
-
-    .panel-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      color: var(--dim);
-      font-family: var(--mono);
-      font-size: 12px;
-    }
-
-    .panel-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 30px;
-      padding: 0 10px;
-      border: 1px solid rgba(74, 222, 128, 0.2);
-      border-radius: 999px;
-      background: rgba(34, 197, 94, 0.08);
-      color: var(--green-bright);
-      font-weight: 700;
-    }
-
-    .hero-command {
-      width: 100%;
-      min-width: 0;
-      margin-top: 52px;
-      border: 1px solid rgba(181, 210, 194, 0.14);
-      border-radius: 8px;
-      background: rgba(4, 8, 5, 0.76);
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
-      overflow: hidden;
-    }
-
-    .terminal-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--line);
-      color: var(--dim);
-      font-family: var(--mono);
-      font-size: 12px;
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--green-bright);
-      box-shadow: 0 0 18px rgba(74, 222, 128, 0.7);
-    }
-
-    .terminal-body {
-      max-width: 100%;
-      padding: 20px;
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 13px;
-      line-height: 1.8;
-      overflow-x: auto;
-    }
-
-    .terminal-line {
-      white-space: nowrap;
-    }
-
-    .terminal-line.output {
-      color: #91aa9a;
-    }
-
-    .terminal-line.success {
-      color: var(--green-bright);
-      font-weight: 700;
-    }
-
-    .signal-rail {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-top: 18px;
-    }
-
-    .signal {
-      min-height: 86px;
-      padding: 15px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.026);
-    }
-
-    .signal-kicker {
-      color: var(--green-bright);
-      font-family: var(--mono);
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .signal strong {
-      display: block;
-      font-size: 15px;
-      line-height: 1.35;
-    }
-
     .proof-band {
-      padding: 22px 0;
+      padding: 24px 0;
       border-bottom: 1px solid var(--line);
       background: rgba(255, 255, 255, 0.012);
     }
@@ -566,7 +509,7 @@
     }
 
     .proof-item {
-      min-height: 110px;
+      min-height: 108px;
       padding: 20px;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -589,13 +532,14 @@
       line-height: 1.35;
     }
 
-    section {
+    section.content-section {
       padding: 96px 0;
     }
 
     .section-head {
-      max-width: 760px;
-      margin-bottom: 38px;
+      max-width: 780px;
+      margin: 0 auto 38px;
+      text-align: center;
     }
 
     .section-label {
@@ -608,17 +552,18 @@
       letter-spacing: 0.08em;
     }
 
-    h2 {
+    .section-title {
       margin: 0;
       color: var(--text);
-      font-size: clamp(34px, 4.4vw, 58px);
+      font-size: clamp(36px, 5vw, 64px);
       line-height: 1.02;
       font-weight: 700;
       letter-spacing: 0;
     }
 
     .section-copy {
-      margin: 18px 0 0;
+      margin: 18px auto 0;
+      max-width: 680px;
       color: var(--muted);
       font-size: 18px;
       line-height: 1.7;
@@ -635,7 +580,6 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       background: rgba(255, 255, 255, 0.024);
-      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
     }
 
     .step {
@@ -643,18 +587,15 @@
       padding: 22px;
     }
 
-    .step:hover,
-    .feature:hover {
-      transform: translateY(-3px);
-      border-color: rgba(74, 222, 128, 0.28);
-      background: rgba(255, 255, 255, 0.04);
+    .step-num,
+    .feature-code {
+      color: var(--green-bright);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
     }
 
     .step-num {
-      color: var(--green-bright);
-      font-family: var(--mono);
-      font-size: 13px;
-      font-weight: 700;
       margin-bottom: 48px;
     }
 
@@ -704,13 +645,10 @@
       border: 1px solid rgba(74, 222, 128, 0.25);
       border-radius: 999px;
       background: rgba(34, 197, 94, 0.08);
-      color: var(--green-bright);
-      font-family: var(--mono);
-      font-size: 12px;
-      font-weight: 700;
     }
 
     .cta {
+      padding: 96px 0;
       text-align: center;
     }
 
@@ -765,52 +703,24 @@
       text-decoration: none;
     }
 
-    .reveal {
-      opacity: 1;
-      transform: none;
-    }
-
-    .js .reveal {
-      opacity: 0;
-      transform: translateY(16px);
-      transition: opacity 650ms ease, transform 650ms ease;
-    }
-
-    .js .reveal.is-visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 1ms !important;
         scroll-behavior: auto !important;
         transition-duration: 1ms !important;
       }
-
-      .reveal {
-        opacity: 1;
-        transform: none;
-      }
     }
 
     @media (max-width: 980px) {
-      .hero-grid,
+      .command-grid,
       .steps,
       .feature-grid {
         grid-template-columns: 1fr;
       }
 
-      .hero {
-        padding-top: 64px;
-      }
-
-      .brand-panel {
-        min-height: auto;
-      }
-
-      .hero-command {
-        margin-top: 54px;
+      .terminal {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
       }
 
       .proof-grid {
@@ -820,15 +730,11 @@
 
     @media (max-width: 700px) {
       .container {
-        width: min(100% - 28px, 1160px);
+        width: min(100% - 28px, 1120px);
       }
 
       .announce-bar {
-        align-items: center;
-        flex-wrap: wrap;
         justify-content: flex-start;
-        padding: 9px 48px 9px 14px;
-        text-align: left;
       }
 
       .announce-bar span {
@@ -836,7 +742,7 @@
       }
 
       .nav-inner {
-        min-height: 66px;
+        min-height: 64px;
       }
 
       .nav-links a:not(.nav-cta):not(.github-link) {
@@ -848,15 +754,11 @@
       }
 
       .hero {
-        padding: 34px 0 22px;
-      }
-
-      .hero-grid {
-        gap: 24px;
+        padding-top: 48px;
       }
 
       h1 {
-        font-size: clamp(44px, 15vw, 60px);
+        font-size: clamp(82px, 25vw, 118px);
       }
 
       .hero-copy,
@@ -870,39 +772,21 @@
         flex-direction: column;
       }
 
-      .hero-actions {
-        margin-top: 22px;
-      }
-
       .button {
         width: 100%;
       }
 
-      .install-command {
-        display: none;
+      .command-stage {
+        margin-top: 34px;
       }
 
-      .install-line,
-      .terminal-body {
+      .command-grid {
+        display: block;
+      }
+
+      .terminal {
+        padding: 18px;
         font-size: 12px;
-      }
-
-      .brand-panel-inner {
-        padding: 14px;
-      }
-
-      .panel-top {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .hero-command {
-        margin-top: 22px;
-      }
-
-      .terminal-body {
-        padding: 14px;
       }
 
       .terminal-line:nth-child(5),
@@ -911,7 +795,7 @@
         display: none;
       }
 
-      .signal-rail {
+      .install-panel {
         display: none;
       }
 
@@ -919,7 +803,8 @@
         grid-template-columns: 1fr;
       }
 
-      section {
+      section.content-section,
+      .cta {
         padding: 64px 0;
       }
     }
@@ -953,65 +838,53 @@
 
   <main>
     <section class="hero">
-      <div class="container hero-grid">
-        <div class="reveal is-visible">
-          <div class="eyebrow">Linux-first QEMU/KVM labs</div>
-          <h1>Yeast</h1>
-          <p class="hero-copy">
-            Turn a folder into SSH-ready local Linux VMs. Define machines in <code>yeast.yaml</code>, run <code>yeast up</code>, and keep real infrastructure labs repeatable.
-          </p>
+      <div class="container">
+        <div class="hero-lockup">Linux-first QEMU/KVM labs</div>
+        <h1>Yeast</h1>
+        <p class="hero-copy">
+          Turn a folder into SSH-ready local Linux VMs. Define machines in <code>yeast.yaml</code>, run <code>yeast up</code>, and keep real infrastructure labs repeatable.
+        </p>
 
-          <div class="hero-actions">
-            <a class="button primary" href="/yeast/docs/getting-started/quickstart/">Get Started</a>
-            <a class="button secondary" href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">View GitHub Project</a>
-          </div>
-
-          <div class="install-command" id="install">
-            <div class="install-label">
-              <span>Install Yeast</span>
-              <button class="copy-button" type="button" onclick="copyInstall()">Copy</button>
-            </div>
-            <div class="install-line">
-              <span class="prompt">$</span><code>curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash</code>
-            </div>
-          </div>
+        <div class="hero-actions">
+          <a class="button primary" href="/yeast/docs/getting-started/quickstart/">Get Started</a>
+          <a class="button secondary" href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">View GitHub Project</a>
         </div>
 
-        <div class="brand-panel reveal is-visible" aria-label="Yeast terminal and runtime proof">
-          <div class="brand-panel-inner">
-            <div class="panel-top">
-              <span>local VM orchestration</span>
-              <span class="panel-chip">QEMU/KVM online</span>
+        <div class="command-stage" aria-label="Yeast command flow">
+          <div class="command-stage-inner">
+            <div class="command-top">
+              <span>yeast up</span>
+              <span class="command-status">QEMU/KVM ready</span>
             </div>
 
-            <div>
-              <div class="hero-command">
-                <div class="terminal-top">
-                  <span>yeast up</span>
-                  <span class="status-dot" aria-hidden="true"></span>
-                </div>
-                <div class="terminal-body">
-                  <div class="terminal-line"><span class="prompt">$</span>mkdir my-lab &amp;&amp; cd my-lab</div>
-                  <div class="terminal-line"><span class="prompt">$</span>yeast init --template ubuntu-basic</div>
-                  <div class="terminal-line output">created yeast.yaml</div>
-                  <div class="terminal-line"><span class="prompt">$</span>yeast up</div>
-                  <div class="terminal-line output">downloading trusted ubuntu-24.04 image</div>
-                  <div class="terminal-line output">booting web with cloud-init seed</div>
-                  <div class="terminal-line success">web is up and reachable via SSH</div>
-                  <div class="terminal-line"><span class="prompt">$</span>yeast ssh web</div>
-                </div>
+            <div class="command-grid">
+              <div class="terminal">
+                <div class="terminal-line"><span class="prompt">$</span>mkdir my-lab &amp;&amp; cd my-lab</div>
+                <div class="terminal-line"><span class="prompt">$</span>yeast init --template ubuntu-basic</div>
+                <div class="terminal-line output">created yeast.yaml</div>
+                <div class="terminal-line"><span class="prompt">$</span>yeast up</div>
+                <div class="terminal-line output">downloading trusted ubuntu-24.04 image</div>
+                <div class="terminal-line output">booting web with cloud-init seed</div>
+                <div class="terminal-line success">web is up and reachable via SSH</div>
+                <div class="terminal-line"><span class="prompt">$</span>yeast ssh web</div>
               </div>
 
-              <div class="signal-rail">
-                <div class="signal">
-                  <div class="signal-kicker">STATE</div>
-                  <strong>Project-local files with locking and reconciliation.</strong>
+              <aside class="install-panel" id="install">
+                <div>
+                  <h2>Real local machines, one project command.</h2>
+                  <p>No dashboard detour. No fake shell. Just a folder, a YAML file, and QEMU/KVM guests you can SSH into.</p>
                 </div>
-                <div class="signal">
-                  <div class="signal-kicker">OUTPUT</div>
-                  <strong>Human output and JSON events from the same workflow.</strong>
+
+                <div class="install-command">
+                  <div class="install-label">
+                    <span>Install Yeast</span>
+                    <button class="copy-button" type="button" onclick="copyInstall()">Copy</button>
+                  </div>
+                  <div class="install-line">
+                    <span class="prompt">$</span><code>curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash</code>
+                  </div>
                 </div>
-              </div>
+              </aside>
             </div>
           </div>
         </div>
@@ -1021,19 +894,19 @@
     <section class="proof-band">
       <div class="container">
         <div class="proof-grid">
-          <div class="proof-item reveal">
+          <div class="proof-item">
             <div class="proof-kicker">YAML</div>
             <p class="proof-title">One project file describes the lab.</p>
           </div>
-          <div class="proof-item reveal">
+          <div class="proof-item">
             <div class="proof-kicker">KVM</div>
             <p class="proof-title">Real QEMU/KVM Linux machines.</p>
           </div>
-          <div class="proof-item reveal">
+          <div class="proof-item">
             <div class="proof-kicker">INIT</div>
             <p class="proof-title">Cloud-init and SSH readiness built in.</p>
           </div>
-          <div class="proof-item reveal">
+          <div class="proof-item">
             <div class="proof-kicker">JSON</div>
             <p class="proof-title">Stable output for scripts and agents.</p>
           </div>
@@ -1041,31 +914,31 @@
       </div>
     </section>
 
-    <section>
+    <section class="content-section">
       <div class="container">
-        <div class="section-head reveal">
+        <div class="section-head">
           <div class="section-label">How it works</div>
-          <h2>From folder to running VMs.</h2>
+          <h2 class="section-title">From folder to running VMs.</h2>
           <p class="section-copy">Yeast keeps the workflow small: describe the machines, start the lab, then work inside real Linux guests.</p>
         </div>
 
         <div class="steps">
-          <article class="step reveal">
+          <article class="step">
             <div class="step-num">01</div>
             <h3>Write yeast.yaml</h3>
             <p>Declare images, CPU, memory, disks, users, networking, and provisioning in the project folder.</p>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div class="step-num">02</div>
             <h3>Run yeast up</h3>
             <p>Yeast prepares images, disks, cloud-init seed data, and QEMU/KVM runtime files.</p>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div class="step-num">03</div>
             <h3>Provision on boot</h3>
             <p>Cloud-init and SSH-backed provisioning configure packages, files, and shell setup.</p>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div class="step-num">04</div>
             <h3>SSH and build</h3>
             <p>Connect to full Linux machines for labs, automation, testing, and repeatable learning.</p>
@@ -1074,41 +947,41 @@
       </div>
     </section>
 
-    <section class="features" id="features">
+    <section class="content-section features" id="features">
       <div class="container">
-        <div class="section-head reveal">
+        <div class="section-head">
           <div class="section-label">Features</div>
-          <h2>Built for local infrastructure labs.</h2>
+          <h2 class="section-title">Built for local infrastructure labs.</h2>
           <p class="section-copy">The feature set stays focused on repeatable VM environments, not fake shells or container-only demos.</p>
         </div>
 
         <div class="feature-grid">
-          <article class="feature reveal">
+          <article class="feature">
             <div class="feature-code">YAML</div>
             <h3>Project configuration</h3>
             <p>Keep VM definitions in version control and rebuild the same lab from the same folder.</p>
           </article>
-          <article class="feature reveal">
+          <article class="feature">
             <div class="feature-code">VM</div>
             <h3>Real virtualization</h3>
             <p>Run full Linux machines through QEMU/KVM with systemd, kernels, disks, and isolation.</p>
           </article>
-          <article class="feature reveal">
+          <article class="feature">
             <div class="feature-code">NET</div>
             <h3>Private networking</h3>
             <p>Create multi-VM labs with predictable networking for app, database, proxy, and cluster setups.</p>
           </article>
-          <article class="feature reveal">
+          <article class="feature">
             <div class="feature-code">INIT</div>
             <h3>Cloud-init provisioning</h3>
             <p>Bootstrap users, SSH keys, packages, commands, and files automatically on first boot.</p>
           </article>
-          <article class="feature reveal">
+          <article class="feature">
             <div class="feature-code">SNAP</div>
             <h3>Snapshots and restore</h3>
             <p>Save known-good states, test risky changes, and return to a clean machine quickly.</p>
           </article>
-          <article class="feature reveal">
+          <article class="feature">
             <div class="feature-code">JSON</div>
             <h3>Automation output</h3>
             <p>Use machine-readable output for scripts, checks, agents, CI jobs, and repeatable workflows.</p>
@@ -1118,9 +991,9 @@
     </section>
 
     <section class="cta">
-      <div class="container reveal">
+      <div class="container">
         <div class="section-label">Start building</div>
-        <h2>Make a folder. Run Yeast. Get real VMs.</h2>
+        <h2 class="section-title">Make a folder. Run Yeast. Get real VMs.</h2>
         <p class="section-copy">Start with the quickstart, then grow into multi-VM labs, snapshots, templates, and automation.</p>
         <div class="cta-actions">
           <a class="button primary" href="/yeast/docs/getting-started/quickstart/">Read the Quickstart</a>
@@ -1152,8 +1025,6 @@
       navigator.clipboard.writeText(installCommand).catch(() => {});
     }
 
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
     const ANNOUNCE_KEY = "yeast-academy-bar-dismissed";
     const announceBar = document.getElementById("announce-bar");
     const announceClose = document.getElementById("announce-close");
@@ -1180,20 +1051,6 @@
         }
       })
       .catch(() => {});
-
-    if (!prefersReducedMotion) {
-      const revealItems = document.querySelectorAll(".reveal");
-      const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.12 });
-
-      revealItems.forEach(item => observer.observe(item));
-    }
   </script>
 </body>
 </html>
