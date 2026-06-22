@@ -1,4 +1,6 @@
 /yeast
+/.yeast/
+/yeast.yaml
 .claude/
 .worktrees/
 artifacts/
@@ -6,51 +8,33 @@ dist/
 *.state
 *.state.lock
 vm_test*/
+/opencode.json
 
 # ------------------------------------------------------------------
-# Hide ALL markdown files from the GitHub repo surface.
-# Only README.md stays public. Everything else (planning docs,
-# changelogs, contributing guides, release notes, tutorials,
-# embedded docs, and the deep-dive manual) stays local only.
+# Keep local AI/dev planning notes out of the repository.
 # ------------------------------------------------------------------
+/AI-RULES.md
+/TASKS.md
+/DEVOPS_BOOTCAMP_PLAN.md
+/NEW_DOCS_PLAN.md
+/cli_ui_remake.md
+/YEAST_TECHNICAL_ARCHITECTURE.md
+/YEAST_V2_IMPLEMENTATION_PLAN.md
+/YEAST_TEST_PLAN.md
+/docs/superpowers/
+
+# Markdown is ignored by default, then user-facing docs are re-allowed.
 *.md
 
-# Re-allow the only public-facing markdown file
 !README.md
 !CHANGELOG.md
-!NEW_DOCS_PLAN.md
-!DEVOPS_BOOTCAMP_PLAN.md
+!academy/**/*.md
+!docs/**/*.md
+!examples/**/*.md
 !internal/docs/embedded/*.md
+!internal/templates/builtin/**/README.md
 !examples/labsbackery-attacker-target-basic/scenario/instructions.md
+!scripts/smoke/README.md
 
 # Keep the private DevOps bootcamp local until it is tested and approved.
 /_private-devops-bootcamp/
-
-# Also hide the old docs/ tree by default, then allow only the new
-# MkDocs source paths. This keeps legacy ignored docs from resurfacing.
-/docs/*
-!/docs/index.md
-!/docs/getting-started/
-!/docs/getting-started/*.md
-!/docs/concepts/
-!/docs/concepts/*.md
-!/docs/guides/
-!/docs/guides/*.md
-!/docs/reference/
-!/docs/reference/*.md
-!/docs/troubleshooting/
-!/docs/troubleshooting/*.md
-!/docs/labs/
-!/docs/labs/*.md
-!/docs/releases/
-!/docs/releases/*.md
-!/docs/archive/
-!/docs/archive/*.md
-!/docs/stylesheets/
-!/docs/stylesheets/*.css
-!/docs/academy/
-!/docs/academy/**
-/internal/docs/
-!/internal/docs/
-!/internal/docs/embedded/
-!/internal/docs/embedded/*.md
