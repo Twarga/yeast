@@ -25,6 +25,7 @@ vm_test*/
 
 # Markdown is ignored by default, then user-facing docs are re-allowed.
 *.md
+/fixbugs.md
 
 !README.md
 !CHANGELOG.md

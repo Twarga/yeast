@@ -77,6 +77,7 @@ If you are installing Yeast:
 
 - `yeast doctor`
 - `yeast init`
+- `yeast init --templates`
 - `yeast init --list-templates`
 - `yeast init --template <name-or-path>`
 - `yeast pull --list`
@@ -188,7 +189,7 @@ yeast init
 Or start from a built-in template:
 
 ```bash
-yeast init --list-templates
+yeast init --templates
 yeast init --template caddy-single-vm
 ```
 
@@ -209,7 +210,7 @@ instances:
 ### 3. Review the generated config
 
 ```bash
-sed -n '1,120p' yeast.yaml
+cat yeast.yaml
 ```
 
 The important fields are:
@@ -403,6 +404,7 @@ Then log out and back in before your first `yeast up`.
 |---|---|
 | `yeast doctor` | Check host readiness |
 | `yeast init` | Create `yeast.yaml` and project metadata |
+| `yeast init --templates` | List built-in project templates |
 | `yeast init --list-templates` | List built-in project templates |
 | `yeast init --template <name-or-path>` | Create a project from a built-in or local template |
 | `yeast pull --list` | List supported trusted images |
@@ -501,7 +503,7 @@ instances:
 Built-in templates:
 
 ```bash
-yeast init --list-templates
+yeast init --templates
 yeast init --template ubuntu-basic
 yeast init --template caddy-single-vm
 yeast init --template two-vm-lab

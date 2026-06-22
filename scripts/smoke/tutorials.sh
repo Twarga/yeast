@@ -217,7 +217,7 @@ lab07_templates() {
   local template_root
   template_root="$(new_project_dir "07-templates")"
   local list_out
-  list_out="$(run_capture_logged "${CURRENT_LOG}" bash -lc "cd \"${template_root}\" && \"${YEAST_BIN_PATH}\" init --list-templates")"
+  list_out="$(run_capture_logged "${CURRENT_LOG}" bash -lc "cd \"${template_root}\" && \"${YEAST_BIN_PATH}\" init --templates")"
   smoke_assert_contains "${list_out}" "ubuntu-basic"
   smoke_assert_contains "${list_out}" "caddy-single-vm"
   smoke_assert_contains "${list_out}" "two-vm-lab"

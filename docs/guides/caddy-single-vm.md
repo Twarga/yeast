@@ -13,8 +13,9 @@ yeast init --template caddy-single-vm
 Inspect the template files:
 
 ```bash
-find . -maxdepth 3 -type f | sort
-sed -n '1,180p' yeast.yaml
+ls -la
+ls -la site
+cat yeast.yaml
 ```
 
 ## Start The VM

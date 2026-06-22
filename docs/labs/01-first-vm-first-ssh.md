@@ -41,14 +41,14 @@ yeast init --template ubuntu-basic
 Check what Yeast created:
 
 ```bash
-find . -maxdepth 3 -type f | sort
-sed -n '1,120p' yeast.yaml
+ls -la
+cat yeast.yaml
 ```
 
-Expected files:
+Expected entries:
 
 - `yeast.yaml`
-- `.yeast/project.json`
+- `.yeast/`
 - `README.md`
 
 ## Step 2: Check Supported Images

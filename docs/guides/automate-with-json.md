@@ -60,7 +60,7 @@ done
 ```bash
 yeast version --json
 yeast doctor --json
-yeast init --list-templates --json
+yeast init --templates --json
 yeast pull --list --json
 yeast status --json
 yeast inspect web --json

@@ -50,7 +50,7 @@ yeast doctor --json
 yeast status --json
 yeast inspect web --json
 yeast pull --list --json
-yeast init --list-templates --json
+yeast init --templates --json
 ```
 
 ## Rules For Scripts

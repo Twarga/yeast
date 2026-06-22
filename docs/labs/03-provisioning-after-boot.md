@@ -41,8 +41,8 @@ yeast init --template caddy-single-vm
 Inspect the provisioning config:
 
 ```bash
-sed -n '1,120p' yeast.yaml
-find site -maxdepth 2 -type f | sort
+cat yeast.yaml
+ls -la site
 ```
 
 The template uses top-level `provision`, which applies to the `web` instance.

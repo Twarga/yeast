@@ -33,8 +33,10 @@ yeast doctor
 ## Step 1: List Templates
 
 ```bash
-yeast init --list-templates
+yeast init --templates
 ```
+
+`yeast init --list-templates` is the longer form of the same command.
 
 Built-in templates in v1.1:
 
@@ -47,7 +49,7 @@ Built-in templates in v1.1:
 For scripts:
 
 ```bash
-yeast init --list-templates --json
+yeast init --templates --json
 ```
 
 ## Step 2: Create A Project From A Template
@@ -63,8 +65,9 @@ yeast init --template caddy-single-vm
 ## Step 3: Inspect The Copied Files
 
 ```bash
-find . -maxdepth 3 -type f | sort
-sed -n '1,180p' yeast.yaml
+ls -la
+ls -la site
+cat yeast.yaml
 ```
 
 After a template is copied, the result is just a normal Yeast project. You can edit `yeast.yaml`, `README.md`, or any copied files.
@@ -135,7 +138,8 @@ cd ..
 mkdir from-local-template
 cd from-local-template
 yeast init --template ../local-template
-find . -maxdepth 2 -type f | sort
+ls -la
+cat yeast.yaml
 ```
 
 You should see the files copied from the local template.

@@ -7,13 +7,15 @@ They copy files into your current folder. After that, the folder is a normal Yea
 ## List Built-In Templates
 
 ```bash
-yeast init --list-templates
+yeast init --templates
 ```
+
+`yeast init --list-templates` is the longer form of the same command.
 
 For scripts:
 
 ```bash
-yeast init --list-templates --json
+yeast init --templates --json
 ```
 
 Built-in templates in v1.1:
@@ -35,8 +37,8 @@ yeast init --template ubuntu-basic
 Inspect the result:
 
 ```bash
-find . -maxdepth 3 -type f | sort
-sed -n '1,180p' yeast.yaml
+ls -la
+cat yeast.yaml
 ```
 
 ## Create From A Local Template Directory

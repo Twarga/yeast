@@ -13,7 +13,7 @@ yeast init --template two-vm-lab
 Inspect the network config:
 
 ```bash
-sed -n '1,180p' yeast.yaml
+cat yeast.yaml
 ```
 
 You should see:

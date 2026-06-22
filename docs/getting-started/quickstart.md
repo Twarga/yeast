@@ -53,7 +53,7 @@ This creates:
 ## 3. Look At `yeast.yaml`
 
 ```bash
-sed -n '1,120p' yeast.yaml
+cat yeast.yaml
 ```
 
 You should see one VM named `web`.

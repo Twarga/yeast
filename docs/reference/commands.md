@@ -29,7 +29,7 @@ Useful flags:
 
 | Command | Flags |
 |---|---|
-| `yeast init` | `--list-templates`, `--template <name-or-path>` |
+| `yeast init` | `--templates`, `--list-templates`, `--template <name-or-path>` |
 | `yeast docs` | `--list` |
 | `yeast completion` | `bash`, `zsh`, `fish`, `powershell` |
 
