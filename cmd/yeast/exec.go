@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"time"
 	"yeast/internal/app"
 
@@ -39,7 +40,7 @@ func newExecCmd(service *app.Service) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err := renderCommandOutput(cmd.OutOrStdout(), "exec", result); err != nil {
+			if err := renderExecCommandOutput(cmd.OutOrStdout(), cmd.ErrOrStderr(), result); err != nil {
 				return err
 			}
 			if result.Run.ExitCode != 0 {
@@ -54,4 +55,17 @@ func newExecCmd(service *app.Service) *cobra.Command {
 
 	cmd.Flags().DurationVar(&timeout, "timeout", 0, "Maximum time to wait for remote command completion")
 	return cmd
+}
+
+func renderExecCommandOutput(stdout, stderr io.Writer, result app.ExecResult) error {
+	if outputJSON {
+		return renderCommandOutput(stdout, "exec", result)
+	}
+	if _, err := io.WriteString(stdout, result.Run.Stdout); err != nil {
+		return err
+	}
+	if _, err := io.WriteString(stderr, result.Run.Stderr); err != nil {
+		return err
+	}
+	return nil
 }

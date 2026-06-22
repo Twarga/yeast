@@ -108,6 +108,33 @@ func TestMaterializeRejectsExistingOutput(t *testing.T) {
 	}
 }
 
+func TestUbuntuBasicTemplateUsesPasswordlessYeastUser(t *testing.T) {
+	t.Parallel()
+
+	template, ok, err := LookupBuiltin("ubuntu-basic")
+	if err != nil {
+		t.Fatalf("LookupBuiltin returned error: %v", err)
+	}
+	if !ok {
+		t.Fatal("expected built-in template")
+	}
+	destination := t.TempDir()
+	if _, err := Materialize(template, MaterializeOptions{Destination: destination}); err != nil {
+		t.Fatalf("Materialize returned error: %v", err)
+	}
+
+	raw, err := os.ReadFile(filepath.Join(destination, "yeast.yaml"))
+	if err != nil {
+		t.Fatalf("read yeast.yaml: %v", err)
+	}
+	content := string(raw)
+	for _, want := range []string{"user: yeast", "sudo: nopasswd"} {
+		if !strings.Contains(content, want) {
+			t.Fatalf("expected ubuntu-basic template to contain %q, got:\n%s", want, content)
+		}
+	}
+}
+
 func TestMaterializeRejectsMissingLocalFile(t *testing.T) {
 	t.Parallel()
 

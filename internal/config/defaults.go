@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	DefaultMemoryMB      = 512
-	DefaultCPUs          = 1
-	DefaultUser          = "yeast"
-	DefaultSudo          = "none"
+	DefaultMemoryMB       = 512
+	DefaultCPUs           = 1
+	DefaultUser           = "yeast"
+	DefaultSudo           = "nopasswd"
 	DefaultManagementHost = "127.0.0.1"
 )
 

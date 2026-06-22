@@ -120,11 +120,29 @@ func (t *LocalTransport) Run(ctx context.Context, request RunRequest) (RunResult
 	args = append(args, fmt.Sprintf("%s@%s", request.User, request.Host))
 	args = append(args, request.Command)
 	result, err := runWithTransientSSHRetry(ctx, runner, "ssh", args, request.Timeout)
+	result = stripKnownHostWarning(result)
 	if err != nil {
 		return RunResult(result), err
 	}
 
 	return RunResult(result), nil
+}
+
+func stripKnownHostWarning(result CommandResult) CommandResult {
+	if result.Stderr == "" {
+		return result
+	}
+	lines := strings.SplitAfter(result.Stderr, "\n")
+	filtered := make([]string, 0, len(lines))
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "Warning: Permanently added ") && strings.Contains(trimmed, " to the list of known hosts.") {
+			continue
+		}
+		filtered = append(filtered, line)
+	}
+	result.Stderr = strings.Join(filtered, "")
+	return result
 }
 
 func (t *LocalTransport) Upload(ctx context.Context, request UploadRequest) error {

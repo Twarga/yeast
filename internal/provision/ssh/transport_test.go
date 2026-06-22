@@ -226,6 +226,34 @@ func TestLocalTransportPreservesRunnerResultOnFailure(t *testing.T) {
 	}
 }
 
+func TestLocalTransportRunStripsKnownHostWarning(t *testing.T) {
+	runner := &stubRunner{
+		result: CommandResult{
+			Stdout:   "cloudinit-lab\n",
+			Stderr:   "Warning: Permanently added '[127.0.0.1]:2222' (ED25519) to the list of known hosts.\n",
+			ExitCode: 0,
+			Duration: time.Millisecond,
+		},
+	}
+	transport := NewLocalTransportWithRunner(runner)
+
+	result, err := transport.Run(context.Background(), RunRequest{
+		User:    "yeast",
+		Host:    "127.0.0.1",
+		Port:    2222,
+		Command: "hostname",
+	})
+	if err != nil {
+		t.Fatalf("Run returned error: %v", err)
+	}
+	if result.Stdout != "cloudinit-lab\n" {
+		t.Fatalf("unexpected stdout: %q", result.Stdout)
+	}
+	if result.Stderr != "" {
+		t.Fatalf("expected known-host warning to be stripped, got %q", result.Stderr)
+	}
+}
+
 func TestLocalTransportRetriesTransientSSHFailure(t *testing.T) {
 	runner := &sequenceRunner{
 		results: []CommandResult{

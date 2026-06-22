@@ -43,6 +43,7 @@ func newRootCmd(service *app.Service) *cobra.Command {
 	cmd.PersistentFlags().BoolVar(&outputJSON, "json", false, "Output machine-readable JSON")
 	cmd.PersistentFlags().BoolVar(&outputEvents, "events", false, "Stream machine-readable lifecycle events as JSON Lines")
 	cmd.PersistentFlags().BoolVarP(&outputQuiet, "quiet", "q", false, "Suppress progress output (final result only)")
+	cmd.AddCommand(newCleanCmd(service))
 	cmd.AddCommand(newCompletionCmd())
 	cmd.AddCommand(newDocsCmd())
 	cmd.AddCommand(newDownCmd(service))

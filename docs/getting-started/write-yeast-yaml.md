@@ -51,7 +51,7 @@ If you leave out RAM, CPU, user, and hostname, Yeast applies defaults:
 | `cpus` | `1` |
 | `hostname` | same as `name` |
 | `user` | `yeast` |
-| `sudo` | `none` |
+| `sudo` | `nopasswd` |
 | `management_host` | `127.0.0.1` |
 
 ## Common Edits

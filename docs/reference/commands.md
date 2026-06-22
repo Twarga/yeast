@@ -62,12 +62,14 @@ See [Images](images.md) for the supported image list.
 | `yeast up` | Start the VMs described by the current project |
 | `yeast down` | Stop running VMs in the current project |
 | `yeast destroy` | Remove tracked VM runtime files for the current project |
+| `yeast clean` | Clean broken state and orphaned VM runtime files in the current project |
 
 Useful flags:
 
 | Command | Flags |
 |---|---|
 | `yeast up` | `--no-provision`, `--reprovision`, `--sequential`, `--profile` |
+| `yeast clean` | `--timeout <duration>` |
 
 ## Guest Control
 

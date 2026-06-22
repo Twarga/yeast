@@ -567,6 +567,46 @@ instances:
 	}
 }
 
+func TestUpNoProvisionStillWaitsForBootstrapReadiness(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.runtime = &fakeRuntime{}
+	service.sleep = func(time.Duration) {}
+
+	runCalls := 0
+	service.provisionTransport = provssh.FakeTransport{
+		RunFunc: func(ctx context.Context, request provssh.RunRequest) (provssh.RunResult, error) {
+			runCalls++
+			if request.Command != cloudInitStatusCommand {
+				t.Fatalf("unexpected command for no-provision bootstrap: %q", request.Command)
+			}
+			if runCalls == 1 {
+				return provssh.RunResult{ExitCode: 255, Duration: time.Millisecond}, errors.New("ssh failed")
+			}
+			return provssh.RunResult{Stdout: "status: done\n", ExitCode: 0, Duration: time.Millisecond}, nil
+		},
+	}
+
+	configContent := `version: 1
+provision:
+  shell:
+    - echo skipped
+instances:
+  - name: web
+    image: ubuntu-24.04
+    ssh_port: 2205
+`
+	if err := os.WriteFile(filepath.Join(root, ConfigFileName), []byte(configContent), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	if _, err := service.Up(context.Background(), UpOptions{ProjectRoot: root, NoProvision: true}); err != nil {
+		t.Fatalf("Up returned error: %v", err)
+	}
+	if runCalls != 2 {
+		t.Fatalf("expected no-provision bootstrap retry before ready, got %d run calls", runCalls)
+	}
+}
+
 func TestUpSkipsProvisionOnFingerprintMatchAndReprovisionOverrides(t *testing.T) {
 	service, root := newUpServiceWithCachedImage(t)
 	service.runtime = &fakeRuntime{}

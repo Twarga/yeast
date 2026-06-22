@@ -68,16 +68,16 @@ func resolveDestroyKeepFilesMode(cmd *cobra.Command, keepFiles, yes bool) (bool,
 		return false, nil
 	}
 
-	fmt.Fprint(cmd.ErrOrStderr(), "Delete VM runtime files too? [Y/n]: ")
+	fmt.Fprint(cmd.ErrOrStderr(), "Delete VM runtime files? [y/N]: ")
 	line, err := destroyPromptReader(cmd.InOrStdin())
 	if err != nil {
 		return false, err
 	}
 
 	switch strings.ToLower(strings.TrimSpace(line)) {
-	case "", "y", "yes":
+	case "y", "yes":
 		return false, nil
-	case "n", "no":
+	case "", "n", "no":
 		return true, nil
 	default:
 		return false, fmt.Errorf("please answer y or n")

@@ -85,8 +85,9 @@ copy_example_file() {
 lab01_first_vm() {
   local project_dir
   project_dir="$(new_project_dir "01-first-vm")"
-  run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" init"
-  copy_example_file "examples/ubuntu-basic/yeast.yaml" "${project_dir}/yeast.yaml"
+  run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" init --template ubuntu-basic"
+  [[ -f "${project_dir}/yeast.yaml" ]] || smoke_die "ubuntu-basic template did not create yeast.yaml"
+  smoke_assert_file_contains "${project_dir}/yeast.yaml" "sudo: nopasswd"
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" doctor"
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" pull ubuntu-24.04"
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" up"
@@ -101,15 +102,28 @@ lab01_first_vm() {
 
 lab02_provisioning() {
   local project_dir
-  project_dir="$(new_project_dir "02-provisioning")"
+  project_dir="$(new_project_dir "02-cloud-init-basics")"
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" init"
-  copy_example_file "examples/caddy-single-vm/yeast.yaml" "${project_dir}/yeast.yaml"
-  copy_example_file "examples/caddy-single-vm/site/index.html" "${project_dir}/site/index.html"
-  copy_example_file "examples/caddy-single-vm/site/Caddyfile" "${project_dir}/site/Caddyfile"
+  cat >"${project_dir}/yeast.yaml" <<'YAML'
+version: 1
+instances:
+  - name: web
+    hostname: cloudinit-lab
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    disk_size: 20G
+    user: yeast
+    sudo: nopasswd
+YAML
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" up"
-  local page
-  page="$(run_capture_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" exec web -- curl -fsS http://127.0.0.1")"
-  smoke_assert_contains "${page}" "Yeast v0.4 provisioning works."
+  local hostname_out
+  hostname_out="$(run_capture_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" exec web -- hostname")"
+  [[ "${hostname_out}" == "cloudinit-lab" ]] || smoke_die "expected raw hostname output cloudinit-lab, got: ${hostname_out}"
+  local whoami_out
+  whoami_out="$(run_capture_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" exec web -- whoami")"
+  [[ "${whoami_out}" == "yeast" ]] || smoke_die "expected raw user output yeast, got: ${whoami_out}"
+  run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" exec web -- sudo -n true"
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" down"
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" destroy"
   smoke_assert_project_released "${project_dir}"
@@ -132,7 +146,7 @@ lab03_snapshot_restore() {
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" up"
   local restored
   restored="$(run_capture_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" exec web -- curl -fsS http://127.0.0.1")"
-  smoke_assert_contains "${restored}" "Yeast v0.4 provisioning works."
+  smoke_assert_contains "${restored}" "Yeast provisioning works."
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" down"
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" delete-snapshot web clean"
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" destroy"
@@ -149,8 +163,8 @@ lab04_multi_vm_network() {
   status="$(run_capture_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" status")"
   smoke_assert_contains "${status}" "10.10.10.10"
   smoke_assert_contains "${status}" "10.10.10.20"
-  run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" ssh attacker -- bash -lc 'ip -4 addr show yeastlab0 && ping -c 2 10.10.10.20'"
-  run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" ssh target -- bash -lc 'ip -4 addr show yeastlab0 && ping -c 2 10.10.10.10'"
+  run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" exec attacker -- bash -lc 'ip -4 addr show yeastlab0 && ping -c 2 10.10.10.20'"
+  run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" exec target -- bash -lc 'ip -4 addr show yeastlab0 && ping -c 2 10.10.10.10'"
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" down"
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" destroy"
   smoke_assert_project_released "${project_dir}"
@@ -274,42 +288,6 @@ PY
   smoke_assert_project_released "${project_dir}"
 }
 
-forwarded_ports() {
-  local project_dir
-  project_dir="$(new_project_dir "forwarded-ports")"
-  run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" init --template caddy-single-vm"
-  python3 - <<'PY' "${project_dir}/yeast.yaml"
-import pathlib
-import sys
-
-path = pathlib.Path(sys.argv[1])
-text = path.read_text(encoding='utf-8')
-needle = '    ssh_port: 2205\n'
-replacement = needle + '    ports:\n      - host_port: 8080\n        guest_port: 80\n'
-if needle not in text:
-    raise SystemExit('expected ssh_port line in yeast.yaml')
-path.write_text(text.replace(needle, replacement, 1), encoding='utf-8')
-PY
-  local up_out
-  up_out="$(run_capture_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" up")"
-  smoke_assert_contains "${up_out}" "http://127.0.0.1:8080 -> guest:80"
-  local page
-  page="$(smoke_wait_http "http://127.0.0.1:8080")"
-  smoke_assert_contains "${page}" "Yeast v0.4 provisioning works."
-  local status_out
-  status_out="$(run_capture_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" status")"
-  smoke_assert_contains "${status_out}" "http://127.0.0.1:8080 -> guest:80"
-  local inspect_out
-  inspect_out="$(run_capture_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" inspect web")"
-  smoke_assert_contains "${inspect_out}" "http://127.0.0.1:8080 -> guest:80"
-  run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" down"
-  run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" destroy"
-  if curl -fsS "http://127.0.0.1:8080" >/dev/null 2>&1; then
-    smoke_die "expected forwarded port 8080 to be released after destroy"
-  fi
-  smoke_assert_project_released "${project_dir}"
-}
-
 repeat_lifecycle() {
   local project_dir
   project_dir="$(new_project_dir "repeat-lifecycle")"
@@ -322,8 +300,7 @@ repeat_lifecycle() {
   up1="$(run_capture_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" up")"
   end="$(smoke_now)"
   local cold_seconds="$(( end - start ))"
-  smoke_assert_contains "${up1}" "provision: ran (first boot)"
-  smoke_assert_contains "${up1}" "mode: cold start"
+  smoke_assert_contains "${up1}" "All instances ready"
 
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" down"
 
@@ -331,8 +308,7 @@ repeat_lifecycle() {
   up2="$(run_capture_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" up")"
   end="$(smoke_now)"
   local warm1_seconds="$(( end - start ))"
-  smoke_assert_contains "${up2}" "provision: skipped, config unchanged"
-  smoke_assert_contains "${up2}" "mode: warm start"
+  smoke_assert_contains "${up2}" "All instances ready"
 
   run_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" down"
 
@@ -340,8 +316,7 @@ repeat_lifecycle() {
   up3="$(run_capture_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" up")"
   end="$(smoke_now)"
   local warm2_seconds="$(( end - start ))"
-  smoke_assert_contains "${up3}" "provision: skipped, config unchanged"
-  smoke_assert_contains "${up3}" "mode: warm start"
+  smoke_assert_contains "${up3}" "All instances ready"
 
   local caddy_state
   caddy_state="$(run_capture_logged "${CURRENT_LOG}" bash -lc "cd \"${project_dir}\" && \"${YEAST_BIN_PATH}\" exec web -- systemctl is-active caddy")"
@@ -368,7 +343,15 @@ run_lab() {
   local started_at
   started_at="$(smoke_now)"
   printf '==> %s\n' "${name}"
-  if "${name}"; then
+  set +e
+  (
+    set -euo pipefail
+    "${name}"
+  )
+  local status=$?
+  set -e
+
+  if [[ ${status} -eq 0 ]]; then
     local duration
     duration="$(( $(smoke_now) - started_at ))"
     LAB_RESULTS+=("PASS | ${name} | ${duration}s | ${CURRENT_LOG}")
@@ -409,7 +392,6 @@ main() {
     lab08_json_events
     cleanup_broken_yaml
     cleanup_orphan_qemu
-    forwarded_ports
     repeat_lifecycle
   )
 

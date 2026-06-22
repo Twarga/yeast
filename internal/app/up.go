@@ -579,9 +579,6 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 	}
 
 	provisionVM := func(bp bootPlan) provisionResult {
-		if options.NoProvision {
-			return provisionResult{name: bp.instance.Name, status: state.ProvisioningStatusReady, fingerprint: bp.fingerprint}
-		}
 		pResult, err := s.runProvisionPlan(ctx, bp.instance, bp.sshPort, bp.instanceState.ProvisionLogPath, bp.provisionPlan, bp.runProvision, managementHost)
 		if err != nil {
 			return provisionResult{name: bp.instance.Name, status: state.ProvisioningStatusFailed, err: err}

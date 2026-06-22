@@ -33,8 +33,8 @@ func TestApplyDefaults(t *testing.T) {
 	if instance.User != DefaultUser {
 		t.Fatalf("expected default user %q, got %q", DefaultUser, instance.User)
 	}
-	if instance.Sudo != DefaultSudo {
-		t.Fatalf("expected default sudo %q, got %q", DefaultSudo, instance.Sudo)
+	if instance.Sudo != "nopasswd" {
+		t.Fatalf("expected default sudo nopasswd, got %q", instance.Sudo)
 	}
 }
 

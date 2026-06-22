@@ -24,6 +24,7 @@ func TestCommandHelpRendersForV1Surface(t *testing.T) {
 		"logs":            "Usage:\n  yeast logs <instance>",
 		"inspect":         "Usage:\n  yeast inspect <instance>",
 		"ssh":             "Usage:\n  yeast ssh [instance]",
+		"clean":           "Usage:\n  yeast clean",
 		"down":            "Usage:\n  yeast down",
 		"destroy":         "Usage:\n  yeast destroy",
 		"version":         "Usage:\n  yeast version",

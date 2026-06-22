@@ -48,7 +48,7 @@ The important constraint is still simple: **keep the core small and reliable bef
 
 ## Current Scope
 
-Yeast `v1.1.2` is the current stable local engine release. It covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, operate inside the guest through an SSH-backed control surface, start new projects from built-in or local templates, expose a versioned JSON/events contract for tools, and define the first LabsBakery integration boundary.
+Yeast `v1.1.3` is the current stable local engine release. It covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, operate inside the guest through an SSH-backed control surface, start new projects from built-in or local templates, expose a versioned JSON/events contract for tools, and define the first LabsBakery integration boundary.
 
 | Area | Current status |
 |---|---|
@@ -202,6 +202,8 @@ instances:
     image: ubuntu-24.04
     memory: 1024
     cpus: 1
+    user: yeast
+    sudo: nopasswd
 ```
 
 ### 3. Review the generated config
@@ -459,7 +461,7 @@ instances:
     disk_size: 20G
     ssh_port: 2205
     user: yeast
-    sudo: none
+    sudo: nopasswd
     env:
       APP_ENV: development
 ```

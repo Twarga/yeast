@@ -58,7 +58,7 @@ func TestInitWritesStarterConfig(t *testing.T) {
 		t.Fatalf("failed to read config: %v", err)
 	}
 	content := string(raw)
-	for _, want := range []string{"version: 1", "name: web", "image: ubuntu-24.04"} {
+	for _, want := range []string{"version: 1", "name: web", "image: ubuntu-24.04", "user: yeast", "sudo: nopasswd"} {
 		if !strings.Contains(content, want) {
 			t.Fatalf("expected starter config to contain %q, got:\n%s", want, content)
 		}

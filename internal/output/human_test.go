@@ -138,6 +138,36 @@ func TestRenderHumanUpdateNotice(t *testing.T) {
 	}
 }
 
+func TestRenderHumanCleanResult(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+	err := RenderHuman(&buf, "clean", app.CleanResult{
+		ProjectID: "proj_123",
+		Instances: []app.CleanInstanceResult{
+			{Name: "web", Status: "cleaned", CleanedPIDs: []int{4242}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("RenderHuman returned error: %v", err)
+	}
+
+	got := stripANSI(buf.String())
+	for _, want := range []string{
+		"Project cleaned",
+		"NAME",
+		"STATUS",
+		"CLEANED PIDS",
+		"web",
+		"cleaned",
+		"4242",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("expected output to contain %q, got:\n%s", want, got)
+		}
+	}
+}
+
 func TestRenderHumanProvisionResult(t *testing.T) {
 	t.Parallel()
 

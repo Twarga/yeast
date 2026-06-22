@@ -52,6 +52,8 @@ func RenderHuman(w io.Writer, command string, data any) error {
 		return renderDown(w, theme, value)
 	case app.DestroyResult:
 		return renderDestroy(w, theme, value)
+	case app.CleanResult:
+		return renderClean(w, theme, value)
 	case app.ImageCleanResult:
 		return renderImageClean(w, theme, value)
 	case app.UpdateResult:
@@ -476,6 +478,26 @@ func renderDestroy(w io.Writer, theme humanTheme, value app.DestroyResult) error
 	return writeBlock(w, theme, lines)
 }
 
+func renderClean(w io.Writer, theme humanTheme, value app.CleanResult) error {
+	rows := [][]string{{"NAME", "STATUS", "CLEANED PIDS"}}
+	for _, instance := range value.Instances {
+		rows = append(rows, []string{
+			instance.Name,
+			instance.Status,
+			formatPIDs(instance.CleanedPIDs),
+		})
+	}
+
+	lines := []string{theme.Success.Render("✓") + " " + theme.Header.Render("Project cleaned")}
+	lines = append(lines, "")
+	if len(value.Instances) == 0 {
+		lines = append(lines, theme.Muted.Render("No instances needed cleanup."))
+	} else {
+		lines = append(lines, renderRows(theme, rows)...)
+	}
+	return writeBlock(w, theme, lines)
+}
+
 func renderImageClean(w io.Writer, theme humanTheme, value app.ImageCleanResult) error {
 	if value.DryRun {
 		lines := []string{theme.Header.Render("Would remove")}
@@ -533,6 +555,17 @@ func dashIfEmpty(value string) string {
 		return "-"
 	}
 	return value
+}
+
+func formatPIDs(values []int) string {
+	if len(values) == 0 {
+		return "-"
+	}
+	parts := make([]string, 0, len(values))
+	for _, value := range values {
+		parts = append(parts, fmt.Sprintf("%d", value))
+	}
+	return strings.Join(parts, ", ")
 }
 
 func sshAddress(host string, port int) string {

@@ -117,7 +117,7 @@ instances:
     cpus: 1
     disk_size: 20G
     user: yeast
-    sudo: none
+    sudo: nopasswd
 ```
 
 Create `README.md`:

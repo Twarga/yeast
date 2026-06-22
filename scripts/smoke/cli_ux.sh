@@ -166,7 +166,7 @@ assert_contains "powershell completion produces output" "${OUT}" "Register-Argum
 
 # --- 10. All commands have --help ---
 section "CLI UX: all commands have --help"
-for cmd in up down status destroy pull snapshot snapshots restore logs exec copy inspect provision doctor version completion init images; do
+for cmd in up down status destroy clean pull snapshot snapshots restore logs exec copy inspect provision doctor version completion init images; do
   OUT="$("${BIN}" "${cmd}" --help 2>&1)" || true
   if echo "${OUT}" | grep -qi "usage\|help"; then
     pass "${cmd} --help works"

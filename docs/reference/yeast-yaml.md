@@ -85,7 +85,7 @@ Most projects only need one or two of these edits:
 | `cpus` | `1` |
 | `hostname` | same as `name` |
 | `user` | `yeast` |
-| `sudo` | `none` |
+| `sudo` | `nopasswd` |
 
 ## Validation Rules
 

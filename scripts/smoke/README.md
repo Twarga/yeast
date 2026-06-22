@@ -14,7 +14,7 @@ Run one lab:
 
 ```bash
 scripts/smoke/tutorials.sh lab07_templates
-scripts/smoke/tutorials.sh forwarded_ports
+scripts/smoke/tutorials.sh repeat_lifecycle
 ```
 
 Use a specific binary:
@@ -51,7 +51,6 @@ SMOKE_ROOT=/tmp/yeast-smoke-run scripts/smoke/tutorials.sh lab08_json_events
 - `lab08_json_events`
 - `cleanup_broken_yaml`
 - `cleanup_orphan_qemu`
-- `forwarded_ports`
 - `repeat_lifecycle`
 
 ## Notes
@@ -59,3 +58,4 @@ SMOKE_ROOT=/tmp/yeast-smoke-run scripts/smoke/tutorials.sh lab08_json_events
 - The harness runs real QEMU/KVM flows for the VM labs, so it needs the same host prerequisites as the tutorials.
 - A full `all` run takes several minutes.
 - The workspace is intentionally left behind on success so logs and generated projects can be inspected.
+- Yeast v1.1 does not support general `ports:` forwarding in `yeast.yaml`; use SSH tunnels or guest-side checks instead.

@@ -128,6 +128,8 @@ instances:
     image: ubuntu-24.04
     memory: 1024
     cpus: 1
+    user: yeast
+    sudo: nopasswd
 `
 }
 

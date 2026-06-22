@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v1.1.3] - 2026-06-22
+
+### Fixed
+- **Docs lab usability**: `yeast exec` now prints raw guest stdout/stderr in human mode, so lab checks such as `yeast exec web -- hostname` return the expected command output instead of a boxed status report
+- **SSH guest-control noise**: known-host warnings are filtered from SSH-backed guest command results
+- **Safer destroy prompt**: interactive `yeast destroy` now defaults to preserving runtime files unless the user answers `y` or passes `--yes`
+- **Starter sudo defaults**: generated starter configs and the `ubuntu-basic` template now use `user: yeast` with `sudo: nopasswd`
+- **Docs smoke coverage**: tutorial smoke checks now exercise the official template path and exact cloud-init `hostname`/`whoami` outputs
+
+### Changed
+- **Landing page**: rebuilt the GitHub Pages landing page with a responsive dark green devtool layout, terminal proof, and clearer Yeast product story
+- **Current stable release**: install examples, release smoke docs, and embedded terminal docs now target `v1.1.3`
+
+[v1.1.3]: https://github.com/Twarga/yeast/releases/tag/v1.1.3
+
 ## [v1.1.2] - 2026-06-17
 
 ### Added
