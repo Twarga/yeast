@@ -108,8 +108,34 @@ run_optional() {
 # ─── Helpers ────────────────────────────────────────────────────────────────
 need_root() {
   if [[ "$(id -u)" -eq 0 ]]; then "$@"; return; fi
+  if [[ "${SUDO_REQUIRED:-1}" == "0" ]]; then "$@"; return; fi
   command -v sudo >/dev/null 2>&1 || die "sudo is required to write to ${YEAST_INSTALL_DIR}"
   sudo "$@"
+}
+
+path_requires_sudo() {
+  local dir="$1"
+  if [[ "$(id -u)" -eq 0 ]]; then return 1; fi
+  if [[ -d "${dir}" ]]; then
+    [[ -w "${dir}" ]] && return 1
+    return 0
+  fi
+
+  local parent
+  parent="$(dirname "${dir}")"
+  while [[ ! -d "${parent}" && "${parent}" != "/" ]]; do
+    parent="$(dirname "${parent}")"
+  done
+  [[ -w "${parent}" ]] && return 1
+  return 0
+}
+
+should_require_sudo() {
+  if [[ "$(id -u)" -eq 0 ]]; then return 1; fi
+  if [[ "${YEAST_INSTALL_MODE}" == "source" ]]; then return 0; fi
+  if path_requires_sudo "${YEAST_INSTALL_DIR}"; then return 0; fi
+  if [[ "${TARGET_USER}" != "$(id -un)" ]]; then return 0; fi
+  return 1
 }
 
 require_sudo() {
@@ -405,6 +431,12 @@ detect_target_user() {
 }
 
 ensure_user_paths() {
+  if [[ "$(id -un)" == "${TARGET_USER}" ]]; then
+    install -d -m 0755 "${TARGET_HOME}/.yeast"
+    install -d -m 0755 "${TARGET_HOME}/.yeast/cache"
+    install -d -m 0755 "${TARGET_HOME}/.yeast/cache/images"
+    return
+  fi
   need_root install -d -m 0755 -o "${TARGET_USER}" -g "${TARGET_GROUP}" "${TARGET_HOME}/.yeast"
   need_root install -d -m 0755 -o "${TARGET_USER}" -g "${TARGET_GROUP}" "${TARGET_HOME}/.yeast/cache"
   need_root install -d -m 0755 -o "${TARGET_USER}" -g "${TARGET_GROUP}" "${TARGET_HOME}/.yeast/cache/images"
@@ -437,7 +469,11 @@ ensure_user_ssh_key() {
   fi
 
   command -v ssh-keygen >/dev/null 2>&1 || die "ssh-keygen is required to create a default SSH key"
-  need_root install -d -m 0700 -o "${TARGET_USER}" -g "${TARGET_GROUP}" "${ssh_dir}"
+  if [[ "$(id -un)" == "${TARGET_USER}" ]]; then
+    install -d -m 0700 "${ssh_dir}"
+  else
+    need_root install -d -m 0700 -o "${TARGET_USER}" -g "${TARGET_GROUP}" "${ssh_dir}"
+  fi
 
   if [[ -f "${private_key}" ]]; then
     run_as_target_user bash -lc "ssh-keygen -y -f '${private_key}' > '${public_key}'"
@@ -476,8 +512,8 @@ print_summary() {
   key_value "4" "yeast up"
   key_value "5" "yeast ssh <instance-name>"
   printf '\n'
-  dim "  Tip: 'yeast up' downloads trusted images automatically."
-  dim "  Use 'yeast pull --list' to browse available images."
+  printf '%s\n' "$(dim "  Tip: 'yeast up' downloads trusted images automatically.")"
+  printf '%s\n' "$(dim "  Use 'yeast pull --list' to browse available images.")"
 }
 
 # ─── Main ───────────────────────────────────────────────────────────────────
@@ -510,7 +546,11 @@ main() {
   fi
 
   detect_target_user
-  require_sudo
+  SUDO_REQUIRED=0
+  if should_require_sudo; then
+    SUDO_REQUIRED=1
+    require_sudo
+  fi
 
   case "${YEAST_INSTALL_MODE}" in
     binary) install_from_release ;;
