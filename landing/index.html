@@ -106,15 +106,42 @@
       text-align: center;
     }
 
+    .announcement__tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 0 8px;
+      border: 1px solid rgba(139, 223, 63, 0.32);
+      border-radius: 999px;
+      color: #071006;
+      background: linear-gradient(180deg, #a7f164, var(--green));
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      box-shadow: 0 0 28px rgba(139, 223, 63, 0.14);
+    }
+
     .announcement strong,
     .accent {
       color: var(--green);
     }
 
     .announcement a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       color: var(--green);
       font-weight: 700;
       text-decoration: none;
+    }
+
+    .announcement a::after {
+      content: "->";
+      color: rgba(139, 223, 63, 0.76);
+      font-family: var(--mono);
+      font-size: 11px;
     }
 
     .nav {
@@ -175,6 +202,55 @@
 
     .nav__links a:hover {
       color: var(--green);
+    }
+
+    .github-pill {
+      position: relative;
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 13px;
+      border: 1px solid rgba(246, 251, 243, 0.14);
+      border-radius: 999px;
+      background:
+        linear-gradient(180deg, rgba(246, 251, 243, 0.07), rgba(246, 251, 243, 0.025)),
+        rgba(6, 12, 9, 0.74);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      overflow: hidden;
+    }
+
+    .github-pill::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      background: radial-gradient(circle at 20% 0%, rgba(139, 223, 63, 0.18), transparent 58%);
+      transition: opacity 180ms ease;
+    }
+
+    .github-pill:hover::before {
+      opacity: 1;
+    }
+
+    .github-pill svg,
+    .github-pill span {
+      position: relative;
+    }
+
+    .github-pill svg {
+      color: var(--green);
+      filter: drop-shadow(0 0 10px rgba(139, 223, 63, 0.18));
+    }
+
+    .github-pill__stars {
+      min-width: 52px;
+      padding-left: 9px;
+      border-left: 1px solid rgba(246, 251, 243, 0.13);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      text-align: right;
     }
 
     .nav__cta {
@@ -401,6 +477,25 @@
       white-space: nowrap;
     }
 
+    .terminal-sequence {
+      opacity: 0;
+      transform: translateY(8px);
+      animation: terminalReveal 560ms ease forwards;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    .terminal-sequence + .terminal-sequence {
+      margin-top: 14px;
+    }
+
+    .terminal-command {
+      color: var(--text);
+    }
+
+    .terminal-result {
+      padding-left: 22px;
+    }
+
     .terminal-muted {
       color: var(--muted);
     }
@@ -413,27 +508,36 @@
       color: var(--yellow);
     }
 
-    .terminal-table {
-      min-width: 470px;
-      margin-top: 18px;
+    .terminal-ready-table {
+      min-width: 390px;
+      margin: 10px 0 6px 22px;
+      border: 1px solid rgba(246, 251, 243, 0.12);
+      border-radius: 8px;
       color: var(--muted);
+      background: rgba(2, 6, 4, 0.26);
+      overflow: hidden;
     }
 
-    .terminal-table .row {
+    .terminal-ready-table .row {
       display: grid;
-      grid-template-columns: 112px 92px 142px 86px;
+      grid-template-columns: 110px 96px minmax(130px, 1fr);
       gap: 10px;
+      padding: 7px 12px;
     }
 
-    .terminal-table .head {
-      padding-bottom: 8px;
+    .terminal-ready-table .head {
       border-bottom: 1px solid rgba(246, 251, 243, 0.2);
       color: var(--text);
       font-weight: 700;
     }
 
-    .terminal-table .row:not(.head) {
-      padding-top: 11px;
+    .terminal-connect {
+      padding-left: 22px;
+      color: var(--muted);
+    }
+
+    .terminal-guest {
+      color: #dce7df;
     }
 
     .cursor {
@@ -714,6 +818,17 @@
       46%, 100% { opacity: 0; }
     }
 
+    @keyframes terminalReveal {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     @media (max-width: 980px) {
       .hero__grid,
       .split {
@@ -769,7 +884,7 @@
         gap: 12px;
       }
 
-      .nav__links a:not(.nav__cta) {
+      .nav__links a:not(.nav__cta):not(.github-pill) {
         display: none;
       }
 
@@ -810,21 +925,27 @@
         white-space: normal;
       }
 
-      .terminal-table {
+      .terminal-ready-table {
         min-width: 0;
         width: 100%;
+        margin-left: 0;
         font-size: 10px;
       }
 
-      .terminal-table .row {
-        grid-template-columns: 70px 58px minmax(92px, 1fr) 44px;
+      .terminal-ready-table .row {
+        grid-template-columns: 56px 70px minmax(92px, 1fr);
         gap: 6px;
       }
 
-      .terminal-table .row span {
+      .terminal-ready-table .row span {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .terminal-result,
+      .terminal-connect {
+        padding-left: 0;
       }
 
       .proof-grid,
@@ -870,14 +991,25 @@
         animation-iteration-count: 1 !important;
         transition-duration: 1ms !important;
       }
+
+      .terminal-sequence {
+        opacity: 1;
+        transform: none;
+        animation: none !important;
+      }
+
+      .cursor {
+        animation: none !important;
+      }
     }
   </style>
 </head>
 <body>
   <div class="announcement" role="banner">
     <div class="container announcement__inner">
-      <span><strong>Yeast labs:</strong> real Linux guests, cloud-init, snapshots, and QEMU/KVM credibility.</span>
-      <a href="/yeast/docs/labs/">Run the official labs</a>
+      <span class="announcement__tag">Free bootcamp</span>
+      <span><strong>Twarga Academy:</strong> 30 DevOps labs powered by Yeast and real Linux VMs.</span>
+      <a href="/yeast/bootcamp/labs/">Access the labs</a>
     </div>
   </div>
 
@@ -892,7 +1024,13 @@
       <div class="nav__links">
         <a href="/yeast/docs/">Docs</a>
         <a href="#use-cases">Use Cases</a>
-        <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">GitHub <span id="gh-stars" aria-label="GitHub stars"></span></a>
+        <a class="github-pill" href="https://github.com/Twarga/yeast" target="_blank" rel="noopener" aria-label="Star Yeast on GitHub">
+          <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+            <path fill="currentColor" d="M12 .5a12 12 0 0 0-3.8 23.38c.6.1.82-.26.82-.58v-2.04c-3.34.72-4.04-1.42-4.04-1.42-.54-1.38-1.32-1.75-1.32-1.75-1.08-.74.08-.72.08-.72 1.2.08 1.84 1.24 1.84 1.24 1.06 1.82 2.78 1.3 3.46.99.1-.78.42-1.3.76-1.6-2.66-.3-5.46-1.34-5.46-5.94 0-1.32.46-2.38 1.23-3.22-.12-.3-.53-1.52.12-3.18 0 0 1-.32 3.3 1.23a11.3 11.3 0 0 1 6 0c2.3-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.9 1.23 3.22 0 4.62-2.8 5.63-5.48 5.93.43.37.82 1.1.82 2.22v3.3c0 .32.22.69.83.57A12 12 0 0 0 12 .5Z"/>
+          </svg>
+          <span>Star on GitHub</span>
+          <span class="github-pill__stars" id="gh-stars" aria-label="GitHub stars">stars</span>
+        </a>
         <a class="nav__cta" href="/yeast/docs/getting-started/quickstart/">Get Started</a>
       </div>
     </div>
@@ -932,30 +1070,43 @@
             <span class="dot dot--yellow"></span>
             <span class="dot dot--green"></span>
           </div>
-          <div class="terminal-body">
-            <div class="terminal-line"><span class="prompt">$</span><span class="terminal-green">yeast</span> init lab</div>
-            <div class="terminal-line terminal-muted">&nbsp;&nbsp;Initialized lab in ./lab</div>
-            <div class="terminal-line terminal-muted">&nbsp;&nbsp;Generated 3 VM definitions</div>
-            <br>
-            <div class="terminal-line"><span class="prompt">$</span><span class="terminal-green">yeast</span> up</div>
-            <div class="terminal-line terminal-green">&nbsp;&nbsp;VMs ready - cloud-init applied - network bridged</div>
-
-            <div class="terminal-table" aria-hidden="true">
-              <div class="row head">
-                <span>NAME</span><span>STATUS</span><span>IP ADDRESS</span><span>UPTIME</span>
-              </div>
-              <div class="row">
-                <span>ctrl</span><span>running</span><span>192.168.122.10</span><span>00:01:24</span>
-              </div>
-              <div class="row">
-                <span>worker-1</span><span>running</span><span>192.168.122.11</span><span>00:01:24</span>
-              </div>
-              <div class="row">
-                <span>worker-2</span><span>running</span><span>192.168.122.12</span><span>00:01:24</span>
-              </div>
+          <div class="terminal-body terminal-body--animated">
+            <div class="terminal-sequence" style="--delay: 80ms">
+              <div class="terminal-line terminal-command"><span class="prompt">$</span><span class="terminal-green">yeast</span> init --template ubuntu-basic</div>
+              <div class="terminal-line terminal-result"><span class="terminal-green">✓</span> Project initialized</div>
+              <div class="terminal-line terminal-result terminal-muted">config: yeast.yaml</div>
+              <div class="terminal-line terminal-result terminal-muted">metadata: .yeast/project.json</div>
+              <div class="terminal-line terminal-result terminal-muted">template: ubuntu-basic</div>
             </div>
-            <br>
-            <div class="terminal-line"><span class="prompt">$</span><span class="cursor"></span></div>
+
+            <div class="terminal-sequence" style="--delay: 860ms">
+              <div class="terminal-line terminal-command"><span class="prompt">$</span><span class="terminal-green">yeast</span> up</div>
+              <div class="terminal-line terminal-result"><span class="terminal-green">+</span> [web] Image ready</div>
+              <div class="terminal-line terminal-result"><span class="terminal-green">+</span> [web] Disk ready</div>
+              <div class="terminal-line terminal-result terminal-muted"><span class="terminal-yellow">*</span> [web] Starting VM...</div>
+              <div class="terminal-line terminal-result"><span class="terminal-green">+</span> [web] SSH ready</div>
+              <div class="terminal-line terminal-result"><span class="terminal-green">+</span> [web] Provisioned</div>
+              <div class="terminal-line terminal-result"><span class="terminal-green">+</span> [web] Ready</div>
+              <div class="terminal-line terminal-result"><span class="terminal-green">✓</span> All instances ready</div>
+
+              <div class="terminal-ready-table" aria-hidden="true">
+                <div class="row head">
+                  <span>NAME</span><span>STATUS</span><span>SSH</span>
+                </div>
+                <div class="row">
+                  <span>web</span><span>running</span><span>127.0.0.1:2222</span>
+                </div>
+              </div>
+
+              <div class="terminal-line terminal-connect">Connect: <span class="terminal-green">yeast ssh web</span></div>
+            </div>
+
+            <div class="terminal-sequence" style="--delay: 1800ms">
+              <div class="terminal-line terminal-command"><span class="prompt">$</span><span class="terminal-green">yeast</span> ssh web</div>
+              <div class="terminal-line terminal-guest">yeast@web:~$ hostname</div>
+              <div class="terminal-line terminal-green">web</div>
+              <div class="terminal-line terminal-guest">yeast@web:~$<span class="cursor"></span></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1033,17 +1184,15 @@
 
           <div class="code-card">
             <pre class="code-lines"><code><span>1</span><span class="terminal-green"># yeast.yaml</span>
-<span>2</span><span class="terminal-yellow">lab:</span> demo-lab
-<span>3</span><span class="terminal-yellow">provider:</span> qemu
-<span>4</span><span class="terminal-yellow">network:</span>
-<span>5</span>  <span class="terminal-yellow">mode:</span> bridge
-<span>6</span>  <span class="terminal-yellow">bridge:</span> virbr0
-<span>7</span><span class="terminal-yellow">vms:</span>
-<span>8</span>  - <span class="terminal-yellow">name:</span> ctrl
-<span>9</span>    <span class="terminal-yellow">memory:</span> 2048
-<span>10</span>    <span class="terminal-yellow">image:</span> ubuntu-24.04.qcow2
-<span>11</span>    <span class="terminal-yellow">cloud_init:</span> cloud-init/ctrl.yml
-<span>12</span>    <span class="terminal-yellow">cpus:</span> 2</code></pre>
+<span>2</span><span class="terminal-yellow">version:</span> 1
+<span>3</span><span class="terminal-yellow">instances:</span>
+<span>4</span>  - <span class="terminal-yellow">name:</span> web
+<span>5</span>    <span class="terminal-yellow">image:</span> ubuntu-24.04
+<span>6</span>    <span class="terminal-yellow">memory:</span> 1024
+<span>7</span>    <span class="terminal-yellow">cpus:</span> 1
+<span>8</span>    <span class="terminal-yellow">disk_size:</span> 20G
+<span>9</span>    <span class="terminal-yellow">user:</span> yeast
+<span>10</span>    <span class="terminal-yellow">sudo:</span> nopasswd</code></pre>
           </div>
         </div>
       </div>
@@ -1131,13 +1280,14 @@
       .then(repo => {
         const stars = document.getElementById("gh-stars");
         if (stars && typeof repo.stargazers_count === "number") {
-          stars.textContent = ` ${repo.stargazers_count}`;
+          const label = repo.stargazers_count === 1 ? "star" : "stars";
+          stars.textContent = `${repo.stargazers_count} ${label}`;
         }
       })
       .catch(() => {
         const stars = document.getElementById("gh-stars");
         if (stars) {
-          stars.textContent = "";
+          stars.textContent = "stars";
         }
       });
   </script>

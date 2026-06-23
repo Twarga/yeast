@@ -1,28 +1,28 @@
 /* Twarga Academy: keep course pages simple, readable, and close to Yeast docs. */
 :root {
-  --ta-primary: #8B5CF6;
-  --ta-accent: #A78BFA;
-  --ta-muted: #5B21B6;
-  --ta-border: rgba(139, 92, 246, 0.18);
-  --ta-border-strong: rgba(139, 92, 246, 0.34);
-  --ta-soft: rgba(139, 92, 246, 0.08);
-  --ta-soft-strong: rgba(139, 92, 246, 0.13);
+  --ta-primary: #8bdf3f;
+  --ta-accent: #a7f164;
+  --ta-muted: #4d8f2d;
+  --ta-border: rgba(139, 223, 63, 0.18);
+  --ta-border-strong: rgba(139, 223, 63, 0.34);
+  --ta-soft: rgba(139, 223, 63, 0.08);
+  --ta-soft-strong: rgba(139, 223, 63, 0.13);
 
-  --md-primary-fg-color: #171421;
-  --md-primary-fg-color--light: #241d36;
-  --md-primary-fg-color--dark: #090812;
+  --md-primary-fg-color: #06100c;
+  --md-primary-fg-color--light: #0a1711;
+  --md-primary-fg-color--dark: #020604;
   --md-accent-fg-color: var(--ta-primary);
   --md-typeset-a-color: var(--ta-muted);
 }
 
 .md-header {
-  background: rgba(12, 10, 20, 0.96);
+  background: rgba(2, 6, 4, 0.96);
   border-bottom: 1px solid var(--ta-border);
-  box-shadow: 0 8px 28px rgba(15, 11, 30, 0.18);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
 }
 
 .md-tabs {
-  background: #171421;
+  background: #06100c;
   border-bottom: 1px solid var(--ta-border);
 }
 
@@ -30,7 +30,7 @@
 .md-header__button.md-logo svg {
   width: 1.6rem;
   height: 1.6rem;
-  filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.55));
+  filter: drop-shadow(0 0 8px rgba(139, 223, 63, 0.45));
 }
 
 .md-nav__link:is(:focus, :hover),
@@ -46,7 +46,7 @@
 }
 
 .md-typeset h1 {
-  color: #171421;
+  color: #071006;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
@@ -54,13 +54,13 @@
 .md-typeset h2 {
   margin-top: 2.2rem;
   padding-top: 0.35rem;
-  border-top: 1px solid rgba(139, 92, 246, 0.12);
-  color: #211a32;
+  border-top: 1px solid rgba(139, 223, 63, 0.12);
+  color: #0a1711;
   font-weight: 700;
 }
 
 .md-typeset h3 {
-  color: #2d2444;
+  color: #112118;
   font-weight: 700;
 }
 
@@ -72,7 +72,7 @@
 
 .md-typeset table:not([class]) th {
   background: var(--ta-soft);
-  color: #201a31;
+  color: #0a1711;
 }
 
 .md-typeset table:not([class]) td {
@@ -80,7 +80,7 @@
 }
 
 .md-typeset code {
-  border: 1px solid rgba(139, 92, 246, 0.13);
+  border: 1px solid rgba(139, 223, 63, 0.13);
   border-radius: 0.22rem;
 }
 
@@ -126,7 +126,7 @@
 .academy-hero,
 .academy-page-hero {
   background:
-    linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(167, 139, 250, 0.04)),
+    linear-gradient(135deg, rgba(139, 223, 63, 0.12), rgba(139, 223, 63, 0.04)),
     #fff;
 }
 
@@ -154,7 +154,7 @@
 .academy-card p,
 .academy-panel-note {
   margin-bottom: 0;
-  color: #5b526a;
+  color: #526057;
 }
 
 .academy-hero__eyebrow,
@@ -187,7 +187,7 @@
   border: 1px solid var(--ta-border);
   border-radius: 999px;
   background: var(--ta-soft);
-  color: #33284d;
+  color: #182414;
   text-decoration: none;
 }
 
@@ -198,7 +198,7 @@
 .academy-button--primary {
   border-color: var(--ta-primary);
   background: var(--ta-primary);
-  color: #fff;
+  color: #071006;
 }
 
 .academy-grid,
@@ -224,7 +224,7 @@
 .academy-lab-card:hover,
 .academy-link-grid a:hover {
   border-color: var(--ta-border-strong);
-  box-shadow: 0 10px 28px rgba(49, 34, 92, 0.08);
+  box-shadow: 0 10px 28px rgba(29, 51, 19, 0.08);
 }
 
 .academy-route,
@@ -277,7 +277,7 @@
 .academy-module-name {
   display: block;
   margin-top: 0.35rem;
-  color: #201a31;
+  color: #0a1711;
   font-weight: 700;
 }
 
