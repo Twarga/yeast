@@ -112,19 +112,19 @@
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-    }
-
-    .brand img {
-      width: 36px;
-      height: 36px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: clamp(18px, 2vw, 22px);
+      font-weight: 900;
+      letter-spacing: -0.055em;
+      line-height: 1;
     }
 
     .brand span {
-      color: var(--text);
+      background: linear-gradient(135deg, #ffffff 0%, #d8ccff 52%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
 
     .nav-links {
@@ -565,9 +565,12 @@
       gap: 16px;
     }
 
-    .footer-brand img {
-      width: 28px;
-      height: 28px;
+    .footer-brand {
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 16px;
+      font-weight: 850;
+      letter-spacing: -0.045em;
     }
 
     .footer-links a {
@@ -627,7 +630,7 @@
         min-height: 64px;
       }
 
-      .brand span {
+      .brand {
         font-size: 14px;
       }
 
@@ -718,7 +721,6 @@
   <header class="site-header">
     <nav class="shell nav" aria-label="Twarga Academy navigation">
       <a class="brand" href="/yeast/bootcamp/" aria-label="Twarga Academy home">
-        <img src="/yeast/assets/ta-logo.svg" alt="" width="36" height="36" aria-hidden="true">
         <span>Twarga Academy</span>
       </a>
       <div class="nav-links">
@@ -942,7 +944,6 @@
   <footer>
     <div class="shell footer-inner">
       <div class="footer-brand">
-        <img src="/yeast/assets/ta-logo.svg" alt="" width="28" height="28" aria-hidden="true">
         <span>Twarga Academy</span>
       </div>
       <div class="footer-links" aria-label="Footer links">

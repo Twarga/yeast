@@ -8,7 +8,6 @@ hide:
     <div class="academy-hero academy-hero--intro">
       <div class="academy-hero__copy">
         <div class="academy-brand-lockup" aria-label="Twarga Academy">
-          <span class="academy-brand-mark">TA</span>
           <span class="academy-brand-word">twarga academy</span>
         </div>
         <div class="academy-hero__eyebrow">Twarga Academy · Free course</div>

@@ -7,8 +7,6 @@ docs_dir: academy
 
 theme:
   name: material
-  logo: assets/ta-logo.svg
-  favicon: assets/ta-logo.svg
   features:
     - navigation.sections
     - navigation.indexes
