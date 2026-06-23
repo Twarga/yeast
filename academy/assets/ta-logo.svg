@@ -1,27 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" role="img" aria-labelledby="title desc">
-  <title id="title">Twarga Academy TA logo</title>
-  <desc id="desc">A violet TA monogram inside a rounded square, styled as the Twarga Academy companion mark to Yeast.</desc>
+  <title id="title">Twarga Academy logo</title>
+  <desc id="desc">A bold violet TA monogram inside a dark rounded square.</desc>
   <defs>
-    <linearGradient id="frame" x1="32" y1="26" x2="170" y2="174" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#C4B5FD"/>
-      <stop offset="0.5" stop-color="#8B5CF6"/>
-      <stop offset="1" stop-color="#5B21B6"/>
+    <linearGradient id="frame" x1="18" y1="15" x2="181" y2="185" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#DDD6FE"/>
+      <stop offset="0.46" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#4C1D95"/>
     </linearGradient>
-    <linearGradient id="letters" x1="48" y1="54" x2="160" y2="144" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#EEE7FF"/>
-      <stop offset="0.52" stop-color="#A78BFA"/>
-      <stop offset="1" stop-color="#7C3AED"/>
+    <linearGradient id="mark" x1="49" y1="42" x2="165" y2="159" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F5F3FF"/>
+      <stop offset="0.28" stop-color="#C4B5FD"/>
+      <stop offset="0.68" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#6D28D9"/>
     </linearGradient>
+    <radialGradient id="surface" cx="0" cy="0" r="1" gradientTransform="translate(61 42) rotate(46) scale(178)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#21143B"/>
+      <stop offset="0.44" stop-color="#100B1D"/>
+      <stop offset="1" stop-color="#07050E"/>
+    </radialGradient>
   </defs>
 
-  <rect width="200" height="200" rx="48" fill="#08070D"/>
-  <rect x="18" y="18" width="164" height="164" rx="40" fill="#0D0B15" stroke="url(#frame)" stroke-width="7"/>
-  <rect x="31" y="31" width="138" height="138" rx="30" fill="none" stroke="#E8E1FF" stroke-opacity="0.08" stroke-width="2"/>
-  <g fill="none" stroke="url(#letters)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M48 64H104"/>
-    <path d="M76 64V140"/>
-    <path d="M112 140L138 64L164 140"/>
-    <path d="M123 111H153"/>
+  <rect width="200" height="200" rx="48" fill="#07050E"/>
+  <rect x="9" y="9" width="182" height="182" rx="44" fill="url(#surface)" stroke="url(#frame)" stroke-width="7"/>
+  <path d="M24 100C24 58.0264 58.0264 24 100 24C141.974 24 176 58.0264 176 100C176 141.974 141.974 176 100 176" fill="none" stroke="#F5F3FF" stroke-opacity="0.08" stroke-width="2" stroke-linecap="round"/>
+
+  <g fill="none" stroke="url(#mark)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M47 58H116" stroke-width="18"/>
+    <path d="M81.5 58V151" stroke-width="18"/>
+    <path d="M112 151L141 56L170 151" stroke-width="18"/>
+    <path d="M125 118H157" stroke="#F5F3FF" stroke-opacity="0.78" stroke-width="10"/>
   </g>
 </svg>
