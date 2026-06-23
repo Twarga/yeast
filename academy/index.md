@@ -7,7 +7,10 @@ hide:
   <div class="academy-shell__inner">
     <div class="academy-hero academy-hero--intro">
       <div class="academy-hero__copy">
-        <img class="academy-brand-lockup" src="assets/twarga-academy-logo.png" alt="Twarga Academy">
+        <div class="academy-brand-lockup" aria-label="Twarga Academy">
+          <span class="academy-brand-mark">TA</span>
+          <span class="academy-brand-word">twarga academy</span>
+        </div>
         <div class="academy-hero__eyebrow">Twarga Academy · Free course</div>
         <h1>Learn DevOps with Yeast.</h1>
         <p>
@@ -30,11 +33,11 @@ hide:
       <aside class="academy-hero__panel">
         <div class="academy-section-label">Course map</div>
         <ul class="academy-route">
-          <li><strong>1</strong><span>Systems</span><small>Linux, web servers, troubleshooting</small></li>
-          <li><strong>2</strong><span>Automation</span><small>Bash, Ansible, secrets</small></li>
-          <li><strong>3</strong><span>Delivery</span><small>Docker, Compose, CI, registry</small></li>
-          <li><strong>4</strong><span>Operations</span><small>Monitoring, logging, recovery</small></li>
-          <li><strong>5</strong><span>Platform</span><small>Terraform, GitOps, Kubernetes, AI</small></li>
+          <li><strong>01</strong><span>Systems</span><small>Linux, web servers, troubleshooting</small></li>
+          <li><strong>02</strong><span>Automation</span><small>Bash, Ansible, secrets</small></li>
+          <li><strong>03</strong><span>Delivery</span><small>Docker, Compose, CI, registry</small></li>
+          <li><strong>04</strong><span>Operations</span><small>Monitoring, logging, recovery</small></li>
+          <li><strong>05</strong><span>Platform</span><small>Terraform, GitOps, Kubernetes, AI</small></li>
         </ul>
         <p class="academy-panel-note">
           Yeast handles the VM engine, images, cloud-init, SSH, and state. The academy only frames the learning path.

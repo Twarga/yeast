@@ -176,10 +176,46 @@
 }
 
 .academy-brand-lockup {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
   width: min(28rem, 100%);
-  height: auto;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--ta-border);
+  border-radius: 1rem;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(139, 223, 63, 0.14), transparent 12rem),
+    linear-gradient(135deg, rgba(2, 6, 4, 0.92), rgba(8, 15, 12, 0.82));
+  box-shadow:
+    inset 0 1px 0 rgba(246, 251, 243, 0.06),
+    0 18px 42px rgba(0, 0, 0, 0.26);
+}
+
+.academy-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border: 2px solid var(--ta-primary);
+  border-radius: 0.72rem;
+  color: var(--ta-primary);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.08em;
+  line-height: 1;
+  box-shadow:
+    0 0 0 1px rgba(139, 223, 63, 0.08),
+    0 0 28px rgba(139, 223, 63, 0.22);
+}
+
+.academy-brand-word {
+  color: var(--ta-ink);
+  font-size: clamp(1.6rem, 4vw, 2.65rem);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 1;
 }
 
 .academy-hero h1,
@@ -229,6 +265,10 @@
   text-decoration: none;
 }
 
+.md-typeset .academy-button {
+  color: var(--ta-ink);
+}
+
 .academy-button {
   font-weight: 700;
 }
@@ -237,6 +277,18 @@
   border-color: var(--ta-primary);
   background: var(--ta-primary);
   color: #071006;
+}
+
+.md-typeset .academy-button--primary {
+  color: #071006;
+}
+
+.md-typeset .academy-link-grid a {
+  color: var(--ta-ink);
+}
+
+.md-typeset .academy-link-grid a strong {
+  color: var(--ta-primary);
 }
 
 .academy-grid,
@@ -285,6 +337,39 @@
   border-radius: 0.6rem;
   background: var(--ta-panel-soft);
   color: var(--ta-ink-muted);
+}
+
+.md-typeset .academy-route > li::before,
+.md-typeset .academy-rule-list > li::before,
+.md-typeset .academy-module-topics > li::before {
+  display: none;
+}
+
+.academy-route li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.7rem;
+  align-items: baseline;
+}
+
+.academy-route strong {
+  grid-row: span 2;
+  color: var(--ta-primary);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+}
+
+.academy-route span {
+  color: var(--ta-ink);
+  font-weight: 750;
+  line-height: 1.15;
+}
+
+.academy-route small {
+  color: var(--ta-ink-soft);
+  font-size: 0.7rem;
+  line-height: 1.45;
 }
 
 .academy-phase-header {
