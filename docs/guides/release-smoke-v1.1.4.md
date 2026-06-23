@@ -1,6 +1,10 @@
-# Yeast v1.1.4 Release Smoke Test
+# Release Smoke Test v1.1.4
 
-Run this on a fresh Linux/KVM host before calling `v1.1.4` shippable.
+This guide is for maintainers validating `v1.1.4` on a real Linux/KVM host.
+
+Run it on a fresh machine when possible. The goal is to prove fresh install, update, artifact download, VM lifecycle, guest control, snapshots, private networking, template initialization, raw exec output, and the daily update notice cache.
+
+## Prepare
 
 ```bash
 export YEAST_SMOKE_VERSION="v1.1.4"
@@ -17,7 +21,7 @@ ls -l /dev/kvm || true
 id
 ```
 
-Artifact check:
+## Artifact Check
 
 ```bash
 mkdir -p artifact-test
@@ -34,7 +38,9 @@ yeast version
 cd "$YEAST_SMOKE_ROOT"
 ```
 
-Installer check:
+The tarball must contain a binary named `yeast`.
+
+## Installer Check
 
 ```bash
 mkdir -p installer-test
@@ -48,38 +54,45 @@ yeast doctor
 cd "$YEAST_SMOKE_ROOT"
 ```
 
-Updater check:
+## Updater Check
 
 ```bash
-mkdir -p update-test
-cd update-test
-git clone --depth 1 --branch "${YEAST_SMOKE_VERSION}" https://github.com/Twarga/yeast.git source
-cd source
-GO_BIN="$(command -v go || true)"
-if [ -z "$GO_BIN" ] && [ -x /usr/local/lib/yeast/go/go1.25.0/bin/go ]; then
-  GO_BIN="/usr/local/lib/yeast/go/go1.25.0/bin/go"
-fi
-"$GO_BIN" build -trimpath -ldflags "-s -w -X yeast/internal/app.Version=${YEAST_SMOKE_VERSION}-smoke-old" -o /tmp/yeast-smoke-old ./cmd/yeast
-sudo install -m 0755 /tmp/yeast-smoke-old /usr/local/bin/yeast
-hash -r
-yeast version
+yeast update --check --version "${YEAST_SMOKE_VERSION}"
 sudo yeast update --force --version "${YEAST_SMOKE_VERSION}"
 hash -r
 yeast version
-yeast update --check --version "${YEAST_SMOKE_VERSION}"
+```
+
+## Official Labs Check
+
+```bash
+git clone --depth 1 --branch "${YEAST_SMOKE_VERSION}" https://github.com/Twarga/yeast.git source
+cd source
+YEAST_BIN="$(command -v yeast)" bash scripts/smoke/tutorials.sh lab01
+YEAST_BIN="$(command -v yeast)" bash scripts/smoke/tutorials.sh lab02
+YEAST_BIN="$(command -v yeast)" bash scripts/smoke/tutorials.sh lab03
 cd "$YEAST_SMOKE_ROOT"
 ```
 
-Single-VM check:
+Lab 02 must verify exact raw command output:
+
+```text
+cloudinit-lab
+yeast
+```
+
+## Single VM Manual Check
 
 ```bash
 mkdir -p vm-basic
 cd vm-basic
 yeast init --template ubuntu-basic
+grep "sudo: nopasswd" yeast.yaml
 yeast up
+test -f "$HOME/.yeast/cache/update-check.json"
 yeast status
 yeast inspect web
-yeast exec web -- whoami
+test "$(yeast exec web -- whoami)" = "yeast"
 yeast exec web -- hostname
 printf 'yeast-smoke\n' > artifact.txt
 yeast copy web --to-guest ./artifact.txt /home/yeast/artifact.txt
@@ -94,11 +107,11 @@ yeast restore web baseline
 yeast up
 yeast exec web -- test ! -e /home/yeast/broken-marker
 yeast down
-yeast destroy
+yeast destroy --yes
 cd "$YEAST_SMOKE_ROOT"
 ```
 
-Two-VM networking check:
+## Two VM Networking Check
 
 ```bash
 mkdir -p vm-network
@@ -111,15 +124,26 @@ yeast exec target -- ping -c 2 10.10.10.10
 yeast status --json
 yeast inspect attacker --json
 yeast down
-yeast destroy
+yeast destroy --yes
 ```
 
-Pass criteria:
+## Pass Criteria
 
 - artifact download and checksum pass
+- tarball extracts `yeast`
 - installed version is `v1.1.4`
-- update replaces the smoke-old binary
+- update path completes
 - `yeast doctor` has no blockers
-- Ubuntu image pulls and verifies
-- single VM boots, accepts guest control, snapshots, restores, and cleans up
+- `yeast up` creates the daily update-check cache
+- `ubuntu-basic` initializes with `user: yeast` and `sudo: nopasswd`
+- Lab 02 returns exact raw `hostname` and `whoami` outputs
+- single VM boots and accepts guest control
+- copy to/from guest works
+- snapshot/restore removes the marker file
 - two VMs can ping over the private lab network
+
+The embedded terminal version is available with:
+
+```bash
+yeast docs release-smoke
+```

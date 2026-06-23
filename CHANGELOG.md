@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v1.1.4] - 2026-06-23
+
+### Changed
+- **GitHub Pages landing page**: the announcement bar now promotes the free Twarga Academy DevOps bootcamp and links directly to the labs
+- **Real Yeast terminal proof**: the landing hero now shows the actual `yeast init --template ubuntu-basic`, `yeast up`, and `yeast ssh web` workflow instead of an invented VM table
+- **GitHub call-to-action**: the navbar GitHub link is now a polished star pill with a GitHub icon and graceful star-count fallback
+- **Twarga Academy landing page**: `/yeast/bootcamp/` now uses the same dark green premium devtool visual language as the Yeast landing page
+- **Academy docs theme**: bootcamp course pages now use Yeast green accents instead of the old purple Academy palette
+- **Current stable release docs**: installer defaults, update examples, release docs, and smoke-test docs now target `v1.1.4`
+
+### Fixed
+- **Landing config accuracy**: the homepage YAML example now uses the real v1.1 `instances` schema with `user: yeast` and `sudo: nopasswd`
+- **Academy polish**: the Twarga Academy logo and static stats now stay aligned with the Yeast brand without showing transient animated zero values
+
+[v1.1.4]: https://github.com/Twarga/yeast/releases/tag/v1.1.4
+
 ## [v1.1.3] - 2026-06-22
 
 ### Fixed
