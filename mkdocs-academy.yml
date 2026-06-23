@@ -19,8 +19,8 @@ theme:
     - content.code.copy
   palette:
     - scheme: slate
-      primary: deep purple
-      accent: deep purple
+      primary: green
+      accent: green
 
 extra_css:
   - stylesheets/academy.css

@@ -2,17 +2,31 @@
 :root {
   --ta-primary: #8bdf3f;
   --ta-accent: #a7f164;
-  --ta-muted: #4d8f2d;
+  --ta-muted: #9de95a;
+  --ta-ink: #f6fbf3;
+  --ta-ink-muted: #aebaae;
+  --ta-ink-soft: #7e8a80;
+  --ta-page: #040806;
+  --ta-panel: rgba(8, 15, 12, 0.9);
+  --ta-panel-strong: rgba(11, 20, 16, 0.96);
+  --ta-panel-soft: rgba(11, 20, 16, 0.7);
   --ta-border: rgba(139, 223, 63, 0.18);
   --ta-border-strong: rgba(139, 223, 63, 0.34);
   --ta-soft: rgba(139, 223, 63, 0.08);
   --ta-soft-strong: rgba(139, 223, 63, 0.13);
+  --yeast-text-secondary: var(--ta-ink-muted);
 
   --md-primary-fg-color: #06100c;
   --md-primary-fg-color--light: #0a1711;
   --md-primary-fg-color--dark: #020604;
+  --md-default-bg-color: var(--ta-page);
+  --md-default-fg-color: var(--ta-ink);
+  --md-default-fg-color--light: var(--ta-ink-muted);
+  --md-default-fg-color--lighter: var(--ta-ink-soft);
   --md-accent-fg-color: var(--ta-primary);
   --md-typeset-a-color: var(--ta-muted);
+  --md-code-bg-color: rgba(139, 223, 63, 0.08);
+  --md-code-fg-color: var(--ta-ink);
 }
 
 .md-header {
@@ -24,6 +38,18 @@
 .md-tabs {
   background: #06100c;
   border-bottom: 1px solid var(--ta-border);
+}
+
+.md-main {
+  background:
+    radial-gradient(circle at 80% 4rem, rgba(139, 223, 63, 0.08), transparent 30rem),
+    radial-gradient(circle at 12% 30rem, rgba(139, 223, 63, 0.05), transparent 28rem),
+    linear-gradient(180deg, #20232b 0, #111712 34rem, var(--ta-page) 100%);
+}
+
+.md-sidebar,
+.md-content {
+  color: var(--ta-ink);
 }
 
 .md-header__button.md-logo img,
@@ -46,7 +72,7 @@
 }
 
 .md-typeset h1 {
-  color: #071006;
+  color: var(--ta-ink);
   font-weight: 700;
   letter-spacing: -0.03em;
 }
@@ -55,28 +81,29 @@
   margin-top: 2.2rem;
   padding-top: 0.35rem;
   border-top: 1px solid rgba(139, 223, 63, 0.12);
-  color: #0a1711;
+  color: var(--ta-ink);
   font-weight: 700;
 }
 
 .md-typeset h3 {
-  color: #112118;
+  color: var(--ta-ink);
   font-weight: 700;
 }
 
 .md-typeset table:not([class]) {
-  border: 1px solid rgba(0, 0, 0, 0.09);
+  border: 1px solid var(--ta-border);
   border-radius: 0.45rem;
   overflow: hidden;
 }
 
 .md-typeset table:not([class]) th {
-  background: var(--ta-soft);
-  color: #0a1711;
+  background: var(--ta-panel-strong);
+  color: var(--ta-ink);
 }
 
 .md-typeset table:not([class]) td {
-  background: #fff;
+  background: var(--ta-panel);
+  color: var(--ta-ink-muted);
 }
 
 .md-typeset code {
@@ -102,6 +129,7 @@
 /* Lightweight styling for the Academy index/curriculum/module pages only. */
 .academy-shell {
   margin: 1rem 0 2.5rem;
+  color: var(--ta-ink);
 }
 
 .academy-shell__inner {
@@ -118,16 +146,26 @@
   padding: 1rem;
   border: 1px solid var(--ta-border);
   border-radius: 0.75rem;
-  background: #fff;
-  color: inherit;
+  background:
+    linear-gradient(180deg, rgba(246, 251, 243, 0.045), rgba(246, 251, 243, 0.018)),
+    var(--ta-panel);
+  color: var(--ta-ink);
   text-decoration: none;
+  box-shadow:
+    inset 0 1px 0 rgba(246, 251, 243, 0.055),
+    0 20px 45px rgba(0, 0, 0, 0.18);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .academy-hero,
 .academy-page-hero {
   background:
-    linear-gradient(135deg, rgba(139, 223, 63, 0.12), rgba(139, 223, 63, 0.04)),
-    #fff;
+    radial-gradient(circle at top left, rgba(139, 223, 63, 0.18), transparent 28rem),
+    linear-gradient(135deg, rgba(139, 223, 63, 0.1), rgba(246, 251, 243, 0.025)),
+    var(--ta-panel-strong);
 }
 
 .academy-hero--intro {
@@ -154,7 +192,7 @@
 .academy-card p,
 .academy-panel-note {
   margin-bottom: 0;
-  color: #526057;
+  color: var(--ta-ink-muted);
 }
 
 .academy-hero__eyebrow,
@@ -187,7 +225,7 @@
   border: 1px solid var(--ta-border);
   border-radius: 999px;
   background: var(--ta-soft);
-  color: #182414;
+  color: var(--ta-ink);
   text-decoration: none;
 }
 
@@ -224,7 +262,10 @@
 .academy-lab-card:hover,
 .academy-link-grid a:hover {
   border-color: var(--ta-border-strong);
-  box-shadow: 0 10px 28px rgba(29, 51, 19, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(246, 251, 243, 0.08),
+    0 18px 40px rgba(0, 0, 0, 0.28);
+  transform: translateY(-1px);
 }
 
 .academy-route,
@@ -242,7 +283,8 @@
   padding: 0.7rem 0.8rem;
   border: 1px solid var(--ta-border);
   border-radius: 0.6rem;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--ta-panel-soft);
+  color: var(--ta-ink-muted);
 }
 
 .academy-phase-header {
@@ -260,6 +302,10 @@
   border: 0;
 }
 
+.academy-phase-header > span:not(.academy-phase-number) {
+  color: var(--ta-ink-muted);
+}
+
 .academy-phase-number,
 .academy-module-badge {
   display: inline-flex;
@@ -269,15 +315,16 @@
   height: 1.8rem;
   border-radius: 0.5rem;
   background: var(--ta-primary);
-  color: #fff;
+  color: #071006;
   font-weight: 800;
+  box-shadow: 0 0 24px rgba(139, 223, 63, 0.18);
 }
 
 .academy-lab-title,
 .academy-module-name {
   display: block;
   margin-top: 0.35rem;
-  color: #0a1711;
+  color: var(--ta-ink);
   font-weight: 700;
 }
 
@@ -289,13 +336,19 @@
 .academy-table th,
 .academy-table td {
   padding: 0.7rem;
-  border: 1px solid rgba(0, 0, 0, 0.09);
+  border: 1px solid var(--ta-border);
   text-align: left;
   vertical-align: top;
 }
 
 .academy-table th {
-  background: var(--ta-soft);
+  background: var(--ta-panel-strong);
+  color: var(--ta-ink);
+}
+
+.academy-table td {
+  background: var(--ta-panel);
+  color: var(--ta-ink-muted);
 }
 
 .academy-back {
@@ -312,5 +365,34 @@
 @media screen and (max-width: 920px) {
   .academy-hero--intro {
     grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .academy-phase-header {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+
+  .academy-phase-header > span:not(.academy-phase-number) {
+    grid-column: 1 / -1;
+    line-height: 1.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .academy-card,
+  .academy-card--module,
+  .academy-lab-card,
+  .academy-link-grid a {
+    transition: none;
+  }
+
+  .academy-card:hover,
+  .academy-card--module:hover,
+  .academy-lab-card:hover,
+  .academy-link-grid a:hover {
+    transform: none;
   }
 }
