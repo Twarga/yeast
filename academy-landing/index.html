@@ -4,665 +4,545 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Twarga Academy - Free DevOps Bootcamp</title>
-  <meta name="description" content="30 hands-on labs. Five phases from Linux fundamentals to Kubernetes and AI ops. Free DevOps bootcamp powered by Yeast.">
+  <meta name="description" content="A free 30-lab DevOps bootcamp powered by Yeast. Build Linux, automation, delivery, observability, platform, and AI ops workflows on real local VMs.">
   <link rel="icon" type="image/x-icon" href="/yeast/assets/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
 
     :root {
-      --bg:          #020604;
-      --panel:       rgba(9, 16, 13, 0.86);
-      --panel-2:     rgba(13, 22, 18, 0.94);
-      --green:       #8bdf3f;
-      --green-soft:  rgba(139, 223, 63, 0.12);
-      --green-glow:  rgba(139, 223, 63, 0.28);
-      --line:        rgba(207, 255, 219, 0.12);
-      --line-strong: rgba(139, 223, 63, 0.34);
-      --text:        #f6fbf3;
-      --muted:       #a9b5ad;
-      --dim:         #6f7a72;
-      --serif: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-      --sans:  "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-      --mono:  "JetBrains Mono", ui-monospace, Menlo, monospace;
+      --bg: #08070d;
+      --bg-soft: #0d0b15;
+      --panel: rgba(18, 15, 28, 0.72);
+      --panel-strong: rgba(25, 20, 38, 0.86);
+      --violet: #8b5cf6;
+      --violet-bright: #a78bfa;
+      --violet-soft: rgba(139, 92, 246, 0.14);
+      --violet-line: rgba(167, 139, 250, 0.26);
+      --line: rgba(232, 225, 255, 0.1);
+      --line-strong: rgba(232, 225, 255, 0.18);
+      --text: #faf7ff;
+      --muted: #b8adc9;
+      --dim: #756b86;
+      --black: #05040a;
+      --sans: "Manrope", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+      --max: 1184px;
     }
 
-    html { scroll-behavior: smooth; }
+    html {
+      scroll-behavior: smooth;
+      background: var(--bg);
+    }
 
     body {
       margin: 0;
       min-height: 100vh;
-      background:
-        radial-gradient(circle at 18% 14%, rgba(139, 223, 63, 0.13), transparent 27rem),
-        radial-gradient(circle at 88% 54%, rgba(139, 223, 63, 0.08), transparent 30rem),
-        linear-gradient(180deg, #020604 0%, #030805 48%, #07100d 100%);
       color: var(--text);
       font-family: var(--sans);
-      line-height: 1.55;
+      line-height: 1.6;
+      background:
+        radial-gradient(circle at 50% -12%, rgba(139, 92, 246, 0.26), transparent 32rem),
+        radial-gradient(circle at 100% 18%, rgba(109, 40, 217, 0.13), transparent 30rem),
+        linear-gradient(180deg, #0a0711 0%, #08070d 48%, #06050a 100%);
       -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
 
     body::before {
       content: "";
       position: fixed;
       inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(250, 247, 255, 0.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(250, 247, 255, 0.02) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: linear-gradient(180deg, black 0%, transparent 72%);
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
       z-index: -1;
       pointer-events: none;
       background:
-        linear-gradient(rgba(246, 251, 243, 0.026) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(246, 251, 243, 0.026) 1px, transparent 1px);
-      background-size: 76px 76px;
-      mask-image: linear-gradient(180deg, black, transparent 78%);
+        linear-gradient(90deg, rgba(8, 7, 13, 0.96) 0%, rgba(8, 7, 13, 0.38) 42%, rgba(8, 7, 13, 0.9) 100%);
     }
 
-    a { color: inherit; text-decoration: none; }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
 
-    .container {
-      width: min(1100px, calc(100% - 48px));
+    a:focus-visible,
+    button:focus-visible {
+      outline: 2px solid var(--violet-bright);
+      outline-offset: 4px;
+      border-radius: 8px;
+    }
+
+    .shell {
+      width: min(var(--max), calc(100% - 32px));
       margin: 0 auto;
     }
 
-    /* -- Nav ----------------------------------------------------- */
-    .nav {
+    .site-header {
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 20;
       border-bottom: 1px solid var(--line);
-      background: rgba(2, 6, 4, 0.88);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+      background: rgba(8, 7, 13, 0.76);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
     }
 
-    .nav-inner {
-      height: 68px;
+    .nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 24px;
+      min-height: 72px;
     }
 
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      font-family: var(--mono);
-      font-size: 17px;
-      font-weight: 700;
-      letter-spacing: 0;
+      gap: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
     }
 
     .brand img {
-      width: 32px;
-      height: 32px;
-      filter: drop-shadow(0 0 12px rgba(139, 223, 63, 0.34));
+      width: 36px;
+      height: 36px;
     }
 
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      color: var(--muted);
-      font-size: 15px;
-      font-weight: 500;
-    }
-
-    .nav-links a {
-      transition: color 150ms ease;
-    }
-
-    .nav-links a:hover { color: var(--text); }
-
-    .nav-pill {
-      display: inline-flex;
-      align-items: center;
-      min-height: 36px;
-      padding: 0 16px;
-      border: 1px solid var(--green-glow);
-      border-radius: 8px;
-      background: var(--green-soft);
-      color: var(--green) !important;
-      font-weight: 700;
-      font-size: 14px;
-      transition: background 150ms ease, border-color 150ms ease !important;
-    }
-
-    .nav-pill:hover {
-      background: rgba(139, 223, 63, 0.18) !important;
-      border-color: var(--green) !important;
-    }
-
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--dim);
-      font-size: 13px;
-      font-family: var(--mono);
-      transition: color 150ms ease;
-    }
-
-    .back-link:hover { color: var(--muted); }
-
-    /* -- Hero ---------------------------------------------------- */
-    .hero {
-      padding: 96px 0 80px;
-      border-bottom: 1px solid var(--line);
-      overflow: hidden;
-    }
-
-    .hero-inner {
-      display: grid;
-      grid-template-columns: 1fr min(480px, 40%);
-      gap: 56px;
-      align-items: center;
-    }
-
-    .hero-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 24px;
-      color: var(--green);
-      font-family: var(--mono);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    .hero-eyebrow::before {
-      content: "";
-      width: 22px;
-      height: 1px;
-      background: var(--green);
-      opacity: 0.7;
-    }
-
-    .hero h1 {
-      margin: 0;
-      font-family: var(--serif);
-      font-size: clamp(42px, 6vw, 72px);
-      font-weight: 700;
-      line-height: 1.04;
-      letter-spacing: 0;
+    .brand span {
       color: var(--text);
     }
 
-    .hero h1 em {
-      font-style: italic;
-      color: var(--green);
+    .nav-links {
+      display: inline-flex;
+      align-items: center;
+      gap: 24px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 650;
     }
 
-    .hero-sub {
-      margin: 22px 0 0;
-      font-size: 18px;
+    .nav-links a {
+      transition: color 160ms ease, transform 160ms ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      min-height: calc(100vh - 72px);
+      display: grid;
+      align-items: center;
+      padding: 96px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.68fr);
+      gap: 96px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      color: var(--violet-bright);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 32px;
+      height: 1px;
+      background: currentColor;
+      opacity: 0.7;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    .hero-title {
+      max-width: 760px;
+      margin-bottom: 24px;
+      color: var(--text);
+      font-size: clamp(48px, 8vw, 96px);
+      font-weight: 800;
+      letter-spacing: -0.075em;
+      line-height: 0.95;
+    }
+
+    .hero-title .accent {
+      color: var(--violet-bright);
+      font-style: italic;
+      letter-spacing: -0.085em;
+    }
+
+    .hero-copy {
+      max-width: 600px;
+      margin-bottom: 32px;
       color: var(--muted);
-      line-height: 1.7;
-      max-width: 520px;
+      font-size: clamp(18px, 2vw, 22px);
+      line-height: 1.75;
     }
 
     .hero-actions {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
-      margin-top: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
     }
 
-    .btn {
+    .button {
       display: inline-flex;
+      min-height: 48px;
       align-items: center;
       justify-content: center;
-      min-height: 50px;
-      padding: 0 22px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 15px;
-      transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease, border-color 150ms ease;
-    }
-
-    .btn:hover { transform: translateY(-2px); }
-
-    .btn-primary {
-      background: var(--green);
-      color: #1a1000;
-      border: 1px solid var(--green);
-      box-shadow: 0 0 0 rgba(139, 223, 63, 0);
-    }
-
-    .btn-primary:hover {
-      box-shadow: 0 8px 28px rgba(139, 223, 63, 0.28);
-    }
-
-    .btn-secondary {
-      background: rgba(16,15,24,0.8);
-      color: var(--text);
-      border: 1px solid var(--line-strong);
-    }
-
-    .hero-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 28px;
-    }
-
-    .meta-pill {
-      display: inline-flex;
-      align-items: center;
-      height: 28px;
-      padding: 0 10px;
-      border: 1px solid var(--line);
+      gap: 10px;
+      padding: 0 20px;
+      border: 1px solid transparent;
       border-radius: 999px;
-      background: rgba(139, 223, 63, 0.06);
-      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+      transition:
+        transform 160ms ease,
+        border-color 160ms ease,
+        background 160ms ease,
+        color 160ms ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .button-primary {
+      background: var(--text);
+      color: var(--black);
+    }
+
+    .button-primary:hover {
+      background: #ffffff;
+    }
+
+    .hero-note {
+      color: var(--dim);
+      font-family: var(--mono);
       font-size: 12px;
-      font-family: var(--mono);
     }
 
-    /* Hero right - course card */
-    .hero-card {
-      padding: 28px;
-      border: 1px solid var(--line-strong);
-      border-radius: 16px;
-      background:
-        radial-gradient(circle at top left, rgba(139, 223, 63, 0.09), transparent 50%),
-        var(--panel);
+    .course-rail {
+      border-left: 1px solid var(--line-strong);
+      padding: 8px 0 8px 32px;
     }
 
-    .hero-card-label {
-      color: var(--green);
+    .rail-kicker {
+      margin-bottom: 32px;
+      color: var(--dim);
       font-family: var(--mono);
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      margin-bottom: 16px;
     }
 
-    .phase-list {
-      list-style: none;
+    .rail-list {
+      display: grid;
+      gap: 24px;
       margin: 0;
       padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+      list-style: none;
     }
 
-    .phase-list li {
+    .rail-list li {
       display: grid;
-      grid-template-columns: 28px 1fr auto;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: rgba(139, 223, 63, 0.04);
-      font-size: 14px;
+      grid-template-columns: 48px 1fr;
+      gap: 16px;
+      align-items: baseline;
     }
 
-    .phase-num {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
-      border-radius: 6px;
-      background: var(--green-soft);
-      color: var(--green);
+    .rail-number {
+      color: var(--violet-bright);
       font-family: var(--mono);
-      font-size: 11px;
-      font-weight: 700;
+      font-size: 12px;
+      font-weight: 800;
     }
 
-    .phase-name { color: var(--text); font-weight: 500; }
+    .rail-title {
+      display: block;
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+    }
 
-    .phase-count {
+    .rail-meta {
+      display: block;
+      margin-top: 4px;
       color: var(--dim);
-      font-family: var(--mono);
-      font-size: 11px;
+      font-size: 14px;
+      line-height: 1.5;
     }
 
-    /* -- Stats strip --------------------------------------------- */
-    .stats {
+    .proof {
       border-bottom: 1px solid var(--line);
-      background: rgba(3, 8, 6, 0.6);
-      padding: 0;
+      background: rgba(5, 4, 10, 0.34);
     }
 
-    .stats-grid {
+    .proof-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
-      background: var(--line);
       border-left: 1px solid var(--line);
+    }
+
+    .proof-item {
+      min-height: 128px;
+      padding: 32px 24px;
       border-right: 1px solid var(--line);
     }
 
-    .stat-item {
-      padding: 28px 24px;
-      background: rgba(9, 16, 13, 0.95);
-      text-align: center;
-    }
-
-    .stat-value {
+    .proof-value {
       display: block;
-      font-family: var(--serif);
-      font-size: 42px;
-      font-weight: 700;
-      color: var(--green);
+      color: var(--text);
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 800;
+      letter-spacing: -0.06em;
       line-height: 1;
-      letter-spacing: 0;
     }
 
-    .stat-label {
+    .proof-label {
       display: block;
-      margin-top: 6px;
+      margin-top: 12px;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 14px;
     }
 
-    /* -- Section base -------------------------------------------- */
-    section { padding: 88px 0; }
+    .section {
+      padding: 112px 0;
+      border-bottom: 1px solid var(--line);
+    }
 
-    .section-eyebrow {
-      color: var(--green);
-      font-family: var(--mono);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 14px;
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.8fr) minmax(280px, 0.55fr);
+      gap: 64px;
+      align-items: end;
+      margin-bottom: 64px;
     }
 
     .section-title {
-      margin: 0;
-      font-family: var(--serif);
-      font-size: clamp(28px, 4vw, 44px);
-      font-weight: 700;
-      line-height: 1.1;
-      letter-spacing: 0;
+      margin-bottom: 0;
       color: var(--text);
+      font-size: clamp(36px, 5vw, 64px);
+      font-weight: 800;
+      letter-spacing: -0.065em;
+      line-height: 1;
     }
 
-    .section-title em {
-      font-style: italic;
-      color: var(--green);
-    }
-
-    .section-body {
-      margin: 14px 0 0;
+    .section-copy {
+      margin-bottom: 0;
       color: var(--muted);
       font-size: 17px;
-      line-height: 1.7;
-      max-width: 580px;
+      line-height: 1.75;
     }
 
-    /* -- Phase strip --------------------------------------------- */
-    .phases { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: rgba(3, 8, 6, 0.48); }
-
-    .phase-strip {
+    .sequence {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      border-top: 1px solid var(--line);
+    }
+
+    .sequence-row {
+      display: grid;
+      grid-template-columns: 104px minmax(220px, 0.42fr) 1fr auto;
+      gap: 32px;
+      align-items: baseline;
+      padding: 32px 0;
+      border-bottom: 1px solid var(--line);
+      transition: border-color 160ms ease, color 160ms ease;
+    }
+
+    .sequence-row:hover {
+      border-color: var(--violet-line);
+    }
+
+    .sequence-code,
+    .lab-number {
+      color: var(--violet-bright);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .sequence-name {
+      color: var(--text);
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.045em;
+      line-height: 1.15;
+    }
+
+    .sequence-detail {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .sequence-link {
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      transition: color 160ms ease, transform 160ms ease;
+    }
+
+    .sequence-row:hover .sequence-link {
+      color: var(--violet-bright);
+      transform: translateX(2px);
+    }
+
+    .build-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
       gap: 1px;
       background: var(--line);
       border: 1px solid var(--line);
-      border-radius: 12px;
+      border-radius: 24px;
       overflow: hidden;
-      margin-top: 48px;
     }
 
-    .phase-card {
-      padding: 28px 20px;
-      background: var(--panel);
-      transition: background 160ms ease;
-      position: relative;
-    }
-
-    .phase-card::after {
-      content: "";
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 2px;
-      background: var(--green);
-      opacity: 0;
-      transition: opacity 200ms ease;
-    }
-
-    .phase-card:hover { background: var(--panel-2); }
-    .phase-card:hover::after { opacity: 1; }
-
-    .phase-card-num {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      border: 1px solid var(--line-strong);
-      background: var(--green-soft);
-      color: var(--green);
-      font-family: var(--mono);
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 14px;
-    }
-
-    .phase-card-name {
-      display: block;
-      color: var(--text);
-      font-weight: 600;
-      font-size: 15px;
-      margin-bottom: 8px;
-    }
-
-    .phase-card-range {
-      color: var(--dim);
-      font-family: var(--mono);
-      font-size: 11px;
-    }
-
-    .phase-card-topics {
-      margin: 10px 0 0;
-      padding: 0;
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .phase-card-topics li {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.4;
-      padding-left: 10px;
-      position: relative;
-    }
-
-    .phase-card-topics li::before {
-      content: "-";
-      position: absolute;
-      left: 0;
-      color: var(--green);
-      opacity: 0.5;
-    }
-
-    /* -- What you build ------------------------------------------ */
-    .outcomes-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-top: 48px;
-    }
-
-    .outcome-card {
-      padding: 28px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
+    .build-item {
+      min-height: 280px;
+      padding: 32px;
       background:
-        radial-gradient(circle at top left, rgba(139, 223, 63, 0.07), transparent 40%),
-        var(--panel);
-      transition: border-color 160ms ease, transform 160ms ease;
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01)),
+        rgba(12, 10, 18, 0.86);
     }
 
-    .outcome-card:hover {
-      border-color: var(--line-strong);
-      transform: translateY(-3px);
+    .build-number {
+      color: var(--violet-bright);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
     }
 
-    .outcome-number {
-      font-family: var(--serif);
-      font-size: 52px;
-      font-weight: 700;
-      color: var(--green);
-      opacity: 0.3;
-      line-height: 1;
-      margin-bottom: 12px;
-      letter-spacing: 0;
-    }
-
-    .outcome-title {
-      margin: 0 0 10px;
-      font-size: 20px;
-      font-weight: 700;
+    .build-title {
+      margin: 56px 0 16px;
       color: var(--text);
-      letter-spacing: 0;
-      line-height: 1.25;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.055em;
+      line-height: 1.1;
     }
 
-    .outcome-body {
+    .build-copy {
       margin: 0;
       color: var(--muted);
-      font-size: 14px;
-      line-height: 1.65;
-    }
-
-    /* -- Course path --------------------------------------------- */
-    .path { border-top: 1px solid var(--line); }
-
-    .path-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-top: 48px;
-    }
-
-    .path-block {
-      padding: 24px 26px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--panel);
-      transition: border-color 160ms ease;
-    }
-
-    .path-block:hover { border-color: var(--line-strong); }
-
-    .path-block-wide {
-      grid-column: 1 / -1;
-    }
-
-    .path-block-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .path-block-num {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      background: var(--green-soft);
-      border: 1px solid var(--line-strong);
-      color: var(--green);
-      font-family: var(--mono);
       font-size: 15px;
-      font-weight: 700;
-      flex-shrink: 0;
+      line-height: 1.75;
     }
 
-    .path-block-title {
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--text);
-      letter-spacing: 0;
+    .labs-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 0.36fr) minmax(0, 0.64fr);
+      gap: 64px;
+      align-items: start;
     }
 
-    .path-block-range {
-      display: inline-flex;
-      align-items: center;
-      height: 22px;
-      padding: 0 8px;
-      border-radius: 999px;
-      background: var(--green-soft);
-      border: 1px solid var(--line);
-      color: var(--green);
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      flex-shrink: 0;
+    .labs-index {
+      position: sticky;
+      top: 104px;
     }
 
-    .path-lab-list {
-      list-style: none;
+    .labs-index p {
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .lab-list {
+      display: grid;
+      gap: 0;
       margin: 0;
       padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .path-lab-list li a {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.4;
-      transition: color 130ms ease;
-    }
-
-    .path-lab-list li a:hover { color: var(--text); }
-
-    .path-lab-list .lab-n {
-      color: var(--green);
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 700;
-      flex-shrink: 0;
-      opacity: 0.7;
-    }
-
-    .path-lab-list-split {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 6px 32px;
-    }
-
-    /* -- CTA ----------------------------------------------------- */
-    .cta-section {
+      list-style: none;
       border-top: 1px solid var(--line);
+    }
+
+    .lab-list a {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 20px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      transition: color 160ms ease, border-color 160ms ease, transform 160ms ease;
+    }
+
+    .lab-list a:hover {
+      border-color: var(--violet-line);
+      color: var(--text);
+      transform: translateX(2px);
+    }
+
+    .lab-title {
+      color: var(--text);
+      font-weight: 750;
+      letter-spacing: -0.02em;
+    }
+
+    .final {
+      padding: 112px 0;
       text-align: center;
     }
 
-    .cta-section .section-title { max-width: 680px; margin: 0 auto; }
-    .cta-section .section-body  { max-width: 520px; margin: 14px auto 0; }
-
-    .cta-actions {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 32px;
+    .final h2 {
+      max-width: 760px;
+      margin: 0 auto 24px;
+      color: var(--text);
+      font-size: clamp(40px, 6vw, 72px);
+      font-weight: 800;
+      letter-spacing: -0.07em;
+      line-height: 0.98;
     }
 
-    /* -- Footer -------------------------------------------------- */
+    .final p {
+      max-width: 560px;
+      margin: 0 auto 32px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.75;
+    }
+
     footer {
       border-top: 1px solid var(--line);
       padding: 32px 0;
@@ -671,59 +551,161 @@
 
     .footer-inner {
       display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
       align-items: center;
       justify-content: space-between;
-      gap: 20px;
-      flex-wrap: wrap;
+      font-size: 14px;
     }
 
-    .footer-brand {
+    .footer-brand,
+    .footer-links {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      font-family: var(--mono);
-      font-size: 13px;
+      gap: 16px;
     }
 
-    .footer-brand img { width: 22px; height: 22px; }
-
-    .footer-links {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      font-size: 13px;
+    .footer-brand img {
+      width: 28px;
+      height: 28px;
     }
 
     .footer-links a {
       color: var(--muted);
-      transition: color 130ms ease;
+      transition: color 160ms ease;
     }
 
-    .footer-links a:hover { color: var(--text); }
+    .footer-links a:hover {
+      color: var(--text);
+    }
 
-    /* -- Responsive ---------------------------------------------- */
     @media (max-width: 960px) {
-      .hero-inner { grid-template-columns: 1fr; }
-      .hero-card  { display: none; }
-      .phase-strip { grid-template-columns: repeat(3, 1fr); }
-      .stats-grid  { grid-template-columns: repeat(2, 1fr); }
-      .outcomes-grid { grid-template-columns: 1fr; }
-      .path-grid   { grid-template-columns: 1fr; }
-      .path-lab-list-split { grid-template-columns: 1fr; }
+      .hero {
+        min-height: auto;
+        padding: 80px 0;
+      }
+
+      .hero-grid,
+      .section-head,
+      .labs-panel {
+        grid-template-columns: 1fr;
+        gap: 48px;
+      }
+
+      .course-rail {
+        border-left: 0;
+        border-top: 1px solid var(--line-strong);
+        padding: 32px 0 0;
+      }
+
+      .proof-grid,
+      .build-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .sequence-row {
+        grid-template-columns: 72px 1fr;
+        gap: 16px 24px;
+      }
+
+      .sequence-detail,
+      .sequence-link {
+        grid-column: 2;
+      }
+
+      .labs-index {
+        position: static;
+      }
     }
 
     @media (max-width: 640px) {
-      .container { width: min(100% - 28px, 1100px); }
-      .hero { padding: 64px 0 56px; }
-      .phase-strip { grid-template-columns: 1fr 1fr; }
-      .nav-links a:not(.nav-pill):not(.back-link) { display: none; }
-      section { padding: 60px 0; }
+      .shell {
+        width: min(100% - 24px, var(--max));
+      }
+
+      .nav {
+        min-height: 64px;
+      }
+
+      .brand span {
+        font-size: 14px;
+      }
+
+      .nav-links {
+        gap: 16px;
+      }
+
+      .nav-links a:first-child {
+        display: none;
+      }
+
+      .hero {
+        padding: 64px 0;
+      }
+
+      .hero-title {
+        font-size: clamp(44px, 15vw, 64px);
+      }
+
+      .hero-copy {
+        font-size: 17px;
+      }
+
+      .hero-actions {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .button {
+        width: 100%;
+      }
+
+      .proof-grid,
+      .build-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .proof-item {
+        min-height: 104px;
+      }
+
+      .section,
+      .final {
+        padding: 80px 0;
+      }
+
+      .section-head {
+        margin-bottom: 48px;
+      }
+
+      .sequence-row {
+        grid-template-columns: 1fr;
+      }
+
+      .sequence-detail,
+      .sequence-link {
+        grid-column: auto;
+      }
+
+      .labs-panel {
+        gap: 40px;
+      }
+
+      .footer-inner,
+      .footer-links {
+        align-items: flex-start;
+        flex-direction: column;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
+      html {
+        scroll-behavior: auto;
+      }
 
-      *, *::before, *::after {
+      *,
+      *::before,
+      *::after {
         animation-duration: 1ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 1ms !important;
@@ -733,398 +715,244 @@
   </style>
 </head>
 <body>
-
-  <nav class="nav">
-    <div class="container nav-inner">
-      <a class="brand" href="/yeast/bootcamp/">
-        <img src="/yeast/assets/ta-logo.svg" alt="Twarga Academy" width="32" height="32">
+  <header class="site-header">
+    <nav class="shell nav" aria-label="Twarga Academy navigation">
+      <a class="brand" href="/yeast/bootcamp/" aria-label="Twarga Academy home">
+        <img src="/yeast/assets/ta-logo.svg" alt="" width="36" height="36" aria-hidden="true">
         <span>Twarga Academy</span>
       </a>
       <div class="nav-links">
-        <a class="back-link" href="/yeast/">Back to Yeast</a>
         <a href="/yeast/bootcamp/curriculum/">Curriculum</a>
         <a href="/yeast/bootcamp/labs/">Labs</a>
-        <a class="nav-pill" href="/yeast/bootcamp/labs/">Access labs</a>
       </div>
-    </div>
-  </nav>
+    </nav>
+  </header>
 
-  <!-- -- Hero --------------------------------------------------- -->
-  <section class="hero">
-    <div class="container">
-      <div class="hero-inner">
-        <div class="hero-copy">
-          <div class="hero-eyebrow">Twarga Academy - Free DevOps bootcamp</div>
-          <h1>Practice <em>DevOps with Yeast</em><br>on real machines.</h1>
-          <p class="hero-sub">
-            30 hands-on labs. Five phases from Linux baseline to Kubernetes delivery and AI ops.
-            Every lab runs on local VMs - no cloud account, no fake shells.
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="shell hero-grid">
+        <div>
+          <div class="eyebrow">Free DevOps bootcamp</div>
+          <h1 id="hero-title" class="hero-title">Build real systems. <span class="accent">Locally.</span></h1>
+          <p class="hero-copy">
+            Twarga Academy is a 30-lab DevOps course powered by Yeast. You practice Linux, automation,
+            delivery, observability, Kubernetes, and AI ops on real local VMs, not fake browser terminals.
           </p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="/yeast/bootcamp/labs/">Access the labs</a>
-            <a class="btn btn-secondary" href="/yeast/bootcamp/curriculum/">View curriculum</a>
-          </div>
-          <div class="hero-meta">
-            <span class="meta-pill">30 labs</span>
-            <span class="meta-pill">5 phases</span>
-            <span class="meta-pill">Free</span>
-            <span class="meta-pill">Linux / KVM</span>
-            <span class="meta-pill">Yeast v1.1</span>
+            <a class="button button-primary" href="/yeast/bootcamp/01-linux-server-baseline/lab/">Start with Lab 01</a>
+            <span class="hero-note">No account. No cloud bill. Linux/KVM first.</span>
           </div>
         </div>
 
-        <div class="hero-card">
-          <div class="hero-card-label">Course map</div>
-          <ul class="phase-list">
+        <aside class="course-rail" aria-label="Course sequence">
+          <div class="rail-kicker">Course spine</div>
+          <ol class="rail-list">
             <li>
-              <span class="phase-num">1</span>
-              <span class="phase-name">Systems</span>
-              <span class="phase-count">05 labs</span>
+              <span class="rail-number">01-05</span>
+              <span>
+                <span class="rail-title">Systems</span>
+                <span class="rail-meta">Linux baseline, web servers, databases, troubleshooting.</span>
+              </span>
             </li>
             <li>
-              <span class="phase-num">2</span>
-              <span class="phase-name">Automation</span>
-              <span class="phase-count">04 labs</span>
+              <span class="rail-number">06-09</span>
+              <span>
+                <span class="rail-title">Automation</span>
+                <span class="rail-meta">Bash, Ansible, multi-VM topology, secrets.</span>
+              </span>
             </li>
             <li>
-              <span class="phase-num">3</span>
-              <span class="phase-name">Containers &amp; Delivery</span>
-              <span class="phase-count">07 labs</span>
+              <span class="rail-number">10-16</span>
+              <span>
+                <span class="rail-title">Delivery</span>
+                <span class="rail-meta">Docker, Compose, CI, runners, registries, rollback.</span>
+              </span>
             </li>
             <li>
-              <span class="phase-num">4</span>
-              <span class="phase-name">Operations</span>
-              <span class="phase-count">06 labs</span>
+              <span class="rail-number">17-22</span>
+              <span>
+                <span class="rail-title">Operations</span>
+                <span class="rail-meta">Metrics, logs, tracing, SLOs, backup, chaos.</span>
+              </span>
             </li>
             <li>
-              <span class="phase-num">5</span>
-              <span class="phase-name">Platform</span>
-              <span class="phase-count">08 labs</span>
+              <span class="rail-number">23-30</span>
+              <span>
+                <span class="rail-title">Platform</span>
+                <span class="rail-meta">Terraform, GitOps, Kubernetes, platform capstone, AI ops.</span>
+              </span>
             </li>
-          </ul>
+          </ol>
+        </aside>
+      </div>
+    </section>
+
+    <section class="proof" aria-label="Course facts">
+      <div class="shell proof-grid">
+        <div class="proof-item">
+          <span class="proof-value">30</span>
+          <span class="proof-label">hands-on labs</span>
+        </div>
+        <div class="proof-item">
+          <span class="proof-value">5</span>
+          <span class="proof-label">ordered phases</span>
+        </div>
+        <div class="proof-item">
+          <span class="proof-value">0</span>
+          <span class="proof-label">cloud accounts required</span>
+        </div>
+        <div class="proof-item">
+          <span class="proof-value">100%</span>
+          <span class="proof-label">local VM practice</span>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- -- Stats --------------------------------------------------- -->
-  <div class="stats">
-    <div class="container">
-      <div class="stats-grid">
-        <div class="stat-item">
-          <span class="stat-value">30</span>
-          <span class="stat-label">Hands-on labs</span>
+    <section class="section" aria-labelledby="sequence-title">
+      <div class="shell">
+        <div class="section-head">
+          <h2 id="sequence-title" class="section-title">A course that compounds.</h2>
+          <p class="section-copy">
+            Each phase depends on the last. You start with one Linux machine, then turn that base into
+            automation, delivery, observability, and platform work.
+          </p>
         </div>
-        <div class="stat-item">
-          <span class="stat-value">5</span>
-          <span class="stat-label">Course phases</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value">100%</span>
-          <span class="stat-label">Local VMs, no cloud</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value">Free</span>
-          <span class="stat-label">Always</span>
+
+        <div class="sequence">
+          <a class="sequence-row" href="/yeast/bootcamp/labs/#systems">
+            <span class="sequence-code">01</span>
+            <span class="sequence-name">Systems</span>
+            <p class="sequence-detail">Build a Linux baseline, ship a static site, proxy an app, add a database, and debug it under pressure.</p>
+            <span class="sequence-link">Labs 01-05</span>
+          </a>
+          <a class="sequence-row" href="/yeast/bootcamp/labs/#automation">
+            <span class="sequence-code">02</span>
+            <span class="sequence-name">Automation</span>
+            <p class="sequence-detail">Turn manual setup into scripts and Ansible, then manage secrets and multi-VM configuration.</p>
+            <span class="sequence-link">Labs 06-09</span>
+          </a>
+          <a class="sequence-row" href="/yeast/bootcamp/labs/#delivery">
+            <span class="sequence-code">03</span>
+            <span class="sequence-name">Delivery</span>
+            <p class="sequence-detail">Move from containers to CI, self-hosted runners, registries, progressive delivery, and rollback.</p>
+            <span class="sequence-link">Labs 10-16</span>
+          </a>
+          <a class="sequence-row" href="/yeast/bootcamp/labs/#operations">
+            <span class="sequence-code">04</span>
+            <span class="sequence-name">Operations</span>
+            <p class="sequence-detail">Instrument the stack with metrics, logs, traces, SLOs, backups, and failure recovery drills.</p>
+            <span class="sequence-link">Labs 17-22</span>
+          </a>
+          <a class="sequence-row" href="/yeast/bootcamp/labs/#platform">
+            <span class="sequence-code">05</span>
+            <span class="sequence-name">Platform</span>
+            <p class="sequence-detail">Finish with Terraform, GitOps, Kubernetes, a delivery platform capstone, and AI-assisted ops.</p>
+            <span class="sequence-link">Labs 23-30</span>
+          </a>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <!-- -- Phase strip --------------------------------------------- -->
-  <section class="phases">
-    <div class="container">
-      <div class="section-eyebrow">Five phases</div>
-      <h2 class="section-title">A course that builds <em>on itself.</em></h2>
-      <p class="section-body">
-        Each phase assumes the previous one worked. Skip ahead and you will feel it.
-        Read in order and every concept lands with full context.
-      </p>
+    <section class="section" aria-labelledby="build-title">
+      <div class="shell">
+        <div class="section-head">
+          <h2 id="build-title" class="section-title">What you leave with.</h2>
+          <p class="section-copy">
+            The labs are practical by design: every lesson has context, commands, and validation. The result is a real local portfolio of working systems.
+          </p>
+        </div>
 
-      <div class="phase-strip">
-        <div class="phase-card">
-          <div class="phase-card-num">1</div>
-          <span class="phase-card-name">Systems</span>
-          <span class="phase-card-range">Labs 01-05</span>
-          <ul class="phase-card-topics">
-            <li>Linux server baseline</li>
-            <li>Nginx &amp; reverse proxy</li>
-            <li>Database-backed apps</li>
-            <li>Troubleshooting drills</li>
-          </ul>
-        </div>
-        <div class="phase-card">
-          <div class="phase-card-num">2</div>
-          <span class="phase-card-name">Automation</span>
-          <span class="phase-card-range">Labs 06-09</span>
-          <ul class="phase-card-topics">
-            <li>Bash scripting</li>
-            <li>Ansible single-VM</li>
-            <li>Ansible multi-VM</li>
-            <li>Secrets management</li>
-          </ul>
-        </div>
-        <div class="phase-card">
-          <div class="phase-card-num">3</div>
-          <span class="phase-card-name">Containers &amp; Delivery</span>
-          <span class="phase-card-range">Labs 10-16</span>
-          <ul class="phase-card-topics">
-            <li>Docker &amp; Compose</li>
-            <li>Container hardening</li>
-            <li>GitHub Actions CI</li>
-            <li>Progressive delivery</li>
-          </ul>
-        </div>
-        <div class="phase-card">
-          <div class="phase-card-num">4</div>
-          <span class="phase-card-name">Operations</span>
-          <span class="phase-card-range">Labs 17-22</span>
-          <ul class="phase-card-topics">
-            <li>Prometheus &amp; Grafana</li>
-            <li>Centralized logging</li>
-            <li>OpenTelemetry tracing</li>
-            <li>SLOs &amp; chaos drills</li>
-          </ul>
-        </div>
-        <div class="phase-card">
-          <div class="phase-card-num">5</div>
-          <span class="phase-card-name">Platform</span>
-          <span class="phase-card-range">Labs 23-30</span>
-          <ul class="phase-card-topics">
-            <li>Terraform IaC</li>
-            <li>GitOps &amp; Argo CD</li>
-            <li>Kubernetes with k3s</li>
-            <li>AI-assisted ops</li>
-          </ul>
+        <div class="build-grid">
+          <article class="build-item">
+            <span class="build-number">A</span>
+            <h3 class="build-title">A Linux operations foundation</h3>
+            <p class="build-copy">Users, services, firewalling, troubleshooting, Nginx, app servers, and database-backed workloads that run on VMs you control.</p>
+          </article>
+          <article class="build-item">
+            <span class="build-number">B</span>
+            <h3 class="build-title">Delivery muscle memory</h3>
+            <p class="build-copy">Scripts, Ansible, containers, CI, runners, registries, deployments, and rollback patterns practiced in a repeatable lab environment.</p>
+          </article>
+          <article class="build-item">
+            <span class="build-number">C</span>
+            <h3 class="build-title">Platform confidence</h3>
+            <p class="build-copy">Observability, recovery, Terraform, GitOps, Kubernetes, and AI-assisted diagnostics connected into one coherent learning path.</p>
+          </article>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- -- What you build ------------------------------------------- -->
-  <section>
-    <div class="container">
-      <div class="section-eyebrow">What you build</div>
-      <h2 class="section-title">Not tutorials. <em>Real systems.</em></h2>
-      <p class="section-body">
-        Every lab has a scenario, a real setup, and a validation script.
-        You finish each one with something that actually runs.
-      </p>
+    <section class="section" aria-labelledby="labs-title">
+      <div class="shell labs-panel">
+        <div class="labs-index">
+          <div class="eyebrow">First five labs</div>
+          <h2 id="labs-title" class="section-title">Start where the system starts.</h2>
+          <p>
+            Lab 01 creates the base. Labs 02-05 make it useful: web, proxy, database, and troubleshooting.
+            After that, the course moves into automation.
+          </p>
+        </div>
 
-      <div class="outcomes-grid">
-        <div class="outcome-card">
-          <div class="outcome-number">01</div>
-          <h3 class="outcome-title">Production-grade Linux servers</h3>
-          <p class="outcome-body">Hardened, logged, monitored Linux machines with proper user management, firewall rules, and service configuration.</p>
-        </div>
-        <div class="outcome-card">
-          <div class="outcome-number">02</div>
-          <h3 class="outcome-title">Automated delivery pipelines</h3>
-          <p class="outcome-body">End-to-end CI/CD using GitHub Actions, self-hosted runners, private registries, and container delivery to VMs.</p>
-        </div>
-        <div class="outcome-card">
-          <div class="outcome-number">03</div>
-          <h3 class="outcome-title">A full platform stack</h3>
-          <p class="outcome-body">Terraform IaC, GitOps reconciliation, a running Kubernetes cluster, and an AI-assisted operations workflow.</p>
-        </div>
+        <ol class="lab-list">
+          <li>
+            <a href="/yeast/bootcamp/01-linux-server-baseline/lab/">
+              <span class="lab-number">01</span>
+              <span><span class="lab-title">Linux Server Baseline</span><br>Provision and inspect your first real VM.</span>
+            </a>
+          </li>
+          <li>
+            <a href="/yeast/bootcamp/02-static-site-nginx/lab/">
+              <span class="lab-number">02</span>
+              <span><span class="lab-title">Static Site With Nginx</span><br>Serve a real page from a local Linux guest.</span>
+            </a>
+          </li>
+          <li>
+            <a href="/yeast/bootcamp/03-reverse-proxy-backend-app/lab/">
+              <span class="lab-number">03</span>
+              <span><span class="lab-title">Reverse Proxy To Backend App</span><br>Put a backend behind a clean Nginx edge.</span>
+            </a>
+          </li>
+          <li>
+            <a href="/yeast/bootcamp/04-database-backed-app/lab/">
+              <span class="lab-number">04</span>
+              <span><span class="lab-title">Database-Backed App</span><br>Add Postgres and validate the app path.</span>
+            </a>
+          </li>
+          <li>
+            <a href="/yeast/bootcamp/05-linux-troubleshooting-drill/lab/">
+              <span class="lab-number">05</span>
+              <span><span class="lab-title">Linux Troubleshooting Drill</span><br>Practice debugging when the machine pushes back.</span>
+            </a>
+          </li>
+        </ol>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- -- Course path ---------------------------------------------- -->
-  <section class="path">
-    <div class="container">
-      <div class="section-eyebrow">Course path</div>
-      <h2 class="section-title">All 30 labs, <em>in sequence.</em></h2>
-
-      <div class="path-grid">
-        <div class="path-block">
-          <div class="path-block-header">
-            <span class="path-block-num">1</span>
-            <span class="path-block-title">Systems</span>
-            <span class="path-block-range">01-05</span>
-          </div>
-          <ul class="path-lab-list">
-            <li><a href="/yeast/bootcamp/01-linux-server-baseline/lab/"><span class="lab-n">01</span>Linux Server Baseline</a></li>
-            <li><a href="/yeast/bootcamp/02-static-site-nginx/lab/"><span class="lab-n">02</span>Static Site With Nginx</a></li>
-            <li><a href="/yeast/bootcamp/03-reverse-proxy-backend-app/lab/"><span class="lab-n">03</span>Reverse Proxy To Backend App</a></li>
-            <li><a href="/yeast/bootcamp/04-database-backed-app/lab/"><span class="lab-n">04</span>Database-Backed App</a></li>
-            <li><a href="/yeast/bootcamp/05-linux-troubleshooting-drill/lab/"><span class="lab-n">05</span>Linux Troubleshooting Drill</a></li>
-          </ul>
-        </div>
-
-        <div class="path-block">
-          <div class="path-block-header">
-            <span class="path-block-num">2</span>
-            <span class="path-block-title">Automation</span>
-            <span class="path-block-range">06-09</span>
-          </div>
-          <ul class="path-lab-list">
-            <li><a href="/yeast/bootcamp/06-bash-automation-server-setup/lab/"><span class="lab-n">06</span>Bash Automation For Server Setup</a></li>
-            <li><a href="/yeast/bootcamp/07-ansible-one-server/lab/"><span class="lab-n">07</span>Ansible For One Server</a></li>
-            <li><a href="/yeast/bootcamp/08-ansible-multi-vm-web-cluster/lab/"><span class="lab-n">08</span>Ansible For Multi-VM Web Cluster</a></li>
-            <li><a href="/yeast/bootcamp/09-secrets-configuration-management/lab/"><span class="lab-n">09</span>Secrets And Configuration Management</a></li>
-          </ul>
-        </div>
-
-        <div class="path-block">
-          <div class="path-block-header">
-            <span class="path-block-num">3</span>
-            <span class="path-block-title">Containers &amp; Delivery</span>
-            <span class="path-block-range">10-16</span>
-          </div>
-          <ul class="path-lab-list">
-            <li><a href="/yeast/bootcamp/10-docker-fundamentals-vm/lab/"><span class="lab-n">10</span>Docker Fundamentals On A VM</a></li>
-            <li><a href="/yeast/bootcamp/11-compose-multi-service-app/lab/"><span class="lab-n">11</span>Compose Multi-Service App</a></li>
-            <li><a href="/yeast/bootcamp/12-container-build-scan-hardening/lab/"><span class="lab-n">12</span>Container Build, Scan, Hardening</a></li>
-            <li><a href="/yeast/bootcamp/13-ci-github-actions/lab/"><span class="lab-n">13</span>CI With GitHub Actions</a></li>
-            <li><a href="/yeast/bootcamp/14-self-hosted-ci-runner/lab/"><span class="lab-n">14</span>Self-Hosted CI Runner</a></li>
-            <li><a href="/yeast/bootcamp/15-private-container-registry/lab/"><span class="lab-n">15</span>Private Container Registry</a></li>
-            <li><a href="/yeast/bootcamp/16-progressive-delivery-rollback/lab/"><span class="lab-n">16</span>Progressive Delivery And Rollback</a></li>
-          </ul>
-        </div>
-
-        <div class="path-block">
-          <div class="path-block-header">
-            <span class="path-block-num">4</span>
-            <span class="path-block-title">Operations</span>
-            <span class="path-block-range">17-22</span>
-          </div>
-          <ul class="path-lab-list">
-            <li><a href="/yeast/bootcamp/17-prometheus-grafana-monitoring/lab/"><span class="lab-n">17</span>Prometheus And Grafana Monitoring</a></li>
-            <li><a href="/yeast/bootcamp/18-centralized-logging/lab/"><span class="lab-n">18</span>Centralized Logging</a></li>
-            <li><a href="/yeast/bootcamp/19-opentelemetry-distributed-tracing/lab/"><span class="lab-n">19</span>OpenTelemetry Distributed Tracing</a></li>
-            <li><a href="/yeast/bootcamp/20-sre-slos-alerts-error-budgets/lab/"><span class="lab-n">20</span>SRE: SLOs, Alerts, Error Budgets</a></li>
-            <li><a href="/yeast/bootcamp/21-backup-restore-drill/lab/"><span class="lab-n">21</span>Backup And Restore Drill</a></li>
-            <li><a href="/yeast/bootcamp/22-chaos-failure-recovery-drill/lab/"><span class="lab-n">22</span>Chaos And Failure Recovery Drill</a></li>
-          </ul>
-        </div>
-
-        <div class="path-block path-block-wide">
-          <div class="path-block-header">
-            <span class="path-block-num">5</span>
-            <span class="path-block-title">Platform</span>
-            <span class="path-block-range">23-30</span>
-          </div>
-          <ul class="path-lab-list path-lab-list-split">
-            <li><a href="/yeast/bootcamp/23-terraform-fundamentals/lab/"><span class="lab-n">23</span>Terraform Fundamentals</a></li>
-            <li><a href="/yeast/bootcamp/24-terraform-modules-environments/lab/"><span class="lab-n">24</span>Terraform Modules And Environments</a></li>
-            <li><a href="/yeast/bootcamp/25-gitops-argocd-flux/lab/"><span class="lab-n">25</span>GitOps With Argo CD</a></li>
-            <li><a href="/yeast/bootcamp/26-end-to-end-delivery-platform/lab/"><span class="lab-n">26</span>End-To-End Delivery Platform</a></li>
-            <li><a href="/yeast/bootcamp/27-kubernetes-k3s-foundations/lab/"><span class="lab-n">27</span>Kubernetes Foundations With k3s</a></li>
-            <li><a href="/yeast/bootcamp/28-kubernetes-networking-config-storage/lab/"><span class="lab-n">28</span>Kubernetes Networking, Config, Storage</a></li>
-            <li><a href="/yeast/bootcamp/29-kubernetes-delivery-capstone/lab/"><span class="lab-n">29</span>Kubernetes Delivery Capstone</a></li>
-            <li><a href="/yeast/bootcamp/30-ai-assisted-devops-llm-ops/lab/"><span class="lab-n">30</span>AI-Assisted DevOps And Local LLM Ops</a></li>
-          </ul>
-        </div>
+    <section class="final" aria-labelledby="final-title">
+      <div class="shell">
+        <h2 id="final-title">One lab today. A real platform path after that.</h2>
+        <p>
+          Start with the baseline VM, keep the course in order, and build the full DevOps chain on machines you can break and rebuild.
+        </p>
+        <a class="button button-primary" href="/yeast/bootcamp/01-linux-server-baseline/lab/">Open Lab 01</a>
       </div>
-    </div>
-  </section>
-
-  <!-- -- CTA ----------------------------------------------------- -->
-  <section class="cta-section">
-    <div class="container">
-      <div class="section-eyebrow">Start now</div>
-      <h2 class="section-title">Thirty labs.<br><em>Start with one.</em></h2>
-      <p class="section-body">
-        Lab 01 sets up a clean Linux server from scratch. Everything else builds from there.
-        No sign-up. No account. Just install Yeast and open the lab.
-      </p>
-      <div class="cta-actions">
-        <a class="btn btn-primary" href="/yeast/bootcamp/labs/">Access the labs</a>
-        <a class="btn btn-secondary" href="/yeast/bootcamp/curriculum/">See full curriculum</a>
-      </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
   <footer>
-    <div class="container footer-inner">
+    <div class="shell footer-inner">
       <div class="footer-brand">
-        <img src="/yeast/assets/ta-logo.svg" alt="TA">
+        <img src="/yeast/assets/ta-logo.svg" alt="" width="28" height="28" aria-hidden="true">
         <span>Twarga Academy</span>
       </div>
-      <div class="footer-links">
+      <div class="footer-links" aria-label="Footer links">
         <a href="/yeast/">Yeast</a>
-        <a href="/yeast/docs/">Yeast Docs</a>
+        <a href="/yeast/docs/">Docs</a>
         <a href="/yeast/bootcamp/curriculum/">Curriculum</a>
         <a href="/yeast/bootcamp/labs/">Labs</a>
         <a href="https://github.com/Twarga/yeast" target="_blank" rel="noopener">GitHub</a>
       </div>
     </div>
   </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-  <script>
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (!reduced && typeof gsap !== "undefined") {
-      gsap.registerPlugin(ScrollTrigger);
-
-      /* -- Hero entrance ---------------------------------------- */
-      const heroTl = gsap.timeline({ defaults: { ease: "power3.out" } });
-
-      heroTl
-        .from(".hero-eyebrow", { y: 16, opacity: 0, duration: 0.6 })
-        .from(".hero h1",      { y: 28, opacity: 0, duration: 0.8 }, "-=0.35")
-        .from(".hero-sub",     { y: 20, opacity: 0, duration: 0.7 }, "-=0.5")
-        .from(".hero-actions", { y: 16, opacity: 0, duration: 0.6 }, "-=0.45")
-        .from(".hero-meta",    { y: 12, opacity: 0, duration: 0.5 }, "-=0.4")
-        .from(".hero-card",    { x: 24, opacity: 0, duration: 0.75, ease: "power2.out" }, "-=0.8");
-
-      /* Hero card phase rows stagger */
-      gsap.from(".phase-list li", {
-        x: 14, opacity: 0, duration: 0.45, stagger: 0.07, delay: 0.6, ease: "power2.out"
-      });
-
-      /* -- Phase strip ------------------------------------------- */
-      gsap.from(".phase-card", {
-        y: 28, opacity: 0, duration: 0.55, stagger: 0.09, ease: "power2.out",
-        scrollTrigger: { trigger: ".phase-strip", start: "top 84%", once: true }
-      });
-
-      /* -- Outcome cards ----------------------------------------- */
-      gsap.from(".outcome-card", {
-        y: 32, opacity: 0, duration: 0.65, stagger: 0.12, ease: "power2.out",
-        scrollTrigger: { trigger: ".outcomes-grid", start: "top 82%", once: true }
-      });
-
-      /* -- Path blocks ------------------------------------------- */
-      gsap.from(".path-block", {
-        y: 24, opacity: 0, duration: 0.6, stagger: 0.1, ease: "power2.out",
-        scrollTrigger: { trigger: ".path-grid", start: "top 84%", once: true }
-      });
-
-      /* -- Section headings -------------------------------------- */
-      document.querySelectorAll(".section-title, .section-eyebrow, .section-body").forEach(el => {
-        gsap.from(el, {
-          y: 18, opacity: 0, duration: 0.65, ease: "power2.out",
-          scrollTrigger: { trigger: el, start: "top 88%", once: true }
-        });
-      });
-
-      /* -- CTA --------------------------------------------------- */
-      gsap.from(".cta-section .btn", {
-        y: 18, opacity: 0, duration: 0.6, stagger: 0.1, ease: "power2.out",
-        scrollTrigger: { trigger: ".cta-actions", start: "top 88%", once: true }
-      });
-
-      /* -- Outcome card hover tilt ------------------------------- */
-      document.querySelectorAll(".outcome-card").forEach(card => {
-        card.addEventListener("mousemove", e => {
-          const r = card.getBoundingClientRect();
-          const x = (e.clientX - r.left) / r.width  - 0.5;
-          const y = (e.clientY - r.top)  / r.height - 0.5;
-          gsap.to(card, {
-            rotationY: x * 8, rotationX: -y * 8,
-            transformPerspective: 700, duration: 0.25, ease: "power2.out"
-          });
-        });
-        card.addEventListener("mouseleave", () => {
-          gsap.to(card, { rotationY: 0, rotationX: 0, duration: 0.45, ease: "power2.out" });
-        });
-      });
-    }
-  </script>
 </body>
 </html>

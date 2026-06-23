@@ -1,50 +1,50 @@
 /* Twarga Academy: keep course pages simple, readable, and close to Yeast docs. */
 :root {
-  --ta-primary: #8bdf3f;
-  --ta-accent: #a7f164;
-  --ta-muted: #9de95a;
-  --ta-ink: #f6fbf3;
-  --ta-ink-muted: #aebaae;
-  --ta-ink-soft: #7e8a80;
-  --ta-page: #040806;
-  --ta-panel: rgba(8, 15, 12, 0.9);
-  --ta-panel-strong: rgba(11, 20, 16, 0.96);
-  --ta-panel-soft: rgba(11, 20, 16, 0.7);
-  --ta-border: rgba(139, 223, 63, 0.18);
-  --ta-border-strong: rgba(139, 223, 63, 0.34);
-  --ta-soft: rgba(139, 223, 63, 0.08);
-  --ta-soft-strong: rgba(139, 223, 63, 0.13);
+  --ta-primary: #8b5cf6;
+  --ta-accent: #c4b5fd;
+  --ta-muted: #a78bfa;
+  --ta-ink: #faf7ff;
+  --ta-ink-muted: #b8adc9;
+  --ta-ink-soft: #756b86;
+  --ta-page: #08070d;
+  --ta-panel: rgba(18, 15, 28, 0.9);
+  --ta-panel-strong: rgba(25, 20, 38, 0.96);
+  --ta-panel-soft: rgba(25, 20, 38, 0.7);
+  --ta-border: rgba(167, 139, 250, 0.18);
+  --ta-border-strong: rgba(167, 139, 250, 0.34);
+  --ta-soft: rgba(139, 92, 246, 0.1);
+  --ta-soft-strong: rgba(139, 92, 246, 0.16);
   --yeast-text-secondary: var(--ta-ink-muted);
 
-  --md-primary-fg-color: #06100c;
-  --md-primary-fg-color--light: #0a1711;
-  --md-primary-fg-color--dark: #020604;
+  --md-primary-fg-color: #0d0b15;
+  --md-primary-fg-color--light: #171225;
+  --md-primary-fg-color--dark: #05040a;
   --md-default-bg-color: var(--ta-page);
   --md-default-fg-color: var(--ta-ink);
   --md-default-fg-color--light: var(--ta-ink-muted);
   --md-default-fg-color--lighter: var(--ta-ink-soft);
   --md-accent-fg-color: var(--ta-primary);
   --md-typeset-a-color: var(--ta-muted);
-  --md-code-bg-color: rgba(139, 223, 63, 0.08);
+  --md-code-bg-color: rgba(139, 92, 246, 0.1);
   --md-code-fg-color: var(--ta-ink);
 }
 
 .md-header {
-  background: rgba(2, 6, 4, 0.96);
+  background: rgba(8, 7, 13, 0.96);
   border-bottom: 1px solid var(--ta-border);
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
 }
 
 .md-tabs {
-  background: #06100c;
+  background: #0d0b15;
   border-bottom: 1px solid var(--ta-border);
 }
 
 .md-main {
   background:
-    radial-gradient(circle at 80% 4rem, rgba(139, 223, 63, 0.08), transparent 30rem),
-    radial-gradient(circle at 12% 30rem, rgba(139, 223, 63, 0.05), transparent 28rem),
-    linear-gradient(180deg, #20232b 0, #111712 34rem, var(--ta-page) 100%);
+    radial-gradient(circle at 80% 4rem, rgba(139, 92, 246, 0.11), transparent 30rem),
+    radial-gradient(circle at 12% 30rem, rgba(167, 139, 250, 0.06), transparent 28rem),
+    linear-gradient(180deg, #1f1b2d 0, #100d18 34rem, var(--ta-page) 100%);
 }
 
 .md-sidebar,
@@ -56,7 +56,7 @@
 .md-header__button.md-logo svg {
   width: 1.6rem;
   height: 1.6rem;
-  filter: drop-shadow(0 0 8px rgba(139, 223, 63, 0.45));
+  filter: none;
 }
 
 .md-nav__link:is(:focus, :hover),
@@ -80,7 +80,7 @@
 .md-typeset h2 {
   margin-top: 2.2rem;
   padding-top: 0.35rem;
-  border-top: 1px solid rgba(139, 223, 63, 0.12);
+  border-top: 1px solid rgba(167, 139, 250, 0.12);
   color: var(--ta-ink);
   font-weight: 700;
 }
@@ -107,7 +107,7 @@
 }
 
 .md-typeset code {
-  border: 1px solid rgba(139, 223, 63, 0.13);
+  border: 1px solid rgba(167, 139, 250, 0.14);
   border-radius: 0.22rem;
 }
 
@@ -163,8 +163,8 @@
 .academy-hero,
 .academy-page-hero {
   background:
-    radial-gradient(circle at top left, rgba(139, 223, 63, 0.18), transparent 28rem),
-    linear-gradient(135deg, rgba(139, 223, 63, 0.1), rgba(246, 251, 243, 0.025)),
+    radial-gradient(circle at top left, rgba(139, 92, 246, 0.18), transparent 28rem),
+    linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(250, 247, 255, 0.025)),
     var(--ta-panel-strong);
 }
 
@@ -185,8 +185,8 @@
   border: 1px solid var(--ta-border);
   border-radius: 1rem;
   background:
-    radial-gradient(circle at 10% 0%, rgba(139, 223, 63, 0.14), transparent 12rem),
-    linear-gradient(135deg, rgba(2, 6, 4, 0.92), rgba(8, 15, 12, 0.82));
+    radial-gradient(circle at 10% 0%, rgba(139, 92, 246, 0.16), transparent 12rem),
+    linear-gradient(135deg, rgba(8, 7, 13, 0.94), rgba(18, 15, 28, 0.82));
   box-shadow:
     inset 0 1px 0 rgba(246, 251, 243, 0.06),
     0 18px 42px rgba(0, 0, 0, 0.26);
@@ -206,8 +206,7 @@
   letter-spacing: -0.08em;
   line-height: 1;
   box-shadow:
-    0 0 0 1px rgba(139, 223, 63, 0.08),
-    0 0 28px rgba(139, 223, 63, 0.22);
+    0 0 0 1px rgba(167, 139, 250, 0.08);
 }
 
 .academy-brand-word {
@@ -276,11 +275,11 @@
 .academy-button--primary {
   border-color: var(--ta-primary);
   background: var(--ta-primary);
-  color: #071006;
+  color: #05040a;
 }
 
 .md-typeset .academy-button--primary {
-  color: #071006;
+  color: #05040a;
 }
 
 .md-typeset .academy-link-grid a {
@@ -400,9 +399,9 @@
   height: 1.8rem;
   border-radius: 0.5rem;
   background: var(--ta-primary);
-  color: #071006;
+  color: #05040a;
   font-weight: 800;
-  box-shadow: 0 0 24px rgba(139, 223, 63, 0.18);
+  box-shadow: none;
 }
 
 .academy-lab-title,

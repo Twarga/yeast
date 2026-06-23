@@ -1,35 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" role="img" aria-labelledby="title desc">
-  <title id="title">Twarga Academy logo</title>
-  <desc id="desc">A green TA monogram inside a rounded square, matching the Yeast product logo style.</desc>
+  <title id="title">Twarga Academy TA logo</title>
+  <desc id="desc">A violet TA monogram inside a rounded square, styled as the Twarga Academy companion mark to Yeast.</desc>
   <defs>
-    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="6" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-    <filter id="glow-soft" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="14" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
+    <linearGradient id="frame" x1="32" y1="26" x2="170" y2="174" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C4B5FD"/>
+      <stop offset="0.5" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#5B21B6"/>
+    </linearGradient>
+    <linearGradient id="letters" x1="48" y1="54" x2="160" y2="144" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EEE7FF"/>
+      <stop offset="0.52" stop-color="#A78BFA"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
   </defs>
 
-  <rect x="8" y="8" width="184" height="184" rx="44"
-        fill="none" stroke="#8BDF3F" stroke-width="2" opacity="0.22" filter="url(#glow-soft)"/>
-  <rect x="8" y="8" width="184" height="184" rx="44"
-        fill="#07100C" stroke="#8BDF3F" stroke-width="7" filter="url(#glow)"/>
-
-  <path d="M42 55H102"
-        fill="none" stroke="#8BDF3F" stroke-width="15" stroke-linecap="round"/>
-  <path d="M72 55V150"
-        fill="none" stroke="#8BDF3F" stroke-width="15" stroke-linecap="round"/>
-  <path d="M112 150L137 55L164 150"
-        fill="none" stroke="#8BDF3F" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M123 116H153"
-        fill="none" stroke="#8BDF3F" stroke-width="11" stroke-linecap="round"/>
+  <rect width="200" height="200" rx="48" fill="#08070D"/>
+  <rect x="18" y="18" width="164" height="164" rx="40" fill="#0D0B15" stroke="url(#frame)" stroke-width="7"/>
+  <rect x="31" y="31" width="138" height="138" rx="30" fill="none" stroke="#E8E1FF" stroke-opacity="0.08" stroke-width="2"/>
+  <g fill="none" stroke="url(#letters)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M48 64H104"/>
+    <path d="M76 64V140"/>
+    <path d="M112 140L138 64L164 140"/>
+    <path d="M123 111H153"/>
+  </g>
 </svg>
