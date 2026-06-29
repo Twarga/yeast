@@ -8,10 +8,10 @@ Install the latest stable release:
 curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
 ```
 
-Install the explicit v1.1.4 release:
+Install the explicit v1.1.5 release:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_VERSION=v1.1.4 bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_VERSION=v1.1.5 bash
 ```
 
 The default installer:

@@ -94,7 +94,7 @@ func TestRenderWritesMarkdownForNonTerminal(t *testing.T) {
 	if err := Render(&buf, "release-smoke"); err != nil {
 		t.Fatalf("Render returned error: %v", err)
 	}
-	if !strings.Contains(buf.String(), "# Yeast v1.1.4 Release Smoke Test") {
+	if !strings.Contains(buf.String(), "# Yeast v1.1.5 Release Smoke Test") {
 		t.Fatalf("expected raw markdown output, got %q", buf.String())
 	}
 }
