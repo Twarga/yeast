@@ -86,7 +86,7 @@ curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | bash
 Or install a specific release:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_VERSION=v1.1.2 bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_VERSION=v1.1.5 bash
 ```
 
 ## 5. Verify The Beta Path

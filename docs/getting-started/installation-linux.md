@@ -26,14 +26,14 @@ The script downloads the pre-built binary from GitHub releases, verifies its che
 To pin a specific version:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_VERSION=v1.1.2 bash
+curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAST_VERSION=v1.1.5 bash
 ```
 
 **Environment variables:**
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `YEAST_VERSION` | `v1.1.2` | Release tag to install |
+| `YEAST_VERSION` | `v1.1.5` | Release tag to install |
 | `YEAST_INSTALL_DIR` | `/usr/local/bin` | Where to place the binary |
 | `YEAST_INSTALL_MODE` | `binary` | Set to `source` for source build (advanced) |
 | `YEAST_SKIP_DOCTOR` | `0` | Set to `1` to skip the post-install doctor check |
@@ -44,7 +44,7 @@ curl -fsSL https://raw.githubusercontent.com/Twarga/yeast/main/install.sh | YEAS
 Download, verify, and install the binary directly:
 
 ```bash
-VERSION="v1.1.2"
+VERSION="v1.1.5"
 curl -LO "https://github.com/Twarga/yeast/releases/download/${VERSION}/yeast_linux_amd64.tar.gz"
 curl -LO "https://github.com/Twarga/yeast/releases/download/${VERSION}/SHA256SUMS.txt"
 grep "yeast_linux_amd64.tar.gz" SHA256SUMS.txt | sha256sum -c -
@@ -129,7 +129,7 @@ yeast update --check
 Update to a specific version:
 
 ```bash
-yeast update --version v1.1.2
+yeast update --version v1.1.5
 ```
 
 ## Source Build (advanced)

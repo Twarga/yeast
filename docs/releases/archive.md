@@ -4,6 +4,7 @@ The public docs focus on the current supported release.
 
 Current release docs:
 
+- [Yeast v1.1.5](v1.1.5.md)
 - [Yeast v1.1.2](v1.1.2.md)
 - [Yeast v1.1.1](v1.1.1.md)
 - [Yeast v1.1.0](v1.1.0.md)

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v1.1.5] - 2026-06-29
+
+### Added
+- **Docker-style service port forwarding**: `yeast.yaml` now supports `instances[].ports`, including simple mappings like `["8080:80"]` and object syntax for named forwards
+- **Copy-ready service URLs**: `yeast up` and `yeast status` now show forwarded host URLs so labs and demos are easier to use from the laptop
+
+### Fixed
+- **`yeast destroy` local cleanup**: full destroy now actually removes `.yeast/` and `yeast.yaml` after confirmation instead of leaving stale project files behind
+- **Host port collision checks**: Yeast now rejects conflicting SSH/service host port bindings before boot
+
+### Changed
+- **Academy access flow**: key labs and shared access docs now teach Yeast-native forwarded ports before manual SSH tunnels
+- **Current stable release**: release-facing docs and install examples now target `v1.1.5`
+
+[v1.1.5]: https://github.com/Twarga/yeast/releases/tag/v1.1.5
+
 ## [v1.1.2] - 2026-06-17
 
 ### Added

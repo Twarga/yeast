@@ -1,6 +1,6 @@
-# Yeast v1.1.5 Release Smoke Test
+# Release Smoke Test v1.1.5
 
-Run this on a fresh Linux/KVM host before calling `v1.1.5` shippable.
+This guide is for maintainers validating `v1.1.5` on a real Linux/KVM host.
 
 ```bash
 export YEAST_SMOKE_VERSION="v1.1.5"
