@@ -43,6 +43,15 @@ Read that file as:
 
 If you want to change RAM, CPU, disk size, image, user, sudo, provisioning, or networks, read [Write `yeast.yaml`](write-yeast-yaml.md).
 
+If you want to open a guest web app, API, or dashboard directly from your laptop, add:
+
+```yaml
+ports:
+  - "8080:80"
+```
+
+That forwards host `127.0.0.1:8080` to guest port `80`.
+
 ## Start
 
 ```bash
@@ -104,3 +113,5 @@ You learned the basic Yeast loop:
 ```text
 init -> up -> ssh -> status -> down -> destroy
 ```
+
+You also saw the next useful edit point: `yeast.yaml` can expose guest services to your laptop with `ports`, for example `ports: ["8080:80"]`.

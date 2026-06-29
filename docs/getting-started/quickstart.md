@@ -8,6 +8,7 @@ You will:
 - let `yeast up` download the trusted cloud image if needed
 - boot a real QEMU/KVM VM
 - SSH into the guest
+- optionally expose a guest web port on your laptop
 - stop and destroy the project safely
 
 Expected time: 5-10 minutes after the image is cached.
@@ -80,6 +81,15 @@ This means:
 | `cpus: 1` | The VM gets one vCPU. |
 | `disk_size: 20G` | The VM disk starts at 20 GiB when the disk is created. |
 
+If you want to open a service from the guest on your laptop, add:
+
+```yaml
+    ports:
+      - "8080:80"
+```
+
+That means: host `127.0.0.1:8080` forwards to guest port `80`.
+
 ## 4. Start The VM
 
 ```bash
@@ -149,6 +159,35 @@ yeast destroy
 !!! warning
     `yeast destroy` removes tracked VM runtime files and disks for this project.
 
+## Optional: Open A Guest Service From Your Laptop
+
+Edit `yeast.yaml`:
+
+```yaml
+version: 1
+instances:
+  - name: web
+    image: ubuntu-24.04
+    memory: 1024
+    cpus: 1
+    disk_size: 20G
+    ports:
+      - "8080:80"
+```
+
+Then run:
+
+```bash
+yeast up
+yeast status
+```
+
+Yeast prints the forwarded host URL. In this example, if the guest serves HTTP on port `80`, open:
+
+```text
+http://127.0.0.1:8080
+```
+
 ## Common Next Checks
 
 Read VM logs:
@@ -179,4 +218,4 @@ Manual `yeast pull <image>` is optional for supported auto-download images. Use 
 
 ## Next Step
 
-Read [Write `yeast.yaml`](write-yeast-yaml.md) next. That page explains how to edit RAM, CPU, disk size, images, provisioning, users, and networks.
+Read [Write `yeast.yaml`](write-yeast-yaml.md) next. That page explains how to edit RAM, CPU, disk size, images, provisioning, users, networks, and forwarded ports.

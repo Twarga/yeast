@@ -4,6 +4,8 @@
 
 It describes the VMs you want. Yeast reads it when you run commands such as `yeast up`, `yeast status`, `yeast provision`, and `yeast destroy`.
 
+It also controls Docker-style service port forwarding, so this is where you expose guest web apps, dashboards, and APIs on your laptop.
+
 ## Where This File Lives
 
 Run Yeast commands from your project folder:

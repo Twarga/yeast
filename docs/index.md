@@ -2,7 +2,7 @@
 
 Yeast turns a folder into real Linux VMs.
 
-Define machines in `yeast.yaml`, run `yeast up`, and get SSH-ready QEMU/KVM guests with cloud-init, provisioning, snapshots, private networking, and JSON output for automation.
+Define machines in `yeast.yaml`, run `yeast up`, and get SSH-ready QEMU/KVM guests with cloud-init, provisioning, snapshots, private networking, Docker-style service port forwarding, and JSON output for automation.
 
 ## Learn Yeast In Order
 
@@ -13,7 +13,7 @@ If you are new, follow this path. It is ordered so each page teaches one layer b
 | 1 | [What Is Yeast?](getting-started/what-is-yeast.md) | What problem Yeast solves |
 | 2 | [Installation](getting-started/installation.md) | How to get the CLI and check your host |
 | 3 | [Quickstart](getting-started/quickstart.md) | The shortest working loop |
-| 4 | [Write `yeast.yaml`](getting-started/write-yeast-yaml.md) | How to edit RAM, CPU, disk, image, users, provisioning, and networking |
+| 4 | [Write `yeast.yaml`](getting-started/write-yeast-yaml.md) | How to edit RAM, CPU, disk, image, users, provisioning, networking, and forwarded ports |
 | 5 | [First VM](getting-started/first-vm.md) | A slower first-machine walkthrough |
 | 6 | [Yeast Labs](labs/index.md) | Guided tutorials that build confidence |
 
@@ -52,6 +52,8 @@ instances:
     memory: 1024
     cpus: 1
     disk_size: 20G
+    ports:
+      - "8080:80"
 ```
 
 Common edits:
@@ -64,6 +66,9 @@ Common edits:
 | image | `image: debian-12` |
 | VM name | `name: web` |
 | host SSH port | `ssh_port: 2222` |
+| guest web app on your laptop | `ports: ["8080:80"]` |
+
+With that `ports` example, `yeast up` and `yeast status` print a host URL you can open directly, such as `http://127.0.0.1:8080`.
 
 Read [Write `yeast.yaml`](getting-started/write-yeast-yaml.md) when you want to understand every field without jumping straight into reference docs.
 
@@ -77,6 +82,7 @@ Read [Write `yeast.yaml`](getting-started/write-yeast-yaml.md) when you want to 
 - package, file, and shell provisioning
 - stopped-VM snapshots and restore
 - one private lab network per project
+- Docker-style host-to-guest service forwarding with `instances[].ports`
 - guest control with `ssh`, `exec`, `copy`, `logs`, and `inspect`
 - stable JSON output and lifecycle events
 

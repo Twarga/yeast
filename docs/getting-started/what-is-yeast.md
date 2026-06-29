@@ -2,7 +2,7 @@
 
 Yeast is a command-line tool for running local Linux VMs as project files.
 
-Instead of manually downloading cloud images, creating qcow2 disks, writing cloud-init data, composing QEMU commands, and remembering SSH ports, you describe the machines you want in `yeast.yaml`.
+Instead of manually downloading cloud images, creating qcow2 disks, writing cloud-init data, composing QEMU commands, remembering SSH ports, and wiring manual service forwards, you describe the machines you want in `yeast.yaml`.
 
 Then you run:
 
@@ -33,6 +33,7 @@ Yeast state is runtime reality. It records what is running, what SSH port was as
 - start one VM for quick Linux testing
 - start multiple VMs in one project
 - attach VMs to one private lab network
+- expose guest web apps, APIs, and dashboards on host ports
 - provision packages, files, and shell commands
 - run commands inside guests
 - copy files in and out
