@@ -83,7 +83,7 @@ func TestRenderHumanStatusResult(t *testing.T) {
 	var buf bytes.Buffer
 	err := RenderHuman(&buf, "status", app.StatusResult{
 		Instances: []app.StatusInstanceResult{
-			{Name: "web", Status: "running", ManagementIP: "0.0.0.0", SSHPort: 2222, LabIP: "10.10.10.10"},
+			{Name: "web", Status: "running", ManagementIP: "0.0.0.0", SSHPort: 2222, LabIP: "10.10.10.10", Ports: []app.PortForwardResult{{Host: "127.0.0.1", HostPort: 8080, GuestPort: 80, Protocol: "tcp", URL: "http://127.0.0.1:8080"}}},
 			{Name: "api", Status: "stopped"},
 		},
 	})
@@ -97,12 +97,14 @@ func TestRenderHumanStatusResult(t *testing.T) {
 		"NAME",
 		"STATUS",
 		"SSH",
+		"PORTS",
 		"LAB IP",
 		"api",
 		"stopped",
 		"web",
 		"running",
 		"0.0.0.0:2222",
+		"http://127.0.0.1:8080",
 		"10.10.10.10",
 	} {
 		if !strings.Contains(got, want) {

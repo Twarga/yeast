@@ -259,13 +259,13 @@ func renderDoctor(w io.Writer, theme humanTheme, value app.DoctorResult) error {
 }
 
 func renderUp(w io.Writer, theme humanTheme, value app.UpResult) error {
-	rows := [][]string{{"NAME", "STATUS", "SSH"}}
+	rows := [][]string{{"NAME", "STATUS", "SSH", "PORTS"}}
 	for _, instance := range value.Instances {
 		ssh := "-"
 		if instance.SSHAddress != "" {
 			ssh = instance.SSHAddress
 		}
-		rows = append(rows, []string{instance.Name, instance.Status, ssh})
+		rows = append(rows, []string{instance.Name, instance.Status, ssh, renderPortURLs(instance.Ports)})
 	}
 
 	lines := []string{theme.Success.Render("✓") + " " + theme.Header.Render("All instances ready")}
@@ -294,14 +294,14 @@ func renderStatus(w io.Writer, theme humanTheme, value app.StatusResult) error {
 	instances := append([]app.StatusInstanceResult(nil), value.Instances...)
 	sort.Slice(instances, func(i, j int) bool { return instances[i].Name < instances[j].Name })
 
-	rows := [][]string{{"NAME", "STATUS", "SSH", "LAB IP"}}
+	rows := [][]string{{"NAME", "STATUS", "SSH", "PORTS", "LAB IP"}}
 	for _, instance := range instances {
 		ssh := sshAddress(instance.ManagementIP, instance.SSHPort)
 		labIP := "-"
 		if instance.LabIP != "" {
 			labIP = instance.LabIP
 		}
-		rows = append(rows, []string{instance.Name, instance.Status, ssh, labIP})
+		rows = append(rows, []string{instance.Name, instance.Status, ssh, renderPortURLs(instance.Ports), labIP})
 	}
 
 	lines := []string{theme.Header.Render("Status")}
@@ -312,6 +312,21 @@ func renderStatus(w io.Writer, theme humanTheme, value app.StatusResult) error {
 	}
 
 	return writeBlock(w, theme, lines)
+}
+
+func renderPortURLs(ports []app.PortForwardResult) string {
+	if len(ports) == 0 {
+		return "-"
+	}
+	values := make([]string, 0, len(ports))
+	for _, port := range ports {
+		value := port.URL
+		if value == "" {
+			value = fmt.Sprintf("%s:%d", port.Host, port.HostPort)
+		}
+		values = append(values, value)
+	}
+	return strings.Join(values, ", ")
 }
 
 func renderProvision(w io.Writer, theme humanTheme, value app.ProvisionResult) error {

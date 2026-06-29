@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	DefaultMemoryMB      = 512
-	DefaultCPUs          = 1
-	DefaultUser          = "yeast"
-	DefaultSudo          = "none"
+	DefaultMemoryMB       = 512
+	DefaultCPUs           = 1
+	DefaultUser           = "yeast"
+	DefaultSudo           = "none"
 	DefaultManagementHost = "127.0.0.1"
 )
 
@@ -46,6 +46,16 @@ func ApplyDefaults(cfg *Config) error {
 				return fmt.Errorf("instance %s normalize disk_size: %w", instance.Name, err)
 			}
 			instance.DiskSize = normalized
+		}
+		for j := range instance.Ports {
+			if strings.TrimSpace(instance.Ports[j].Host) == "" {
+				instance.Ports[j].Host = DefaultPortForwardHost
+			}
+			if strings.TrimSpace(instance.Ports[j].Protocol) == "" {
+				instance.Ports[j].Protocol = DefaultPortForwardProtocol
+			} else {
+				instance.Ports[j].Protocol = strings.ToLower(strings.TrimSpace(instance.Ports[j].Protocol))
+			}
 		}
 	}
 

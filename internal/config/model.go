@@ -1,11 +1,11 @@
 package config
 
 type Config struct {
-	Version         int              `yaml:"version"`
-	ManagementHost  string           `yaml:"management_host,omitempty"`
-	Networks        []Network        `yaml:"networks,omitempty"`
-	Instances       []Instance       `yaml:"instances"`
-	Provision       *ProvisionConfig `yaml:"provision,omitempty"`
+	Version        int              `yaml:"version"`
+	ManagementHost string           `yaml:"management_host,omitempty"`
+	Networks       []Network        `yaml:"networks,omitempty"`
+	Instances      []Instance       `yaml:"instances"`
+	Provision      *ProvisionConfig `yaml:"provision,omitempty"`
 }
 
 type Instance struct {
@@ -20,6 +20,7 @@ type Instance struct {
 	Sudo     string            `yaml:"sudo,omitempty"`
 	Env      map[string]string `yaml:"env,omitempty"`
 	UserData string            `yaml:"user_data,omitempty"`
+	Ports    []PortForward     `yaml:"ports,omitempty"`
 
 	Networks  []InstanceNetwork `yaml:"networks,omitempty"`
 	Provision *ProvisionConfig  `yaml:"provision,omitempty"`

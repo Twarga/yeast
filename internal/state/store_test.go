@@ -100,7 +100,10 @@ func TestSaveReloadRoundTrip(t *testing.T) {
 		PID:          1001,
 		ManagementIP: "127.0.0.1",
 		SSHPort:      2222,
-		RuntimeDir:   "/tmp/web",
+		ServicePorts: []PortForwardState{
+			{Name: "web", Host: "127.0.0.1", HostPort: 8080, GuestPort: 80, Protocol: "tcp"},
+		},
+		RuntimeDir: "/tmp/web",
 		Snapshots: map[string]SnapshotState{
 			"baseline": {
 				Name:           "baseline",
@@ -125,6 +128,9 @@ func TestSaveReloadRoundTrip(t *testing.T) {
 	}
 	if loaded.Instances["web"].RuntimeDir != "/tmp/web" {
 		t.Fatalf("expected runtime dir /tmp/web, got %q", loaded.Instances["web"].RuntimeDir)
+	}
+	if len(loaded.Instances["web"].ServicePorts) != 1 || loaded.Instances["web"].ServicePorts[0].HostPort != 8080 {
+		t.Fatalf("expected service ports to round-trip, got %#v", loaded.Instances["web"].ServicePorts)
 	}
 	if loaded.Instances["web"].ProvisionLogPath != "/tmp/web/provision.log" {
 		t.Fatalf("expected provision log path /tmp/web/provision.log, got %q", loaded.Instances["web"].ProvisionLogPath)

@@ -81,6 +81,8 @@ instances:
     cpus: 1
     disk_size: 25 gb
     ssh_port: 2205
+    ports:
+      - 8080:80
 `
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("write config with disk_size: %v", err)
@@ -108,6 +110,9 @@ instances:
 	if result.Instances[0].SSHAddress != "127.0.0.1:2205" {
 		t.Fatalf("unexpected ssh address: %q", result.Instances[0].SSHAddress)
 	}
+	if len(result.Instances[0].Ports) != 1 || result.Instances[0].Ports[0].URL != "http://127.0.0.1:8080" {
+		t.Fatalf("expected host port result, got %#v", result.Instances[0].Ports)
+	}
 	if userDataCalls != 1 {
 		t.Fatalf("expected one user-data render call, got %d", userDataCalls)
 	}
@@ -123,6 +128,12 @@ instances:
 	if fakeRuntime.startPlan.Disk.Size != "25G" {
 		t.Fatalf("expected start plan disk size 25G, got %q", fakeRuntime.startPlan.Disk.Size)
 	}
+	if len(fakeRuntime.startPlan.Networks.Management.PortForwards) != 1 {
+		t.Fatalf("expected one management port forward, got %#v", fakeRuntime.startPlan.Networks.Management.PortForwards)
+	}
+	if fakeRuntime.startPlan.Networks.Management.PortForwards[0].HostPort != 8080 || fakeRuntime.startPlan.Networks.Management.PortForwards[0].GuestPort != 80 {
+		t.Fatalf("unexpected management port forward: %#v", fakeRuntime.startPlan.Networks.Management.PortForwards[0])
+	}
 
 	statePath := filepath.Join(yeastHome, "projects", result.ProjectID, "state.json")
 	raw, err := os.ReadFile(statePath)
@@ -130,7 +141,7 @@ instances:
 		t.Fatalf("read state file: %v", err)
 	}
 	content := string(raw)
-	for _, want := range []string{`"status": "running"`, `"ssh_port": 2205`, `"user": "yeast"`, `"runtime_dir": "`, `"provisioning_status": "provisioned"`, `"provision_log_path": "`} {
+	for _, want := range []string{`"status": "running"`, `"ssh_port": 2205`, `"host_port": 8080`, `"guest_port": 80`, `"user": "yeast"`, `"runtime_dir": "`, `"provisioning_status": "provisioned"`, `"provision_log_path": "`} {
 		if !strings.Contains(content, want) {
 			t.Fatalf("expected state content %q, got:\n%s", want, content)
 		}
@@ -1024,7 +1035,7 @@ instances:
 
 	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
 	assertAppErrorCode(t, err, ErrorCodeInvalidArgument)
-	if !strings.Contains(err.Error(), "already in use") {
+	if !strings.Contains(err.Error(), "conflicts with") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

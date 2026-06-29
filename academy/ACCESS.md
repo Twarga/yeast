@@ -1,25 +1,25 @@
-# Accessing Services In Yeast v1.1 Labs
+# Accessing Services In Yeast Labs
 
-Yeast v1.1 forwards SSH management ports. It does not provide a documented general `ports:` feature for exposing guest HTTP services to the host.
+Use Yeast service port forwarding first. Use manual SSH tunnels only when a lab explicitly needs them as a fallback.
 
-That means this is correct:
+## The Easy Path
+
+If a lab `yeast.yaml` contains:
 
 ```yaml
 instances:
   - name: web
     ssh_port: 2202
-```
-
-This is not supported in `yeast.yaml` v1.1:
-
-```yaml
-instances:
-  - name: web
     ports:
       - "8080:80"
 ```
 
-Docker Compose and Kubernetes still have their own `ports:` fields inside their own files. That is fine. The unsupported part is using `ports:` in `yeast.yaml`.
+then after `yeast up` you can use:
+
+- `yeast ssh web` for the VM shell
+- `http://127.0.0.1:8080` from your laptop browser
+
+You do not need a manual `ssh -L` tunnel for that service.
 
 ## Three Places `localhost` Can Mean
 
@@ -37,120 +37,55 @@ If a lab says:
 curl http://localhost:8080
 ```
 
-you must know where you are running it. If you are SSHed into the VM, it tests the service inside that VM. If you are on your laptop, it only works after you create a tunnel.
+you still need to notice where that command runs.
 
-## Check The VM SSH Port
+## Check The Forwarded Ports
 
 From the lab folder, run:
 
 ```bash
+yeast up
 yeast status
-```
-
-For machine-readable output:
-
-```bash
-yeast status --json
 ```
 
 Look for:
 
-- `management_ip`
-- `ssh_port`
-- `user`
+- `SSH`
+- `PORTS`
+- the host URL Yeast prints for the service
 
-Most bootcamp labs use:
+## Common Lab Browser Ports
 
-- `management_ip`: `127.0.0.1`
-- `user`: `ubuntu`
-- an explicit `ssh_port` in `assets/yeast.yaml`
-
-## Create A Local Browser Tunnel
-
-Use normal SSH local forwarding:
-
-```bash
-ssh -N -L <local_port>:127.0.0.1:<service_port> -p <ssh_port> ubuntu@127.0.0.1
-```
-
-Example for a VM named `monitoring` with `ssh_port: 2226`, exposing Prometheus on VM port `9090`:
-
-```bash
-ssh -N -L 9090:127.0.0.1:9090 -p 2226 ubuntu@127.0.0.1
-```
-
-Keep that terminal open. In another terminal, open:
-
-```text
-http://localhost:9090
-```
-
-Stop the tunnel with `Ctrl+C`.
-
-## Multiple Services From One VM
-
-You can forward more than one port through the same SSH connection:
-
-```bash
-ssh -N \
-  -L 9090:127.0.0.1:9090 \
-  -L 3000:127.0.0.1:3000 \
-  -p 2226 ubuntu@127.0.0.1
-```
-
-Then open:
-
-```text
-http://localhost:9090
-http://localhost:3000
-```
-
-## Service On Another VM
-
-If the service is on a private lab IP reachable from the SSH target, forward to that private IP:
-
-```bash
-ssh -N -L 8080:192.168.10.10:80 -p 2203 ubuntu@127.0.0.1
-```
-
-This means:
-
-- browser connects to your laptop on `localhost:8080`
-- SSH carries that traffic through VM `proxy`
-- VM `proxy` connects to `192.168.10.10:80`
-
-Prefer tunneling to the VM that actually runs the service when possible:
-
-```bash
-ssh -N -L 8080:127.0.0.1:80 -p 2203 ubuntu@127.0.0.1
-```
-
-## Common Lab Tunnel Examples
-
-| Lab | Service | Tunnel |
+| Lab | Service | Host URL |
 |---|---|---|
-| 02 | Nginx on `web`, port 80 | `ssh -N -L 8080:127.0.0.1:80 -p 2202 ubuntu@127.0.0.1` |
-| 03 | Proxy on `proxy`, port 80 | `ssh -N -L 8080:127.0.0.1:80 -p 2203 ubuntu@127.0.0.1` |
-| 11 | Compose app on `compose`, port 8080 | `ssh -N -L 8080:127.0.0.1:8080 -p 2217 ubuntu@127.0.0.1` |
-| 17 | Prometheus/Grafana on `monitoring` | `ssh -N -L 9090:127.0.0.1:9090 -L 3000:127.0.0.1:3000 -p 2226 ubuntu@127.0.0.1` |
-| 18 | Loki/Grafana on `logs` | `ssh -N -L 3100:127.0.0.1:3100 -L 3000:127.0.0.1:3000 -p 2228 ubuntu@127.0.0.1` |
-| 19 | Jaeger on `tracing` | `ssh -N -L 16686:127.0.0.1:16686 -p 2230 ubuntu@127.0.0.1` |
-| 20 | Prometheus/Grafana/Alertmanager on `sre` | `ssh -N -L 9090:127.0.0.1:9090 -L 3000:127.0.0.1:3000 -L 9093:127.0.0.1:9093 -p 2233 ubuntu@127.0.0.1` |
-| 25 | Argo CD on `gitops-cluster` after `kubectl port-forward` inside VM | `ssh -N -L 8080:127.0.0.1:8080 -p 2240 ubuntu@127.0.0.1` |
-| 30 | Ollama API on `llm` | `ssh -N -L 11434:127.0.0.1:11434 -p 2252 ubuntu@127.0.0.1` |
+| 02 | Nginx | `http://127.0.0.1:8080` |
+| 03 | Reverse proxy | `http://127.0.0.1:8080` |
+| 11 | Compose app | `http://127.0.0.1:8080` |
+| 17 | Prometheus and Grafana | `http://127.0.0.1:9090`, `http://127.0.0.1:3000` |
+| 18 | Loki and Grafana | `http://127.0.0.1:3100`, `http://127.0.0.1:3000` |
+| 20 | Prometheus, Grafana, Alertmanager | `http://127.0.0.1:9090`, `http://127.0.0.1:3000`, `http://127.0.0.1:9093` |
+| 30 | Ollama API and UI | `http://127.0.0.1:11434`, `http://127.0.0.1:3000` |
 
-## Safer Wording For Labs
+## When To Still Use A Manual Tunnel
 
-Use this wording:
+Use a manual SSH tunnel only when:
 
-> Inside the VM, test the service with `curl http://localhost:8080`.
+- the lab intentionally teaches SSH forwarding
+- the service is not declared in `ports:`
+- you need a one-off path through another VM on the private lab network
 
-Use this wording when the learner needs a browser:
+Fallback example:
 
-> From your laptop, first create an SSH tunnel. Keep it open, then browse to `http://localhost:8080`.
+```bash
+ssh -N -L 8080:127.0.0.1:80 -p 2202 ubuntu@127.0.0.1
+```
 
-Avoid this wording:
+## Safer Lab Wording
 
-> Yeast maps port 8080 on your laptop to port 80 inside the VM.
+Prefer this wording in labs:
 
-That is not a Yeast v1.1 feature.
+> From your laptop, open the forwarded Yeast URL shown by `yeast up` or `yeast status`.
+
+Fallback wording:
+
+> If the forwarded port is not configured for this step, create an SSH tunnel from your laptop and keep it open while you test.

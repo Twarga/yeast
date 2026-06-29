@@ -24,6 +24,7 @@ type InstanceState struct {
 	PID                  int                      `json:"pid,omitempty"`
 	ManagementIP         string                   `json:"management_ip,omitempty"`
 	SSHPort              int                      `json:"ssh_port,omitempty"`
+	ServicePorts         []PortForwardState       `json:"service_ports,omitempty"`
 	User                 string                   `json:"user,omitempty"`
 	LabIP                string                   `json:"lab_ip,omitempty"`
 	RuntimeDir           string                   `json:"runtime_dir,omitempty"`
@@ -32,6 +33,14 @@ type InstanceState struct {
 	ProvisioningStatus   ProvisioningStatus       `json:"provisioning_status,omitempty"`
 	ProvisionFingerprint string                   `json:"provision_fingerprint,omitempty"`
 	LastError            string                   `json:"last_error,omitempty"`
+}
+
+type PortForwardState struct {
+	Name      string `json:"name,omitempty"`
+	Host      string `json:"host"`
+	HostPort  int    `json:"host_port"`
+	GuestPort int    `json:"guest_port"`
+	Protocol  string `json:"protocol"`
 }
 
 type SnapshotState struct {

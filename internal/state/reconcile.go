@@ -52,6 +52,7 @@ func Reconcile(state *State, options ReconcileOptions) bool {
 		instance.PID = 0
 		instance.ManagementIP = ""
 		instance.SSHPort = 0
+		instance.ServicePorts = nil
 		instance.LastError = "process not running"
 		state.Instances[name] = instance
 		changed = true

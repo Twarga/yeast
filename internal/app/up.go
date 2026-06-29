@@ -53,10 +53,11 @@ type UpOptions struct {
 }
 
 type UpInstanceResult struct {
-	Name       string `json:"name"`
-	Status     string `json:"status"`
-	SSHAddress string `json:"ssh_address,omitempty"`
-	SSHPort    int    `json:"ssh_port,omitempty"`
+	Name       string              `json:"name"`
+	Status     string              `json:"status"`
+	SSHAddress string              `json:"ssh_address,omitempty"`
+	SSHPort    int                 `json:"ssh_port,omitempty"`
+	Ports      []PortForwardResult `json:"ports,omitempty"`
 }
 
 type UpResult struct {
@@ -167,6 +168,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 	}
 
 	allocatedPorts := usedManagementPorts(currentState)
+	allocatedHostBinds := usedHostBindings(currentState)
 	startedInstances := make([]rtm.RuntimeInstance, 0)
 
 	type bootPlan struct {
@@ -194,8 +196,13 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 				Status:     existing.Status,
 				SSHAddress: address,
 				SSHPort:    existing.SSHPort,
+				Ports:      buildPortForwardResults(existing.ServicePorts),
 			})
 			allocatedPorts[existing.SSHPort] = true
+			allocatedHostBinds[hostPortKey(managementHost, existing.SSHPort)] = instance.Name + " ssh"
+			for _, forward := range existing.ServicePorts {
+				allocatedHostBinds[hostPortKey(forward.Host, forward.HostPort)] = instance.Name + " port"
+			}
 
 			if !options.NoProvision {
 				existingPlan, planErr := resolveProvisionPlan(absoluteRoot, provision.BuildPlan(instance, cfg.Provision))
@@ -304,7 +311,11 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
 		}
+		if err := reserveConfiguredPortBindings(instance, managementHost, sshPort, allocatedHostBinds); err != nil {
+			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
+		}
 		allocatedPorts[sshPort] = true
+		allocatedHostBinds[hostPortKey(managementHost, sshPort)] = instance.Name + " ssh"
 
 		userKey, err := s.discoverSSHKey()
 		if err != nil {
@@ -372,6 +383,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 					SSHPort:       sshPort,
 					InterfaceName: defaultManagementNIC,
 					MACAddress:    deriveManagementMACAddress(metadata.ID, instance.Name),
+					PortForwards:  buildRuntimePortForwards(instance.Ports),
 				},
 				Lab: labNetworkPlan,
 			},
@@ -398,6 +410,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			Status:             "running",
 			ManagementIP:       managementHost,
 			SSHPort:            sshPort,
+			ServicePorts:       buildStatePortForwards(instance.Ports),
 			User:               instance.User,
 			RuntimeDir:         runtimeDir,
 			ProvisionLogPath:   filepath.Join(runtimeDir, "provision.log"),
@@ -508,6 +521,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			Data: map[string]any{
 				"ssh_address": address,
 				"ssh_port":    bp.sshPort,
+				"ports":       buildPortForwardResults(bp.instanceState.ServicePorts),
 			},
 		})
 
@@ -519,6 +533,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 				Status:     "running",
 				SSHAddress: address,
 				SSHPort:    bp.sshPort,
+				Ports:      buildPortForwardResults(bp.instanceState.ServicePorts),
 			},
 		}
 	}

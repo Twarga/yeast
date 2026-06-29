@@ -113,6 +113,50 @@ func TestBuildCommandArgsIncludesLabNetworkFlags(t *testing.T) {
 	}
 }
 
+func TestBuildCommandArgsIncludesServicePortForwards(t *testing.T) {
+	t.Parallel()
+
+	plan := runtime.MachinePlan{
+		Name:          "web",
+		RuntimeDir:    "/runtime/web",
+		LogPath:       "/runtime/web/vm.log",
+		MemoryMiB:     2048,
+		CPUs:          2,
+		SeedImagePath: "/runtime/web/seed.iso",
+		Disk: runtime.DiskPlan{
+			DiskPath: "/runtime/web/disk.qcow2",
+		},
+		Networks: runtime.NetworkPlan{
+			Management: runtime.ManagementNetworkPlan{
+				SSHHost:       "127.0.0.1",
+				SSHPort:       2222,
+				InterfaceName: "yeastmgmt0",
+				MACAddress:    "52:54:00:11:22:33",
+				PortForwards: []runtime.PortForwardPlan{
+					{Host: "127.0.0.1", HostPort: 8080, GuestPort: 80, Protocol: "tcp"},
+					{Host: "0.0.0.0", HostPort: 3000, GuestPort: 3000, Protocol: "tcp"},
+				},
+			},
+		},
+	}
+
+	got, err := BuildCommandArgs(plan)
+	if err != nil {
+		t.Fatalf("BuildCommandArgs returned error: %v", err)
+	}
+
+	found := false
+	for i := 0; i < len(got)-1; i++ {
+		if got[i] == "-netdev" && got[i+1] == "user,id=mgmt0,hostfwd=tcp:127.0.0.1:2222-:22,hostfwd=tcp:127.0.0.1:8080-:80,hostfwd=tcp:0.0.0.0:3000-:3000" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected service forwards in netdev args, got %#v", got)
+	}
+}
+
 func TestBuildCommandReturnsBinaryAndArgs(t *testing.T) {
 	t.Parallel()
 

@@ -67,6 +67,8 @@ func Validate(cfg *Config) error {
 
 	seen := make(map[string]struct{}, len(cfg.Instances))
 	usedNetworkIPs := make(map[string]string)
+	usedBinds := make(map[string]string)
+	managementHost := resolveValidatedManagementHost(cfg)
 	for _, instance := range cfg.Instances {
 		if instance.Name == "" {
 			return fmt.Errorf("instance name cannot be empty")
@@ -97,6 +99,13 @@ func Validate(cfg *Config) error {
 		if instance.SSHPort != 0 && (instance.SSHPort < 1 || instance.SSHPort > 65535) {
 			return fmt.Errorf("instance %s has invalid ssh_port %d", instance.Name, instance.SSHPort)
 		}
+		if instance.SSHPort != 0 {
+			key := portBindKey(managementHost, instance.SSHPort)
+			if previous, exists := usedBinds[key]; exists {
+				return fmt.Errorf("instance %s ssh_port %d conflicts with %s", instance.Name, instance.SSHPort, previous)
+			}
+			usedBinds[key] = fmt.Sprintf("instance %s ssh_port", instance.Name)
+		}
 		if strings.TrimSpace(instance.DiskSize) != "" {
 			if _, err := parseByteSize(instance.DiskSize); err != nil {
 				return fmt.Errorf("instance %s has invalid disk_size: %w", instance.Name, err)
@@ -119,6 +128,17 @@ func Validate(cfg *Config) error {
 			if strings.Contains(value, "\n") {
 				return fmt.Errorf("instance %s env %q contains newline", instance.Name, key)
 			}
+		}
+		for i, forward := range instance.Ports {
+			normalized, err := validatePortForward(instance.Name, i, forward)
+			if err != nil {
+				return err
+			}
+			key := portBindKey(normalized.Host, normalized.HostPort)
+			if previous, exists := usedBinds[key]; exists {
+				return fmt.Errorf("instance %s ports[%d] host binding %s:%d conflicts with %s", instance.Name, i, normalized.Host, normalized.HostPort, previous)
+			}
+			usedBinds[key] = fmt.Sprintf("instance %s ports[%d]", instance.Name, i)
 		}
 		if len(instance.Networks) > 1 {
 			return fmt.Errorf("instance %s can attach to at most one private network", instance.Name)
@@ -163,6 +183,47 @@ func Validate(cfg *Config) error {
 	}
 
 	return nil
+}
+
+func resolveValidatedManagementHost(cfg *Config) string {
+	if cfg != nil && strings.TrimSpace(cfg.ManagementHost) != "" {
+		return strings.TrimSpace(cfg.ManagementHost)
+	}
+	return DefaultManagementHost
+}
+
+func validatePortForward(instanceName string, index int, forward PortForward) (PortForward, error) {
+	normalized := forward
+	if strings.TrimSpace(normalized.Host) == "" {
+		normalized.Host = DefaultPortForwardHost
+	}
+	if strings.TrimSpace(normalized.Protocol) == "" {
+		normalized.Protocol = DefaultPortForwardProtocol
+	}
+	normalized.Host = strings.TrimSpace(normalized.Host)
+	normalized.Protocol = strings.ToLower(strings.TrimSpace(normalized.Protocol))
+
+	if normalized.Protocol != DefaultPortForwardProtocol {
+		return PortForward{}, fmt.Errorf("instance %s ports[%d] protocol %q is unsupported (tcp only)", instanceName, index, forward.Protocol)
+	}
+	if normalized.HostPort < 1 || normalized.HostPort > 65535 {
+		return PortForward{}, fmt.Errorf("instance %s ports[%d] has invalid host_port %d", instanceName, index, normalized.HostPort)
+	}
+	if normalized.GuestPort < 1 || normalized.GuestPort > 65535 {
+		return PortForward{}, fmt.Errorf("instance %s ports[%d] has invalid guest_port %d", instanceName, index, normalized.GuestPort)
+	}
+	if normalized.Host != "127.0.0.1" && normalized.Host != "0.0.0.0" {
+		ip := net.ParseIP(normalized.Host)
+		if ip == nil || ip.To4() == nil {
+			return PortForward{}, fmt.Errorf("instance %s ports[%d] host must be a valid IPv4 address (got %q)", instanceName, index, forward.Host)
+		}
+	}
+
+	return normalized, nil
+}
+
+func portBindKey(host string, port int) string {
+	return host + ":" + strconv.Itoa(port)
 }
 
 func isBroadcastIPv4(network net.IPNet, ip net.IP) bool {

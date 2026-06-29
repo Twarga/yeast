@@ -59,6 +59,13 @@ instances:
     cpus: 1
     disk_size: 20G
     ssh_port: 2205
+    ports:
+      - 8080:80
+      - name: grafana
+        host: 0.0.0.0
+        host_port: 3000
+        guest_port: 3000
+        protocol: tcp
     user: yeast
     sudo: none
     networks:
@@ -121,6 +128,15 @@ instances:
 	}
 	if instance.SSHPort != 2205 {
 		t.Fatalf("expected ssh port 2205, got %d", instance.SSHPort)
+	}
+	if len(instance.Ports) != 2 {
+		t.Fatalf("expected 2 port mappings, got %d", len(instance.Ports))
+	}
+	if instance.Ports[0].Host != "127.0.0.1" || instance.Ports[0].HostPort != 8080 || instance.Ports[0].GuestPort != 80 {
+		t.Fatalf("unexpected first port mapping: %#v", instance.Ports[0])
+	}
+	if instance.Ports[1].Name != "grafana" || instance.Ports[1].Host != "0.0.0.0" || instance.Ports[1].HostPort != 3000 || instance.Ports[1].GuestPort != 3000 {
+		t.Fatalf("unexpected second port mapping: %#v", instance.Ports[1])
 	}
 	if instance.User != "yeast" {
 		t.Fatalf("expected user yeast, got %q", instance.User)
