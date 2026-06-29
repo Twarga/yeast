@@ -49,4 +49,4 @@ If update fails:
 4. confirm the release has `SHA256SUMS.txt`
 5. run `yeast version` to see what is still installed
 
-For release validation, see [Release Smoke Test](release-smoke-v1.1.4.md).
+For release validation, see [Release Smoke Test](release-smoke-v1.1.5.md).
