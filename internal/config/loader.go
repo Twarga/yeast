@@ -1,8 +1,10 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -14,7 +16,10 @@ func Load(path string) (*Config, error) {
 	}
 
 	var cfg Config
-	if err := yaml.Unmarshal(raw, &cfg); err != nil {
+	decoder := yaml.NewDecoder(bytes.NewReader(raw))
+	decoder.KnownFields(true)
+	if err := decoder.Decode(&cfg); err != nil {
+		err = enrichYAMLError(err)
 		return nil, fmt.Errorf("parse config file %s: %w", path, err)
 	}
 	if err := Validate(&cfg); err != nil {
@@ -25,4 +30,12 @@ func Load(path string) (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+func enrichYAMLError(err error) error {
+	message := err.Error()
+	if strings.Contains(message, "field port not found") && !strings.Contains(message, `did you mean "ports"`) {
+		return fmt.Errorf("%s; did you mean \"ports\"?", message)
+	}
+	return err
 }

@@ -163,3 +163,28 @@ instances:
 		t.Fatalf("expected provision destination /srv/site, got %q", instance.Provision.Files[0].Destination)
 	}
 }
+
+func TestLoadRejectsUnknownFieldWithSuggestion(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "yeast.yaml")
+	raw := `version: 1
+instances:
+  - name: web
+    image: ubuntu-24.04
+    port:
+      - "8080:80"
+`
+	if err := os.WriteFile(path, []byte(raw), 0644); err != nil {
+		t.Fatalf("failed to write yaml: %v", err)
+	}
+
+	_, err := Load(path)
+	if err == nil {
+		t.Fatal("expected unknown field error")
+	}
+	if !strings.Contains(err.Error(), "field port not found") {
+		t.Fatalf("expected unknown field error, got %v", err)
+	}
+	if !strings.Contains(err.Error(), "did you mean \"ports\"") {
+		t.Fatalf("expected ports suggestion, got %v", err)
+	}
+}
