@@ -12,6 +12,8 @@ instances:
     cpus: 2
     disk_size: 40G
     ssh_port: 2221
+    ports:
+      - "5000:5000"
     user: ubuntu
     sudo: nopasswd
     networks:
@@ -45,6 +47,8 @@ instances:
     cpus: 2
     disk_size: 20G
     ssh_port: 2222
+    ports:
+      - "8080:8080"
     user: ubuntu
     sudo: nopasswd
     networks:

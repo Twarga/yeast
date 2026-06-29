@@ -28,7 +28,7 @@
 - Run `yeast` commands from this lab folder on your laptop.
 - Run Linux service commands only after you SSH into the target VM.
 - When a command says "from your laptop", leave the VM shell first with `exit`.
-- When a browser URL uses `localhost`, check whether the lab asked you to open an SSH tunnel first.
+- When a browser URL uses `localhost`, check whether Yeast already forwarded that port for you. If not, the lab will tell you when to use a manual SSH tunnel.
 - Run Docker commands inside the VM unless the lab explicitly says otherwise.
 
 ### Expected Checkpoints
@@ -41,7 +41,7 @@
 ### Common Mistakes To Avoid
 
 - Running a VM command on your laptop, or a laptop command inside the VM.
-- Closing an SSH tunnel and then wondering why `localhost:<port>` stopped working.
+- Ignoring the forwarded port shown by `yeast up` or `yeast status`, or opening a tunnel when the lab already gave you a forwarded host port.
 - Skipping validation because the final page or command "looked fine".
 - Forgetting to run `yeast destroy` before moving to the next lab.
 - Confusing laptop `localhost`, VM `localhost`, and container `localhost`.
@@ -55,6 +55,8 @@ Your CI pipeline builds container images. You scan them. They pass. But then wha
 A private container registry is the standard solution. It is a server that stores your container images — accessible only to authenticated clients. Your CI pushes to it. Your deploy servers pull from it. Every image version is stored indefinitely. Rolling back is as simple as pulling an older tag.
 
 In this lab you run your own registry on a Yeast VM using the official `registry:2` image, push a tagged image to it, and deploy from it to a second VM.
+
+For this patch, Yeast forwards the registry to `127.0.0.1:5000` on your laptop and the deployed app to `127.0.0.1:8080`.
 
 ---
 
@@ -169,7 +171,7 @@ exit
 
 ## Step 2 — Configure Docker To Use The Insecure Registry
 
-Both the build machine (your laptop) and the deployer VM need to know that `192.168.40.10:5000` is allowed as an insecure registry.
+Both the build machine (your laptop) and the deployer VM need to know which registry address they are allowed to use.
 
 **On your laptop:**
 
@@ -177,7 +179,7 @@ Both the build machine (your laptop) and the deployer VM need to know that `192.
 sudo mkdir -p /etc/docker
 sudo tee /etc/docker/daemon.json << 'EOF'
 {
-  "insecure-registries": ["192.168.40.10:5000"]
+  "insecure-registries": ["127.0.0.1:5000"]
 }
 EOF
 sudo systemctl restart docker
@@ -243,23 +245,23 @@ docker build -t myapp:1.0.0 --build-arg APP_VERSION=1.0.0 .
 Tag it with the registry address:
 
 ```bash
-docker tag myapp:1.0.0 192.168.40.10:5000/myapp:1.0.0
-docker tag myapp:1.0.0 192.168.40.10:5000/myapp:latest
+docker tag myapp:1.0.0 127.0.0.1:5000/myapp:1.0.0
+docker tag myapp:1.0.0 127.0.0.1:5000/myapp:latest
 ```
 
-Tagging with the registry address tells Docker where to push. `192.168.40.10:5000/myapp:1.0.0` means: registry at `192.168.40.10:5000`, image name `myapp`, tag `1.0.0`.
+Tagging with the registry address tells Docker where to push. `127.0.0.1:5000/myapp:1.0.0` means: use the Yeast-forwarded registry on your laptop, image name `myapp`, tag `1.0.0`.
 
 Push:
 
 ```bash
-docker push 192.168.40.10:5000/myapp:1.0.0
-docker push 192.168.40.10:5000/myapp:latest
+docker push 127.0.0.1:5000/myapp:1.0.0
+docker push 127.0.0.1:5000/myapp:latest
 ```
 
 Verify it arrived in the registry:
 
 ```bash
-curl http://192.168.40.10:5000/v2/myapp/tags/list
+curl http://127.0.0.1:5000/v2/myapp/tags/list
 ```
 
 Expected: `{"name":"myapp","tags":["1.0.0","latest"]}`
@@ -331,16 +333,16 @@ EOF
 
 cd /tmp/registry-lab
 docker build -t myapp:2.0.0 .
-docker tag myapp:2.0.0 192.168.40.10:5000/myapp:2.0.0
-docker tag myapp:2.0.0 192.168.40.10:5000/myapp:latest
-docker push 192.168.40.10:5000/myapp:2.0.0
-docker push 192.168.40.10:5000/myapp:latest
+docker tag myapp:2.0.0 127.0.0.1:5000/myapp:2.0.0
+docker tag myapp:2.0.0 127.0.0.1:5000/myapp:latest
+docker push 127.0.0.1:5000/myapp:2.0.0
+docker push 127.0.0.1:5000/myapp:latest
 ```
 
 Verify both versions are in the registry:
 
 ```bash
-curl http://192.168.40.10:5000/v2/myapp/tags/list
+curl http://127.0.0.1:5000/v2/myapp/tags/list
 ```
 
 Expected: `{"name":"myapp","tags":["1.0.0","2.0.0","latest"]}`
@@ -376,6 +378,12 @@ curl http://localhost:8080
 
 Expected: `{"version": "1.0.0", "status": "ok"}` — no `feature` field. Rolled back.
 
+From your laptop you can also verify the deployed app through the forwarded host port:
+
+```bash
+curl http://127.0.0.1:8080
+```
+
 This is why keeping old image versions in the registry matters. Rollback is instant — no rebuild required.
 
 ---
@@ -386,13 +394,13 @@ The registry exposes a REST API. Useful commands:
 
 ```bash
 # List all repositories in the registry
-curl http://192.168.40.10:5000/v2/_catalog
+curl http://127.0.0.1:5000/v2/_catalog
 
 # List tags for an image
-curl http://192.168.40.10:5000/v2/myapp/tags/list
+curl http://127.0.0.1:5000/v2/myapp/tags/list
 
 # Get the manifest for a specific tag
-curl http://192.168.40.10:5000/v2/myapp/manifests/1.0.0 \
+curl http://127.0.0.1:5000/v2/myapp/manifests/1.0.0 \
   -H "Accept: application/vnd.docker.distribution.manifest.v2+json"
 ```
 

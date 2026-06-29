@@ -29,7 +29,7 @@
 - Run `yeast` commands from this lab folder on your laptop.
 - Run Linux service commands only after you SSH into the target VM.
 - When a command says "from your laptop", leave the VM shell first with `exit`.
-- When a browser URL uses `localhost`, check whether Yeast already forwarded that port for you.
+- When a browser URL uses `localhost`, check whether Yeast already forwarded that port for you. If not, the lab will tell you when to use a manual SSH tunnel.
 - Run Docker commands inside the VM unless the lab explicitly says otherwise.
 
 ### Expected Checkpoints
@@ -46,7 +46,7 @@
 - Skipping validation because the final page or command "looked fine".
 - Forgetting to run `yeast destroy` before moving to the next lab.
 - Confusing laptop `localhost`, VM `localhost`, and container `localhost`.
-- Opening Grafana, Prometheus, Jaeger, or Argo CD before the tunnel is running.
+- Opening Grafana, Prometheus, Jaeger, or Argo CD before the forwarded service is ready.
 
 ---
 

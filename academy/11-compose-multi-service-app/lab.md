@@ -29,7 +29,7 @@
 - Run `yeast` commands from this lab folder on your laptop.
 - Run Linux service commands only after you SSH into the target VM.
 - When a command says "from your laptop", leave the VM shell first with `exit`.
-- When a browser URL uses `localhost`, check whether Yeast already forwarded that port for you.
+- When a browser URL uses `localhost`, check whether Yeast already forwarded that port for you. If not, the lab will tell you when to use a manual SSH tunnel.
 - Run Docker commands inside the VM unless the lab explicitly says otherwise.
 
 ### Expected Checkpoints

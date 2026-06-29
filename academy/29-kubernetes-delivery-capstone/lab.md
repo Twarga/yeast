@@ -29,7 +29,7 @@
 - Run `yeast` commands from this lab folder on your laptop.
 - Run Linux service commands only after you SSH into the target VM.
 - When a command says "from your laptop", leave the VM shell first with `exit`.
-- When a browser URL uses `localhost`, check whether the lab asked you to open an SSH tunnel first.
+- When a browser URL uses `localhost`, check whether Yeast already forwarded that port for you. If not, the lab will tell you when to use a manual SSH tunnel.
 - Run Docker commands inside the VM unless the lab explicitly says otherwise.
 - Run `kubectl` commands inside the Kubernetes control-plane VM unless the lab says otherwise.
 
@@ -43,7 +43,7 @@
 ### Common Mistakes To Avoid
 
 - Running a VM command on your laptop, or a laptop command inside the VM.
-- Closing an SSH tunnel and then wondering why `localhost:<port>` stopped working.
+- Ignoring the forwarded port shown by `yeast up` or `yeast status`, or opening a tunnel when the lab already gave you a forwarded host port.
 - Skipping validation because the final page or command "looked fine".
 - Forgetting to run `yeast destroy` before moving to the next lab.
 - Confusing laptop `localhost`, VM `localhost`, and container `localhost`.
@@ -175,9 +175,9 @@ docker run -d \
 sudo mkdir -p /etc/rancher/k3s/
 sudo tee /etc/rancher/k3s/registries.yaml << 'EOF'
 mirrors:
-  "localhost:5000":
+  "127.0.0.1:5000":
     endpoint:
-      - "http://localhost:5000"
+      - "http://127.0.0.1:5000"
   "192.168.100.70:5000":
     endpoint:
       - "http://192.168.100.70:5000"
@@ -345,15 +345,15 @@ Before automating, do it manually once so you understand every step:
 ```bash
 # Build and tag for the local registry
 docker build -t myapp:1.0.0 .
-docker tag myapp:1.0.0 192.168.100.70:5000/myapp:1.0.0
-docker tag myapp:1.0.0 192.168.100.70:5000/myapp:latest
+docker tag myapp:1.0.0 127.0.0.1:5000/myapp:1.0.0
+docker tag myapp:1.0.0 127.0.0.1:5000/myapp:latest
 
 # Push to registry
-docker push 192.168.100.70:5000/myapp:1.0.0
-docker push 192.168.100.70:5000/myapp:latest
+docker push 127.0.0.1:5000/myapp:1.0.0
+docker push 127.0.0.1:5000/myapp:latest
 
 # Verify in registry
-curl http://192.168.100.70:5000/v2/myapp/tags/list
+curl http://127.0.0.1:5000/v2/myapp/tags/list
 ```
 
 Deploy to Kubernetes:
@@ -387,7 +387,7 @@ kubectl get pods -w
 Once Running, test:
 
 ```bash
-curl -H "Host: myapp.k8s.lab" http://192.168.100.70
+curl -H "Host: myapp.k8s.lab" http://127.0.0.1:8080
 ```
 
 Expected: `{"version": "1.0.0", "status": "ok", ...}`
@@ -430,12 +430,12 @@ PYEOF
 
 # Build the new version
 docker build -t myapp:2.0.0 .
-docker tag myapp:2.0.0 192.168.100.70:5000/myapp:2.0.0
-docker tag myapp:2.0.0 192.168.100.70:5000/myapp:latest
+docker tag myapp:2.0.0 127.0.0.1:5000/myapp:2.0.0
+docker tag myapp:2.0.0 127.0.0.1:5000/myapp:latest
 
 # Push to registry
-docker push 192.168.100.70:5000/myapp:2.0.0
-docker push 192.168.100.70:5000/myapp:latest
+docker push 127.0.0.1:5000/myapp:2.0.0
+docker push 127.0.0.1:5000/myapp:latest
 
 # Update the manifest
 sed -i 's/image: 192.168.100.70:5000\/myapp:latest/image: 192.168.100.70:5000\/myapp:2.0.0/' \
@@ -465,7 +465,7 @@ kubectl get pods
 **Verify the new version:**
 
 ```bash
-curl -H "Host: myapp.k8s.lab" http://192.168.100.70
+curl -H "Host: myapp.k8s.lab" http://127.0.0.1:8080
 ```
 
 Expected: `{"version": "2.0.0", "new_feature": "search support", ...}`
@@ -480,7 +480,7 @@ Something is wrong with v2.0.0. Roll back:
 # In the cluster
 kubectl rollout undo deployment/myapp
 kubectl rollout status deployment/myapp
-curl -H "Host: myapp.k8s.lab" http://192.168.100.70
+curl -H "Host: myapp.k8s.lab" http://127.0.0.1:8080
 ```
 
 Back to v1.0.0 in under 30 seconds.

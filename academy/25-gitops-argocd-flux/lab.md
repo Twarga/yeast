@@ -22,7 +22,7 @@
 - Ability to run `yeast up`, `yeast ssh <instance>`, and `yeast destroy`
 - Basic comfort with `curl`, `systemctl`, and reading command output
 - A GitHub account and `gh` authentication when the lab uses GitHub
-- Comfort creating SSH tunnels from `ACCESS.md` for browser-based tools
+- Comfort using forwarded Yeast host URLs from `ACCESS.md` for browser-based tools
 - Patience for Kubernetes startup time and enough host RAM for multi-VM labs
 
 ### Where Commands Run
@@ -30,7 +30,7 @@
 - Run `yeast` commands from this lab folder on your laptop.
 - Run Linux service commands only after you SSH into the target VM.
 - When a command says "from your laptop", leave the VM shell first with `exit`.
-- When a browser URL uses `localhost`, check whether the lab asked you to open an SSH tunnel first.
+- When a browser URL uses `localhost`, check whether Yeast already forwarded that port for you. If not, the lab will tell you when to use a manual SSH tunnel.
 - Run `kubectl` commands inside the Kubernetes control-plane VM unless the lab says otherwise.
 
 ### Expected Checkpoints
@@ -43,10 +43,10 @@
 ### Common Mistakes To Avoid
 
 - Running a VM command on your laptop, or a laptop command inside the VM.
-- Closing an SSH tunnel and then wondering why `localhost:<port>` stopped working.
+- Ignoring the forwarded port shown by `yeast up` or `yeast status`, or opening a tunnel when the lab already gave you a forwarded host port.
 - Skipping validation because the final page or command "looked fine".
 - Forgetting to run `yeast destroy` before moving to the next lab.
-- Opening Grafana, Prometheus, Jaeger, or Argo CD before the tunnel is running.
+- Opening Grafana, Prometheus, Jaeger, or Argo CD before the forwarded service is ready.
 - Running Kubernetes commands before all nodes are Ready.
 
 ---
@@ -171,7 +171,6 @@ Configure kubectl for the ubuntu user:
 mkdir -p ~/.kube
 sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
 sudo chown ubuntu:ubuntu ~/.kube/config
-sed -i 's/127.0.0.1/127.0.0.1/' ~/.kube/config
 
 # Install kubectl alias
 echo 'alias kubectl="k3s kubectl"' >> ~/.bashrc
@@ -222,13 +221,7 @@ Inside the `gitops-cluster` VM, expose the Argo CD UI on the VM loopback interfa
 kubectl port-forward svc/argocd-server -n argocd 8080:443 --address=127.0.0.1 &
 ```
 
-From your laptop, create a tunnel to that VM-local port:
-
-```bash
-ssh -N -L 8080:127.0.0.1:8080 -p 2240 ubuntu@127.0.0.1
-```
-
-Keep that tunnel terminal open. Then open: `https://localhost:8080` (accept the self-signed cert)
+You do not need a second SSH tunnel now. Keep the `kubectl port-forward` command running in the VM shell, then open: `https://127.0.0.1:8080` (accept the self-signed cert)
 
 Login: `admin` / (the password from above)
 
