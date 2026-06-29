@@ -8,6 +8,8 @@ instances:
     cpus: 2
     disk_size: 20G
     ssh_port: 2202
+    ports:
+      - "8080:80"
     user: ubuntu
     sudo: nopasswd
 

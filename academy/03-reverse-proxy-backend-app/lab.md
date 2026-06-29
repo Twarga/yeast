@@ -21,14 +21,14 @@
 - Comfort opening a terminal and changing directories
 - Ability to run `yeast up`, `yeast ssh <instance>`, and `yeast destroy`
 - Basic comfort with `curl`, `systemctl`, and reading command output
-- Comfort creating SSH tunnels from `ACCESS.md` for browser-based tools
+- Comfort using forwarded Yeast host URLs from `ACCESS.md` for browser-based tools
 
 ### Where Commands Run
 
 - Run `yeast` commands from this lab folder on your laptop.
 - Run Linux service commands only after you SSH into the target VM.
 - When a command says "from your laptop", leave the VM shell first with `exit`.
-- When a browser URL uses `localhost`, check whether the lab asked you to open an SSH tunnel first.
+- When a browser URL uses `localhost`, check whether Yeast already forwarded that port for you.
 
 ### Expected Checkpoints
 
@@ -40,7 +40,7 @@
 ### Common Mistakes To Avoid
 
 - Running a VM command on your laptop, or a laptop command inside the VM.
-- Closing an SSH tunnel and then wondering why `localhost:<port>` stopped working.
+- Ignoring the forwarded port shown by `yeast up` or `yeast status`.
 - Skipping validation because the final page or command "looked fine".
 - Forgetting to run `yeast destroy` before moving to the next lab.
 
@@ -88,7 +88,7 @@ In Nginx config you define an upstream block with the address and port, then ref
 
 In this lab, both VMs share a private network (`192.168.10.0/24`). This network exists only between the VMs — it is not reachable from your laptop or the internet. The proxy VM has an IP on this network (`192.168.10.10`) and the backend VM has an IP (`192.168.10.20`).
 
-The proxy can reach the backend via `192.168.10.20:8000`. Your laptop cannot directly reach the backend at all. To reach the proxy from your laptop browser, you create an SSH tunnel to the proxy VM.
+The proxy can reach the backend via `192.168.10.20:8000`. Your laptop still cannot directly reach the backend, but Yeast now forwards the proxy service to your laptop on port 8080.
 
 This is the same pattern used in real infrastructure: a public subnet for load balancers and proxies, a private subnet for application and database servers.
 

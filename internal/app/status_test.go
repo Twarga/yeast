@@ -176,8 +176,11 @@ func TestStatusIncludesConfiguredLabIP(t *testing.T) {
 		PID:          200,
 		ManagementIP: "127.0.0.1",
 		SSHPort:      2222,
-		User:         "yeast",
-		LabIP:        "10.10.10.10",
+		ServicePorts: []state.PortForwardState{
+			{Name: "web", Host: "127.0.0.1", HostPort: 8080, GuestPort: 80, Protocol: "tcp"},
+		},
+		User:  "yeast",
+		LabIP: "10.10.10.10",
 	}
 	if err := state.Save(paths.StateFile, current); err != nil {
 		t.Fatalf("Save returned error: %v", err)
@@ -195,6 +198,9 @@ func TestStatusIncludesConfiguredLabIP(t *testing.T) {
 	}
 	if result.Instances[0].User != "yeast" {
 		t.Fatalf("expected user in status result, got %#v", result.Instances[0])
+	}
+	if len(result.Instances[0].Ports) != 1 || result.Instances[0].Ports[0].URL != "http://127.0.0.1:8080" {
+		t.Fatalf("expected service ports in status result, got %#v", result.Instances[0].Ports)
 	}
 }
 

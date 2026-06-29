@@ -9,36 +9,52 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func TestResolveDestroyKeepFilesModeAcceptsKeepFilesChoice(t *testing.T) {
-	previousPromptReader := destroyPromptReader
-	previousTerminalCheck := destroyTerminalCheck
-	previousJSON := outputJSON
-	defer func() {
-		destroyPromptReader = previousPromptReader
-		destroyTerminalCheck = previousTerminalCheck
-		outputJSON = previousJSON
-	}()
-
-	outputJSON = false
-	destroyTerminalCheck = func(value any) bool { return true }
-	destroyPromptReader = func(r io.Reader) (string, error) {
-		return "n\n", nil
+func TestDestroyPromptChoices(t *testing.T) {
+	tests := []struct {
+		name          string
+		answer        string
+		wantKeepFiles bool
+	}{
+		{name: "yes short", answer: "y\n", wantKeepFiles: false},
+		{name: "yes long", answer: "yes\n", wantKeepFiles: false},
+		{name: "default preserve", answer: "\n", wantKeepFiles: true},
+		{name: "no preserve", answer: "n\n", wantKeepFiles: true},
+		{name: "no long preserve", answer: "no\n", wantKeepFiles: true},
 	}
 
-	cmd := &cobra.Command{}
-	cmd.SetIn(bytes.NewBuffer(nil))
-	var stderr bytes.Buffer
-	cmd.SetErr(&stderr)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			previousPromptReader := destroyPromptReader
+			previousTerminalCheck := destroyTerminalCheck
+			previousJSON := outputJSON
+			defer func() {
+				destroyPromptReader = previousPromptReader
+				destroyTerminalCheck = previousTerminalCheck
+				outputJSON = previousJSON
+			}()
 
-	keepFiles, err := resolveDestroyKeepFilesMode(cmd, false, false)
-	if err != nil {
-		t.Fatalf("resolveDestroyKeepFilesMode returned error: %v", err)
-	}
-	if !keepFiles {
-		t.Fatal("expected keep-files mode to be selected")
-	}
-	if !strings.Contains(stderr.String(), "Delete VM runtime files? [y/N]:") {
-		t.Fatalf("expected prompt to be shown, got %q", stderr.String())
+			outputJSON = false
+			destroyTerminalCheck = func(value any) bool { return true }
+			destroyPromptReader = func(r io.Reader) (string, error) {
+				return tt.answer, nil
+			}
+
+			cmd := &cobra.Command{}
+			cmd.SetIn(bytes.NewBuffer(nil))
+			var stderr bytes.Buffer
+			cmd.SetErr(&stderr)
+
+			keepFiles, err := resolveDestroyKeepFilesMode(cmd, false, false)
+			if err != nil {
+				t.Fatalf("resolveDestroyKeepFilesMode returned error: %v", err)
+			}
+			if keepFiles != tt.wantKeepFiles {
+				t.Fatalf("unexpected keep-files mode: got %v want %v", keepFiles, tt.wantKeepFiles)
+			}
+			if !strings.Contains(stderr.String(), "Delete local Yeast files for this project? [y/N]: ") {
+				t.Fatalf("expected updated prompt to be shown, got %q", stderr.String())
+			}
+		})
 	}
 }
 
@@ -70,7 +86,7 @@ func TestResolveDestroyKeepFilesModeDefaultsToPreservingRuntimeFiles(t *testing.
 	if !keepFiles {
 		t.Fatal("expected empty prompt answer to preserve runtime files")
 	}
-	if !strings.Contains(stderr.String(), "Delete VM runtime files? [y/N]:") {
+	if !strings.Contains(stderr.String(), "Delete local Yeast files for this project? [y/N]: ") {
 		t.Fatalf("expected safe default prompt, got %q", stderr.String())
 	}
 }

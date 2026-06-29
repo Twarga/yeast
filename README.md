@@ -9,7 +9,7 @@
 
 **Linux-first local VM orchestration for QEMU/KVM**
 
-Fast project-based virtual machines with cloud-init, trusted base images, post-boot provisioning, SSH access, stable JSON, and event streams.
+Fast project-based virtual machines with cloud-init, trusted base images, post-boot provisioning, SSH access, Docker-style service port forwarding, stable JSON, and event streams.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Go](https://img.shields.io/badge/go-1.25+-cyan.svg)
@@ -57,7 +57,7 @@ Yeast `v1.1.4` is the current stable local engine release. It covers one complet
 | VM model | Project-local instances from `yeast.yaml` |
 | Base images | Trusted shared cache in `~/.yeast/cache/images` |
 | Bootstrap | cloud-init seed ISO |
-| Access | SSH over host port forwarding |
+| Access | SSH over host port forwarding plus Docker-style service port forwarding |
 | State | Project-scoped state with locking and reconciliation |
 | Automation | Versioned `--json` envelopes, stable command data fields, documented error codes, and JSON Lines `--events` for lifecycle workflows |
 | Provisioning | Packages, files, shell, and `yeast provision` |
@@ -98,8 +98,10 @@ If you are installing Yeast:
 - `yeast ssh [instance]`
 - `yeast down`
 - `yeast destroy`
+- Docker-style `instances[].ports` such as `["8080:80"]`
 - `yeast version`
 - first private lab network with per-instance `LAB IP`
+- clear forwarded service URLs in `yeast up` and `yeast status`
 - versioned `--json` output with `schema_version: "yeast.v1"`
 - browser-terminal-friendly `user` metadata in `status --json` and `inspect --json`
 - `--json --events` streams for `up`, `provision`, `restore`, `down`, and `destroy`
@@ -205,6 +207,8 @@ instances:
     cpus: 1
     user: yeast
     sudo: nopasswd
+    ports:
+      - "8080:80"
 ```
 
 ### 3. Review the generated config
@@ -221,6 +225,7 @@ The important fields are:
 | `image` | supported base image, for example `ubuntu-24.04` |
 | `memory` | RAM in MiB |
 | `cpus` | virtual CPU count |
+| `ports` | Host-to-guest service forwards such as `["8080:80"]` |
 
 ### 4. Optional: list supported images
 

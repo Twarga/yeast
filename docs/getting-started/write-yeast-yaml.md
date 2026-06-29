@@ -80,6 +80,7 @@ instances:
 | Bigger disk | `disk_size: 30G` | Applies when the instance disk is created. Existing disks are not automatically resized. |
 | Different image | `image: debian-12` | Use an image from the supported image list. |
 | Fixed SSH port | `ssh_port: 2222` | Useful when you want predictable host ports. |
+| Expose a guest service | `ports: ["8080:80"]` | Good for web UIs, APIs, and dashboards. |
 | Passwordless sudo | `sudo: nopasswd` | Useful for labs and provisioning commands. |
 | Different login user | `user: operator` | Must be a Linux-style username. |
 | Different hostname | `hostname: web-lab` | Defaults to `name` if omitted. |
@@ -91,6 +92,26 @@ yeast up
 ```
 
 If the VM already exists, some changes affect the next boot, while disk-size changes may require recreating the VM disk.
+
+## Expose A Service On Your Laptop
+
+Use `ports` when the guest runs a web app, dashboard, or API and you want to open it directly from your laptop.
+
+```yaml
+version: 1
+instances:
+  - name: web
+    image: ubuntu-24.04
+    ssh_port: 2222
+    ports:
+      - "8080:80"
+```
+
+After `yeast up`, Yeast prints the forwarded host URL. In this example, open:
+
+```text
+http://127.0.0.1:8080
+```
 
 ## Pick An Image
 

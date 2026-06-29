@@ -103,6 +103,7 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 			instance.PID = 0
 			instance.ManagementIP = ""
 			instance.SSHPort = 0
+			instance.ServicePorts = nil
 			currentState.Instances[name] = instance
 			result.Instances = append(result.Instances, DownInstanceResult{
 				Name:   name,
@@ -139,6 +140,7 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 		instance.PID = 0
 		instance.ManagementIP = ""
 		instance.SSHPort = 0
+		instance.ServicePorts = nil
 		instance.LastError = ""
 		currentState.Instances[name] = instance
 		result.Instances = append(result.Instances, DownInstanceResult{

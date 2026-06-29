@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -162,6 +163,76 @@ func TestDestroyKeepFilesStopsInstancesAndPreservesState(t *testing.T) {
 	}
 	if instance.RuntimeDir != "/tmp/web" {
 		t.Fatalf("expected runtime dir to be preserved, got %q", instance.RuntimeDir)
+	}
+}
+
+func TestDestroyRemovesLocalProjectFilesAfterFullCleanup(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.runtime = &fakeDestroyRuntime{}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "yeast.yaml"), []byte("version: 1\ninstances: []\n"), 0644); err != nil {
+		t.Fatalf("WriteFile returned error: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "notes.txt"), []byte("keep me\n"), 0644); err != nil {
+		t.Fatalf("WriteFile returned error: %v", err)
+	}
+
+	result, err := service.Destroy(context.Background(), DestroyOptions{ProjectRoot: root, Timeout: 5 * time.Second})
+	if err != nil {
+		t.Fatalf("Destroy returned error: %v", err)
+	}
+	if result.FilesDeleted != true {
+		t.Fatal("expected FilesDeleted=true for full destroy")
+	}
+	if _, err := os.Stat(filepath.Join(root, ".yeast")); !os.IsNotExist(err) {
+		t.Fatalf("expected local .yeast metadata directory to be removed after full destroy, stat err=%v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "yeast.yaml")); !os.IsNotExist(err) {
+		t.Fatalf("expected yeast.yaml to be removed after full destroy, stat err=%v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "notes.txt")); err != nil {
+		t.Fatalf("expected unrelated user file to remain, stat err=%v", err)
+	}
+}
+
+func TestDestroyKeepFilesPreservesLocalProjectFiles(t *testing.T) {
+	root := t.TempDir()
+	yeastHome := filepath.Join(root, "yeast-home")
+
+	service := NewService()
+	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.runtime = &fakeDestroyRuntime{}
+
+	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "yeast.yaml"), []byte("version: 1\ninstances: []\n"), 0644); err != nil {
+		t.Fatalf("WriteFile returned error: %v", err)
+	}
+
+	result, err := service.Destroy(context.Background(), DestroyOptions{
+		ProjectRoot: root,
+		KeepFiles:   true,
+		Timeout:     5 * time.Second,
+	})
+	if err != nil {
+		t.Fatalf("Destroy returned error: %v", err)
+	}
+	if result.FilesDeleted {
+		t.Fatal("expected FilesDeleted=false with KeepFiles")
+	}
+	if _, err := os.Stat(filepath.Join(root, ".yeast")); err != nil {
+		t.Fatalf("expected local .yeast metadata directory to remain with KeepFiles, stat err=%v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "yeast.yaml")); err != nil {
+		t.Fatalf("expected yeast.yaml to remain with KeepFiles, stat err=%v", err)
 	}
 }
 

@@ -20,6 +20,7 @@ type StatusInstanceResult struct {
 	PID                int                      `json:"pid"`
 	ManagementIP       string                   `json:"management_ip,omitempty"`
 	SSHPort            int                      `json:"ssh_port,omitempty"`
+	Ports              []PortForwardResult      `json:"ports,omitempty"`
 	User               string                   `json:"user,omitempty"`
 	LabIP              string                   `json:"lab_ip,omitempty"`
 	RuntimeDir         string                   `json:"runtime_dir,omitempty"`
@@ -88,6 +89,7 @@ func (s *Service) Status(ctx context.Context, options StatusOptions) (StatusResu
 			PID:                instance.PID,
 			ManagementIP:       instance.ManagementIP,
 			SSHPort:            instance.SSHPort,
+			Ports:              buildPortForwardResults(instance.ServicePorts),
 			User:               instance.User,
 			LabIP:              instance.LabIP,
 			RuntimeDir:         instance.RuntimeDir,

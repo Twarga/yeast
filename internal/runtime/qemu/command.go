@@ -70,7 +70,7 @@ func BuildCommandArgs(plan runtime.MachinePlan) ([]string, error) {
 		"-drive", buildDiskDriveArg(plan.Disk.DiskPath),
 		"-drive", buildSeedDriveArg(plan.SeedImagePath),
 		"-device", "virtio-rng-pci",
-		"-netdev", buildManagementNetdevArg(plan.Networks.Management.SSHHost, plan.Networks.Management.SSHPort),
+		"-netdev", buildManagementNetdevArgWithForwards(plan.Networks.Management.SSHHost, plan.Networks.Management.SSHPort, plan.Networks.Management.PortForwards),
 		"-device", buildManagementDeviceArg(plan.Networks.Management),
 		"-qmp", fmt.Sprintf("unix:%s,server,nowait", qmpSocketPath(plan.RuntimeDir)),
 	}
@@ -98,7 +98,19 @@ func buildSeedDriveArg(path string) string {
 }
 
 func buildManagementNetdevArg(host string, port int) string {
-	return fmt.Sprintf("user,id=mgmt0,hostfwd=tcp:%s:%d-:22", host, port)
+	return buildManagementNetdevArgWithForwards(host, port, nil)
+}
+
+func buildManagementNetdevArgWithForwards(host string, port int, forwards []runtime.PortForwardPlan) string {
+	parts := []string{
+		"user",
+		"id=mgmt0",
+		fmt.Sprintf("hostfwd=tcp:%s:%d-:22", host, port),
+	}
+	for _, forward := range forwards {
+		parts = append(parts, fmt.Sprintf("hostfwd=%s:%s:%d-:%d", forward.Protocol, forward.Host, forward.HostPort, forward.GuestPort))
+	}
+	return strings.Join(parts, ",")
 }
 
 func buildManagementDeviceArg(management runtime.ManagementNetworkPlan) string {

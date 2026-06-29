@@ -2,6 +2,9 @@ package project
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -50,5 +53,44 @@ func TestNewMetadataStoresUTCTime(t *testing.T) {
 	}
 	if got := metadata.CreatedAt.Format(time.RFC3339); got != "2026-05-16T12:00:00Z" {
 		t.Fatalf("expected normalized UTC time, got %s", got)
+	}
+}
+
+func TestRemoveLocalProjectFilesRemovesOnlyYeastOwnedFiles(t *testing.T) {
+	root := t.TempDir()
+
+	if err := os.MkdirAll(filepath.Join(root, ".yeast"), 0755); err != nil {
+		t.Fatalf("MkdirAll returned error: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, ".yeast", "project.json"), []byte("{}\n"), 0644); err != nil {
+		t.Fatalf("WriteFile returned error: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "yeast.yaml"), []byte("version: 1\n"), 0644); err != nil {
+		t.Fatalf("WriteFile returned error: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "notes.txt"), []byte("keep me\n"), 0644); err != nil {
+		t.Fatalf("WriteFile returned error: %v", err)
+	}
+
+	result, err := RemoveLocalProjectFiles(root)
+	if err != nil {
+		t.Fatalf("RemoveLocalProjectFiles returned error: %v", err)
+	}
+
+	wantRemoved := []string{
+		filepath.Join(root, ".yeast"),
+		filepath.Join(root, "yeast.yaml"),
+	}
+	if !reflect.DeepEqual(result.Removed, wantRemoved) {
+		t.Fatalf("unexpected removed paths:\n got: %#v\nwant: %#v", result.Removed, wantRemoved)
+	}
+	if _, err := os.Stat(filepath.Join(root, ".yeast")); !os.IsNotExist(err) {
+		t.Fatalf("expected .yeast to be removed, stat err=%v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "yeast.yaml")); !os.IsNotExist(err) {
+		t.Fatalf("expected yeast.yaml to be removed, stat err=%v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "notes.txt")); err != nil {
+		t.Fatalf("expected unrelated file to remain, stat err=%v", err)
 	}
 }

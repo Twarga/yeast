@@ -15,6 +15,10 @@ const MetadataFileName = "project.json"
 
 var ErrMetadataNotFound = errors.New("project metadata not found")
 
+type LocalProjectCleanupResult struct {
+	Removed []string
+}
+
 type Metadata struct {
 	Schema    string    `json:"schema"`
 	ID        string    `json:"id"`
@@ -113,4 +117,40 @@ func ValidateMetadata(metadata Metadata) error {
 		return errors.New("created_at is required")
 	}
 	return nil
+}
+
+func RemoveLocalProjectFiles(root string) (LocalProjectCleanupResult, error) {
+	cleanRoot, err := filepath.Abs(root)
+	if err != nil {
+		return LocalProjectCleanupResult{}, fmt.Errorf("resolve project root: %w", err)
+	}
+
+	targets := []string{
+		filepath.Join(cleanRoot, MetadataDirName),
+		filepath.Join(cleanRoot, "yeast.yaml"),
+	}
+	result := LocalProjectCleanupResult{
+		Removed: make([]string, 0, len(targets)),
+	}
+
+	for _, target := range targets {
+		cleanTarget, err := filepath.Abs(target)
+		if err != nil {
+			return result, fmt.Errorf("resolve local project file %s: %w", target, err)
+		}
+		if cleanTarget != filepath.Join(cleanRoot, "yeast.yaml") && cleanTarget != filepath.Join(cleanRoot, MetadataDirName) {
+			return result, fmt.Errorf("refusing to remove unexpected local project path: %s", cleanTarget)
+		}
+		if _, err := os.Stat(cleanTarget); errors.Is(err, os.ErrNotExist) {
+			continue
+		} else if err != nil {
+			return result, fmt.Errorf("stat local project file %s: %w", cleanTarget, err)
+		}
+		if err := os.RemoveAll(cleanTarget); err != nil {
+			return result, fmt.Errorf("remove local project file %s: %w", cleanTarget, err)
+		}
+		result.Removed = append(result.Removed, cleanTarget)
+	}
+
+	return result, nil
 }

@@ -14,6 +14,6 @@ Current Yeast v1.1 limits:
 - no Windows guests
 - stopped-VM snapshots only
 - no project-wide atomic snapshot helper
-- no public `ports:` config support
+- TCP-only service port forwarding
 - no daemon or web API
 - no remote template registry

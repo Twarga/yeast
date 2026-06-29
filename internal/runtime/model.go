@@ -32,6 +32,15 @@ type ManagementNetworkPlan struct {
 	SSHPort       int
 	InterfaceName string
 	MACAddress    string
+	PortForwards  []PortForwardPlan
+}
+
+type PortForwardPlan struct {
+	Name      string
+	Host      string
+	HostPort  int
+	GuestPort int
+	Protocol  string
 }
 
 type LabNetworkPlan struct {

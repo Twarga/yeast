@@ -43,6 +43,11 @@ instances:
     cpus: 1
     disk_size: 20G
     ssh_port: 2222
+    ports:
+      - "8080:80"
+      - name: grafana
+        host_port: 3000
+        guest_port: 3000
     user: yeast
     sudo: nopasswd
     env:
@@ -71,6 +76,7 @@ Most projects only need one or two of these edits:
 | Change disk size for a new disk | `instances[].disk_size` | `disk_size: 30G` |
 | Change image | `instances[].image` | `image: debian-12` |
 | Pin host SSH port | `instances[].ssh_port` | `ssh_port: 2222` |
+| Expose a guest web app | `instances[].ports` | `ports: ["8080:80"]` |
 | Change login user | `instances[].user` | `user: operator` |
 | Allow passwordless sudo | `instances[].sudo` | `sudo: nopasswd` |
 | Add packages/files/shell | `instances[].provision` | see [Provision Fields](#provision-fields) |
@@ -103,6 +109,7 @@ Yeast validates config before starting VMs.
 | memory | minimum `128` MiB when set |
 | CPUs | minimum `1` when set |
 | `ssh_port` | `1` through `65535` when set |
+| `ports` | string `host:guest` or object form; TCP only; host bind tuples must be unique |
 | `disk_size` | number with optional `K`, `M`, `G`, `T`, or `P` suffix |
 | user | Linux-style user name, max 32 characters |
 | sudo | `none`, `password`, or `nopasswd` |
@@ -185,6 +192,7 @@ Top-level provisioning applies to instances. Instance-level provisioning adds in
 | `instances[].cpus` | no | vCPU count. Minimum is `1` when set. |
 | `instances[].disk_size` | no | Overlay disk size. Applies when the instance disk is created. |
 | `instances[].ssh_port` | no | Host-side management SSH port. |
+| `instances[].ports` | no | Host-to-guest service port forwards. |
 | `instances[].user` | no | Linux user created/configured for access. |
 | `instances[].sudo` | no | Sudo behavior: `none`, `password`, or `nopasswd`. |
 | `instances[].env` | no | Environment-style values used by Yeast guest setup and provisioning context. |
@@ -241,10 +249,38 @@ user_data: |
 
 Use it carefully. If custom user data conflicts with Yeast's expected user or SSH setup, the VM may boot but Yeast may not be able to connect.
 
-## Unsupported In v1.1
+## Service Port Forwarding
 
-Do not use these fields in public v1.1 docs:
+Simple syntax:
 
-- `ports`
-- `host_port`
-- `guest_port`
+```yaml
+instances:
+  - name: web
+    image: ubuntu-24.04
+    ports:
+      - "8080:80"
+```
+
+Object syntax:
+
+```yaml
+instances:
+  - name: monitoring
+    image: ubuntu-24.04
+    ports:
+      - name: prometheus
+        host_port: 9090
+        guest_port: 9090
+      - name: grafana
+        host: 0.0.0.0
+        host_port: 3000
+        guest_port: 3000
+        protocol: tcp
+```
+
+Defaults and rules:
+
+- default `host` is `127.0.0.1`
+- only `tcp` is supported in this patch
+- duplicate host bindings are rejected
+- `yeast up` and `yeast status` print the forwarded host URLs

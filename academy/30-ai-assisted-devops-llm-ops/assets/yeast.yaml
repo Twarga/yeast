@@ -8,6 +8,9 @@ instances:
     cpus: 4
     disk_size: 50G
     ssh_port: 2252
+    ports:
+      - "11434:11434"
+      - "3000:3000"
     user: ubuntu
     sudo: nopasswd
 

@@ -98,12 +98,13 @@ func TestAppWorkflowsRunWithoutQEMUUsingFakeRuntime(t *testing.T) {
 
 	destroyResult, err := service.Destroy(context.Background(), DestroyOptions{
 		ProjectRoot: root,
+		KeepFiles:   true,
 		Timeout:     5 * time.Second,
 	})
 	if err != nil {
 		t.Fatalf("Destroy returned error: %v", err)
 	}
-	if len(destroyResult.Instances) != 1 || destroyResult.Instances[0].Status != "destroyed" {
+	if len(destroyResult.Instances) != 1 || destroyResult.Instances[0].Status != "already_stopped" {
 		t.Fatalf("expected destroyed result, got %#v", destroyResult.Instances)
 	}
 
@@ -111,8 +112,8 @@ func TestAppWorkflowsRunWithoutQEMUUsingFakeRuntime(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Status after destroy returned error: %v", err)
 	}
-	if len(statusAfterDestroy.Instances) != 0 {
-		t.Fatalf("expected empty state after destroy, got %#v", statusAfterDestroy.Instances)
+	if len(statusAfterDestroy.Instances) != 1 || statusAfterDestroy.Instances[0].Status != "stopped" {
+		t.Fatalf("expected stopped state after keep-files destroy, got %#v", statusAfterDestroy.Instances)
 	}
 
 	if fakeRuntime.prepareCalls != 1 {
@@ -124,8 +125,8 @@ func TestAppWorkflowsRunWithoutQEMUUsingFakeRuntime(t *testing.T) {
 	if fakeRuntime.stopCalls != 1 {
 		t.Fatalf("expected one stop call, got %d", fakeRuntime.stopCalls)
 	}
-	if fakeRuntime.destroyCalls != 1 {
-		t.Fatalf("expected one destroy call, got %d", fakeRuntime.destroyCalls)
+	if fakeRuntime.destroyCalls != 0 {
+		t.Fatalf("expected no destroy calls during keep-files destroy, got %d", fakeRuntime.destroyCalls)
 	}
 }
 

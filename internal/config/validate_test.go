@@ -153,6 +153,43 @@ func TestValidateAcceptsValidConfig(t *testing.T) {
 	}
 }
 
+func TestValidateAcceptsDockerStylePorts(t *testing.T) {
+	cfg := validConfig()
+	cfg.Instances[0].Ports = []PortForward{
+		{HostPort: 8080, GuestPort: 80},
+		{Host: "0.0.0.0", HostPort: 3000, GuestPort: 3000, Protocol: "tcp"},
+	}
+
+	if err := Validate(cfg); err != nil {
+		t.Fatalf("expected valid ports config, got %v", err)
+	}
+}
+
+func TestValidateRejectsPortProtocolOtherThanTCP(t *testing.T) {
+	cfg := validConfig()
+	cfg.Instances[0].Ports = []PortForward{{HostPort: 8080, GuestPort: 80, Protocol: "udp"}}
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected unsupported protocol error")
+	}
+}
+
+func TestValidateRejectsDuplicateHostPortBinding(t *testing.T) {
+	cfg := validConfig()
+	cfg.Instances = append(cfg.Instances, Instance{
+		Name:   "api",
+		Image:  "ubuntu-24.04",
+		Memory: 1024,
+		CPUs:   1,
+		Ports:  []PortForward{{HostPort: 8080, GuestPort: 8080}},
+	})
+	cfg.Instances[0].Ports = []PortForward{{HostPort: 8080, GuestPort: 80}}
+
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected duplicate host binding error")
+	}
+}
+
 func TestValidateAcceptsValidProjectNetwork(t *testing.T) {
 	if err := Validate(validNetworkedConfig()); err != nil {
 		t.Fatalf("expected valid network config, got %v", err)

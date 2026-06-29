@@ -19,6 +19,9 @@ func TestNetworkPlanExpressesManagementAndLabNetworks(t *testing.T) {
 				SSHPort:       2222,
 				InterfaceName: "yeastmgmt0",
 				MACAddress:    "52:54:00:11:22:33",
+				PortForwards: []PortForwardPlan{
+					{Name: "web", Host: "127.0.0.1", HostPort: 8080, GuestPort: 80, Protocol: "tcp"},
+				},
 			},
 			Lab: &LabNetworkPlan{
 				Name:          "lab",
@@ -41,6 +44,12 @@ func TestNetworkPlanExpressesManagementAndLabNetworks(t *testing.T) {
 	}
 	if plan.Networks.Management.MACAddress != "52:54:00:11:22:33" {
 		t.Fatalf("unexpected management mac address: %q", plan.Networks.Management.MACAddress)
+	}
+	if len(plan.Networks.Management.PortForwards) != 1 {
+		t.Fatalf("expected 1 management port forward, got %#v", plan.Networks.Management.PortForwards)
+	}
+	if plan.Networks.Management.PortForwards[0].HostPort != 8080 || plan.Networks.Management.PortForwards[0].GuestPort != 80 {
+		t.Fatalf("unexpected management port forward: %#v", plan.Networks.Management.PortForwards[0])
 	}
 	if plan.Networks.Lab == nil {
 		t.Fatal("expected lab network plan")

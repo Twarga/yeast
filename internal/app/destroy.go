@@ -114,6 +114,7 @@ func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (DestroyR
 			instance.PID = 0
 			instance.ManagementIP = ""
 			instance.SSHPort = 0
+			instance.ServicePorts = nil
 			instance.LastError = ""
 			currentState.Instances[name] = instance
 
@@ -162,6 +163,11 @@ func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (DestroyR
 
 	if err := state.Save(paths.StateFile, currentState); err != nil {
 		return DestroyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	if !options.KeepFiles {
+		if _, err := project.RemoveLocalProjectFiles(absoluteRoot); err != nil {
+			return DestroyResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+		}
 	}
 	emitEvent(options.Events, "destroy", EventWorkflowCompleted, EventOptions{
 		ProjectID: metadata.ID,

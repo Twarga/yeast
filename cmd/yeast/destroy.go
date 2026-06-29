@@ -29,7 +29,7 @@ func newDestroyCmd(service *app.Service) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "destroy",
-		Short: "Remove tracked VM runtime files for the current project",
+		Short: "Destroy project instances and optionally remove local Yeast project files",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			start := time.Now()
 			resolvedKeepFiles, err := resolveDestroyKeepFilesMode(cmd, keepFiles, yes)
@@ -68,7 +68,7 @@ func resolveDestroyKeepFilesMode(cmd *cobra.Command, keepFiles, yes bool) (bool,
 		return false, nil
 	}
 
-	fmt.Fprint(cmd.ErrOrStderr(), "Delete VM runtime files? [y/N]: ")
+	fmt.Fprint(cmd.ErrOrStderr(), "Delete local Yeast files for this project? [y/N]: ")
 	line, err := destroyPromptReader(cmd.InOrStdin())
 	if err != nil {
 		return false, err

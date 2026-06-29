@@ -22,14 +22,14 @@
 - Ability to run `yeast up`, `yeast ssh <instance>`, and `yeast destroy`
 - Basic comfort with `curl`, `systemctl`, and reading command output
 - Basic understanding that Docker commands run inside the VM unless stated otherwise
-- Comfort creating SSH tunnels from `ACCESS.md` for browser-based tools
+- Comfort using forwarded Yeast host URLs from `ACCESS.md` for browser-based tools
 
 ### Where Commands Run
 
 - Run `yeast` commands from this lab folder on your laptop.
 - Run Linux service commands only after you SSH into the target VM.
 - When a command says "from your laptop", leave the VM shell first with `exit`.
-- When a browser URL uses `localhost`, check whether the lab asked you to open an SSH tunnel first.
+- When a browser URL uses `localhost`, check whether Yeast already forwarded that port for you.
 - Run Docker commands inside the VM unless the lab explicitly says otherwise.
 
 ### Expected Checkpoints
@@ -42,7 +42,7 @@
 ### Common Mistakes To Avoid
 
 - Running a VM command on your laptop, or a laptop command inside the VM.
-- Closing an SSH tunnel and then wondering why `localhost:<port>` stopped working.
+- Ignoring the forwarded port shown by `yeast up` or `yeast status`.
 - Skipping validation because the final page or command "looked fine".
 - Forgetting to run `yeast destroy` before moving to the next lab.
 - Confusing laptop `localhost`, VM `localhost`, and container `localhost`.
