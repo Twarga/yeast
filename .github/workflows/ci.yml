@@ -47,6 +47,11 @@ jobs:
           set -o pipefail
           ./scripts/static-analysis.sh artifacts
 
+      - name: Install qemu-utils for qcow2 overlay tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-utils
+
       - name: Run tests
         run: |
           set -o pipefail
