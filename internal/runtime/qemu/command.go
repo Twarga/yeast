@@ -188,14 +188,6 @@ func buildBootISODriveArg(path string) string {
 	return fmt.Sprintf("file=%s,if=ide,media=cdrom,readonly=on", filepath.Clean(path))
 }
 
-func buildManagementNetdevArg(host string, port int) string {
-	return buildManagementNetdevArgWithForwards(host, port, nil)
-}
-
-func buildManagementNetdevArgWithForwards(host string, port int, forwards []runtime.PortForwardPlan) string {
-	return buildManagementNetdevArgFull(host, port, forwards, nil)
-}
-
 func buildManagementNetdevArgFull(host string, port int, forwards []runtime.PortForwardPlan, egress *runtime.EgressPlan) string {
 	parts := []string{
 		"user",

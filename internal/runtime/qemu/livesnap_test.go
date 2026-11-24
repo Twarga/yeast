@@ -98,11 +98,11 @@ func TestSaveLiveSnapshotHappyPath(t *testing.T) {
 func TestSaveLiveSnapshotResumeOnFailure(t *testing.T) {
 	rt := t.TempDir()
 	disk := filepath.Join(rt, "disk.qcow2")
-	os.WriteFile(disk, []byte("d"), 0644)
+	_ = os.WriteFile(disk, []byte("d"), 0644)
 	// migrate fails → guest must still be resumed
 	var sent []string
 	sock := qmpSocketPath(rt)
-	os.Remove(sock)
+	_ = os.Remove(sock)
 	startFakeQMP(t, sock, func(req qmpRequest) map[string]any {
 		sent = append(sent, req.Execute)
 		switch req.Execute {
@@ -136,7 +136,7 @@ func TestSaveLiveSnapshotResumeOnFailure(t *testing.T) {
 func TestSaveLiveSnapshotInsufficientSpace(t *testing.T) {
 	rt := t.TempDir()
 	disk := filepath.Join(rt, "disk.qcow2")
-	os.WriteFile(disk, []byte("d"), 0644)
+	_ = os.WriteFile(disk, []byte("d"), 0644)
 	startLiveFakeQMP(t, rt, disk, nil)
 
 	old := statfsFreeFn
@@ -157,10 +157,10 @@ func TestSaveLiveSnapshotInsufficientSpace(t *testing.T) {
 func TestSaveLiveSnapshotFallback(t *testing.T) {
 	rt := t.TempDir()
 	disk := filepath.Join(rt, "disk.qcow2")
-	os.WriteFile(disk, []byte("d"), 0644)
+	_ = os.WriteFile(disk, []byte("d"), 0644)
 	var cmds []string
 	sock := qmpSocketPath(rt)
-	os.Remove(sock)
+	_ = os.Remove(sock)
 	startFakeQMP(t, sock, func(req qmpRequest) map[string]any {
 		cmds = append(cmds, req.Execute)
 		switch req.Execute {
@@ -211,7 +211,7 @@ func TestRestoreLiveSnapshotHappyPath(t *testing.T) {
 		SeedImagePath: filepath.Join(rt, "seed.iso"),
 		Networks:      rtm.NetworkPlan{Management: rtm.ManagementNetworkPlan{SSHPort: 2222, SSHHost: "127.0.0.1", InterfaceName: "eth0", MACAddress: "52:54:00:12:34:56"}},
 	})
-	os.WriteFile(filepath.Join(snapDir, "plan.json"), planData, 0644)
+	_ = os.WriteFile(filepath.Join(snapDir, "plan.json"), planData, 0644)
 
 	// Fake QEMU spawn: the socket appears when QEMU "starts" (mirrors -qmp).
 	sock := qmpSocketPath(rt)

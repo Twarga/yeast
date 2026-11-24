@@ -338,7 +338,7 @@ func (c *Client) Events(ctx context.Context, projectID string) (<-chan app.Event
 // VNCWebSocketURL returns the ws:// URL for the built-in VNC proxy
 // (unix-socket clients must dial the daemon's TCP listener instead).
 func (c *Client) VNCWebSocketURL(projectID, instance string) string {
-	base := c.base
+	var base string
 	if c.socket != "" {
 		base = "ws://localhost" // unix-socket transport can't WS-dial; use --tcp
 	} else {

@@ -11,8 +11,6 @@ import (
 	"strings"
 )
 
-// overlayBaseName is the frozen disk file inside a snapshot directory.
-const overlayBaseName = "base.qcow2"
 const activeDiskName = "disk.qcow2"
 
 // CreateOverlaySnapshot freezes the instance's current disk into

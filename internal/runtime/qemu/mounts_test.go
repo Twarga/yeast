@@ -14,18 +14,6 @@ import (
 	rtm "github.com/Twarga/yeast/internal/runtime"
 )
 
-func argsContain(args []string, want string) bool {
-	for i, a := range args {
-		if a == want {
-			return true
-		}
-		if strings.Contains(a, want) && (i == 0 || args[i-1] == "-fsdev" || args[i-1] == "-device" || args[i-1] == "-chardev" || args[i-1] == "-object" || args[i-1] == "-numa") {
-			return true
-		}
-	}
-	return false
-}
-
 func TestBuildMountArgsVirtiofs(t *testing.T) {
 	plan := rtm.MachinePlan{
 		Name: "desk", RuntimeDir: "/run/desk", MemoryMiB: 2048,
@@ -178,7 +166,7 @@ func TestSidecarSIGTERMKills(t *testing.T) {
 	// sanity: signalProcessFn honors SIGTERM on a real process
 	dir := t.TempDir()
 	fake := filepath.Join(dir, "s.sh")
-	os.WriteFile(fake, []byte("#!/bin/sh\nsleep 60\n"), 0o755)
+	_ = os.WriteFile(fake, []byte("#!/bin/sh\nsleep 60\n"), 0o755)
 	pidData := []byte("999999999") // nonexistent pid → signal should error
 	if err := signalProcessFn(mustAtoi(t, pidData), syscall.SIGTERM); err == nil {
 		t.Fatal("expected error signalling dead pid")

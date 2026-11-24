@@ -194,7 +194,7 @@ func TestVNCProxyPipesToDisplayPort(t *testing.T) {
 			if err != nil {
 				return
 			}
-			go io.Copy(c, c)
+			go func() { _, _ = io.Copy(c, c) }()
 		}
 	}()
 

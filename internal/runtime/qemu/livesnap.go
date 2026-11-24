@@ -210,7 +210,7 @@ func (r *Runtime) RestoreLiveSnapshot(ctx context.Context, plan rtm.LiveRestoreP
 		return rtm.RuntimeInstance{}, err
 	}
 	if err := os.Chmod(base, 0644); err == nil {
-		defer os.Chmod(base, 0444)
+		defer func() { _ = os.Chmod(base, 0444) }()
 	}
 	if _, err := os.Stat(target); err == nil {
 		_ = os.Remove(target) // previous active disk is superseded
@@ -475,48 +475,4 @@ func queryStatus(client *qmpClient) (string, error) {
 	}
 	_ = json.Unmarshal(raw, &st)
 	return st.Status, nil
-}
-
-// waitJobComplete polls query-jobs for the snapshot-save job finishing.
-func waitJobComplete(ctx context.Context, client *qmpClient, jobID string, timeout time.Duration) error {
-	deadline := time.Now().Add(timeout)
-	for {
-		raw, err := client.executeQuery("query-jobs", nil)
-		if err != nil {
-			return err
-		}
-		var jobs []struct {
-			ID        string `json:"id"`
-			Status    string `json:"status"`
-			LastError string `json:"error"`
-		}
-		_ = json.Unmarshal(raw, &jobs)
-		found := false
-		for _, j := range jobs {
-			if j.ID != jobID {
-				continue
-			}
-			found = true
-			switch j.Status {
-			case "concluded", "null":
-				if j.LastError != "" {
-					return fmt.Errorf("snapshot job failed: %s", j.LastError)
-				}
-				return nil
-			case "aborting":
-				return fmt.Errorf("snapshot job aborting")
-			}
-		}
-		if !found {
-			return nil // job already dismissed/gone = completed
-		}
-		if time.Now().After(deadline) {
-			return fmt.Errorf("snapshot job timed out")
-		}
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(livePollInterval):
-		}
-	}
 }

@@ -276,8 +276,8 @@ func TestSnapshotRunningInstanceTakesLiveSnapshot(t *testing.T) {
 	inst.Status = "running"
 	inst.PID = 4242
 	st.Instances["web"] = inst
-	state.Save(paths.StateFile, st)
-	writeBootPlan(inst.RuntimeDir, rtm.MachinePlan{Name: "web", MemoryMiB: 512, RuntimeDir: inst.RuntimeDir})
+	_ = state.Save(paths.StateFile, st)
+	_ = writeBootPlan(inst.RuntimeDir, rtm.MachinePlan{Name: "web", MemoryMiB: 512, RuntimeDir: inst.RuntimeDir})
 
 	result, err := service.Snapshot(context.Background(), SnapshotOptions{
 		ProjectRoot: root, Target: "web", Name: "live1",
@@ -312,7 +312,7 @@ func TestSnapshotRunningWithoutBootPlanFails(t *testing.T) {
 	inst.Status = "running"
 	inst.PID = 1
 	st.Instances["web"] = inst
-	state.Save(paths.StateFile, st)
+	_ = state.Save(paths.StateFile, st)
 
 	_, err := service.Snapshot(context.Background(), SnapshotOptions{ProjectRoot: root, Target: "web", Name: "x"})
 	assertAppErrorCode(t, err, ErrorCodePrecondition)
@@ -335,7 +335,7 @@ func TestRestoreLiveSnapshotRunning(t *testing.T) {
 			DiskPath: filepath.Join(inst.RuntimeDir, "snapshots", "live1", "base.qcow2")},
 	}
 	st.Instances["web"] = inst
-	state.Save(paths.StateFile, st)
+	_ = state.Save(paths.StateFile, st)
 
 	_, err := service.Restore(context.Background(), RestoreOptions{
 		ProjectRoot: root, Target: "web", Name: "live1",

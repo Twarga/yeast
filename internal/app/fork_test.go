@@ -181,7 +181,7 @@ func TestForkFromSnapshotUsesBase(t *testing.T) {
 		"golden": {Name: "golden", Kind: "overlay", Dir: snapDir, DiskPath: base},
 	}
 	st.Instances["web"] = inst
-	state.Save(paths.StateFile, st)
+	_ = state.Save(paths.StateFile, st)
 
 	result, err := service.Fork(context.Background(), ForkOptions{
 		ProjectRoot: root, Target: "web", Count: 1, From: "golden",
@@ -209,7 +209,7 @@ func TestForkRunningParentWithoutFromFails(t *testing.T) {
 	inst.Status = "running"
 	inst.PID = 1234
 	st.Instances["web"] = inst
-	state.Save(paths.StateFile, st)
+	_ = state.Save(paths.StateFile, st)
 
 	_, err := service.Fork(context.Background(), ForkOptions{ProjectRoot: root, Target: "web", Count: 1})
 	assertAppErrorCode(t, err, ErrorCodePrecondition)
@@ -351,7 +351,7 @@ func TestSnapshotAllRejectsDuplicateName(t *testing.T) {
 	inst.Snapshots["v1b"] = inst.Snapshots["v1"]
 	delete(inst.Snapshots, "v1")
 	st.Instances["web"] = inst
-	state.Save(paths.StateFile, st)
+	_ = state.Save(paths.StateFile, st)
 
 	// "v1" now collides only on api — should fail BEFORE creating web's
 	_, err := service.SnapshotAll(context.Background(), SnapshotAllOptions{
@@ -374,7 +374,7 @@ func TestRestoreAllPreflightBlocksPartialRestore(t *testing.T) {
 		"v1": {Name: "v1", Kind: "overlay", DiskPath: filepath.Join(inst.RuntimeDir, "snapshots", "v1", "base.qcow2")},
 	}
 	st.Instances["web"] = inst
-	state.Save(paths.StateFile, st)
+	_ = state.Save(paths.StateFile, st)
 
 	_, err := service.RestoreAll(context.Background(), RestoreAllOptions{
 		ProjectRoot: root, Name: "v1",
