@@ -1,0 +1,16 @@
+[Unit]
+Description=Yeast local VM daemon (yeastd)
+Documentation=https://github.com/Twarga/yeast
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/yeast daemon --idle-timeout 30m
+Restart=on-failure
+RestartSec=2
+# Stop only the daemon — QEMU VMs keep running (they are independent
+# processes and yeastd reattaches on the next start).
+KillMode=process
+
+[Install]
+WantedBy=default.target

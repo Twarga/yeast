@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/project"
+	"github.com/Twarga/yeast/internal/state"
 	"path/filepath"
 	"sort"
-	"yeast/internal/project"
-	"yeast/internal/state"
 )
 
 type StatusOptions struct {
@@ -27,6 +27,8 @@ type StatusInstanceResult struct {
 	ProvisionLogPath   string                   `json:"provision_log_path,omitempty"`
 	ProvisioningStatus state.ProvisioningStatus `json:"provisioning_status,omitempty"`
 	LastError          string                   `json:"last_error,omitempty"`
+	Display            *DisplayResult           `json:"display,omitempty"`
+	Mounts             []state.MountState       `json:"mounts,omitempty"`
 }
 
 type StatusResult struct {
@@ -96,6 +98,8 @@ func (s *Service) Status(ctx context.Context, options StatusOptions) (StatusResu
 			ProvisionLogPath:   instance.ProvisionLogPath,
 			ProvisioningStatus: instance.ProvisioningStatus,
 			LastError:          instance.LastError,
+			Display:            displayResultFromState(instance.Display),
+			Mounts:             instance.Mounts,
 		})
 	}
 

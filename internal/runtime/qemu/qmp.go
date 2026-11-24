@@ -45,7 +45,16 @@ func newQMPClient(socketPath string, dialTimeout time.Duration) (*qmpClient, err
 	}
 }
 
+const defaultQMPCommandTimeout = 30 * time.Second
+
+func (c *qmpClient) setDeadline(d time.Duration) {
+	if c.conn != nil && d > 0 {
+		_ = c.conn.SetDeadline(time.Now().Add(d))
+	}
+}
+
 func (c *qmpClient) readGreeting() error {
+	c.setDeadline(defaultQMPCommandTimeout)
 	line, err := c.reader.ReadBytes('\n')
 	if err != nil {
 		return fmt.Errorf("read qmp greeting: %w", err)
@@ -65,6 +74,7 @@ func (c *qmpClient) readGreeting() error {
 }
 
 func (c *qmpClient) execute(command string, args map[string]any) error {
+	c.setDeadline(defaultQMPCommandTimeout)
 	req := map[string]any{"execute": command}
 	if args != nil {
 		req["arguments"] = args
@@ -104,8 +114,73 @@ func (c *qmpClient) execute(command string, args map[string]any) error {
 	}
 }
 
+// executeQuery runs a command and returns the "return" payload for
+// inspection (query-* commands).
+func (c *qmpClient) executeQuery(command string, args map[string]any) (json.RawMessage, error) {
+	c.setDeadline(defaultQMPCommandTimeout)
+	req := map[string]any{"execute": command}
+	if args != nil {
+		req["arguments"] = args
+	}
+	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := c.conn.Write(append(data, '\n')); err != nil {
+		return nil, fmt.Errorf("write qmp command %s: %w", command, err)
+	}
+	for {
+		line, err := c.reader.ReadBytes('\n')
+		if err != nil {
+			return nil, fmt.Errorf("read qmp response for %s: %w", command, err)
+		}
+		var resp struct {
+			Return json.RawMessage `json:"return"`
+			Error  *struct {
+				Class string `json:"class"`
+				Desc  string `json:"desc"`
+			} `json:"error"`
+			Event json.RawMessage `json:"event"`
+		}
+		if err := json.Unmarshal(line, &resp); err != nil {
+			return nil, fmt.Errorf("parse qmp response: %w", err)
+		}
+		if resp.Event != nil {
+			continue
+		}
+		if resp.Error != nil {
+			return nil, fmt.Errorf("qmp command %s failed: %s", command, resp.Error.Desc)
+		}
+		return resp.Return, nil
+	}
+}
+
 func (c *qmpClient) close() {
 	if c.conn != nil {
 		_ = c.conn.Close()
 	}
+}
+
+// screendump executes QEMU's screendump. format "" lets QEMU pick (PPM on
+// old builds); "png" requires QEMU ≥ 7.1.
+func (c *qmpClient) screendump(filename, format string) error {
+	args := map[string]any{"filename": filename}
+	if format != "" {
+		args["format"] = format
+	}
+	return c.execute("screendump", args)
+}
+
+// sendKey presses a simultaneous chord of QKeyCode names. holdTimeMs adds a
+// hold between press and release (QEMU clamps to its own limit).
+func (c *qmpClient) sendKey(keys []string, holdTimeMs int) error {
+	keyObjs := make([]map[string]string, 0, len(keys))
+	for _, key := range keys {
+		keyObjs = append(keyObjs, map[string]string{"type": "qcode", "data": key})
+	}
+	args := map[string]any{"keys": keyObjs}
+	if holdTimeMs > 0 {
+		args["hold-time"] = holdTimeMs
+	}
+	return c.execute("send-key", args)
 }

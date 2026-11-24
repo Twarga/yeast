@@ -3,9 +3,9 @@ package ssh
 import (
 	"context"
 	"errors"
+	"github.com/Twarga/yeast/internal/provision"
 	"testing"
 	"time"
-	"yeast/internal/provision"
 )
 
 type scriptedTransport struct {

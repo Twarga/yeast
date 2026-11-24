@@ -1,8 +1,8 @@
 # attacker-target-basic
 
-LabsBakery-ready attacker/target example for Yeast.
+LabsBackery-ready attacker/target example for Yeast.
 
-This is a local Yeast template package with extra LabsBakery-owned metadata. Yeast consumes `template.yaml`, `yeast.yaml`, and provision files. LabsBakery consumes `lab.yaml`, `scenario/instructions.md`, and `scenario/checks.yaml`.
+This is a local Yeast template package with extra LabsBackery-owned metadata. Yeast consumes `template.yaml`, `yeast.yaml`, and provision files. LabsBackery consumes `lab.yaml`, `scenario/instructions.md`, and `scenario/checks.yaml`.
 
 ## What this example proves
 
@@ -13,17 +13,17 @@ This is a local Yeast template package with extra LabsBakery-owned metadata. Yea
   - `target` -> `10.20.30.20`
 - target-side file provisioning
 - terminal connection metadata through `status --json`
-- check commands that LabsBakery can run through `yeast exec`
+- check commands that LabsBackery can run through `yeast exec`
 - clean baseline snapshot/reset workflow
 
 ## Files
 
 - `template.yaml` - local Yeast template metadata
 - `yeast.yaml` - Yeast VM/network/provisioning config
-- `lab.yaml` - LabsBakery-owned lab metadata
+- `lab.yaml` - LabsBackery-owned lab metadata
 - `files/target/flag.txt` - provisioned target marker file
 - `scenario/instructions.md` - learner instructions
-- `scenario/checks.yaml` - LabsBakery-owned check definitions
+- `scenario/checks.yaml` - LabsBackery-owned check definitions
 
 ## Initialize
 
@@ -55,7 +55,7 @@ Expected `status --json` data:
 
 ## Validate
 
-Run the checks manually the same way LabsBakery can run them:
+Run the checks manually the same way LabsBackery can run them:
 
 ```bash
 yeast exec attacker --json -- bash -lc 'echo > /dev/tcp/10.20.30.20/22'
@@ -89,4 +89,4 @@ yeast destroy --json --events
 
 ## Boundary
 
-Yeast does not parse `lab.yaml`, instructions, or check definitions. LabsBakery owns those files and calls Yeast through the JSON/event contract.
+Yeast does not parse `lab.yaml`, instructions, or check definitions. LabsBackery owns those files and calls Yeast through the JSON/event contract.

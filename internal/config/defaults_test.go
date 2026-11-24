@@ -115,3 +115,30 @@ func TestApplyDefaultsManagementHost(t *testing.T) {
 		t.Fatalf("expected explicit management_host 0.0.0.0, got %q", cfg2.ManagementHost)
 	}
 }
+
+func TestApplyDefaultsDisplayAndMounts(t *testing.T) {
+	cfg := validConfig()
+	cfg.Instances[0].Firmware = " UEFI "
+	cfg.Instances[0].Display = &DisplayConfig{Enabled: true}
+	cfg.Instances[0].Mounts = []MountConfig{{Source: "./d", Target: " /mnt/d "}}
+	if err := ApplyDefaults(cfg); err != nil {
+		t.Fatal(err)
+	}
+	i := cfg.Instances[0]
+	if i.Firmware != "uefi" {
+		t.Fatalf("firmware = %q", i.Firmware)
+	}
+	if i.Display.Type != DefaultDisplayType || i.Display.Host != DefaultDisplayHost || i.Display.GPU != DefaultDisplayGPU {
+		t.Fatalf("display defaults = %+v", i.Display)
+	}
+	if i.Mounts[0].Driver != DefaultMountDriver || i.Mounts[0].Target != "/mnt/d" {
+		t.Fatalf("mount defaults = %+v", i.Mounts[0])
+	}
+	cfg2 := validConfig()
+	if err := ApplyDefaults(cfg2); err != nil {
+		t.Fatal(err)
+	}
+	if cfg2.Instances[0].Firmware != "bios" {
+		t.Fatalf("default firmware = %q", cfg2.Instances[0].Firmware)
+	}
+}

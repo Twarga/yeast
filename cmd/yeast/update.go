@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"yeast/internal/app"
+	"github.com/Twarga/yeast/internal/app"
 
 	"github.com/spf13/cobra"
 )
@@ -46,11 +46,11 @@ func newUpdateCmd() *cobra.Command {
 }
 
 type ReleaseInfo struct {
-	TagName    string    `json:"tag_name"`
-	Name       string    `json:"name"`
-	Body       string    `json:"body"`
-	Published  time.Time `json:"published_at"`
-	Assets     []Asset   `json:"assets"`
+	TagName   string    `json:"tag_name"`
+	Name      string    `json:"name"`
+	Body      string    `json:"body"`
+	Published time.Time `json:"published_at"`
+	Assets    []Asset   `json:"assets"`
 }
 
 type Asset struct {

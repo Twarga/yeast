@@ -2,13 +2,13 @@ package app
 
 import (
 	"errors"
+	"github.com/Twarga/yeast/internal/host"
+	"github.com/Twarga/yeast/internal/provision/cloudinit"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
-	"yeast/internal/host"
-	"yeast/internal/provision/cloudinit"
 )
 
 func TestDoctorReportsHealthyHost(t *testing.T) {
@@ -118,7 +118,7 @@ func TestDoctorReportsExpectedBlockersAndWarnings(t *testing.T) {
 	}
 }
 
-func TestDoctorKVMWarningInWSL(t *testing.T) {
+func TestDoctorKVMBlockerInWSL(t *testing.T) {
 	previousLookPath := lookPath
 	previousStatPath := statPath
 	previousDetectHostEnvironment := detectHostEnvironment
@@ -163,8 +163,8 @@ func TestDoctorKVMWarningInWSL(t *testing.T) {
 			},
 			{
 				Name:     host.DepKVM,
-				Severity: host.SeverityWarning,
-				Detail:   "not available; running in WSL or container — VMs will use software emulation (TCG), which is significantly slower",
+				Severity: host.SeverityBlocker,
+				Detail:   "not available; running in WSL — Yeast requires KVM hardware acceleration",
 			},
 		}
 	}
@@ -188,8 +188,8 @@ func TestDoctorKVMWarningInWSL(t *testing.T) {
 	if kvmCheck == nil {
 		t.Fatal("expected /dev/kvm check")
 	}
-	if kvmCheck.Status != CheckStatusWarning {
-		t.Fatalf("expected KVM to be a warning in WSL, got %s", kvmCheck.Status)
+	if kvmCheck.Status != CheckStatusBlocker {
+		t.Fatalf("expected KVM to be a blocker in WSL, got %s", kvmCheck.Status)
 	}
 }
 
@@ -232,7 +232,7 @@ func TestDoctorUsesHostChecksForInaccessibleKVM(t *testing.T) {
 			},
 			{
 				Name:     host.DepKVM,
-				Severity: host.SeverityWarning,
+				Severity: host.SeverityBlocker,
 				Detail:   "present but not accessible by current user: permission denied",
 			},
 		}
@@ -260,8 +260,8 @@ func TestDoctorUsesHostChecksForInaccessibleKVM(t *testing.T) {
 	if kvmCheck == nil {
 		t.Fatal("expected /dev/kvm check")
 	}
-	if kvmCheck.Status != CheckStatusWarning {
-		t.Fatalf("expected inaccessible KVM to stay a warning, got %s", kvmCheck.Status)
+	if kvmCheck.Status != CheckStatusBlocker {
+		t.Fatalf("expected inaccessible KVM to be a blocker, got %s", kvmCheck.Status)
 	}
 	if !strings.Contains(kvmCheck.Details, "permission denied") {
 		t.Fatalf("expected inaccessible KVM detail to mention permission denied, got %q", kvmCheck.Details)

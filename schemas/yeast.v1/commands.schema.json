@@ -1,0 +1,1433 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yeast.dev/schemas/yeast.v1/commands.schema.json",
+  "title": "Yeast v1 Command Payloads",
+  "description": "Per-command `data` payload shapes for `yeast --json`. Each $defs key is the `command` field of the success envelope. Frozen contract: backwards-compatible additions only.",
+  "$defs": {
+    "clean": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "instances"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "instances": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "status"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "cleaned_pids": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "copy": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "instance",
+        "direction",
+        "source",
+        "destination",
+        "started_at",
+        "finished_at",
+        "duration"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "instance": {
+          "type": "string"
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "to_guest",
+            "from_guest"
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "destination": {
+          "type": "string"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "finished_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "duration": {
+          "type": "integer"
+        }
+      }
+    },
+    "delete-snapshot": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "instance",
+        "snapshot"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "instance": {
+          "type": "string"
+        },
+        "snapshot": {
+          "type": "string"
+        }
+      }
+    },
+    "destroy": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "instances",
+        "files_deleted"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "instances": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "status"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "files_deleted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "doctor": {
+      "$ref": "#/$defs/doctor.result"
+    },
+    "doctor.fix": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "command",
+            "create_ssh_key",
+            "create_cache_dir"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "needs_sudo": {
+          "type": "boolean"
+        },
+        "manual_only": {
+          "type": "boolean"
+        },
+        "manual_instructions": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "doctor.fix-apply": {
+      "type": "object",
+      "properties": {
+        "applied": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/doctor.fix-step"
+          }
+        },
+        "skipped_manual": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/doctor.fix-step"
+          }
+        }
+      }
+    },
+    "doctor.fix-step": {
+      "type": "object",
+      "required": [
+        "check_name",
+        "status",
+        "fix"
+      ],
+      "properties": {
+        "check_name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "warning",
+            "blocker"
+          ]
+        },
+        "fix": {
+          "$ref": "#/$defs/doctor.fix"
+        }
+      }
+    },
+    "doctor.result": {
+      "type": "object",
+      "required": [
+        "checks",
+        "blockers",
+        "warnings"
+      ],
+      "properties": {
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "status",
+              "details"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "ok",
+                  "warning",
+                  "blocker"
+                ]
+              },
+              "details": {
+                "type": "string"
+              },
+              "fix": {
+                "$ref": "#/$defs/doctor.fix"
+              }
+            }
+          }
+        },
+        "blockers": {
+          "type": "integer"
+        },
+        "warnings": {
+          "type": "integer"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "native-linux",
+            "wsl2",
+            "wsl1",
+            "container"
+          ]
+        },
+        "support_tier": {
+          "type": "string",
+          "enum": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ]
+        }
+      }
+    },
+    "down": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "instances"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "instances": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "status"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "exec": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "instance",
+        "run"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "instance": {
+          "type": "string"
+        },
+        "run": {
+          "type": "object",
+          "required": [
+            "command",
+            "exit_code",
+            "stdout",
+            "stderr",
+            "started_at",
+            "finished_at",
+            "duration",
+            "timed_out"
+          ],
+          "properties": {
+            "command": {
+              "type": "string"
+            },
+            "exit_code": {
+              "type": "integer"
+            },
+            "stdout": {
+              "type": "string"
+            },
+            "stderr": {
+              "type": "string"
+            },
+            "started_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "finished_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "duration": {
+              "type": "integer"
+            },
+            "timed_out": {
+              "type": "boolean"
+            },
+            "truncated": {
+              "type": "boolean"
+            },
+            "full_output_path": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "explain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "title",
+        "cause",
+        "diagnose",
+        "fix"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string"
+        },
+        "cause": {
+          "type": "string"
+        },
+        "diagnose": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fix": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "images-clean": {
+      "type": "object",
+      "properties": {
+        "dry_run": {
+          "type": "boolean"
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "size_bytes"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "size_bytes": {
+                "type": "integer"
+              },
+              "size": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "total_size_bytes": {
+          "type": "integer"
+        },
+        "total_size": {
+          "type": "string"
+        }
+      }
+    },
+    "init": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/init.result"
+        },
+        {
+          "$ref": "#/$defs/templates"
+        }
+      ]
+    },
+    "init.result": {
+      "type": "object",
+      "required": [
+        "project_root",
+        "config_path",
+        "metadata_path",
+        "project_id",
+        "created"
+      ],
+      "properties": {
+        "project_root": {
+          "type": "string"
+        },
+        "config_path": {
+          "type": "string"
+        },
+        "metadata_path": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "template": {
+          "type": "string"
+        },
+        "created": {
+          "type": "boolean"
+        }
+      }
+    },
+    "inspect": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "instance",
+        "snapshot_names",
+        "snapshot_count"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "instance": {
+          "$ref": "#/$defs/status-instance"
+        },
+        "snapshot_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "snapshot_count": {
+          "type": "integer"
+        }
+      }
+    },
+    "logs": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "instance",
+        "log_path",
+        "content"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "instance": {
+          "type": "string"
+        },
+        "log_path": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        }
+      }
+    },
+    "port-forward": {
+      "type": "object",
+      "required": [
+        "host",
+        "host_port",
+        "guest_port",
+        "protocol"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "host_port": {
+          "type": "integer"
+        },
+        "guest_port": {
+          "type": "integer"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "provision": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "instance"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "instance": {
+          "type": "object",
+          "required": [
+            "name",
+            "provisioning_status"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "provisioning_status": {
+              "type": "string",
+              "enum": [
+                "not_started",
+                "running",
+                "provisioned",
+                "failed"
+              ]
+            },
+            "ssh_address": {
+              "type": "string"
+            },
+            "ssh_port": {
+              "type": "integer"
+            },
+            "provision_log_path": {
+              "type": "string"
+            },
+            "last_error": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "pull": {
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "boolean"
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "image_groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "category",
+              "images"
+            ],
+            "properties": {
+              "category": {
+                "type": "string"
+              },
+              "images": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/trusted-image"
+                }
+              }
+            }
+          }
+        },
+        "image_name": {
+          "type": "string"
+        },
+        "image_path": {
+          "type": "string"
+        },
+        "manifest_url": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "search_results": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "manual_hint": {
+          "type": "string"
+        },
+        "cached_images": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "path"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "restore": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "project_id",
+            "instance",
+            "snapshot"
+          ],
+          "properties": {
+            "project_id": {
+              "type": "string"
+            },
+            "instance": {
+              "type": "string"
+            },
+            "snapshot": {
+              "$ref": "#/$defs/snapshot-state"
+            }
+          }
+        },
+        {
+          "$ref": "#/$defs/restore-all"
+        }
+      ]
+    },
+    "snapshot": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "project_id",
+            "instance",
+            "snapshot"
+          ],
+          "properties": {
+            "project_id": {
+              "type": "string"
+            },
+            "instance": {
+              "type": "string"
+            },
+            "snapshot": {
+              "$ref": "#/$defs/snapshot-state"
+            }
+          }
+        },
+        {
+          "$ref": "#/$defs/snapshot-all"
+        }
+      ]
+    },
+    "snapshot-state": {
+      "type": "object",
+      "required": [
+        "name",
+        "created_at",
+        "disk_path"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string"
+        },
+        "disk_path": {
+          "type": "string"
+        },
+        "source_disk_size": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "copy",
+            "overlay",
+            "live"
+          ]
+        },
+        "dir": {
+          "type": "string"
+        },
+        "memory_path": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        },
+        "pause_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "snapshots": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "instance",
+        "snapshots"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "instance": {
+          "type": "string"
+        },
+        "snapshots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/snapshot-state"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "instances"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "instances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/status-instance"
+          }
+        }
+      }
+    },
+    "status-instance": {
+      "type": "object",
+      "required": [
+        "name",
+        "status",
+        "pid"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "pid": {
+          "type": "integer"
+        },
+        "management_ip": {
+          "type": "string"
+        },
+        "ssh_port": {
+          "type": "integer"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/port-forward"
+          }
+        },
+        "user": {
+          "type": "string"
+        },
+        "lab_ip": {
+          "type": "string"
+        },
+        "runtime_dir": {
+          "type": "string"
+        },
+        "provision_log_path": {
+          "type": "string"
+        },
+        "provisioning_status": {
+          "type": "string",
+          "enum": [
+            "not_started",
+            "running",
+            "provisioned",
+            "failed"
+          ]
+        },
+        "last_error": {
+          "type": "string"
+        },
+        "display": {
+          "$ref": "#/$defs/display"
+        },
+        "mounts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "source",
+              "target",
+              "driver"
+            ],
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "driver": {
+                "type": "string",
+                "enum": [
+                  "virtiofs",
+                  "9p"
+                ]
+              },
+              "readonly": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "templates": {
+      "type": "object",
+      "required": [
+        "templates"
+      ],
+      "properties": {
+        "templates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "title",
+              "description",
+              "category",
+              "version",
+              "source"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "trusted-image": {
+      "type": "object",
+      "required": [
+        "Name",
+        "URL",
+        "Checksum",
+        "Category",
+        "Description",
+        "CloudInit",
+        "Size"
+      ],
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "URL": {
+          "type": "string"
+        },
+        "Checksum": {
+          "type": "string"
+        },
+        "Category": {
+          "type": "string"
+        },
+        "Description": {
+          "type": "string"
+        },
+        "CloudInit": {
+          "type": "boolean"
+        },
+        "Size": {
+          "type": "string"
+        },
+        "ManualInstructions": {
+          "type": "string"
+        }
+      }
+    },
+    "up": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "instances"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "instances": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "status"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "ssh_address": {
+                "type": "string"
+              },
+              "ssh_port": {
+                "type": "integer"
+              },
+              "ports": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/port-forward"
+                }
+              },
+              "display": {
+                "$ref": "#/$defs/display"
+              }
+            }
+          }
+        },
+        "profile": {
+          "type": "object",
+          "required": [
+            "phases",
+            "total_ms"
+          ],
+          "properties": {
+            "phases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "duration_ms"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "duration_ms": {
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "total_ms": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "update": {
+      "type": "object",
+      "required": [
+        "current_version",
+        "target_version",
+        "update_available",
+        "already_latest",
+        "check_only",
+        "success"
+      ],
+      "properties": {
+        "current_version": {
+          "type": "string"
+        },
+        "target_version": {
+          "type": "string"
+        },
+        "update_available": {
+          "type": "boolean"
+        },
+        "already_latest": {
+          "type": "boolean"
+        },
+        "check_only": {
+          "type": "boolean"
+        },
+        "checksum_verified": {
+          "type": "boolean"
+        },
+        "binary_path": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "display": {
+      "type": "object",
+      "required": [
+        "type",
+        "host",
+        "port",
+        "url"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "vnc"
+          ]
+        },
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "url": {
+          "type": "string"
+        },
+        "gpu": {
+          "type": "string",
+          "enum": [
+            "virtio-vga",
+            "virtio-gpu",
+            "virgl"
+          ]
+        },
+        "firmware": {
+          "type": "string",
+          "enum": [
+            "bios",
+            "uefi"
+          ]
+        }
+      }
+    },
+    "screenshot": {
+      "type": "object",
+      "required": [
+        "instance",
+        "path",
+        "width",
+        "height",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "instance": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "bytes": {
+          "type": "integer"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      }
+    },
+    "input": {
+      "type": "object",
+      "required": [
+        "instance"
+      ],
+      "properties": {
+        "instance": {
+          "type": "string"
+        },
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "text": {
+          "type": "string"
+        },
+        "chars": {
+          "type": "integer"
+        }
+      }
+    },
+    "snapshot-all-entry": {
+      "type": "object",
+      "required": [
+        "instance",
+        "snapshot"
+      ],
+      "properties": {
+        "instance": {
+          "type": "string"
+        },
+        "snapshot": {
+          "$ref": "#/$defs/snapshot-state"
+        }
+      }
+    },
+    "snapshot-all": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "name",
+        "snapshots"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "snapshots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/snapshot-all-entry"
+          }
+        }
+      }
+    },
+    "restore-all": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "name",
+        "instances"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "instances": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "fork-entry": {
+      "type": "object",
+      "required": [
+        "name",
+        "runtime_dir",
+        "ssh_port",
+        "status"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "runtime_dir": {
+          "type": "string"
+        },
+        "ssh_port": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "export": {
+      "type": "object",
+      "required": [
+        "instance",
+        "format",
+        "path",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "instance": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "qcow2",
+            "rootfs",
+            "iso"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "integer"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "builder": {
+          "type": "string"
+        }
+      }
+    },
+    "boot-iso": {
+      "type": "object",
+      "required": [
+        "iso_path",
+        "name",
+        "pid",
+        "runtime_dir",
+        "removed"
+      ],
+      "properties": {
+        "iso_path": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "pid": {
+          "type": "integer"
+        },
+        "runtime_dir": {
+          "type": "string"
+        },
+        "vnc_url": {
+          "type": "string"
+        },
+        "screenshot": {
+          "type": "string"
+        },
+        "removed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "fork": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "source",
+        "forks"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "forks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fork-entry"
+          }
+        }
+      }
+    },
+    "migrate-change": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "instance": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "action"
+      ]
+    },
+    "migrate": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "dry_run": {
+          "type": "boolean"
+        },
+        "instances": {
+          "type": "integer"
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/migrate-change"
+          }
+        }
+      },
+      "required": [
+        "project_id",
+        "dry_run",
+        "instances",
+        "changes"
+      ]
+    }
+  }
+}

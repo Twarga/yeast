@@ -3,9 +3,9 @@ package output
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/Twarga/yeast/internal/app"
 	"testing"
 	"time"
-	"yeast/internal/app"
 )
 
 func TestRenderJSONEvent(t *testing.T) {

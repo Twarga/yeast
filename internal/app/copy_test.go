@@ -3,15 +3,15 @@ package app
 import (
 	"context"
 	"errors"
+	"github.com/Twarga/yeast/internal/guest"
+	"github.com/Twarga/yeast/internal/project"
+	provssh "github.com/Twarga/yeast/internal/provision/ssh"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
-	"yeast/internal/guest"
-	"yeast/internal/project"
-	provssh "yeast/internal/provision/ssh"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 func TestCopyUploadsLocalFileToGuest(t *testing.T) {

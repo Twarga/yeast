@@ -2,13 +2,13 @@ package app
 
 import (
 	"context"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
-	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 func TestInspectReturnsInstanceDetailsAndSnapshots(t *testing.T) {

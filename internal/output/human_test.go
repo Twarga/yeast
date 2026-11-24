@@ -2,12 +2,12 @@ package output
 
 import (
 	"bytes"
+	"github.com/Twarga/yeast/internal/app"
+	"github.com/Twarga/yeast/internal/state"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
-	"yeast/internal/app"
-	"yeast/internal/state"
 )
 
 var ansiPattern = regexp.MustCompile(`\x1b\[[0-9;:]*m`)

@@ -3,13 +3,13 @@ package app
 import (
 	"context"
 	"errors"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
-	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 func TestDownStopsRunningVMsAndMarksStopped(t *testing.T) {
@@ -443,7 +443,7 @@ func (f *fakeDownRuntime) RestoreSnapshot(ctx context.Context, plan rtm.Snapshot
 	return nil
 }
 
-func (f *fakeDownRuntime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
+func (f *fakeDownRuntime) DeleteSnapshot(ctx context.Context, plan rtm.DeleteSnapshotPlan) error {
 	return nil
 }
 

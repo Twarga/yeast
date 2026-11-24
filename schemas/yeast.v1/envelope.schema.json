@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yeast.dev/schemas/yeast.v1/envelope.schema.json",
+  "title": "Yeast v1 JSON Envelope",
+  "description": "Shared success/error envelope emitted by every `yeast --json` command. Frozen contract: backwards-compatible additions only.",
+  "oneOf": [
+    { "$ref": "#/$defs/success" },
+    { "$ref": "#/$defs/error" }
+  ],
+  "$defs": {
+    "success": {
+      "type": "object",
+      "required": ["ok", "schema_version", "command"],
+      "properties": {
+        "ok": { "const": true },
+        "schema_version": { "const": "yeast.v1" },
+        "command": { "type": "string", "minLength": 1 },
+        "data": {
+          "description": "Command-specific payload; see commands.schema.json $defs keyed by command name."
+        }
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "required": ["ok", "schema_version", "error"],
+      "properties": {
+        "ok": { "const": false },
+        "schema_version": { "const": "yeast.v1" },
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": {
+              "type": "string",
+              "enum": [
+                "unknown",
+                "invalid_argument",
+                "not_found",
+                "conflict",
+                "failed_precondition",
+                "timeout",
+                "runtime_error",
+                "provisioning_failed",
+                "guest_error",
+                "internal"
+              ]
+            },
+            "message": { "type": "string" },
+            "details": { "type": "object" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

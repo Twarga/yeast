@@ -2,12 +2,12 @@ package app
 
 import (
 	"context"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"path/filepath"
 	"testing"
 	"time"
-	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 func TestStatusReconcilesMissingPIDByRuntimeDir(t *testing.T) {
@@ -83,7 +83,7 @@ func (f *fakeReconcileRuntime) RestoreSnapshot(ctx context.Context, plan rtm.Sna
 	return nil
 }
 
-func (f *fakeReconcileRuntime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
+func (f *fakeReconcileRuntime) DeleteSnapshot(ctx context.Context, plan rtm.DeleteSnapshotPlan) error {
 	return nil
 }
 

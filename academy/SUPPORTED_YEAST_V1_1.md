@@ -72,6 +72,12 @@ instances:
     cpus: 2
     disk_size: 20G
     ssh_port: 2202
+    ports:
+      - "8080:80"
+      - name: grafana
+        host_port: 3000
+        guest_port: 3000
+        protocol: tcp
     user: ubuntu
     sudo: nopasswd
     env:
@@ -98,15 +104,14 @@ instances:
 Do not use these fields in this bootcamp until Yeast implements and documents them:
 
 ```yaml
-ports:
-host_port:
-guest_port:
 http_port:
 forward:
 port_forward:
 mounts:
 volumes:
 ```
+
+`instances[].ports` IS supported in v1.1 — both the short `"host:guest"` form and the object form (`name`, `host`, `host_port`, `guest_port`, `protocol`). Do not confuse it with the unsupported top-level `http_port`/`forward`/`port_forward` keys above.
 
 Docker Compose and Kubernetes manifests may use their own `ports:` fields. That is different from Yeast `yeast.yaml`.
 
@@ -117,11 +122,10 @@ Yeast v1.1 has two networking ideas:
 | Network type | What it does |
 |---|---|
 | Management SSH | Host-to-VM SSH through `management_host` and `ssh_port` |
+| Service port forwarding | Host-to-guest forwarding via `instances[].ports` (Docker-style `["8080:80"]` or object form) |
 | Private lab network | VM-to-VM traffic using one project network with static IPv4 addresses |
 
-Yeast v1.1 does not document general host-to-guest HTTP port forwarding.
-
-If a lab needs a browser on the laptop to reach Grafana, Prometheus, Nginx, Argo CD, Jaeger, Ollama, or a registry UI/API, use SSH local forwarding. See `ACCESS.md`.
+If a lab needs a browser on the laptop to reach Grafana, Prometheus, Nginx, Argo CD, Jaeger, Ollama, or a registry UI/API, declare the port in `instances[].ports` first; use SSH local forwarding only for ports not declared ahead of time. See `ACCESS.md`.
 
 ## Lab Author Checklist
 
@@ -131,7 +135,7 @@ Before marking a lab as tested:
 - Run `yeast up`.
 - Run `yeast status`.
 - Verify every VM is `running`.
-- If the lab needs browser access, create the documented SSH tunnel.
+- If the lab needs browser access, declare it via `instances[].ports` (or create the documented SSH tunnel for ad-hoc ports).
 - Run all commands exactly as written.
 - Run `bash assets/validate.sh`.
 - Run `yeast destroy`.

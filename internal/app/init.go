@@ -3,11 +3,11 @@ package app
 import (
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/project"
+	"github.com/Twarga/yeast/internal/templates"
 	"os"
 	"path/filepath"
 	"time"
-	"yeast/internal/project"
-	"yeast/internal/templates"
 )
 
 const ConfigFileName = "yeast.yaml"

@@ -6,7 +6,7 @@ checks:
     command: bash -lc 'echo > /dev/tcp/10.20.30.20/22'
     expected_exit_code: 0
   - id: target-marker-file
-    title: Target contains the LabsBakery marker file
+    title: Target contains the LabsBackery marker file
     instance: target
     command: bash -lc 'test -f /home/yeast/labsbackery-target.txt && grep -q labsbackery-ready /home/yeast/labsbackery-target.txt'
     expected_exit_code: 0

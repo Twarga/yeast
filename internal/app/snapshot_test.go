@@ -3,14 +3,14 @@ package app
 import (
 	"context"
 	"errors"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
-	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 func TestSnapshotCreatesSnapshotAndPersistsMetadata(t *testing.T) {
@@ -210,7 +210,7 @@ func (f *fakeSnapshotRuntime) RestoreSnapshot(ctx context.Context, plan rtm.Snap
 	return nil
 }
 
-func (f *fakeSnapshotRuntime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
+func (f *fakeSnapshotRuntime) DeleteSnapshot(ctx context.Context, plan rtm.DeleteSnapshotPlan) error {
 	return nil
 }
 
@@ -238,5 +238,117 @@ func TestSnapshotMissingInstanceReturnsNotFound(t *testing.T) {
 	assertAppErrorCode(t, err, ErrorCodeNotFound)
 	if !strings.Contains(err.Error(), `instance "api" not found`) {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// --- live snapshot tests (3.3/3.4) -------------------------------------------
+
+type fakeLiveRuntime struct {
+	fakeSnapshotRuntime
+	savedPlan    *rtm.LiveSnapshotPlan
+	restoredPlan *rtm.LiveRestorePlan
+	saveInfo     rtm.LiveSnapshotInfo
+	saveErr      error
+	restored     rtm.RuntimeInstance
+	restoreErr   error
+}
+
+func (f *fakeLiveRuntime) SaveLiveSnapshot(ctx context.Context, plan rtm.LiveSnapshotPlan) (rtm.LiveSnapshotInfo, error) {
+	f.savedPlan = &plan
+	return f.saveInfo, f.saveErr
+}
+
+func (f *fakeLiveRuntime) RestoreLiveSnapshot(ctx context.Context, plan rtm.LiveRestorePlan) (rtm.RuntimeInstance, error) {
+	f.restoredPlan = &plan
+	return f.restored, f.restoreErr
+}
+
+func TestSnapshotRunningInstanceTakesLiveSnapshot(t *testing.T) {
+	service, root, metadata, _ := newSnapshotServiceWithStoppedInstance(t)
+	fake := &fakeLiveRuntime{saveInfo: rtm.LiveSnapshotInfo{Method: "mapped-ram", PauseMs: 42},
+		restored: rtm.RuntimeInstance{PID: 9999}}
+	service.runtime = fake
+
+	// make the instance running + give it a boot plan
+	paths, _ := project.NewPaths(filepath.Join(root, "yeast-home"), metadata)
+	st, _ := state.Load(paths.StateFile, metadata.ID)
+	inst := st.Instances["web"]
+	inst.Status = "running"
+	inst.PID = 4242
+	st.Instances["web"] = inst
+	state.Save(paths.StateFile, st)
+	writeBootPlan(inst.RuntimeDir, rtm.MachinePlan{Name: "web", MemoryMiB: 512, RuntimeDir: inst.RuntimeDir})
+
+	result, err := service.Snapshot(context.Background(), SnapshotOptions{
+		ProjectRoot: root, Target: "web", Name: "live1",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Snapshot.Kind != "live" || result.Snapshot.Method != "mapped-ram" || result.Snapshot.PauseMs != 42 {
+		t.Fatalf("snapshot = %+v", result.Snapshot)
+	}
+	if fake.savedPlan == nil || fake.savedPlan.Plan.MemoryMiB != 512 {
+		t.Fatalf("saved plan = %+v", fake.savedPlan)
+	}
+	// state records live snapshot + ActiveDisk
+	reloaded, _ := state.Load(paths.StateFile, metadata.ID)
+	got := reloaded.Instances["web"]
+	if got.Snapshots["live1"].Kind != "live" {
+		t.Fatalf("state snapshot kind = %+v", got.Snapshots)
+	}
+	if got.ActiveDisk == "" {
+		t.Fatal("ActiveDisk not set after live snapshot")
+	}
+}
+
+func TestSnapshotRunningWithoutBootPlanFails(t *testing.T) {
+	service, root, metadata, _ := newSnapshotServiceWithStoppedInstance(t)
+	fake := &fakeLiveRuntime{}
+	service.runtime = fake
+	paths, _ := project.NewPaths(filepath.Join(root, "yeast-home"), metadata)
+	st, _ := state.Load(paths.StateFile, metadata.ID)
+	inst := st.Instances["web"]
+	inst.Status = "running"
+	inst.PID = 1
+	st.Instances["web"] = inst
+	state.Save(paths.StateFile, st)
+
+	_, err := service.Snapshot(context.Background(), SnapshotOptions{ProjectRoot: root, Target: "web", Name: "x"})
+	assertAppErrorCode(t, err, ErrorCodePrecondition)
+}
+
+func TestRestoreLiveSnapshotRunning(t *testing.T) {
+	service, root, metadata, _ := newSnapshotServiceWithStoppedInstance(t)
+	fake := &fakeLiveRuntime{
+		restored: rtm.RuntimeInstance{PID: 8888},
+	}
+	service.runtime = fake
+
+	paths, _ := project.NewPaths(filepath.Join(root, "yeast-home"), metadata)
+	st, _ := state.Load(paths.StateFile, metadata.ID)
+	inst := st.Instances["web"]
+	inst.Status = "running"
+	inst.PID = 4242
+	inst.Snapshots = map[string]state.SnapshotState{
+		"live1": {Name: "live1", Kind: "live", Dir: filepath.Join(inst.RuntimeDir, "snapshots", "live1"),
+			DiskPath: filepath.Join(inst.RuntimeDir, "snapshots", "live1", "base.qcow2")},
+	}
+	st.Instances["web"] = inst
+	state.Save(paths.StateFile, st)
+
+	_, err := service.Restore(context.Background(), RestoreOptions{
+		ProjectRoot: root, Target: "web", Name: "live1",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fake.restoredPlan == nil {
+		t.Fatal("RestoreLiveSnapshot not called")
+	}
+	reloaded, _ := state.Load(paths.StateFile, metadata.ID)
+	got := reloaded.Instances["web"]
+	if got.PID != 8888 || got.Status != "running" {
+		t.Fatalf("state after live restore = %+v", got)
 	}
 }

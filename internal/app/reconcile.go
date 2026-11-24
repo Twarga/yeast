@@ -2,8 +2,11 @@ package app
 
 import (
 	"context"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
+	"path/filepath"
+
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 )
 
 func (s *Service) reconcileStateWithRuntime(ctx context.Context, currentState *state.State) bool {
@@ -42,4 +45,46 @@ func (s *Service) findProcessByRuntimeDir(ctx context.Context) func(name, runtim
 		}
 		return 0, false
 	}
+}
+
+// ReconcileProject loads the project's state and reconciles it against live
+// runtime processes (dead PIDs cleared, orphaned QEMU re-discovered by
+// runtime dir). Used by yeastd on startup to reattach to VMs that outlived
+// a previous daemon run.
+func (s *Service) ReconcileProject(ctx context.Context, projectRoot string) error {
+	root := projectRoot
+	if root == "" {
+		root = "."
+	}
+	abs, err := filepath.Abs(root)
+	if err != nil {
+		return WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	metadata, err := project.LoadMetadata(abs)
+	if err != nil {
+		return WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	yeastHome, err := s.resolveYeastHome()
+	if err != nil {
+		return WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		return WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	lock, err := state.Acquire(paths.StateLock, state.DefaultLockOptions())
+	if err != nil {
+		return WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	defer func() { _ = lock.Release() }()
+	currentState, err := state.Load(paths.StateFile, metadata.ID)
+	if err != nil {
+		return WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	if s.reconcileStateWithRuntime(ctx, &currentState) {
+		if err := state.Save(paths.StateFile, currentState); err != nil {
+			return WrapError(ErrorCodeInternal, err.Error(), err)
+		}
+	}
+	return nil
 }

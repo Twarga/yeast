@@ -8,35 +8,35 @@ func PackageNames(dep DependencyName, family DistroFamily) []string {
 
 	table := map[DependencyName]mapping{
 		DepQEMUSystem: {
-			FamilyDebian:  {"qemu-system-x86"},
-			FamilyFedora:  {"qemu-kvm"},
-			FamilyArch:    {"qemu-base"},
+			FamilyDebian:   {"qemu-system-x86"},
+			FamilyFedora:   {"qemu-kvm"},
+			FamilyArch:     {"qemu-base"},
 			FamilyOpenSUSE: {"qemu-x86"},
 		},
 		DepQEMUImg: {
-			FamilyDebian:  {"qemu-utils"},
-			FamilyFedora:  {"qemu-img"},
-			FamilyArch:    {"qemu-base"},
+			FamilyDebian:   {"qemu-utils"},
+			FamilyFedora:   {"qemu-img"},
+			FamilyArch:     {"qemu-base"},
 			FamilyOpenSUSE: {"qemu-tools"},
 		},
 		DepISOBuilder: {
-			FamilyDebian:  {"genisoimage"},
-			FamilyFedora:  {"genisoimage"},
-			FamilyArch:    {"cdrtools"},
+			FamilyDebian:   {"genisoimage"},
+			FamilyFedora:   {"genisoimage"},
+			FamilyArch:     {"cdrtools"},
 			FamilyOpenSUSE: {"cdrtools"},
 		},
 		DepSSH: {
-			FamilyDebian:  {"openssh-client"},
-			FamilyFedora:  {"openssh-clients"},
-			FamilyArch:    {"openssh"},
+			FamilyDebian:   {"openssh-client"},
+			FamilyFedora:   {"openssh-clients"},
+			FamilyArch:     {"openssh"},
 			FamilyOpenSUSE: {"openssh-clients"},
 		},
 		DepKVMModules: {
 			// KVM modules are part of the kernel on most distros; on Debian/Ubuntu
 			// the qemu-system package pulls the right meta-packages.
-			FamilyDebian:  {"qemu-kvm"},
-			FamilyFedora:  {},
-			FamilyArch:    {},
+			FamilyDebian:   {"qemu-kvm"},
+			FamilyFedora:   {},
+			FamilyArch:     {},
 			FamilyOpenSUSE: {},
 		},
 	}

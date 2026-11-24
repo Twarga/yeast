@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"yeast/internal/app"
+	"github.com/Twarga/yeast/internal/app"
 
 	"github.com/spf13/cobra"
 )
@@ -16,6 +16,7 @@ func newStatusCmd(service *app.Service) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			renderStatusSprite(cmd.OutOrStdout(), result)
 			return renderCommandOutput(cmd.OutOrStdout(), "status", result)
 		},
 	}

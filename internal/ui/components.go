@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
 	"strings"
 
 	"charm.land/lipgloss/v2"
@@ -79,24 +80,90 @@ func (t Theme) NextStepBlock(steps []string) string {
 	return strings.Join(lines, "\n")
 }
 
+// cardBorder returns a rounded-border box style whose border color is only
+// applied on styled terminals — plain output must stay ANSI-free.
+func (t Theme) cardBorder(c color.Color) lipgloss.Style {
+	s := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		Padding(0, 2)
+	if t.styled {
+		s = s.BorderForeground(c)
+	}
+	return s
+}
+
 // WarningBlock renders a bordered warning section.
 func (t Theme) WarningBlock(title, body string) string {
 	content := t.Warning.Render("⚠  "+title) + "\n\n" + t.Muted.Render(body)
-	return lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(ColorWarning).
-		Padding(0, 2).
-		Render(content)
+	return t.cardBorder(t.warnCol).Render(content)
 }
 
 // ErrorBlock renders a bordered error section.
 func (t Theme) ErrorBlock(title, body string) string {
 	content := t.Blocker.Render("✗  "+title) + "\n\n" + t.Muted.Render(body)
-	return lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(ColorBlocker).
-		Padding(0, 2).
-		Render(content)
+	return t.cardBorder(t.blockCol).Render(content)
+}
+
+// ErrorCard renders the structured error card: what failed, why, how to fix,
+// and an optional `yeast explain <code>` pointer for typed error codes.
+// Error blocks are never cute — plain, precise, actionable.
+func (t Theme) ErrorCard(what, why, fix, moreCode string) string {
+	sym := SymbolsFor(true)
+	var b strings.Builder
+	b.WriteString(t.Blocker.Render(sym.Fail + "  " + what))
+	if why != "" {
+		b.WriteString("\n\n" + t.Muted.Render("why:  ") + t.Text.Render(why))
+	}
+	if fix != "" {
+		b.WriteString("\n\n" + t.Muted.Render("fix:  ") + t.Text.Render(fix))
+	}
+	if moreCode != "" {
+		b.WriteString("\n\n" + t.Muted.Render("more: ") + t.AccentSoft.Render("yeast explain "+moreCode))
+	}
+	return t.cardBorder(t.blockCol).Render(b.String())
+}
+
+// WidthTier buckets terminal width for responsive layout.
+type WidthTier int
+
+const (
+	// WidthFull is >= 80 cols: side-by-side sprite + status layout.
+	WidthFull WidthTier = iota
+	// WidthCompact is 60–79 cols: single-line header, no sprite.
+	WidthCompact
+	// WidthNarrow is < 60 cols: plain stacked text only.
+	WidthNarrow
+)
+
+// TierFor maps a column width to its tier.
+func TierFor(width int) WidthTier {
+	switch {
+	case width >= 80:
+		return WidthFull
+	case width >= 60:
+		return WidthCompact
+	default:
+		return WidthNarrow
+	}
+}
+
+// Symbols holds the glyph set for status icons — Unicode or ASCII fallback.
+type Symbols struct {
+	OK     string // ✓ / [ok]
+	Fail   string // ✗ / [x]
+	Warn   string // ! / [!]
+	Bullet string // • / *
+	Arrow  string // → / ->
+	Dot    string // ● / o
+	Ring   string // ○ / o
+}
+
+// SymbolsFor returns the Unicode set when utf8 is true, ASCII otherwise.
+func SymbolsFor(utf8 bool) Symbols {
+	if !utf8 {
+		return Symbols{OK: "[ok]", Fail: "[x]", Warn: "[!]", Bullet: "*", Arrow: "->", Dot: "o", Ring: "o"}
+	}
+	return Symbols{OK: "✓", Fail: "✗", Warn: "!", Bullet: "•", Arrow: "→", Dot: "●", Ring: "○"}
 }
 
 // Divider returns a simple separator line.

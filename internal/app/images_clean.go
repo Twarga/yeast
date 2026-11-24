@@ -2,8 +2,8 @@ package app
 
 import (
 	"fmt"
+	"github.com/Twarga/yeast/internal/images"
 	"os"
-	"yeast/internal/images"
 )
 
 type ImageCleanOptions struct {

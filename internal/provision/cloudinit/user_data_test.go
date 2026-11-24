@@ -2,11 +2,11 @@ package cloudinit
 
 import (
 	"errors"
+	"github.com/Twarga/yeast/internal/config"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-	"yeast/internal/config"
 )
 
 func TestDiscoverAuthorizedKeyPrefersEd25519(t *testing.T) {
@@ -192,5 +192,33 @@ func TestRenderUserDataUsesExplicitHostname(t *testing.T) {
 	}
 	if !strings.Contains(got, "hostname: web-lab") {
 		t.Fatalf("expected explicit hostname in user-data, got:\n%s", got)
+	}
+}
+
+func TestRenderUserDataMounts(t *testing.T) {
+	t.Parallel()
+
+	got, err := RenderUserData(UserDataInput{
+		Hostname:      "desk",
+		Instance:      config.Instance{User: "yeast", Sudo: "nopasswd"},
+		AuthorizedKey: "ssh-ed25519 AAAATEST",
+		Mounts: []MountSpec{
+			{Target: "/mnt/dotfiles", Driver: "virtiofs", Tag: "yeast_mnt_0"},
+			{Target: "/mnt/data", Driver: "9p", Tag: "yeast_mnt_1", ReadOnly: true},
+		},
+	})
+	if err != nil {
+		t.Fatalf("RenderUserData returned error: %v", err)
+	}
+	for _, want := range []string{
+		"mounts:",
+		"- - yeast_mnt_0\n      - /mnt/dotfiles\n      - virtiofs\n      - defaults,nofail",
+		"- - yeast_mnt_1\n      - /mnt/data\n      - 9p\n      - trans=virtio,version=9p2000.L,msize=1048576,nofail,ro",
+		"bootcmd:",
+		"modprobe virtiofs || true",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("expected user-data to contain %q, got:\n%s", want, got)
+		}
 	}
 }

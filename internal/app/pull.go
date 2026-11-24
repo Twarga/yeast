@@ -3,9 +3,9 @@ package app
 import (
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/images"
 	"path/filepath"
 	"strings"
-	"yeast/internal/images"
 )
 
 var ErrUnsupportedImage = errors.New("unsupported image")

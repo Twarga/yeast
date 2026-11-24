@@ -3,15 +3,15 @@ package app
 import (
 	"context"
 	"errors"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
-	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 func TestSSHUsesStoredPortForSingleRunningInstance(t *testing.T) {

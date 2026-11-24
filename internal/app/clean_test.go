@@ -2,13 +2,13 @@ package app
 
 import (
 	"context"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
-	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 func TestCleanWorksWithoutStateFile(t *testing.T) {
@@ -182,7 +182,7 @@ func (f *fakeCleanRuntime) RestoreSnapshot(ctx context.Context, plan rtm.Snapsho
 	return nil
 }
 
-func (f *fakeCleanRuntime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
+func (f *fakeCleanRuntime) DeleteSnapshot(ctx context.Context, plan rtm.DeleteSnapshotPlan) error {
 	return nil
 }
 

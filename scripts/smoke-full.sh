@@ -57,6 +57,7 @@ case "${CATEGORY}" in
     run_category "ERROR PATHS" "${SMOKE_DIR}/error_paths.sh"
     run_category "CLI UX" "${SMOKE_DIR}/cli_ux.sh"
     run_category "PERFORMANCE" "${SMOKE_DIR}/perf.sh"
+    run_category "SUPERPOWERS" "${SMOKE_DIR}/superpowers.sh"
     ;;
   lifecycle)   run_category "LIFECYCLE" "${SMOKE_DIR}/lifecycle.sh" ;;
   provision)   run_category "PROVISIONING" "${SMOKE_DIR}/provision.sh" ;;
@@ -68,6 +69,7 @@ case "${CATEGORY}" in
   error)       run_category "ERROR PATHS" "${SMOKE_DIR}/error_paths.sh" ;;
   cli-ux)      run_category "CLI UX" "${SMOKE_DIR}/cli_ux.sh" ;;
   perf)        run_category "PERFORMANCE" "${SMOKE_DIR}/perf.sh" ;;
+  superpowers) run_category "SUPERPOWERS" "${SMOKE_DIR}/superpowers.sh" ;;
   *)           echo "Unknown category: ${CATEGORY}"; exit 1 ;;
 esac
 

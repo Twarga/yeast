@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"yeast/internal/app"
+	"github.com/Twarga/yeast/internal/app"
 
 	"github.com/spf13/cobra"
 )

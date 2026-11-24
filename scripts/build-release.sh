@@ -14,7 +14,7 @@ rm -f "${BIN_PATH}" "${BIN_PATH}.sha256"
 echo "==> building ${PACKAGE_NAME} (${VERSION})"
 CGO_ENABLED=0 GOOS="${TARGET_OS}" GOARCH="${TARGET_ARCH}" go build \
   -trimpath \
-  -ldflags "-s -w -X yeast/internal/app.Version=${VERSION}" \
+  -ldflags "-s -w -X github.com/Twarga/yeast/internal/app.Version=${VERSION}" \
   -o "${BIN_PATH}" \
   ./cmd/yeast
 

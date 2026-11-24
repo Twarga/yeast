@@ -9,18 +9,18 @@ import (
 type DistroFamily string
 
 const (
-	FamilyDebian  DistroFamily = "debian"  // Ubuntu, Debian, Mint, Pop
-	FamilyFedora  DistroFamily = "fedora"  // Fedora, RHEL, CentOS, Rocky, Alma
-	FamilyArch    DistroFamily = "arch"    // Arch, Manjaro, EndeavourOS
+	FamilyDebian   DistroFamily = "debian" // Ubuntu, Debian, Mint, Pop
+	FamilyFedora   DistroFamily = "fedora" // Fedora, RHEL, CentOS, Rocky, Alma
+	FamilyArch     DistroFamily = "arch"   // Arch, Manjaro, EndeavourOS
 	FamilyOpenSUSE DistroFamily = "opensuse"
-	FamilyUnknown DistroFamily = "unknown"
+	FamilyUnknown  DistroFamily = "unknown"
 )
 
 // Distro holds the parsed values from /etc/os-release.
 type Distro struct {
-	ID      string       // e.g. "ubuntu", "debian", "fedora"
-	Name    string       // e.g. "Ubuntu", "Debian GNU/Linux"
-	Version string       // e.g. "22.04", "12"
+	ID      string // e.g. "ubuntu", "debian", "fedora"
+	Name    string // e.g. "Ubuntu", "Debian GNU/Linux"
+	Version string // e.g. "22.04", "12"
 	Family  DistroFamily
 }
 

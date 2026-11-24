@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"yeast/internal/config"
+	"github.com/Twarga/yeast/internal/config"
 )
 
 const FingerprintSchemaVersion = "v1"

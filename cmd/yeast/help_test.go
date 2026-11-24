@@ -2,9 +2,9 @@ package main
 
 import (
 	"bytes"
+	"github.com/Twarga/yeast/internal/app"
 	"strings"
 	"testing"
-	"yeast/internal/app"
 )
 
 func TestCommandHelpRendersForV1Surface(t *testing.T) {

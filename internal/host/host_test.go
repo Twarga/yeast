@@ -62,8 +62,8 @@ func TestDetectDistroParseOSRelease(t *testing.T) {
 
 func TestDistroPackageManager(t *testing.T) {
 	tests := []struct {
-		family  DistroFamily
-		wantPM  string
+		family DistroFamily
+		wantPM string
 	}{
 		{FamilyDebian, "apt"},
 		{FamilyFedora, "dnf"},
@@ -106,8 +106,8 @@ func TestPackageNames(t *testing.T) {
 
 func TestRunChecksKVMBlockerOnNativeLinux(t *testing.T) {
 	env := Environment{
-		Type:  EnvironmentNativeLinux,
-		Arch:  ArchAMD64,
+		Type:   EnvironmentNativeLinux,
+		Arch:   ArchAMD64,
 		Distro: Distro{Family: FamilyDebian},
 	}
 
@@ -138,10 +138,10 @@ func TestRunChecksKVMBlockerOnNativeLinux(t *testing.T) {
 	}
 }
 
-func TestRunChecksKVMWarningInWSL(t *testing.T) {
+func TestRunChecksKVMBlockerInWSL(t *testing.T) {
 	env := Environment{
-		Type:  EnvironmentWSL2,
-		Arch:  ArchAMD64,
+		Type:   EnvironmentWSL2,
+		Arch:   ArchAMD64,
 		Distro: Distro{Family: FamilyDebian},
 	}
 
@@ -160,12 +160,12 @@ func TestRunChecksKVMWarningInWSL(t *testing.T) {
 	if kvmResult == nil {
 		t.Fatal("expected /dev/kvm check")
 	}
-	if kvmResult.Severity != SeverityWarning {
-		t.Errorf("WSL2 with no KVM: want SeverityWarning, got %s", kvmResult.Severity)
+	if kvmResult.Severity != SeverityBlocker {
+		t.Errorf("WSL2 with no KVM: want SeverityBlocker, got %s", kvmResult.Severity)
 	}
 }
 
-func TestRunChecksKVMWarningWhenDeviceIsInaccessible(t *testing.T) {
+func TestRunChecksKVMBlockerWhenDeviceIsInaccessible(t *testing.T) {
 	env := Environment{
 		Type:   EnvironmentNativeLinux,
 		Arch:   ArchAMD64,
@@ -201,8 +201,8 @@ func TestRunChecksKVMWarningWhenDeviceIsInaccessible(t *testing.T) {
 	if kvmResult == nil {
 		t.Fatal("expected /dev/kvm check")
 	}
-	if kvmResult.Severity != SeverityWarning {
-		t.Fatalf("present but inaccessible /dev/kvm: want SeverityWarning, got %s", kvmResult.Severity)
+	if kvmResult.Severity != SeverityBlocker {
+		t.Fatalf("present but inaccessible /dev/kvm: want SeverityBlocker, got %s", kvmResult.Severity)
 	}
 	if kvmResult.Fix == nil {
 		t.Fatal("expected a fix step for inaccessible /dev/kvm")
@@ -214,8 +214,8 @@ func TestRunChecksKVMWarningWhenDeviceIsInaccessible(t *testing.T) {
 
 func TestRunChecksISOBuilderAcceptsXorriso(t *testing.T) {
 	env := Environment{
-		Type:  EnvironmentNativeLinux,
-		Arch:  ArchAMD64,
+		Type:   EnvironmentNativeLinux,
+		Arch:   ArchAMD64,
 		Distro: Distro{Family: FamilyDebian},
 	}
 

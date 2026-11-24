@@ -1,8 +1,8 @@
 package provision
 
 import (
+	"github.com/Twarga/yeast/internal/state"
 	"time"
-	"yeast/internal/state"
 )
 
 type StepKind string

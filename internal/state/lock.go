@@ -24,6 +24,7 @@ type FileLock struct {
 type LockInfo struct {
 	PID       int       `json:"pid"`
 	CreatedAt time.Time `json:"created_at"`
+	Hostname  string    `json:"hostname,omitempty"`
 }
 
 func DefaultLockOptions() LockOptions {
@@ -43,10 +44,12 @@ func Acquire(path string, options LockOptions) (*FileLock, error) {
 		return nil, fmt.Errorf("create lock directory %s: %w", filepath.Dir(path), err)
 	}
 
+	hostname, _ := os.Hostname()
 	for {
 		err := tryCreateLock(path, LockInfo{
 			PID:       os.Getpid(),
 			CreatedAt: opts.Now().UTC(),
+			Hostname:  hostname,
 		})
 		if err == nil {
 			return &FileLock{Path: path}, nil
@@ -131,8 +134,18 @@ func removeIfStale(path string, options LockOptions) (bool, error) {
 		return false, nil
 	}
 
-	if info.PID > 0 && options.IsProcessAlive(info.PID) {
-		return false, nil
+	// A dead PID means the previous holder crashed — reclaim immediately
+	// instead of waiting out StaleAfter. The PID check is only trustworthy
+	// on the host that wrote the lock (empty hostname = older lock format).
+	currentHost, _ := os.Hostname()
+	if info.PID > 0 && (info.Hostname == "" || info.Hostname == currentHost) {
+		if options.IsProcessAlive(info.PID) {
+			return false, nil
+		}
+		if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return false, fmt.Errorf("remove stale lock %s held by dead pid %d: %w", path, info.PID, err)
+		}
+		return true, nil
 	}
 	if info.CreatedAt.IsZero() {
 		fileInfo, statErr := os.Stat(path)

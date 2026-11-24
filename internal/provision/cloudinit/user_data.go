@@ -3,11 +3,11 @@ package cloudinit
 import (
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/config"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-	"yeast/internal/config"
 
 	"gopkg.in/yaml.v3"
 )
@@ -20,12 +20,23 @@ type UserDataInput struct {
 	Hostname      string
 	Instance      config.Instance
 	AuthorizedKey string
+	Mounts        []MountSpec
+}
+
+// MountSpec is one resolved shared folder for the cloud-init mounts module.
+type MountSpec struct {
+	Target   string
+	Driver   string // "virtiofs" | "9p"
+	Tag      string
+	ReadOnly bool
 }
 
 type cloudConfig struct {
 	Hostname   string           `yaml:"hostname"`
 	Users      []cloudUser      `yaml:"users"`
 	WriteFiles []cloudWriteFile `yaml:"write_files,omitempty"`
+	Mounts     [][]string       `yaml:"mounts,omitempty"`
+	Bootcmd    []string         `yaml:"bootcmd,omitempty"`
 }
 
 type cloudUser struct {
@@ -101,6 +112,42 @@ func RenderUserData(input UserDataInput) (string, error) {
 			Permissions: "0644",
 			Content:     content,
 		})
+	}
+	if input.Instance.Egress != nil && input.Instance.Egress.Mode == "allowlist" {
+		const proxyURL = "http://10.0.2.100:3128"
+		cfg.WriteFiles = append(cfg.WriteFiles,
+			cloudWriteFile{
+				Path:        "/etc/profile.d/yeast-egress.sh",
+				Permissions: "0644",
+				Content: fmt.Sprintf(
+					"export HTTP_PROXY=%[1]q\nexport HTTPS_PROXY=%[1]q\nexport http_proxy=%[1]q\nexport https_proxy=%[1]q\nexport NO_PROXY=\"localhost,127.0.0.1,10.0.2.0/24\"\n",
+					proxyURL,
+				),
+			},
+			cloudWriteFile{
+				Path:        "/etc/apt/apt.conf.d/99yeast-egress",
+				Permissions: "0644",
+				Content: fmt.Sprintf(
+					"Acquire::http::Proxy %[1]q;\nAcquire::https::Proxy %[1]q;\n",
+					proxyURL,
+				),
+			},
+		)
+	}
+
+	for _, mount := range input.Mounts {
+		opts := "defaults,nofail"
+		fstype := mount.Driver
+		if mount.Driver == "9p" {
+			opts = "trans=virtio,version=9p2000.L,msize=1048576,nofail"
+		}
+		if mount.ReadOnly {
+			opts += ",ro"
+		}
+		cfg.Mounts = append(cfg.Mounts, []string{mount.Tag, mount.Target, fstype, opts, "0", "0"})
+		if mount.Driver == "virtiofs" {
+			cfg.Bootcmd = append(cfg.Bootcmd, "modprobe virtiofs || true")
+		}
 	}
 
 	body, err := yaml.Marshal(cfg)

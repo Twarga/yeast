@@ -58,7 +58,7 @@ jobs:
           cp assets/ta-logo.svg dist/assets/
           cp assets/favicon.ico dist/assets/
           cp landing/index.html dist/index.html
-          cp academy-landing/index.html dist/bootcamp/index.html
+          if [ -f academy-landing/index.html ]; then cp academy-landing/index.html dist/bootcamp/index.html; fi
           touch dist/.nojekyll
 
       - name: Configure Pages

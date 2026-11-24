@@ -3,11 +3,11 @@ package qemu
 import (
 	"context"
 	"fmt"
+	rtm "github.com/Twarga/yeast/internal/runtime"
 	"os"
 	"path/filepath"
 	"syscall"
 	"time"
-	rtm "yeast/internal/runtime"
 )
 
 type Runtime struct{}
@@ -37,13 +37,41 @@ func (r *Runtime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.RuntimeI
 		return rtm.RuntimeInstance{}, err
 	}
 
+	if plan.Firmware == "uefi" {
+		if _, err := os.Stat(filepath.Join(plan.RuntimeDir, ovmfVarsName)); os.IsNotExist(err) {
+			if _, _, err := prepareFirmwareFn(plan.RuntimeDir); err != nil {
+				return rtm.RuntimeInstance{}, err
+			}
+		}
+	}
+	if plan.Display != nil && plan.Display.GPU == "virgl" {
+		if err := virglSupportFn(plan.Display.RenderNode); err != nil {
+			return rtm.RuntimeInstance{}, err
+		}
+	}
+	if err := prepareEgress(&plan); err != nil {
+		return rtm.RuntimeInstance{}, err
+	}
+	if err := spawnMountSidecars(ctx, plan); err != nil {
+		return rtm.RuntimeInstance{}, err
+	}
+	if err := spawnEgressSidecar(plan); err != nil {
+		stopMountSidecars(plan.RuntimeDir)
+		stopEgressSidecar(plan.RuntimeDir)
+		return rtm.RuntimeInstance{}, err
+	}
+
 	binary, args, err := buildCommand(plan)
 	if err != nil {
+		stopMountSidecars(plan.RuntimeDir)
+		stopEgressSidecar(plan.RuntimeDir)
 		return rtm.RuntimeInstance{}, err
 	}
 
 	logFile, err := os.OpenFile(plan.LogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
+		stopMountSidecars(plan.RuntimeDir)
+		stopEgressSidecar(plan.RuntimeDir)
 		return rtm.RuntimeInstance{}, fmt.Errorf("open log file %s: %w", plan.LogPath, err)
 	}
 	defer func() {
@@ -52,6 +80,8 @@ func (r *Runtime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.RuntimeI
 
 	proc, err := startProcess(ctx, binary, args, logFile, logFile)
 	if err != nil {
+		stopMountSidecars(plan.RuntimeDir)
+		stopEgressSidecar(plan.RuntimeDir)
 		return rtm.RuntimeInstance{}, fmt.Errorf("start qemu process: %w", err)
 	}
 	pid := proc.PID()
@@ -62,14 +92,27 @@ func (r *Runtime) Start(ctx context.Context, plan rtm.MachinePlan) (rtm.RuntimeI
 		return rtm.RuntimeInstance{}, fmt.Errorf("release qemu process handle: %w", err)
 	}
 
-	return rtm.RuntimeInstance{
+	secureQMPSocket(plan.RuntimeDir)
+
+	instance := rtm.RuntimeInstance{
 		Name:       plan.Name,
 		RuntimeDir: plan.RuntimeDir,
 		LogPath:    plan.LogPath,
 		PID:        pid,
 		Networks:   plan.Networks,
 		StartedAt:  time.Now().UTC(),
-	}, nil
+	}
+	if plan.Display != nil {
+		instance.Display = &rtm.DisplayInfo{
+			Type:     plan.Display.Type,
+			Host:     plan.Display.Host,
+			Port:     plan.Display.Port,
+			URL:      fmt.Sprintf("vnc://%s:%d", plan.Display.Host, plan.Display.Port),
+			GPU:      plan.Display.GPU,
+			Firmware: plan.Firmware,
+		}
+	}
+	return instance, nil
 }
 
 func (r *Runtime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeout time.Duration) error {
@@ -82,6 +125,9 @@ func (r *Runtime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeou
 		return fmt.Errorf("inspect process %d: %w", instance.PID, err)
 	}
 	if !running {
+		_ = removeStaleQMPSocket(instance.RuntimeDir)
+		stopMountSidecars(instance.RuntimeDir)
+		stopEgressSidecar(instance.RuntimeDir)
 		return nil
 	}
 
@@ -94,6 +140,8 @@ func (r *Runtime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeou
 	}
 	if err := r.gracefulPowerdown(ctx, instance, qmpTimeout); err == nil {
 		_ = removeStaleQMPSocket(instance.RuntimeDir)
+		stopMountSidecars(instance.RuntimeDir)
+		stopEgressSidecar(instance.RuntimeDir)
 		return nil
 	} else {
 		appendRuntimeLog(instance.RuntimeDir, fmt.Sprintf("yeast: graceful powerdown failed, falling back to SIGTERM: %v\n", err))
@@ -107,6 +155,9 @@ func (r *Runtime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeou
 		return fmt.Errorf("send SIGTERM to process %d: %w", instance.PID, err)
 	}
 	if err := waitForProcessExitFn(ctx, instance.PID, termTimeout); err == nil {
+		_ = removeStaleQMPSocket(instance.RuntimeDir)
+		stopMountSidecars(instance.RuntimeDir)
+		stopEgressSidecar(instance.RuntimeDir)
 		return nil
 	} else if err != context.DeadlineExceeded {
 		return fmt.Errorf("wait for process %d after SIGTERM: %w", instance.PID, err)
@@ -119,6 +170,8 @@ func (r *Runtime) Stop(ctx context.Context, instance rtm.RuntimeInstance, timeou
 		return fmt.Errorf("wait for process %d after SIGKILL: %w", instance.PID, err)
 	}
 	_ = removeStaleQMPSocket(instance.RuntimeDir)
+	stopMountSidecars(instance.RuntimeDir)
+	stopEgressSidecar(instance.RuntimeDir)
 
 	return nil
 }
@@ -187,15 +240,24 @@ func (r *Runtime) Inspect(ctx context.Context, instance rtm.RuntimeInstance) (rt
 }
 
 func (r *Runtime) CreateSnapshot(ctx context.Context, plan rtm.SnapshotPlan) error {
+	if plan.Kind == "overlay" {
+		return CreateOverlaySnapshot(ctx, plan)
+	}
 	return CreateSnapshotCopy(ctx, plan)
 }
 
 func (r *Runtime) RestoreSnapshot(ctx context.Context, plan rtm.SnapshotPlan) error {
+	if plan.Kind == "overlay" {
+		return RestoreOverlaySnapshot(ctx, plan)
+	}
 	return RestoreSnapshotCopy(ctx, plan)
 }
 
-func (r *Runtime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
-	return DeleteSnapshotFile(snapshotPath)
+func (r *Runtime) DeleteSnapshot(ctx context.Context, plan rtm.DeleteSnapshotPlan) error {
+	if plan.Kind == "overlay" || plan.Kind == "live" {
+		return DeleteOverlaySnapshot(ctx, plan)
+	}
+	return DeleteSnapshotFile(plan.Path)
 }
 
 func (r *Runtime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) error {
@@ -221,10 +283,27 @@ func (r *Runtime) Destroy(ctx context.Context, instance rtm.RuntimeInstance) err
 	if instance.RuntimeDir == "" {
 		return nil
 	}
+	stopMountSidecars(instance.RuntimeDir)
+	stopEgressSidecar(instance.RuntimeDir)
 	if err := os.RemoveAll(instance.RuntimeDir); err != nil {
 		return fmt.Errorf("remove runtime directory %s: %w", instance.RuntimeDir, err)
 	}
 	return nil
+}
+
+// secureQMPSocket waits briefly for QEMU to bind its QMP unix socket and
+// tightens it to 0600 — QEMU inherits umask defaults (often 0755) which
+// would let other local users issue monitor commands.
+func secureQMPSocket(runtimeDir string) {
+	socketPath := qmpSocketPath(runtimeDir)
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		if _, err := os.Stat(socketPath); err == nil {
+			_ = os.Chmod(socketPath, 0o600)
+			return
+		}
+		time.Sleep(25 * time.Millisecond)
+	}
 }
 
 func removeStaleQMPSocket(runtimeDir string) error {

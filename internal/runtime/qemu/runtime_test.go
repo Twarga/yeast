@@ -2,6 +2,7 @@ package qemu
 
 import (
 	"context"
+	rtm "github.com/Twarga/yeast/internal/runtime"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -9,7 +10,6 @@ import (
 	"syscall"
 	"testing"
 	"time"
-	rtm "yeast/internal/runtime"
 
 	"golang.org/x/sys/unix"
 )

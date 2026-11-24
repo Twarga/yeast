@@ -4,6 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/guest"
+	"github.com/Twarga/yeast/internal/images"
+	"github.com/Twarga/yeast/internal/project"
+	"github.com/Twarga/yeast/internal/provision/cloudinit"
+	provssh "github.com/Twarga/yeast/internal/provision/ssh"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"net"
 	"os"
 	"path/filepath"
@@ -11,13 +18,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"yeast/internal/guest"
-	"yeast/internal/images"
-	"yeast/internal/project"
-	"yeast/internal/provision/cloudinit"
-	provssh "yeast/internal/provision/ssh"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 func TestUpStartsInstanceAndSavesState(t *testing.T) {
@@ -28,6 +28,7 @@ func TestUpStartsInstanceAndSavesState(t *testing.T) {
 	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
 	service.discoverSSHKey = func() (string, error) { return "ssh-ed25519 AAAATEST", nil }
 	service.managementPortAvailable = func(port int) bool { return true }
+	service.checkKVMReady = func() error { return nil }
 
 	var userDataCalls int
 	service.renderUserData = func(input cloudinit.UserDataInput) (string, error) {
@@ -156,6 +157,7 @@ func TestUpBuildsLabNetworkPlanAndSeedConfig(t *testing.T) {
 	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
 	service.discoverSSHKey = func() (string, error) { return "ssh-ed25519 AAAATEST", nil }
 	service.managementPortAvailable = func(port int) bool { return true }
+	service.checkKVMReady = func() error { return nil }
 	service.renderUserData = func(input cloudinit.UserDataInput) (string, error) {
 		return "#cloud-config\nhostname: web-lab\n", nil
 	}
@@ -807,6 +809,7 @@ func TestUpFailsClearlyWhenCachedImageMissing(t *testing.T) {
 
 	service := NewService()
 	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.checkKVMReady = func() error { return nil }
 	service.downloadImage = func(image images.TrustedImage, destination string, options images.DownloadOptions) error {
 		return fmt.Errorf("download failed: no network")
 	}
@@ -837,6 +840,7 @@ func TestUpReportsUnsupportedImageAsInvalidArgument(t *testing.T) {
 
 	service := NewService()
 	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.checkKVMReady = func() error { return nil }
 
 	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
 		t.Fatalf("Init returned error: %v", err)
@@ -869,6 +873,7 @@ func TestUpShowsManualImageInstructions(t *testing.T) {
 
 	service := NewService()
 	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.checkKVMReady = func() error { return nil }
 
 	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
 		t.Fatalf("Init returned error: %v", err)
@@ -1024,6 +1029,7 @@ func TestUpClassifiesStateProjectMismatch(t *testing.T) {
 	yeastHome := filepath.Join(root, "yeast-home")
 	service := NewService()
 	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.checkKVMReady = func() error { return nil }
 
 	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
 		t.Fatalf("Init returned error: %v", err)
@@ -1085,6 +1091,7 @@ func TestUpClassifiesCachedRunningSSHAddressFailure(t *testing.T) {
 	yeastHome := filepath.Join(root, "yeast-home")
 	service := NewService()
 	service.resolveYeastHome = func() (string, error) { return yeastHome, nil }
+	service.checkKVMReady = func() error { return nil }
 	service.sshAddress = func(host string, port int) (string, error) {
 		return "", errors.New("bad ssh address")
 	}
@@ -1150,6 +1157,85 @@ func TestUpClassifiesSeedISOCreationFailure(t *testing.T) {
 	assertAppErrorCode(t, err, ErrorCodeInternal)
 }
 
+func TestUpReturnsPreconditionWhenKVMPrecheckFails(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	fake := &fakeRuntime{}
+	service.runtime = fake
+
+	downloadCalled := false
+	service.downloadImage = func(image images.TrustedImage, destination string, options images.DownloadOptions) error {
+		downloadCalled = true
+		return nil
+	}
+	service.checkKVMReady = func() error {
+		return fmt.Errorf("/dev/kvm is not available on this host: %w", os.ErrNotExist)
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodePrecondition)
+	if !strings.Contains(err.Error(), "KVM is required") {
+		t.Fatalf("expected KVM precondition message, got %q", err)
+	}
+
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	recovery, ok := appErr.Details["recovery"].([]string)
+	if !ok || len(recovery) == 0 {
+		t.Fatalf("expected recovery steps in error details, got %#v", appErr.Details)
+	}
+	joined := strings.Join(recovery, "\n")
+	if !strings.Contains(joined, "yeast doctor") {
+		t.Fatalf("expected recovery to mention yeast doctor, got: %s", joined)
+	}
+
+	// The precheck must run before any image pull or QEMU spawn.
+	if downloadCalled {
+		t.Fatal("expected no image download when KVM precheck fails")
+	}
+	if fake.preparePlan.Name != "" {
+		t.Fatalf("expected no disk preparation when KVM precheck fails, got plan for %q", fake.preparePlan.Name)
+	}
+}
+
+func TestUpPermissionDeniedKVMRecoveryMentionsUsermod(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.runtime = &fakeRuntime{}
+	service.checkKVMReady = func() error {
+		return fmt.Errorf("/dev/kvm is not readable/writable by the current user: %w", os.ErrPermission)
+	}
+
+	_, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	assertAppErrorCode(t, err, ErrorCodePrecondition)
+
+	var appErr *AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected AppError, got %T", err)
+	}
+	recovery, ok := appErr.Details["recovery"].([]string)
+	if !ok {
+		t.Fatalf("expected recovery steps, got %#v", appErr.Details)
+	}
+	if !strings.Contains(strings.Join(recovery, "\n"), "usermod -aG kvm") {
+		t.Fatalf("expected usermod recovery step, got: %v", recovery)
+	}
+}
+
+func TestUpRunsWhenKVMPrecheckPasses(t *testing.T) {
+	service, root := newUpServiceWithCachedImage(t)
+	service.runtime = &fakeRuntime{}
+	service.checkKVMReady = func() error { return nil }
+
+	result, err := service.Up(context.Background(), UpOptions{ProjectRoot: root})
+	if err != nil {
+		t.Fatalf("Up returned error: %v", err)
+	}
+	if len(result.Instances) != 1 {
+		t.Fatalf("expected 1 instance, got %#v", result.Instances)
+	}
+}
+
 func newUpServiceWithCachedImage(t *testing.T) (*Service, string) {
 	t.Helper()
 
@@ -1166,6 +1252,7 @@ func newUpServiceWithCachedImage(t *testing.T) (*Service, string) {
 	service.provisionTransport = fakeBootstrapTransport(t)
 	service.waitForTCP = func(ctx context.Context, options guest.ReadinessOptions) error { return nil }
 	service.managementPortAvailable = func(port int) bool { return true }
+	service.checkKVMReady = func() error { return nil }
 
 	if _, err := service.Init(InitOptions{ProjectRoot: root}); err != nil {
 		t.Fatalf("Init returned error: %v", err)
@@ -1257,7 +1344,7 @@ func (f *fakeRuntime) RestoreSnapshot(ctx context.Context, plan rtm.SnapshotPlan
 	return nil
 }
 
-func (f *fakeRuntime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
+func (f *fakeRuntime) DeleteSnapshot(ctx context.Context, plan rtm.DeleteSnapshotPlan) error {
 	return nil
 }
 

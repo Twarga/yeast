@@ -31,6 +31,10 @@ func ErrorHint(err error) string {
 		}
 
 	case ErrorCodePrecondition:
+		if strings.Contains(msg, "kvm") {
+			return `Yeast requires KVM acceleration — QEMU runs with -enable-kvm.
+Run "yeast doctor" for a host-specific diagnosis and fixes.`
+		}
 		if strings.Contains(msg, "ssh") {
 			return `Try: yeast down && yeast up
 Check VM logs: yeast logs <instance>`

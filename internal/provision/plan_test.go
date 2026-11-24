@@ -1,8 +1,8 @@
 package provision
 
 import (
+	"github.com/Twarga/yeast/internal/config"
 	"testing"
-	"yeast/internal/config"
 )
 
 func TestBuildPlanEmpty(t *testing.T) {

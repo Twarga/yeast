@@ -6,8 +6,8 @@ import (
 	"os"
 	"sync"
 
+	"github.com/Twarga/yeast/internal/app"
 	"golang.org/x/term"
-	"yeast/internal/app"
 )
 
 func NewProgressSink(w io.Writer) app.EventSink {

@@ -75,3 +75,7 @@ yeast inspect web --json
 - do not use `--json` with `yeast docs`; terminal docs are human-only
 
 See [JSON Output](../reference/json-output.md) and [Events](../reference/events.md) for the reference shapes.
+
+## Stability Promise
+
+`yeast.v1` output stays readable through all of v2. Tools that consume `yeast.v1` envelopes and events keep working — new capabilities arrive as additive `data` fields and new event names, never as breaking changes to existing keys. Machine-readable schemas for every command payload and the shared envelope/event live in [`schemas/yeast.v1/`](../../schemas/yeast.v1/) and are enforced by contract tests.

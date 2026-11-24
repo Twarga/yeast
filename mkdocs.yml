@@ -69,6 +69,9 @@ nav:
       - Two VM Lab: guides/two-vm-lab.md
       - Rerun Provisioning: guides/rerun-provisioning.md
       - Automate With JSON: guides/automate-with-json.md
+      - Agents & MCP: guides/agents-mcp.md
+      - Graphical & Desktop VMs: guides/graphical-vm.md
+      - Reset Superpowers: guides/reset-superpowers.md
       - Manage Image Cache: guides/manage-image-cache.md
       - Update Yeast: guides/update-yeast.md
       - Release Smoke Test: guides/release-smoke-v1.1.5.md
@@ -78,6 +81,7 @@ nav:
       - yeast.yaml: reference/yeast-yaml.md
       - Images: reference/images.md
       - JSON Output: reference/json-output.md
+      - Security Model: reference/security-model.md
       - Events: reference/events.md
       - Limitations: reference/limitations.md
   - Troubleshooting:

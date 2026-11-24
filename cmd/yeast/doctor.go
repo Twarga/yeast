@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/Twarga/yeast/internal/app"
+	"github.com/Twarga/yeast/internal/ui"
+	"github.com/Twarga/yeast/internal/ui/sprites"
 	"io"
 	"strings"
-	"yeast/internal/app"
 
 	"github.com/spf13/cobra"
 )
@@ -28,9 +30,18 @@ Use --fix --yes to run safe fixes non-interactively.`,
 				return fmt.Errorf("--fix with --json requires --yes")
 			}
 
+			stage, _ := newProgressStage(cmd.ErrOrStderr(), sprites.MoodWorking, ui.Voice.Doctor())
+			defer stageStop(stage)
+
 			result, err := service.Doctor()
 			if err != nil {
+				stageFinish(stage, err)
 				return err
+			}
+			if result.Blockers > 0 {
+				stageFinish(stage, fmt.Errorf("blockers"))
+			} else {
+				stageFinish(stage, nil)
 			}
 
 			if !fix {

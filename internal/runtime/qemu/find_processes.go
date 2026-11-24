@@ -2,11 +2,11 @@ package qemu
 
 import (
 	"context"
+	rtm "github.com/Twarga/yeast/internal/runtime"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-	rtm "yeast/internal/runtime"
 )
 
 func (r *Runtime) FindProcesses(ctx context.Context, targets []rtm.CleanupTarget) ([]rtm.CleanupResult, error) {

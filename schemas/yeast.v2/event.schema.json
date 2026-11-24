@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yeast.dev/schemas/yeast.v2/event.schema.json",
+  "title": "Yeast v2 Lifecycle Event",
+  "description": "One JSON Lines record per lifecycle event (SSE stream on yeastd, --events JSONL). Additive over yeast.v1: new event names + meta.actor.",
+  "type": "object",
+  "required": ["schema_version", "type", "name", "command", "time"],
+  "properties": {
+    "schema_version": { "const": "yeast.v2" },
+    "type": { "const": "event" },
+    "name": {
+      "type": "string",
+      "enum": [
+        "project.loaded",
+        "config.validated",
+        "image.pulling",
+        "image.ready",
+        "disk.ready",
+        "cloud_init.generated",
+        "vm.starting",
+        "ssh.waiting",
+        "ssh.ready",
+        "provision.started",
+        "provision.finished",
+        "provision.skipped",
+        "snapshot.created",
+        "restore.started",
+        "restore.finished",
+        "restore.clock-resynced",
+        "fork.created",
+        "instance.ready",
+        "instance.stopped",
+        "instance.destroyed",
+        "workflow.completed",
+        "workflow.failed"
+      ]
+    },
+    "command": { "type": "string", "minLength": 1 },
+    "project_id": { "type": "string" },
+    "instance": { "type": "string" },
+    "message": { "type": "string" },
+    "time": { "type": "string", "format": "date-time" },
+    "data": { "type": "object" },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "actor": { "type": "string", "description": "cli | api | mcp:<client> | sdk" },
+        "duration_ms": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

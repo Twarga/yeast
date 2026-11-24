@@ -2,13 +2,13 @@ package app
 
 import (
 	"context"
+	"github.com/Twarga/yeast/internal/guest"
+	"github.com/Twarga/yeast/internal/provision/cloudinit"
+	rtm "github.com/Twarga/yeast/internal/runtime"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
-	"yeast/internal/guest"
-	"yeast/internal/provision/cloudinit"
-	rtm "yeast/internal/runtime"
 )
 
 func TestAppWorkflowsRunWithoutQEMUUsingFakeRuntime(t *testing.T) {
@@ -34,6 +34,7 @@ func TestAppWorkflowsRunWithoutQEMUUsingFakeRuntime(t *testing.T) {
 	}
 	service.provisionTransport = fakeBootstrapTransport(t)
 	service.waitForTCP = func(ctx context.Context, options guest.ReadinessOptions) error { return nil }
+	service.checkKVMReady = func() error { return nil }
 
 	fakeRuntime := &workflowRuntime{
 		nextPID: 4200,
@@ -188,7 +189,7 @@ func (f *workflowRuntime) RestoreSnapshot(ctx context.Context, plan rtm.Snapshot
 	return nil
 }
 
-func (f *workflowRuntime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
+func (f *workflowRuntime) DeleteSnapshot(ctx context.Context, plan rtm.DeleteSnapshotPlan) error {
 	return nil
 }
 

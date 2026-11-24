@@ -2,15 +2,15 @@ package app
 
 import (
 	"context"
+	"github.com/Twarga/yeast/internal/guest"
+	"github.com/Twarga/yeast/internal/images"
+	"github.com/Twarga/yeast/internal/project"
+	"github.com/Twarga/yeast/internal/provision/cloudinit"
+	provssh "github.com/Twarga/yeast/internal/provision/ssh"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/runtime/qemu"
 	"net/http"
 	"time"
-	"yeast/internal/guest"
-	"yeast/internal/images"
-	"yeast/internal/project"
-	"yeast/internal/provision/cloudinit"
-	provssh "yeast/internal/provision/ssh"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/runtime/qemu"
 )
 
 var Version = "0.0.0-dev"
@@ -30,6 +30,7 @@ type Service struct {
 	managementPortAvailable func(port int) bool
 	sleep                   func(time.Duration)
 	provisionTransport      provssh.Transport
+	checkKVMReady           func() error
 	runtime                 rtm.Runtime
 	httpClient              *http.Client
 	latestReleaseURL        string
@@ -50,6 +51,7 @@ func NewService() *Service {
 		sshAddress:          guest.SSHAddress,
 		runSSH:              guest.RunSSH,
 		sleep:               time.Sleep,
+		checkKVMReady:       checkKVMReadiness,
 		runtime:             qemu.NewRuntime(),
 		httpClient:          http.DefaultClient,
 		latestReleaseURL:    defaultLatestReleaseURL,

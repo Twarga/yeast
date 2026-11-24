@@ -2,6 +2,9 @@
 /.yeast/
 /yeast.yaml
 .claude/
+.commandcode/
+/.agents/
+/skills-lock.json
 .worktrees/
 artifacts/
 dist/
@@ -9,6 +12,10 @@ dist/
 *.state.lock
 vm_test*/
 /opencode.json
+
+# Stray local scratch/tooling artifacts — not part of the repository.
+/promo-video/
+/linux_ricer_project_library.html
 
 # ------------------------------------------------------------------
 # Keep local AI/dev planning notes out of the repository.

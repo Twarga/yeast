@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/Twarga/yeast/internal/app"
+	"github.com/Twarga/yeast/internal/output"
 	"io"
 	"time"
-	"yeast/internal/app"
-	"yeast/internal/output"
 )
 
 func renderCommandOutput(w io.Writer, command string, data any) error {

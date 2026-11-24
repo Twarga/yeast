@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
+	"os"
 	"path/filepath"
 	"strings"
-	"yeast/internal/project"
-	"yeast/internal/state"
+	"syscall"
 )
 
 type SnapshotsOptions struct {
@@ -75,6 +78,9 @@ func (s *Service) Snapshots(ctx context.Context, options SnapshotsOptions) (Snap
 	if err != nil {
 		return SnapshotsResult{}, err
 	}
+	for i := range snapshots {
+		snapshots[i].Bytes = snapshotDirBytes(snapshots[i])
+	}
 
 	return SnapshotsResult{
 		ProjectID: metadata.ID,
@@ -135,7 +141,12 @@ func (s *Service) DeleteSnapshot(ctx context.Context, options DeleteSnapshotOpti
 		return DeleteSnapshotResult{}, WrapError(ErrorCodeNotFound, fmt.Sprintf("snapshot %q not found for instance %q", options.Name, options.Target), nil)
 	}
 
-	if err := s.runtime.DeleteSnapshot(ctx, snapshot.DiskPath); err != nil {
+	if err := s.runtime.DeleteSnapshot(ctx, rtm.DeleteSnapshotPlan{
+		Path:           snapshot.DiskPath,
+		Kind:           snapshot.Kind,
+		RuntimeDir:     instance.RuntimeDir,
+		ActiveDiskPath: instance.ActiveDisk,
+	}); err != nil {
 		if strings.Contains(err.Error(), "no such file or directory") {
 			return DeleteSnapshotResult{}, WrapError(ErrorCodeNotFound, err.Error(), err)
 		}
@@ -172,4 +183,30 @@ func listInstanceSnapshots(currentState state.State, target string) ([]state.Sna
 	}
 
 	return state.SortedSnapshots(instance), nil
+}
+
+// snapshotDirBytes returns the allocated size of a snapshot directory using
+// stat blocks (sparse-aware), falling back to the single disk file for
+// legacy copy snapshots.
+func snapshotDirBytes(snap state.SnapshotState) int64 {
+	root := snap.Dir
+	if root == "" {
+		root = snap.DiskPath
+	}
+	if root == "" {
+		return 0
+	}
+	var total int64
+	_ = filepath.Walk(root, func(_ string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() {
+			return nil
+		}
+		if st, ok := info.Sys().(*syscall.Stat_t); ok && st.Blocks > 0 {
+			total += st.Blocks * 512
+		} else {
+			total += info.Size()
+		}
+		return nil
+	})
+	return total
 }

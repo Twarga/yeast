@@ -20,6 +20,8 @@ const (
 	EventSnapshotCreated    EventName = "snapshot.created"
 	EventRestoreStarted     EventName = "restore.started"
 	EventRestoreFinished    EventName = "restore.finished"
+	EventClockResynced      EventName = "restore.clock-resynced"
+	EventForkCreated        EventName = "fork.created"
 	EventInstanceReady      EventName = "instance.ready"
 	EventInstanceStopped    EventName = "instance.stopped"
 	EventInstanceDestroyed  EventName = "instance.destroyed"

@@ -3,14 +3,14 @@ package app
 import (
 	"context"
 	"errors"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
-	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 func TestRestoreReplacesStoppedInstanceDiskFromSnapshot(t *testing.T) {
@@ -224,7 +224,7 @@ func (f *fakeRestoreRuntime) RestoreSnapshot(ctx context.Context, plan rtm.Snaps
 	return f.restoreSnapshotErr
 }
 
-func (f *fakeRestoreRuntime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
+func (f *fakeRestoreRuntime) DeleteSnapshot(ctx context.Context, plan rtm.DeleteSnapshotPlan) error {
 	return nil
 }
 

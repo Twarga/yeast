@@ -48,7 +48,7 @@ The important constraint is still simple: **keep the core small and reliable bef
 
 ## Current Scope
 
-Yeast `v1.1.5` is the current stable local engine release. It covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, operate inside the guest through an SSH-backed control surface, expose guest services with Docker-style host port forwarding, start new projects from built-in or local templates, expose a versioned JSON/events contract for tools, and define the first LabsBakery integration boundary.
+Yeast `v1.1.5` is the current stable local engine release. It covers one complete loop: boot a VM, provision it into something useful, snapshot a clean baseline, restore it later, attach one private lab network, operate inside the guest through an SSH-backed control surface, expose guest services with Docker-style host port forwarding, start new projects from built-in or local templates, expose a versioned JSON/events contract for tools, and define the first LabsBackery integration boundary.
 
 | Area | Current status |
 |---|---|
@@ -65,8 +65,8 @@ Yeast `v1.1.5` is the current stable local engine release. It covers one complet
 | Private networking | One project-level lab network with static per-instance IPv4 |
 | Guest control | `exec`, `copy`, `logs`, and `inspect` |
 | Templates | Built-in `ubuntu-basic`, `caddy-single-vm`, and `two-vm-lab`; local template directories |
-| LabsBakery integration | Stable local-engine contract, lab package convention, and first attacker/target example package |
-| Examples | Single-VM Ubuntu, Caddy provisioning/reset, first two-VM lab example, and LabsBakery package example |
+| LabsBackery integration | Stable local-engine contract, lab package convention, and first attacker/target example package |
+| Examples | Single-VM Ubuntu, Caddy provisioning/reset, first two-VM lab example, and LabsBackery package example |
 
 If you are installing Yeast:
 
@@ -98,6 +98,12 @@ If you are installing Yeast:
 - `yeast ssh [instance]`
 - `yeast down`
 - `yeast destroy`
+- **v2 — live snapshots**: `yeast snapshot` / `restore` on a *running* VM (RAM+disk checkpoint, ~2s restore), `yeast snapshot --all` / `restore --all`, `yeast fork <vm> --count N`, `yeast destroy --forks`, `yeast clean --snapshots`
+- **v2 — graphical VMs**: `display:` VNC + `gpu: virtio-vga|virtio-gpu|virgl`, `firmware: uefi`, `yeast screenshot`, `yeast input --key/--text`, `mounts:` virtiofs/9p shared folders
+- **v2 — agents**: `yeast daemon` (unix-socket HTTP/SSE API + WebSocket VNC proxy), `yeast mcp` (native MCP, 18 tools, `agent-policy.yaml` gating), `pkg/yeast` Go SDK
+- **v2 — safety**: `egress.mode` open/offline/allowlist, `.yeast/audit.jsonl` + `yeast audit`, QEMU `-sandbox` hardening, `yeast run --rm` ephemeral VMs
+- **v2 — export**: `yeast export --format qcow2|rootfs|iso` (+`--sysprep`), `yeast boot-iso`
+- `yeast migrate` (v1 → v2 project upgrade), `yeast explain`
 - Docker-style `instances[].ports` such as `["8080:80"]`
 - `yeast version`
 - first private lab network with per-instance `LAB IP`
@@ -105,23 +111,22 @@ If you are installing Yeast:
 - versioned `--json` output with `schema_version: "yeast.v1"`
 - browser-terminal-friendly `user` metadata in `status --json` and `inspect --json`
 - `--json --events` streams for `up`, `provision`, `restore`, `down`, and `destroy`
-- LabsBakery integration contract docs
-- LabsBakery lab package convention docs
-- first Yeast-backed LabsBakery attacker/target example package
+- LabsBackery integration contract docs
+- LabsBackery lab package convention docs
+- first Yeast-backed LabsBackery attacker/target example package
 
 ### What is not in the current release yet
 
 - remote template downloads or registry search/update
 - complex template variables
-- daemon or web API
 - Twarga Cloud features
-- LabsBakery web UI
+- LabsBackery web UI
 - packaged `.lbz` import/export
-- project-wide atomic snapshot/reset helper
 - multiple private networks
 - bridge mode
 - DHCP lab guests
 - event history or progress percentages
+- Windows hosts (WSL is experimental)
 
 ---
 
@@ -424,6 +429,24 @@ Then log out and back in before your first `yeast up`.
 | `yeast ssh [instance]` | Open SSH into a running instance |
 | `yeast down` | Stop tracked running instances |
 | `yeast destroy` | Stop and remove tracked runtime data |
+| `yeast snapshot <vm> <name>` | Snapshot (live checkpoint when running, overlay when stopped) |
+| `yeast restore <vm> <name>` | Restore a snapshot (~2s for live checkpoints) |
+| `yeast snapshot --all <name>` | Checkpoint every instance in the project |
+| `yeast restore --all <name>` | Restore the whole project to a shared checkpoint |
+| `yeast fork <vm> --count N [--boot]` | Clone a VM into N copy-on-write siblings |
+| `yeast destroy --forks <vm>` | Remove only a VM's fork group |
+| `yeast screenshot <vm> [-o out.png]` | QMP framebuffer capture |
+| `yeast input <vm> --key/--text` | Programmatic QMP key input |
+| `yeast export <vm> --format qcow2\|rootfs\|iso` | Export an image (`--sysprep`, `-o`) |
+| `yeast boot-iso <path.iso>` | Boot-test an ISO in a scratch VM |
+| `yeast run --rm` | Ephemeral offline VM, destroyed on exit/Ctrl-C |
+| `yeast daemon` | Local HTTP/SSE API + WebSocket VNC proxy (`yeastd`) |
+| `yeast mcp` | Native MCP server (stdio) for AI agents |
+| `yeast audit` | Read `.yeast/audit.jsonl` |
+| `yeast migrate [--dry-run]` | Upgrade a v1 project to v2 layout |
+| `yeast clean [--snapshots]` | Clean broken state / wipe snapshots |
+| `yeast logs <vm> [--network]` | VM log; `--network` shows egress decisions |
+| `yeast explain` | Explain commands and concepts |
 | `yeast version` | Print the current version |
 
 ### JSON mode
@@ -526,7 +549,7 @@ The templates and examples are intentionally small:
 - `ubuntu-basic` keeps the lifecycle-only path minimal
 - `caddy-single-vm` shows provisioning with packages, files, and shell
 - `two-vm-lab` shows the first private lab network
-- `labsbackery-attacker-target-basic` shows the first Yeast-backed LabsBakery lab package convention
+- `labsbackery-attacker-target-basic` shows the first Yeast-backed LabsBackery lab package convention
 
 They exist to prove the current shipped paths cleanly.
 
@@ -580,7 +603,7 @@ That split matters because the long-term direction is larger than the local CLI:
 - Yeast MCP should depend on stable state and JSON output
 - Twarga Cloud should eventually reuse the same engine model remotely
 
-For the current detailed architecture document, see [YEAST_TECHNICAL_ARCHITECTURE.md](YEAST_TECHNICAL_ARCHITECTURE.md).
+For the current detailed architecture and scope analysis, see [SCOPE.md](SCOPE.md).
 
 ---
 
@@ -621,7 +644,7 @@ Current known limits:
 - no remote template downloads or registry workflow
 - no daemon or remote worker mode yet
 - full end-to-end VM smoke testing requires a host with writable `/dev/kvm`, QEMU tools, network access for image downloads, and enough time for cloud-init/SSH readiness
-- first LabsBakery local-engine contract is documented, but LabsBakery itself is not part of Yeast
+- first LabsBackery local-engine contract is documented, but LabsBackery itself is not part of Yeast
 
 That is not a weakness in the README. It is the correct scope boundary for the current release line.
 
@@ -639,13 +662,8 @@ yeast docs installation
 yeast docs release-smoke
 ```
 
-- [YEAST_VISION.md](YEAST_VISION.md)
-- [YEAST_TECHNICAL_DISCOVERY.md](YEAST_TECHNICAL_DISCOVERY.md)
-- [YEAST_TECHNICAL_ARCHITECTURE.md](YEAST_TECHNICAL_ARCHITECTURE.md)
-- [YEAST_V2_IMPLEMENTATION_PLAN.md](YEAST_V2_IMPLEMENTATION_PLAN.md)
-- [YEAST_TEST_PLAN.md](YEAST_TEST_PLAN.md)
-- [YEAST_RELEASE_PLAN.md](YEAST_RELEASE_PLAN.md)
-- [YEAST_PRODUCT_ROADMAP.md](YEAST_PRODUCT_ROADMAP.md)
+- [SCOPE.md](SCOPE.md)
+- [REMAKE_IMPLEMENTATION_PLAN.md](REMAKE_IMPLEMENTATION_PLAN.md)
 - [docs/index.md](docs/index.md)
 - [docs/getting-started/quickstart.md](docs/getting-started/quickstart.md)
 - [docs/getting-started/installation.md](docs/getting-started/installation.md)
@@ -664,7 +682,6 @@ yeast docs release-smoke
 - [docs/labs/06-multi-vm-private-networking.md](docs/labs/06-multi-vm-private-networking.md)
 - [docs/labs/07-templates-and-reusable-labs.md](docs/labs/07-templates-and-reusable-labs.md)
 - [CHANGELOG.md](CHANGELOG.md)
-- [TASKS.md](TASKS.md)
 
 ---
 

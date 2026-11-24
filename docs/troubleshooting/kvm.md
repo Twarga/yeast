@@ -15,4 +15,5 @@ sudo usermod -aG kvm "$USER"
 
 Log out and back in.
 
-Without KVM, QEMU may fall back to slower software emulation.
+Yeast starts QEMU with `-enable-kvm` and has no software-emulation fallback —
+without a readable/writable `/dev/kvm`, `yeast up` fails before the VM boots.

@@ -4,15 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/config"
+	"github.com/Twarga/yeast/internal/guest"
+	"github.com/Twarga/yeast/internal/project"
+	"github.com/Twarga/yeast/internal/provision"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"os"
 	"path/filepath"
 	"time"
-	"yeast/internal/config"
-	"yeast/internal/guest"
-	"yeast/internal/project"
-	"yeast/internal/provision"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 type ProvisionOptions struct {

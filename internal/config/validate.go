@@ -140,6 +140,51 @@ func Validate(cfg *Config) error {
 			}
 			usedBinds[key] = fmt.Sprintf("instance %s ports[%d]", instance.Name, i)
 		}
+		switch instance.Firmware {
+		case "", "bios", "uefi":
+		default:
+			return fmt.Errorf("instance %s has invalid firmware %q (expected bios or uefi)", instance.Name, instance.Firmware)
+		}
+		if err := validateDisplay(instance); err != nil {
+			return err
+		}
+		if instance.Display != nil && instance.Display.Enabled && instance.Display.Port != 0 {
+			displayHost := strings.TrimSpace(instance.Display.Host)
+			if displayHost == "" {
+				displayHost = DefaultDisplayHost
+			}
+			key := portBindKey(displayHost, instance.Display.Port)
+			if previous, exists := usedBinds[key]; exists {
+				return fmt.Errorf("instance %s display port %s:%d conflicts with %s", instance.Name, displayHost, instance.Display.Port, previous)
+			}
+			usedBinds[key] = fmt.Sprintf("instance %s display", instance.Name)
+		}
+		if err := validateMounts(instance); err != nil {
+			return err
+		}
+		if instance.Egress != nil {
+			switch strings.TrimSpace(instance.Egress.Mode) {
+			case "", "open":
+				if len(instance.Egress.Allowlist) > 0 {
+					return fmt.Errorf("instance %s egress allowlist requires mode: allowlist", instance.Name)
+				}
+			case "offline":
+				if len(instance.Egress.Allowlist) > 0 {
+					return fmt.Errorf("instance %s egress mode offline does not take an allowlist", instance.Name)
+				}
+			case "allowlist":
+				if len(instance.Egress.Allowlist) == 0 {
+					return fmt.Errorf("instance %s egress mode allowlist requires at least one allowed domain", instance.Name)
+				}
+				for _, domain := range instance.Egress.Allowlist {
+					if strings.TrimSpace(domain) == "" || strings.ContainsAny(domain, " \t/:") {
+						return fmt.Errorf("instance %s has invalid egress allowlist domain %q", instance.Name, domain)
+					}
+				}
+			default:
+				return fmt.Errorf("instance %s has invalid egress mode %q (expected open, offline, or allowlist)", instance.Name, instance.Egress.Mode)
+			}
+		}
 		if len(instance.Networks) > 1 {
 			return fmt.Errorf("instance %s can attach to at most one private network", instance.Name)
 		}
@@ -182,6 +227,82 @@ func Validate(cfg *Config) error {
 		}
 	}
 
+	return nil
+}
+
+var resolutionPattern = regexp.MustCompile(`^([0-9]+)x([0-9]+)$`)
+
+// validateDisplay checks a display block. Field values are strict even when
+// disabled; the host port only joins collision tracking when enabled.
+func validateDisplay(instance Instance) error {
+	if instance.Display == nil {
+		return nil
+	}
+	d := instance.Display
+	switch d.Type {
+	case "", "vnc":
+	default:
+		return fmt.Errorf("instance %s has invalid display.type %q (only vnc is supported)", instance.Name, d.Type)
+	}
+	switch d.GPU {
+	case "", "virtio-vga", "virtio-gpu", "virgl":
+	default:
+		return fmt.Errorf("instance %s has invalid display.gpu %q (expected virtio-vga, virtio-gpu, or virgl)", instance.Name, d.GPU)
+	}
+	host := strings.TrimSpace(d.Host)
+	if host != "" && host != "127.0.0.1" && host != "0.0.0.0" {
+		ip := net.ParseIP(host)
+		if ip == nil || ip.To4() == nil {
+			return fmt.Errorf("instance %s display.host must be a valid IPv4 address (got %q)", instance.Name, d.Host)
+		}
+	}
+	if d.Port != 0 && (d.Port < 5900 || d.Port > 65535) {
+		return fmt.Errorf("instance %s display.port must be 0 (auto) or in 5900..65535 (got %d)", instance.Name, d.Port)
+	}
+	if res := strings.TrimSpace(d.Resolution); res != "" {
+		m := resolutionPattern.FindStringSubmatch(res)
+		if m == nil {
+			return fmt.Errorf("instance %s display.resolution must be <width>x<height> (got %q)", instance.Name, d.Resolution)
+		}
+		w, _ := strconv.Atoi(m[1])
+		h, _ := strconv.Atoi(m[2])
+		if w < 640 || w > 7680 || h < 480 || h > 4320 {
+			return fmt.Errorf("instance %s display.resolution %q is out of range (640x480..7680x4320)", instance.Name, d.Resolution)
+		}
+	}
+	return nil
+}
+
+// validateMounts checks host-directory mount blocks. Relative sources are
+// resolved against the project root at plan time (internal/app); here we
+// enforce shape and safety of the guest target and driver values.
+func validateMounts(instance Instance) error {
+	seenTargets := make(map[string]struct{}, len(instance.Mounts))
+	for i, mount := range instance.Mounts {
+		source := strings.TrimSpace(mount.Source)
+		if source == "" {
+			return fmt.Errorf("instance %s mounts[%d] source is required", instance.Name, i)
+		}
+		if strings.ContainsAny(source, "\n\x00") {
+			return fmt.Errorf("instance %s mounts[%d] source contains an invalid character", instance.Name, i)
+		}
+		target := strings.TrimSpace(mount.Target)
+		if target == "" {
+			return fmt.Errorf("instance %s mounts[%d] target is required", instance.Name, i)
+		}
+		if !strings.HasPrefix(target, "/") || strings.Contains(target, "..") || strings.ContainsAny(target, "\n\x00") {
+			return fmt.Errorf("instance %s mounts[%d] target must be a clean absolute guest path (got %q)", instance.Name, i, mount.Target)
+		}
+		if _, exists := seenTargets[target]; exists {
+			return fmt.Errorf("instance %s mounts[%d] target %q is already mounted by this instance", instance.Name, i, target)
+		}
+		seenTargets[target] = struct{}{}
+		switch mount.Driver {
+		case "", "auto", "virtiofs", "9p":
+		default:
+			return fmt.Errorf("instance %s mounts[%d] has invalid driver %q (expected auto, virtiofs, or 9p)", instance.Name, i, mount.Driver)
+		}
+	}
 	return nil
 }
 

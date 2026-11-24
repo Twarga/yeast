@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/Twarga/yeast/internal/app"
+	"github.com/Twarga/yeast/internal/output"
+	"github.com/Twarga/yeast/internal/ui"
+	"github.com/Twarga/yeast/internal/ui/sprites"
 	"os"
 	"time"
-	"yeast/internal/app"
-	"yeast/internal/output"
 
 	"github.com/spf13/cobra"
 )
@@ -35,8 +37,10 @@ func newUpCmd(service *app.Service) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if events == nil && !outputQuiet && !outputJSON {
-				events = output.NewProgressSink(cmd.ErrOrStderr())
+			var stage *ui.LiveStage
+			if events == nil {
+				stage, events = newProgressStage(cmd.ErrOrStderr(), sprites.MoodWorking, ui.Voice.Up(0))
+				defer stageStop(stage)
 			}
 			result, err := service.Up(context.Background(), app.UpOptions{
 				Events:      events,
@@ -45,6 +49,7 @@ func newUpCmd(service *app.Service) *cobra.Command {
 				Sequential:  sequential,
 				Profile:     profile,
 			})
+			stageFinish(stage, err)
 			if err != nil {
 				return err
 			}

@@ -3,12 +3,12 @@ package app
 import (
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/host"
+	"github.com/Twarga/yeast/internal/project"
+	"github.com/Twarga/yeast/internal/provision/cloudinit"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"yeast/internal/host"
-	"yeast/internal/project"
-	"yeast/internal/provision/cloudinit"
 )
 
 type CheckStatus string
@@ -30,7 +30,7 @@ type DoctorResult struct {
 	Checks      []DoctorCheck `json:"checks"`
 	Blockers    int           `json:"blockers"`
 	Warnings    int           `json:"warnings"`
-	Environment string        `json:"environment,omitempty"` // e.g. "native-linux", "wsl2"
+	Environment string        `json:"environment,omitempty"`  // e.g. "native-linux", "wsl2"
 	SupportTier string        `json:"support_tier,omitempty"` // "A", "B", "C", "D"
 }
 

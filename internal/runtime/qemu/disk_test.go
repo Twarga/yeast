@@ -2,11 +2,11 @@ package qemu
 
 import (
 	"context"
+	"github.com/Twarga/yeast/internal/runtime"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
-	"yeast/internal/runtime"
 )
 
 func TestBuildCreateOverlayArgsWithoutSize(t *testing.T) {

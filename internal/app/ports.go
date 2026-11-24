@@ -2,11 +2,11 @@ package app
 
 import (
 	"fmt"
+	"github.com/Twarga/yeast/internal/config"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"strconv"
 	"strings"
-	"yeast/internal/config"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 type PortForwardResult struct {
@@ -78,6 +78,9 @@ func usedHostBindings(current state.State) map[string]string {
 		}
 		for _, forward := range instance.ServicePorts {
 			result[hostPortKey(forward.Host, forward.HostPort)] = name + " port"
+		}
+		if instance.Display != nil && instance.Display.Port > 0 {
+			result[hostPortKey(instance.Display.Host, instance.Display.Port)] = name + " display"
 		}
 	}
 	return result

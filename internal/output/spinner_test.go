@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"yeast/internal/app"
+	"github.com/Twarga/yeast/internal/app"
 )
 
 func TestSpinnerStartStop(t *testing.T) {

@@ -2,12 +2,12 @@ package app
 
 import (
 	"errors"
+	"github.com/Twarga/yeast/internal/project"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
-	"yeast/internal/project"
 )
 
 func TestInitCreatesConfigAndProjectMetadata(t *testing.T) {

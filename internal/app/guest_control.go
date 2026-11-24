@@ -20,12 +20,20 @@ type GuestCommandResult struct {
 	FinishedAt time.Time     `json:"finished_at"`
 	Duration   time.Duration `json:"duration"`
 	TimedOut   bool          `json:"timed_out"`
+	// Truncated is true when stdout and/or stderr exceeded the agent-safe
+	// output cap; the untruncated payload is at FullOutputPath.
+	Truncated      bool   `json:"truncated,omitempty"`
+	FullOutputPath string `json:"full_output_path,omitempty"`
 }
 
 type ExecOptions struct {
 	GuestTargetOptions
 	Command []string
 	Timeout time.Duration
+	Cwd     string
+	Env     map[string]string
+	User    string
+	Stdin   []byte
 }
 
 type ExecResult struct {
@@ -74,6 +82,9 @@ type InspectResult struct {
 type LogsOptions struct {
 	GuestTargetOptions
 	TailLines int
+	// Network reads the egress-proxy decision log (network.log) instead of
+	// the VM console log — populated when egress.mode=allowlist.
+	Network bool
 }
 
 type LogsResult struct {

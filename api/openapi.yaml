@@ -1,0 +1,294 @@
+openapi: 3.1.0
+info:
+  title: Yeast Local Daemon API (yeastd)
+  version: "1.0"
+  description: |
+    Local HTTP API served by `yeast daemon` on a user-private unix socket
+    (`$XDG_RUNTIME_DIR/yeast/yeastd.sock`, mode 0600). An optional loopback
+    TCP listener (`--tcp`) requires `Authorization: Bearer <token>`.
+
+    All endpoints delegate to the same `app.Service` and state locks the CLI
+    uses. Mutating actions stream progress events over
+    `GET /v1/projects/{id}/events` (Server-Sent Events, `yeast.v2` JSONL).
+servers:
+  - url: http://localhost
+    description: unix socket (yeastd.sock) or loopback TCP
+paths:
+  /healthz:
+    get:
+      summary: Liveness probe
+      responses:
+        "200":
+          description: Daemon is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  service: { type: string }
+                  version: { type: string }
+  /v1/projects:
+    get:
+      summary: List registered projects
+      responses:
+        "200":
+          description: Registered project IDs and roots
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Result"
+    post:
+      summary: Register a project root with the daemon
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [root]
+              properties:
+                root: { type: string, description: absolute path to the project directory }
+      responses:
+        "200": { description: Registered, schema: { $ref: "#/components/schemas/Result" } }
+  /v1/projects/{id}/status:
+    get:
+      summary: Project status (all instances)
+      parameters: [{ $ref: "#/components/parameters/ProjectId" }]
+      responses:
+        "200": { description: StatusResult, schema: { $ref: "#/components/schemas/Result" } }
+  /v1/projects/{id}/up:
+    post:
+      summary: Boot/reconcile the project
+      parameters: [{ $ref: "#/components/parameters/ProjectId" }]
+      responses:
+        "200": { description: UpResult, schema: { $ref: "#/components/schemas/Result" } }
+  /v1/projects/{id}/down:
+    post:
+      summary: Stop all instances
+      parameters: [{ $ref: "#/components/parameters/ProjectId" }]
+      responses:
+        "200": { description: DownResult, schema: { $ref: "#/components/schemas/Result" } }
+  /v1/projects/{id}/exec:
+    post:
+      summary: Run a command inside an instance over SSH
+      parameters: [{ $ref: "#/components/parameters/ProjectId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [command]
+              properties:
+                instance: { type: string }
+                command: { type: array, items: { type: string } }
+                timeout_ms: { type: integer }
+                cwd: { type: string }
+                env: { type: object, additionalProperties: { type: string } }
+                user: { type: string }
+                stdin_b64: { type: string, description: base64-encoded stdin }
+      responses:
+        "200": { description: ExecResult (stdout/stderr capped at 64 KiB tail; full_output_path has the rest), schema: { $ref: "#/components/schemas/Result" } }
+  /v1/projects/{id}/snapshot:
+    post:
+      summary: Create a snapshot (stopped → overlay, running → live; all → project checkpoint)
+      parameters: [{ $ref: "#/components/parameters/ProjectId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                instance: { type: string }
+                name: { type: string }
+                description: { type: string }
+                all: { type: boolean }
+      responses:
+        "200": { description: SnapshotResult or SnapshotAllResult, schema: { $ref: "#/components/schemas/Result" } }
+  /v1/projects/{id}/restore:
+    post:
+      summary: Restore instance(s) from a snapshot
+      parameters: [{ $ref: "#/components/parameters/ProjectId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                instance: { type: string }
+                name: { type: string }
+                all: { type: boolean }
+      responses:
+        "200": { description: RestoreResult or RestoreAllResult, schema: { $ref: "#/components/schemas/Result" } }
+  /v1/projects/{id}/export:
+    post:
+      summary: Export an instance to qcow2/rootfs/iso
+      operationId: exportInstance
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [instance, format, output]
+              properties:
+                instance: { type: string }
+                format: { type: string, enum: [qcow2, rootfs, iso] }
+                output: { type: string }
+                sysprep: { type: boolean }
+                skel_user: { type: string }
+                builder: { type: string }
+      responses:
+        '200':
+          description: Export result
+  /v1/projects/{id}/fork:
+    post:
+      summary: Create copy-on-write sibling instances
+      parameters: [{ $ref: "#/components/parameters/ProjectId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [instance]
+              properties:
+                instance: { type: string }
+                count: { type: integer, default: 1 }
+                from: { type: string, description: snapshot name to fork from }
+                boot: { type: boolean }
+      responses:
+        "200": { description: ForkResult, schema: { $ref: "#/components/schemas/Result" } }
+  /v1/projects/{id}/screenshot:
+    post:
+      summary: QMP screendump of a display-enabled instance
+      parameters: [{ $ref: "#/components/parameters/ProjectId" }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [instance]
+              properties:
+                instance: { type: string }
+                output_path: { type: string }
+      responses:
+        "200": { description: ScreenshotResult, schema: { $ref: "#/components/schemas/Result" } }
+  /v1/projects/{id}/input:
+    post:
+      summary: Inject keystrokes via QMP (keys chord or text)
+      parameters: [{ $ref: "#/components/parameters/ProjectId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [instance]
+              properties:
+                instance: { type: string }
+                keys: { type: array, items: { type: string } }
+                text: { type: string }
+                hold_time_ms: { type: integer }
+      responses:
+        "200": { description: InputResult, schema: { $ref: "#/components/schemas/Result" } }
+  /v1/projects/{id}/clean:
+    post:
+      summary: Clean runtime state, or all snapshots with {"snapshots":true}
+      parameters: [{ $ref: "#/components/parameters/ProjectId" }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                snapshots: { type: boolean }
+      responses:
+        "200": { description: CleanResult, schema: { $ref: "#/components/schemas/Result" } }
+  /v1/projects/{id}/destroy:
+    post:
+      summary: Destroy instances (or only forks of one instance)
+      parameters: [{ $ref: "#/components/parameters/ProjectId" }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                keep_files: { type: boolean }
+                forks: { type: string, description: parent instance name }
+      responses:
+        "200": { description: DestroyResult, schema: { $ref: "#/components/schemas/Result" } }
+  /v1/projects/{id}/snapshots:
+    get:
+      summary: List instance snapshots (with kind + allocated size)
+      parameters:
+        - { $ref: "#/components/parameters/ProjectId" }
+        - { name: instance, in: query, required: true, schema: { type: string } }
+      responses:
+        "200": { description: SnapshotsResult, schema: { $ref: "#/components/schemas/Result" } }
+  /v1/projects/{id}/logs:
+    get:
+      summary: Instance serial/console logs
+      parameters:
+        - { $ref: "#/components/parameters/ProjectId" }
+        - { name: instance, in: query, required: true, schema: { type: string } }
+      responses:
+        "200": { description: LogsResult, schema: { $ref: "#/components/schemas/Result" } }
+  /v1/projects/{id}/events:
+    get:
+      summary: Server-Sent Events stream of app.Event (yeast.v2 JSONL)
+      parameters: [{ $ref: "#/components/parameters/ProjectId" }]
+      responses:
+        "200":
+          description: SSE stream; each `data:` line is one app.Event JSON
+          content:
+            text/event-stream:
+              schema: { type: string }
+  /v1/projects/{id}/instances/{name}/vnc:
+    get:
+      summary: WebSocket-to-VNC proxy (binary frames piped to the instance display)
+      parameters:
+        - { $ref: "#/components/parameters/ProjectId" }
+        - { name: name, in: path, required: true, schema: { type: string } }
+      responses:
+        "101": { description: WebSocket upgrade; bidirectional binary pipe to VNC TCP }
+        "412": { description: Instance has no display }
+components:
+  parameters:
+    ProjectId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+  schemas:
+    Result:
+      type: object
+      description: Command envelope — `data` holds the command-specific result.
+      properties:
+        ok: { type: boolean }
+        command: { type: string }
+        data: { type: object }
+    Error:
+      type: object
+      properties:
+        ok: { type: boolean, enum: [false] }
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum: [unknown, invalid_argument, not_found, conflict, failed_precondition, timeout, runtime_error, provisioning_failed, guest_error, internal, unauthorized]
+            message: { type: string }
+  securitySchemes:
+    BearerToken:
+      type: http
+      scheme: bearer
+security: []

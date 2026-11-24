@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/config"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"path/filepath"
 	"sort"
 	"time"
-	"yeast/internal/config"
-	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 type DownOptions struct {
@@ -29,7 +29,8 @@ type DownResult struct {
 	Instances []DownInstanceResult `json:"instances"`
 }
 
-func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, error) {
+func (s *Service) Down(ctx context.Context, options DownOptions) (out DownResult, err error) {
+	started := time.Now()
 	root := options.ProjectRoot
 	if root == "" {
 		root = "."
@@ -38,6 +39,7 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 	if err != nil {
 		return DownResult{}, WrapError(ErrorCodeInternal, fmt.Sprintf("resolve project root: %v", err), err)
 	}
+	defer func() { s.auditCall(ctx, absoluteRoot, "down", map[string]any{}, started, err) }()
 
 	metadata, err := project.LoadMetadata(absoluteRoot)
 	if err != nil {
@@ -104,6 +106,7 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 			instance.ManagementIP = ""
 			instance.SSHPort = 0
 			instance.ServicePorts = nil
+			instance.Display = nil
 			currentState.Instances[name] = instance
 			result.Instances = append(result.Instances, DownInstanceResult{
 				Name:   name,
@@ -141,6 +144,7 @@ func (s *Service) Down(ctx context.Context, options DownOptions) (DownResult, er
 		instance.ManagementIP = ""
 		instance.SSHPort = 0
 		instance.ServicePorts = nil
+		instance.Display = nil
 		instance.LastError = ""
 		currentState.Instances[name] = instance
 		result.Instances = append(result.Instances, DownInstanceResult{

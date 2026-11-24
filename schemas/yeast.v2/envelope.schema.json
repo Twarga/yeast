@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yeast.dev/schemas/yeast.v2/envelope.schema.json",
+  "title": "Yeast v2 JSON Envelope",
+  "description": "Additive evolution of the frozen yeast.v1 envelope: adds meta.actor/duration_ms and error.retryable/error.recovery. Emitted by yeastd API, SDK, and MCP surfaces; --json CLI stays on yeast.v1.",
+  "oneOf": [
+    { "$ref": "#/$defs/success" },
+    { "$ref": "#/$defs/error" }
+  ],
+  "$defs": {
+    "success": {
+      "type": "object",
+      "required": ["ok", "schema_version", "command"],
+      "properties": {
+        "ok": { "const": true },
+        "schema_version": { "const": "yeast.v2" },
+        "command": { "type": "string", "minLength": 1 },
+        "data": {
+          "description": "Command-specific payload; superset of yeast.v1 (snapshot/fork/display metadata included)."
+        },
+        "meta": { "$ref": "#/$defs/meta" }
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "required": ["ok", "schema_version", "error"],
+      "properties": {
+        "ok": { "const": false },
+        "schema_version": { "const": "yeast.v2" },
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": {
+              "type": "string",
+              "enum": [
+                "unknown",
+                "invalid_argument",
+                "not_found",
+                "conflict",
+                "failed_precondition",
+                "timeout",
+                "runtime_error",
+                "provisioning_failed",
+                "guest_error",
+                "internal",
+                "unauthorized",
+                "policy_denied"
+              ]
+            },
+            "message": { "type": "string" },
+            "details": { "type": "object" },
+            "retryable": {
+              "type": "boolean",
+              "description": "Whether retrying the same call may succeed (timeouts, transient guest/SSH failures)."
+            },
+            "recovery": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Ordered remediation suggestions surfaced from app error recovery hints."
+            }
+          },
+          "additionalProperties": false
+        },
+        "meta": { "$ref": "#/$defs/meta" }
+      },
+      "additionalProperties": false
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "type": "string",
+          "description": "Who triggered the action: cli | api | mcp:<client> | sdk"
+        },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "project_id": { "type": "string" },
+        "daemon": { "type": "string", "description": "yeastd version that served the call" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

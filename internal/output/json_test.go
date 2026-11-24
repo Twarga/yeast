@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/Twarga/yeast/internal/app"
 	"testing"
-	"yeast/internal/app"
 )
 
 func TestRenderJSONSuccess(t *testing.T) {

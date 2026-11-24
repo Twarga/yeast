@@ -58,4 +58,4 @@ SMOKE_ROOT=/tmp/yeast-smoke-run scripts/smoke/tutorials.sh lab08_json_events
 - The harness runs real QEMU/KVM flows for the VM labs, so it needs the same host prerequisites as the tutorials.
 - A full `all` run takes several minutes.
 - The workspace is intentionally left behind on success so logs and generated projects can be inspected.
-- Yeast v1.1 does not support general `ports:` forwarding in `yeast.yaml`; use SSH tunnels or guest-side checks instead.
+- Yeast v1.1 supports host-to-guest `instances[].ports` forwarding in `yeast.yaml` (e.g. `["8080:80"]`); use SSH tunnels only for ports not declared ahead of time.

@@ -410,3 +410,168 @@ func TestValidateManagementHost(t *testing.T) {
 		t.Fatal("expected invalid management_host to fail")
 	}
 }
+
+func TestValidateRejectsInvalidFirmware(t *testing.T) {
+	cfg := validConfig()
+	cfg.Instances[0].Firmware = "uefi-secure"
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected invalid firmware error")
+	}
+	cfg.Instances[0].Firmware = "uefi"
+	if err := Validate(cfg); err != nil {
+		t.Fatalf("uefi should be valid: %v", err)
+	}
+}
+
+func TestValidateDisplay(t *testing.T) {
+	cfg := validConfig()
+
+	cfg.Instances[0].Display = &DisplayConfig{Enabled: true, Type: "spice"}
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected invalid display.type error")
+	}
+
+	cfg.Instances[0].Display = &DisplayConfig{Enabled: true, Type: "vnc", GPU: "amdgpu"}
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected invalid display.gpu error")
+	}
+
+	cfg.Instances[0].Display = &DisplayConfig{Enabled: true, Type: "vnc", Port: 5800}
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected display.port range error")
+	}
+	cfg.Instances[0].Display = &DisplayConfig{Enabled: true, Type: "vnc", Port: 8080}
+	if err := Validate(cfg); err != nil {
+		t.Fatalf("explicit display port in 5900..65535 should be valid: %v", err)
+	}
+
+	cfg.Instances[0].Display = &DisplayConfig{Enabled: true, Type: "vnc", Resolution: "1280-800"}
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected display.resolution format error")
+	}
+
+	cfg.Instances[0].Display = &DisplayConfig{Enabled: true, Type: "vnc", Resolution: "320x200"}
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected display.resolution range error")
+	}
+
+	cfg.Instances[0].Display = &DisplayConfig{Enabled: true, Type: "vnc", Host: "not-an-ip"}
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected display.host ip error")
+	}
+
+	cfg.Instances[0].Display = &DisplayConfig{
+		Enabled: true, Type: "vnc", GPU: "virgl", Port: 5901, Resolution: "1920x1080",
+	}
+	if err := Validate(cfg); err != nil {
+		t.Fatalf("valid display config rejected: %v", err)
+	}
+}
+
+func TestValidateDisplayPortCollision(t *testing.T) {
+	cfg := validConfig()
+	cfg.Instances[0].SSHPort = 5901
+	cfg.Instances[0].Display = &DisplayConfig{Enabled: true, Type: "vnc", Port: 5901}
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected display/ssh port collision error")
+	}
+
+	// two instances sharing a display port collide
+	cfg = validConfig()
+	cfg.Instances[0].Display = &DisplayConfig{Enabled: true, Type: "vnc", Port: 5901}
+	cfg.Instances = append(cfg.Instances, Instance{
+		Name: "db", Image: "ubuntu-24.04", SSHPort: 2300,
+		Ports: []PortForward{{Host: "127.0.0.1", HostPort: 5901, GuestPort: 80, Protocol: "tcp"}},
+	})
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected display/port-forward collision error")
+	}
+
+	// disabled display never collides
+	cfg = validConfig()
+	cfg.Instances[0].SSHPort = 5901
+	cfg.Instances[0].Display = &DisplayConfig{Enabled: false, Type: "vnc", Port: 5901}
+	if err := Validate(cfg); err != nil {
+		t.Fatalf("disabled display should not collide: %v", err)
+	}
+}
+
+func TestValidateMounts(t *testing.T) {
+	cfg := validConfig()
+
+	cfg.Instances[0].Mounts = []MountConfig{{Target: "/mnt/x"}}
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected missing mount source error")
+	}
+
+	cfg.Instances[0].Mounts = []MountConfig{{Source: "./d"}}
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected missing mount target error")
+	}
+
+	cfg.Instances[0].Mounts = []MountConfig{{Source: "./d", Target: "mnt/x"}}
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected non-absolute mount target error")
+	}
+
+	cfg.Instances[0].Mounts = []MountConfig{{Source: "./d", Target: "/mnt/../etc"}}
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected traversal mount target error")
+	}
+
+	cfg.Instances[0].Mounts = []MountConfig{{Source: "./d", Target: "/mnt/x", Driver: "nfs"}}
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected invalid mount driver error")
+	}
+
+	cfg.Instances[0].Mounts = []MountConfig{
+		{Source: "./a", Target: "/mnt/x"},
+		{Source: "./b", Target: "/mnt/x"},
+	}
+	if err := Validate(cfg); err == nil {
+		t.Fatal("expected duplicate mount target error")
+	}
+
+	cfg.Instances[0].Mounts = []MountConfig{
+		{Source: "./dotfiles", Target: "/mnt/dotfiles", Driver: "9p", ReadOnly: true},
+		{Source: "/abs/path", Target: "/mnt/code", Driver: "virtiofs"},
+	}
+	if err := Validate(cfg); err != nil {
+		t.Fatalf("valid mounts rejected: %v", err)
+	}
+}
+
+func TestValidateEgressModes(t *testing.T) {
+	base := func(eg *EgressConfig) *Config {
+		return &Config{
+			Version: 1,
+			Instances: []Instance{{
+				Name: "vm1", Image: "ubuntu", Memory: 512, CPUs: 1, Egress: eg,
+			}},
+		}
+	}
+	for _, mode := range []string{"", "open", "offline"} {
+		cfg := base(&EgressConfig{Mode: mode})
+		if err := Validate(cfg); err != nil {
+			t.Fatalf("mode %q must be valid: %v", mode, err)
+		}
+	}
+	if err := Validate(base(&EgressConfig{Mode: "allowlist", Allowlist: []string{"example.com"}})); err != nil {
+		t.Fatalf("allowlist with domains must be valid: %v", err)
+	}
+	if err := Validate(base(&EgressConfig{Mode: "allowlist"})); err == nil {
+		t.Fatal("allowlist without domains must fail")
+	}
+	if err := Validate(base(&EgressConfig{Mode: "bogus"})); err == nil {
+		t.Fatal("unknown mode must fail")
+	}
+	if err := Validate(base(&EgressConfig{Mode: "offline", Allowlist: []string{"x.com"}})); err == nil {
+		t.Fatal("offline with allowlist must fail")
+	}
+	if err := Validate(base(&EgressConfig{Allowlist: []string{"x.com"}})); err == nil {
+		t.Fatal("allowlist without mode must fail")
+	}
+	if err := Validate(base(&EgressConfig{Mode: "allowlist", Allowlist: []string{"bad domain/"}})); err == nil {
+		t.Fatal("invalid domain must fail")
+	}
+}

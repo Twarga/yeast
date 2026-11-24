@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
+	"github.com/Twarga/yeast/internal/app"
+	"github.com/Twarga/yeast/internal/ui"
+	"github.com/Twarga/yeast/internal/ui/sprites"
 	"time"
-	"yeast/internal/app"
-	"yeast/internal/output"
 
 	"github.com/spf13/cobra"
 )
@@ -25,8 +26,10 @@ func newProvisionCmd(service *app.Service) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if events == nil && !outputQuiet && !outputJSON {
-				events = output.NewProgressSink(cmd.ErrOrStderr())
+			var stage *ui.LiveStage
+			if events == nil {
+				stage, events = newProgressStage(cmd.ErrOrStderr(), sprites.MoodWorking, ui.Voice.Provision())
+				defer stageStop(stage)
 			}
 			options := app.ProvisionOptions{}
 			options.Events = events
@@ -34,6 +37,7 @@ func newProvisionCmd(service *app.Service) *cobra.Command {
 				options.Target = args[0]
 			}
 			result, err := service.Provision(context.Background(), options)
+			stageFinish(stage, err)
 			if err != nil {
 				return err
 			}

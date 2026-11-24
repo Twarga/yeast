@@ -3,14 +3,14 @@ package app
 import (
 	"context"
 	"errors"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
-	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 func TestListInstanceSnapshotsReturnsSortedSnapshots(t *testing.T) {
@@ -240,8 +240,8 @@ func (f *fakeSnapshotsRuntime) RestoreSnapshot(ctx context.Context, plan rtm.Sna
 	return nil
 }
 
-func (f *fakeSnapshotsRuntime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
-	f.deleteSnapshotPath = snapshotPath
+func (f *fakeSnapshotsRuntime) DeleteSnapshot(ctx context.Context, plan rtm.DeleteSnapshotPlan) error {
+	f.deleteSnapshotPath = plan.Path
 	return f.deleteSnapshotErr
 }
 

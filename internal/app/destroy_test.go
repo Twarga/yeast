@@ -3,14 +3,14 @@ package app
 import (
 	"context"
 	"errors"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
-	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 func TestDestroyStopsAndRemovesTrackedInstances(t *testing.T) {
@@ -415,7 +415,7 @@ func (f *fakeDestroyRuntime) RestoreSnapshot(ctx context.Context, plan rtm.Snaps
 	return nil
 }
 
-func (f *fakeDestroyRuntime) DeleteSnapshot(ctx context.Context, snapshotPath string) error {
+func (f *fakeDestroyRuntime) DeleteSnapshot(ctx context.Context, plan rtm.DeleteSnapshotPlan) error {
 	return nil
 }
 

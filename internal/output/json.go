@@ -2,8 +2,8 @@ package output
 
 import (
 	"encoding/json"
+	"github.com/Twarga/yeast/internal/app"
 	"io"
-	"yeast/internal/app"
 )
 
 func RenderJSONSuccess(w io.Writer, command string, data any) error {

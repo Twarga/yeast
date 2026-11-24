@@ -4,15 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/config"
+	"github.com/Twarga/yeast/internal/guest"
+	"github.com/Twarga/yeast/internal/project"
+	provssh "github.com/Twarga/yeast/internal/provision/ssh"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"os"
 	"path/filepath"
 	"time"
-	"yeast/internal/config"
-	"yeast/internal/guest"
-	"yeast/internal/project"
-	provssh "yeast/internal/provision/ssh"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 func (s *Service) Copy(ctx context.Context, options CopyOptions) (CopyResult, error) {
@@ -91,9 +91,16 @@ func (s *Service) Copy(ctx context.Context, options CopyOptions) (CopyResult, er
 	if err != nil {
 		return CopyResult{}, err
 	}
-	instanceCfg, ok := lookupConfigInstance(cfg, selectedName)
-	if !ok {
-		return CopyResult{}, WrapError(ErrorCodeNotFound, fmt.Sprintf("instance %q not found in config", selectedName), nil)
+	sshUser := selectedState.User
+	if instanceCfg, ok := lookupConfigInstance(cfg, selectedName); ok && instanceCfg.User != "" {
+		sshUser = instanceCfg.User
+	} else if selectedState.ForkOf != "" {
+		if parentCfg, ok := lookupConfigInstance(cfg, selectedState.ForkOf); ok && parentCfg.User != "" && sshUser == "" {
+			sshUser = parentCfg.User
+		}
+	}
+	if sshUser == "" {
+		sshUser = "yeast"
 	}
 	managementHost := resolveManagementHost(cfg)
 	address, err := s.sshAddress(managementHost, selectedState.SSHPort)
@@ -116,7 +123,7 @@ func (s *Service) Copy(ctx context.Context, options CopyOptions) (CopyResult, er
 	switch options.Direction {
 	case CopyToGuest:
 		err = transport.Upload(ctx, provssh.UploadRequest{
-			User:        instanceCfg.User,
+			User:        sshUser,
 			Host:        managementHost,
 			Port:        selectedState.SSHPort,
 			Source:      localSource,
@@ -125,7 +132,7 @@ func (s *Service) Copy(ctx context.Context, options CopyOptions) (CopyResult, er
 		})
 	case CopyFromGuest:
 		err = transport.Download(ctx, provssh.DownloadRequest{
-			User:        instanceCfg.User,
+			User:        sshUser,
 			Host:        managementHost,
 			Port:        selectedState.SSHPort,
 			Source:      options.Source,

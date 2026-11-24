@@ -4,6 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/config"
+	"github.com/Twarga/yeast/internal/guest"
+	"github.com/Twarga/yeast/internal/images"
+	"github.com/Twarga/yeast/internal/project"
+	"github.com/Twarga/yeast/internal/provision"
+	"github.com/Twarga/yeast/internal/provision/cloudinit"
+	provssh "github.com/Twarga/yeast/internal/provision/ssh"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"hash/fnv"
 	"net"
 	"net/netip"
@@ -13,15 +22,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"yeast/internal/config"
-	"yeast/internal/guest"
-	"yeast/internal/images"
-	"yeast/internal/project"
-	"yeast/internal/provision"
-	"yeast/internal/provision/cloudinit"
-	provssh "yeast/internal/provision/ssh"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 const (
@@ -58,6 +58,7 @@ type UpInstanceResult struct {
 	SSHAddress string              `json:"ssh_address,omitempty"`
 	SSHPort    int                 `json:"ssh_port,omitempty"`
 	Ports      []PortForwardResult `json:"ports,omitempty"`
+	Display    *DisplayResult      `json:"display,omitempty"`
 }
 
 type UpResult struct {
@@ -76,7 +77,8 @@ type ProfilePhase struct {
 	Duration time.Duration `json:"duration_ms"`
 }
 
-func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
+func (s *Service) Up(ctx context.Context, options UpOptions) (out UpResult, err error) {
+	started := time.Now()
 	root := options.ProjectRoot
 	if root == "" {
 		root = "."
@@ -85,6 +87,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 	if err != nil {
 		return UpResult{}, WrapError(ErrorCodeInternal, fmt.Sprintf("resolve project root: %v", err), err)
 	}
+	defer func() { s.auditCall(ctx, absoluteRoot, "up", map[string]any{}, started, err) }()
 
 	metadata, err := project.LoadMetadata(absoluteRoot)
 	if err != nil {
@@ -130,6 +133,14 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			"instances": len(cfg.Instances),
 		},
 	})
+
+	// Fail fast before any image download or QEMU spawn: QEMU always runs
+	// with accel=kvm, so a missing or unreadable /dev/kvm is a blocker.
+	if s.checkKVMReady != nil {
+		if err := s.checkKVMReady(); err != nil {
+			return UpResult{}, kvmPreconditionError(err)
+		}
+	}
 
 	managementHost := resolveManagementHost(cfg)
 
@@ -197,6 +208,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 				SSHAddress: address,
 				SSHPort:    existing.SSHPort,
 				Ports:      buildPortForwardResults(existing.ServicePorts),
+				Display:    displayResultFromState(existing.Display),
 			})
 			allocatedPorts[existing.SSHPort] = true
 			allocatedHostBinds[hostPortKey(managementHost, existing.SSHPort)] = instance.Name + " ssh"
@@ -314,6 +326,14 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 		if err := reserveConfiguredPortBindings(instance, managementHost, sshPort, allocatedHostBinds); err != nil {
 			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
 		}
+		displayPlan, err := buildDisplayPlan(instance, portAvailable, allocatedHostBinds)
+		if err != nil {
+			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
+		}
+		mountPlans, err := resolveMountPlans(absoluteRoot, instance)
+		if err != nil {
+			return UpResult{}, WrapError(ErrorCodeInvalidArgument, err.Error(), err)
+		}
 		allocatedPorts[sshPort] = true
 		allocatedHostBinds[hostPortKey(managementHost, sshPort)] = instance.Name + " ssh"
 
@@ -328,6 +348,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			Hostname:      instance.Hostname,
 			Instance:      instance,
 			AuthorizedKey: userKey,
+			Mounts:        mountSpecs(mountPlans),
 		})
 		if err != nil {
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
@@ -365,16 +386,29 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 
+		previousState, hadPreviousState := currentState.Instances[instance.Name]
+		diskPath := filepath.Join(runtimeDir, "disk.qcow2")
+		activeDisk := ""
+		if hadPreviousState && previousState.ActiveDisk != "" {
+			if _, statErr := os.Stat(previousState.ActiveDisk); statErr == nil {
+				diskPath = previousState.ActiveDisk
+				activeDisk = previousState.ActiveDisk
+			}
+		}
+
 		plan := rtm.MachinePlan{
 			Name:          instance.Name,
 			RuntimeDir:    runtimeDir,
 			LogPath:       filepath.Join(runtimeDir, "vm.log"),
 			MemoryMiB:     instance.Memory,
 			CPUs:          instance.CPUs,
+			Firmware:      instance.Firmware,
+			Display:       displayPlan,
+			Mounts:        mountPlans,
 			SeedImagePath: seedResult.ISOPath,
 			Disk: rtm.DiskPlan{
 				BaseImagePath: cachePaths.ImageFile,
-				DiskPath:      filepath.Join(runtimeDir, "disk.qcow2"),
+				DiskPath:      diskPath,
 				Size:          instance.DiskSize,
 			},
 			Networks: rtm.NetworkPlan{
@@ -387,6 +421,10 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 				},
 				Lab: labNetworkPlan,
 			},
+			Egress: egressPlan(instance.Egress),
+		}
+		if err := writeEgressAllowlist(runtimeDir, instance.Egress); err != nil {
+			return UpResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 		}
 
 		if _, err := s.runtime.PrepareDisk(ctx, plan); err != nil {
@@ -401,7 +439,6 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			},
 		})
 
-		previousState, hadPreviousState := currentState.Instances[instance.Name]
 		previousProvisioningStatus := state.ProvisioningStatusNotStarted
 		if hadPreviousState {
 			previousProvisioningStatus = previousState.ProvisioningStatus
@@ -413,9 +450,12 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 			ServicePorts:       buildStatePortForwards(instance.Ports),
 			User:               instance.User,
 			RuntimeDir:         runtimeDir,
+			ActiveDisk:         activeDisk,
 			ProvisionLogPath:   filepath.Join(runtimeDir, "provision.log"),
 			ProvisioningStatus: previousProvisioningStatus,
 			LastError:          "",
+			Display:            buildDisplayState(displayPlan, instance.Firmware),
+			Mounts:             buildMountStates(mountPlans),
 		}
 		if labNetworkPlan != nil {
 			instState.LabIP = labNetworkPlan.IPv4.String()
@@ -534,6 +574,7 @@ func (s *Service) Up(ctx context.Context, options UpOptions) (UpResult, error) {
 				SSHAddress: address,
 				SSHPort:    bp.sshPort,
 				Ports:      buildPortForwardResults(bp.instanceState.ServicePorts),
+				Display:    displayResultFromState(bp.instanceState.Display),
 			},
 		}
 	}
@@ -776,6 +817,9 @@ func (s *Service) startWithManagementPortRetry(ctx context.Context, plan rtm.Mac
 			return rtm.RuntimeInstance{}, WrapError(ErrorCodeInternal, conflictErr.Error(), conflictErr)
 		}
 		if !conflict {
+			// Persist the boot plan so live snapshots/forks can respawn with
+			// identical topology. Best-effort: failure just disables those.
+			_ = writeBootPlan(plan.RuntimeDir, plan)
 			return started, nil
 		}
 

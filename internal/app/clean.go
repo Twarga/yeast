@@ -4,14 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/config"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"os"
 	"path/filepath"
 	"sort"
 	"time"
-	"yeast/internal/config"
-	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 type CleanOptions struct {
@@ -235,4 +235,82 @@ func cleanedPIDsByName(cleaned []rtm.CleanupResult) map[string][]int {
 		grouped[result.Name] = append(grouped[result.Name], result.PID)
 	}
 	return grouped
+}
+
+// CleanSnapshots deletes every snapshot for every instance — chain-safe —
+// then wipes each instance's snapshot directory.
+func (s *Service) CleanSnapshots(ctx context.Context, options CleanOptions) (CleanResult, error) {
+	root := options.ProjectRoot
+	if root == "" {
+		root = "."
+	}
+	absoluteRoot, err := filepath.Abs(root)
+	if err != nil {
+		return CleanResult{}, WrapError(ErrorCodeInternal, fmt.Sprintf("resolve project root: %v", err), err)
+	}
+	metadata, err := project.LoadMetadata(absoluteRoot)
+	if err != nil {
+		if errors.Is(err, project.ErrMetadataNotFound) {
+			return CleanResult{}, WrapError(ErrorCodePrecondition, err.Error(), err)
+		}
+		return CleanResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	yeastHome, err := s.resolveYeastHome()
+	if err != nil {
+		return CleanResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	paths, err := project.NewPaths(yeastHome, metadata)
+	if err != nil {
+		return CleanResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	lock, err := state.Acquire(paths.StateLock, state.DefaultLockOptions())
+	if err != nil {
+		return CleanResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	defer func() { _ = lock.Release() }()
+	currentState, err := state.Load(paths.StateFile, metadata.ID)
+	if err != nil {
+		return CleanResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+
+	result := CleanResult{ProjectID: metadata.ID, Instances: []CleanInstanceResult{}}
+	for _, name := range sortedInstanceNames(currentState) {
+		instance := currentState.Instances[name]
+		if instance.Status == "running" {
+			return CleanResult{}, WrapError(ErrorCodePrecondition, fmt.Sprintf("instance %q is running — stop it before cleaning snapshots", name), nil)
+		}
+		deleted := 0
+		for snapName, snap := range instance.Snapshots {
+			kind := snap.Kind
+			if kind == "" {
+				kind = "copy"
+			}
+			if snap.Dir != "" {
+				_ = os.Chmod(filepath.Join(snap.Dir, "base.qcow2"), 0644)
+			}
+			if err := s.runtime.DeleteSnapshot(ctx, rtm.DeleteSnapshotPlan{
+				Path: snap.DiskPath, Kind: kind,
+				RuntimeDir: instance.RuntimeDir, ActiveDiskPath: instance.ActiveDisk,
+			}); err != nil {
+				return CleanResult{}, WrapError(ErrorCodeInternal, fmt.Sprintf("delete snapshot %q for %s: %v", snapName, name, err), err)
+			}
+			deleted++
+		}
+		if snapRoot := snapDirOf(paths, name); snapRoot != "" {
+			_ = os.RemoveAll(snapRoot)
+		}
+		instance.Snapshots = nil
+		currentState.Instances[name] = instance
+		result.Instances = append(result.Instances, CleanInstanceResult{
+			Name: name, Status: fmt.Sprintf("%d snapshot(s) cleaned", deleted),
+		})
+		emitEvent(options.Events, "clean", EventInstanceDestroyed, EventOptions{
+			ProjectID: metadata.ID, Instance: name,
+			Message: fmt.Sprintf("Cleaned %d snapshot(s)", deleted),
+		})
+	}
+	if err := state.Save(paths.StateFile, currentState); err != nil {
+		return CleanResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
+	}
+	return result, nil
 }

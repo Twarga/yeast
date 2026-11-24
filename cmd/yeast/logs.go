@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
-	"yeast/internal/app"
+	"github.com/Twarga/yeast/internal/app"
 
 	"github.com/spf13/cobra"
 )
 
 func newLogsCmd(service *app.Service) *cobra.Command {
 	var tailLines int
+	var network bool
 
 	cmd := &cobra.Command{
 		Use:   "logs <instance>",
@@ -18,6 +19,7 @@ func newLogsCmd(service *app.Service) *cobra.Command {
 			result, err := service.Logs(context.Background(), app.LogsOptions{
 				GuestTargetOptions: app.GuestTargetOptions{Target: args[0]},
 				TailLines:          tailLines,
+				Network:            network,
 			})
 			if err != nil {
 				return err
@@ -27,5 +29,6 @@ func newLogsCmd(service *app.Service) *cobra.Command {
 	}
 
 	cmd.Flags().IntVar(&tailLines, "tail", 0, "Only return the last N lines")
+	cmd.Flags().BoolVar(&network, "network", false, "Read the egress-proxy network decision log instead of the console log")
 	return cmd
 }

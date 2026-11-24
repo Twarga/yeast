@@ -1,6 +1,6 @@
 package provision
 
-import "yeast/internal/config"
+import "github.com/Twarga/yeast/internal/config"
 
 type StepOrigin string
 

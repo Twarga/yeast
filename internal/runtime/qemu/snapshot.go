@@ -3,10 +3,10 @@ package qemu
 import (
 	"context"
 	"fmt"
+	"github.com/Twarga/yeast/internal/runtime"
 	"io"
 	"os"
 	"path/filepath"
-	"yeast/internal/runtime"
 )
 
 func CreateSnapshotCopy(ctx context.Context, plan runtime.SnapshotPlan) error {

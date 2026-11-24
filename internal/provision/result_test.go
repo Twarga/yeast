@@ -1,8 +1,8 @@
 package provision
 
 import (
+	"github.com/Twarga/yeast/internal/state"
 	"testing"
-	"yeast/internal/state"
 )
 
 func TestNewResultInitializesProvisioningState(t *testing.T) {

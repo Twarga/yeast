@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/Twarga/yeast/internal/docs"
 	"io"
-	"yeast/internal/docs"
 
 	"github.com/spf13/cobra"
 )

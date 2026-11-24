@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"os"
 	"path/filepath"
 	"strings"
-	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 func (s *Service) Inspect(ctx context.Context, options InspectOptions) (InspectResult, error) {
@@ -86,7 +86,17 @@ func (s *Service) Logs(ctx context.Context, options LogsOptions) (LogsResult, er
 		return LogsResult{}, WrapError(ErrorCodeInternal, fmt.Sprintf("instance %q runtime directory is missing", options.Target), nil)
 	}
 
+	// Graphical VMs log serial boot output to console.log (QEMU stderr stays
+	// in vm.log); headless VMs multiplex serial into vm.log via -nographic.
+	// --network reads the egress-proxy decision log instead.
 	logPath := filepath.Join(instance.RuntimeDir, "vm.log")
+	if options.Network {
+		logPath = filepath.Join(instance.RuntimeDir, "network.log")
+	} else if console := filepath.Join(instance.RuntimeDir, "console.log"); instance.Display != nil {
+		if _, err := os.Stat(console); err == nil {
+			logPath = console
+		}
+	}
 	content, err := os.ReadFile(logPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {

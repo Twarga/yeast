@@ -3,8 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/app"
 	"time"
-	"yeast/internal/app"
 
 	"github.com/spf13/cobra"
 )

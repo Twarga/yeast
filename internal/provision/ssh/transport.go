@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -23,12 +24,19 @@ type Runner interface {
 	Run(ctx context.Context, command string, args []string) (CommandResult, error)
 }
 
+// stdinRunner is an optional Runner extension for commands that need data
+// piped to the remote process's stdin (e.g. `yeast exec` piping).
+type stdinRunner interface {
+	RunWithInput(ctx context.Context, command string, args []string, stdin []byte) (CommandResult, error)
+}
+
 type RunRequest struct {
 	User    string
 	Host    string
 	Port    int
 	Command string
 	Timeout time.Duration
+	Stdin   []byte
 }
 
 type RunResult struct {
@@ -119,7 +127,7 @@ func (t *LocalTransport) Run(ctx context.Context, request RunRequest) (RunResult
 	args = append(args, t.controlArgs()...)
 	args = append(args, fmt.Sprintf("%s@%s", request.User, request.Host))
 	args = append(args, request.Command)
-	result, err := runWithTransientSSHRetry(ctx, runner, "ssh", args, request.Timeout)
+	result, err := runWithTransientSSHRetry(ctx, runner, "ssh", args, request.Timeout, request.Stdin)
 	result = stripKnownHostWarning(result)
 	if err != nil {
 		return RunResult(result), err
@@ -193,10 +201,14 @@ func (t *LocalTransport) Download(ctx context.Context, request DownloadRequest) 
 	return err
 }
 
-func runWithTransientSSHRetry(ctx context.Context, runner Runner, command string, args []string, timeout time.Duration) (CommandResult, error) {
+func runWithTransientSSHRetry(ctx context.Context, runner Runner, command string, args []string, timeout time.Duration, stdin ...[]byte) (CommandResult, error) {
 	started := time.Now()
 	var last CommandResult
 	var lastErr error
+	var input []byte
+	if len(stdin) > 0 {
+		input = stdin[0]
+	}
 
 	for attempt := 1; attempt <= transientSSHMaxAttempts; attempt++ {
 		runCtx := ctx
@@ -212,7 +224,13 @@ func runWithTransientSSHRetry(ctx context.Context, runner Runner, command string
 			runCtx, cancel = context.WithTimeout(ctx, remaining)
 		}
 
-		result, err := runner.Run(runCtx, command, args)
+		var result CommandResult
+		var err error
+		if sr, ok := runner.(stdinRunner); ok && input != nil {
+			result, err = sr.RunWithInput(runCtx, command, args, input)
+		} else {
+			result, err = runner.Run(runCtx, command, args)
+		}
 		cancel()
 		if err == nil {
 			return result, nil
@@ -246,7 +264,18 @@ func isTransientSSHFailure(result CommandResult) bool {
 type OSRunner struct{}
 
 func (OSRunner) Run(ctx context.Context, command string, args []string) (CommandResult, error) {
+	return runOS(ctx, command, args, nil)
+}
+
+func (OSRunner) RunWithInput(ctx context.Context, command string, args []string, stdin []byte) (CommandResult, error) {
+	return runOS(ctx, command, args, stdin)
+}
+
+func runOS(ctx context.Context, command string, args []string, stdin []byte) (CommandResult, error) {
 	cmd := exec.CommandContext(ctx, command, args...)
+	if stdin != nil {
+		cmd.Stdin = bytes.NewReader(stdin)
+	}
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -357,6 +386,54 @@ func validateDownloadRequest(request DownloadRequest) error {
 	}
 	if request.Destination == "" {
 		return fmt.Errorf("destination is required")
+	}
+	return nil
+}
+
+// StreamRequest pipes a remote command's stdout to an io.Writer — used for
+// large exports (rootfs tarballs) where buffering the whole output in
+// memory is not acceptable.
+type StreamRequest struct {
+	User    string
+	Host    string
+	Port    int
+	Command string
+	Timeout time.Duration
+	Stdout  io.Writer
+	Stdin   io.Reader
+}
+
+// Streamer is an optional transport capability for streaming remote stdout.
+type Streamer interface {
+	Stream(ctx context.Context, request StreamRequest) error
+}
+
+// Stream runs `ssh <cmd>` with stdout wired directly to request.Stdout.
+// No retry: a partial stream cannot be replayed — failures surface as an
+// error (and a truncated output file the caller must discard).
+func (t *LocalTransport) Stream(ctx context.Context, request StreamRequest) error {
+	if request.Stdout == nil {
+		return fmt.Errorf("stream stdout writer is required")
+	}
+	if request.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, request.Timeout)
+		defer cancel()
+	}
+	args := buildSSHBaseArgs(request.User, request.Host, request.Port)
+	args = append(args, t.controlArgs()...)
+	args = append(args, fmt.Sprintf("%s@%s", request.User, request.Host))
+	args = append(args, request.Command)
+
+	cmd := exec.CommandContext(ctx, "ssh", args...)
+	cmd.Stdout = request.Stdout
+	if request.Stdin != nil {
+		cmd.Stdin = request.Stdin
+	}
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("ssh stream: %w: %s", err, strings.TrimSpace(stderr.String()))
 	}
 	return nil
 }

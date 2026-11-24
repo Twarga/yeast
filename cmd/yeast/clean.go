@@ -2,15 +2,17 @@ package main
 
 import (
 	"context"
+	"github.com/Twarga/yeast/internal/app"
+	"github.com/Twarga/yeast/internal/ui"
+	"github.com/Twarga/yeast/internal/ui/sprites"
 	"time"
-	"yeast/internal/app"
-	"yeast/internal/output"
 
 	"github.com/spf13/cobra"
 )
 
 func newCleanCmd(service *app.Service) *cobra.Command {
 	var timeout time.Duration
+	var snapshots bool
 
 	cmd := &cobra.Command{
 		Use:   "clean",
@@ -21,13 +23,27 @@ func newCleanCmd(service *app.Service) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if events == nil && !outputQuiet && !outputJSON {
-				events = output.NewProgressSink(cmd.ErrOrStderr())
+			var stage *ui.LiveStage
+			if events == nil {
+				stage, events = newProgressStage(cmd.ErrOrStderr(), sprites.MoodWorking, ui.Voice.Clean())
+				defer stageStop(stage)
+			}
+			if snapshots {
+				result, err := service.CleanSnapshots(context.Background(), app.CleanOptions{
+					Timeout: timeout,
+					Events:  events,
+				})
+				stageFinish(stage, err)
+				if err != nil {
+					return err
+				}
+				return renderCommandOutputWithTiming(cmd.OutOrStdout(), "clean", result, time.Since(start))
 			}
 			result, err := service.Clean(context.Background(), app.CleanOptions{
 				Timeout: timeout,
 				Events:  events,
 			})
+			stageFinish(stage, err)
 			if err != nil {
 				return err
 			}
@@ -36,5 +52,6 @@ func newCleanCmd(service *app.Service) *cobra.Command {
 	}
 
 	cmd.Flags().DurationVar(&timeout, "timeout", 0, "Maximum time to wait for orphan cleanup")
+	cmd.Flags().BoolVar(&snapshots, "snapshots", false, "Delete all snapshots for every instance (keeps running disks)")
 	return cmd
 }

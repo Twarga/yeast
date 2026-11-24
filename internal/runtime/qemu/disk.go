@@ -3,13 +3,13 @@ package qemu
 import (
 	"context"
 	"fmt"
+	rtm "github.com/Twarga/yeast/internal/runtime"
 	"os"
 	"os/exec"
 	"path/filepath"
 	goruntime "runtime"
 	"strconv"
 	"strings"
-	rtm "yeast/internal/runtime"
 )
 
 const qemuImgBinary = "qemu-img"
@@ -28,6 +28,14 @@ func PrepareDisk(ctx context.Context, plan rtm.MachinePlan) (rtm.DiskPlan, error
 	if plan.RuntimeDir != "" {
 		if err := os.MkdirAll(plan.RuntimeDir, 0755); err != nil {
 			return rtm.DiskPlan{}, fmt.Errorf("create runtime directory %s: %w", plan.RuntimeDir, err)
+		}
+	}
+
+	// UEFI machines get their own persistent EFI variable store on first
+	// preparation. Idempotent — an existing ovmf_vars.fd is kept.
+	if plan.Firmware == "uefi" && plan.RuntimeDir != "" {
+		if _, _, err := prepareFirmwareFn(plan.RuntimeDir); err != nil {
+			return rtm.DiskPlan{}, err
 		}
 	}
 

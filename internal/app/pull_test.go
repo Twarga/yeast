@@ -3,10 +3,10 @@ package app
 import (
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/images"
 	"os"
 	"path/filepath"
 	"testing"
-	"yeast/internal/images"
 )
 
 func TestPullListReturnsSupportedImages(t *testing.T) {

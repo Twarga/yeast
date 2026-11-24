@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/config"
+	"github.com/Twarga/yeast/internal/guest"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"os"
 	"path/filepath"
-	"yeast/internal/config"
-	"yeast/internal/guest"
-	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 type SSHOptions struct {
@@ -89,16 +89,23 @@ func (s *Service) SSH(ctx context.Context, options SSHOptions) (SSHResult, error
 		return SSHResult{}, err
 	}
 
-	instanceCfg, ok := lookupConfigInstance(cfg, selectedName)
-	if !ok {
-		return SSHResult{}, WrapError(ErrorCodeNotFound, fmt.Sprintf("instance %q not found in config", selectedName), nil)
+	sshUser := selectedState.User
+	if instanceCfg, ok := lookupConfigInstance(cfg, selectedName); ok && instanceCfg.User != "" {
+		sshUser = instanceCfg.User
+	} else if selectedState.ForkOf != "" {
+		if parentCfg, ok := lookupConfigInstance(cfg, selectedState.ForkOf); ok && parentCfg.User != "" && sshUser == "" {
+			sshUser = parentCfg.User
+		}
+	}
+	if sshUser == "" {
+		sshUser = "yeast"
 	}
 	managementHost := resolveManagementHost(cfg)
 	address, err := s.sshAddress(managementHost, selectedState.SSHPort)
 	if err != nil {
 		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
-	args, err := guest.BuildSSHArgs(instanceCfg.User, managementHost, selectedState.SSHPort)
+	args, err := guest.BuildSSHArgs(sshUser, managementHost, selectedState.SSHPort)
 	if err != nil {
 		return SSHResult{}, WrapError(ErrorCodeInternal, err.Error(), err)
 	}
@@ -120,7 +127,7 @@ func (s *Service) SSH(ctx context.Context, options SSHOptions) (SSHResult, error
 	return SSHResult{
 		InstanceName: selectedName,
 		Address:      address,
-		User:         instanceCfg.User,
+		User:         sshUser,
 		Port:         selectedState.SSHPort,
 	}, nil
 }

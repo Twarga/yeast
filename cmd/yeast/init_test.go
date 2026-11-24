@@ -3,11 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/Twarga/yeast/internal/app"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-	"yeast/internal/app"
 )
 
 func TestInitListTemplatesJSON(t *testing.T) {
@@ -75,7 +75,7 @@ func TestInitTemplatesAliasJSON(t *testing.T) {
 	}
 
 	var payload struct {
-		OK      bool `json:"ok"`
+		OK      bool   `json:"ok"`
 		Command string `json:"command"`
 		Data    struct {
 			Templates []app.TemplateSummary `json:"templates"`

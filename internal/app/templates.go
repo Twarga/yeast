@@ -1,6 +1,6 @@
 package app
 
-import "yeast/internal/templates"
+import "github.com/Twarga/yeast/internal/templates"
 
 type TemplateSummary struct {
 	Name        string `json:"name"`

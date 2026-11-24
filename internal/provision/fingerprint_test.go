@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"yeast/internal/config"
+	"github.com/Twarga/yeast/internal/config"
 )
 
 func TestProvisionFingerprintChangesWhenFileContentChanges(t *testing.T) {

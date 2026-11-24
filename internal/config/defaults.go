@@ -11,6 +11,10 @@ const (
 	DefaultUser           = "yeast"
 	DefaultSudo           = "nopasswd"
 	DefaultManagementHost = "127.0.0.1"
+	DefaultDisplayType    = "vnc"
+	DefaultDisplayHost    = "127.0.0.1"
+	DefaultDisplayGPU     = "virtio-vga"
+	DefaultMountDriver    = "auto"
 )
 
 func ApplyDefaults(cfg *Config) error {
@@ -56,6 +60,38 @@ func ApplyDefaults(cfg *Config) error {
 			} else {
 				instance.Ports[j].Protocol = strings.ToLower(strings.TrimSpace(instance.Ports[j].Protocol))
 			}
+		}
+
+		instance.Firmware = strings.ToLower(strings.TrimSpace(instance.Firmware))
+		if instance.Firmware == "" {
+			instance.Firmware = "bios"
+		}
+		if instance.Display != nil {
+			display := instance.Display
+			if !display.Enabled && (strings.TrimSpace(display.Type) != "" || strings.TrimSpace(display.GPU) != "" || strings.TrimSpace(display.Resolution) != "" || display.Port > 0) {
+				display.Enabled = true
+			}
+			display.Type = strings.ToLower(strings.TrimSpace(display.Type))
+			if display.Type == "" {
+				display.Type = DefaultDisplayType
+			}
+			display.Host = strings.TrimSpace(display.Host)
+			if display.Host == "" {
+				display.Host = DefaultDisplayHost
+			}
+			display.GPU = strings.ToLower(strings.TrimSpace(display.GPU))
+			if display.GPU == "" {
+				display.GPU = DefaultDisplayGPU
+			}
+			display.Resolution = strings.ToLower(strings.TrimSpace(display.Resolution))
+		}
+		for j := range instance.Mounts {
+			mount := &instance.Mounts[j]
+			mount.Driver = strings.ToLower(strings.TrimSpace(mount.Driver))
+			if mount.Driver == "" {
+				mount.Driver = DefaultMountDriver
+			}
+			mount.Target = strings.TrimSpace(mount.Target)
 		}
 	}
 

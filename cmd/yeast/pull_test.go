@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/Twarga/yeast/internal/app"
 	"testing"
-	"yeast/internal/app"
 )
 
 func TestPullUnsupportedImageRendersInvalidArgumentJSON(t *testing.T) {

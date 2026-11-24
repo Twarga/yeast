@@ -1,11 +1,11 @@
 package templates
 
 import (
+	"github.com/Twarga/yeast/internal/config"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-	"yeast/internal/config"
 )
 
 func TestOfficialBuiltinsMaterializeValidProjects(t *testing.T) {

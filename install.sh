@@ -12,7 +12,7 @@
 set -euo pipefail
 
 # ─── Configuration ─────────────────────────────────────────���────────────────
-YEAST_VERSION="${YEAST_VERSION:-v1.1.4}"
+YEAST_VERSION="${YEAST_VERSION:-v1.1.5}"
 YEAST_INSTALL_DIR="${YEAST_INSTALL_DIR:-/usr/local/bin}"
 YEAST_BIN_PATH="${YEAST_INSTALL_DIR}/yeast"
 YEAST_INSTALL_MODE="${YEAST_INSTALL_MODE:-binary}"
@@ -385,7 +385,7 @@ install_from_source() {
   local version="${YEAST_REF}"
   run_required "Building CLI binary" bash -c "
     cd '${SRC_DIR}'
-    '${go_bin}' build -trimpath -ldflags '-s -w -X yeast/internal/app.Version=${version}' -o '${WORKDIR}/yeast' ./cmd/yeast
+    '${go_bin}' build -trimpath -ldflags '-s -w -X github.com/Twarga/yeast/internal/app.Version=${version}' -o '${WORKDIR}/yeast' ./cmd/yeast
   "
 
   need_root install -d "${YEAST_INSTALL_DIR}"
@@ -498,8 +498,8 @@ print_summary() {
 
   if [[ "${IS_WSL}" -eq 1 ]]; then
     printf '\n'
-    yellow "WSL${WSL_VERSION} detected: Yeast is installed, but KVM acceleration is not guaranteed."
-    dim "  - VMs may fall back to TCG (software emulation) which is ~10x slower."
+    yellow "WSL${WSL_VERSION} detected: Yeast requires /dev/kvm — QEMU runs with KVM acceleration only."
+    dim "  - Enable nested virtualization: set nestedVirtualization=true under [wsl2] in %UserProfile%\.wslconfig, then 'wsl --shutdown'."
     dim "  - Run 'yeast doctor' to check your WSL setup."
     dim "  - See docs/getting-started/installation-windows-wsl.md for details."
   fi
@@ -535,8 +535,8 @@ main() {
   section "Platform"
   key_value "arch" "${YEAST_ARCH}"
   key_value "environment" "$(
-    if [[ "${IS_WSL}" -eq 1 ]]; then echo "WSL${WSL_VERSION} (beta — KVM not guaranteed)";
-    elif [[ "${IS_CONTAINER}" -eq 1 ]]; then echo "container (KVM not available)";
+    if [[ "${IS_WSL}" -eq 1 ]]; then echo "WSL${WSL_VERSION} (beta — requires nested virtualization / KVM)";
+    elif [[ "${IS_CONTAINER}" -eq 1 ]]; then echo "container (requires /dev/kvm passthrough)";
     else echo "native Linux"; fi
   )"
   key_value "mode" "${YEAST_INSTALL_MODE}"

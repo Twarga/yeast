@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"yeast/internal/app"
+	"github.com/Twarga/yeast/internal/app"
 
 	"github.com/spf13/cobra"
 )

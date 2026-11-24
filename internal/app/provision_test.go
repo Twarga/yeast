@@ -3,15 +3,15 @@ package app
 import (
 	"context"
 	"errors"
+	"github.com/Twarga/yeast/internal/guest"
+	"github.com/Twarga/yeast/internal/project"
+	provssh "github.com/Twarga/yeast/internal/provision/ssh"
+	"github.com/Twarga/yeast/internal/state"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
-	"yeast/internal/guest"
-	"yeast/internal/project"
-	provssh "yeast/internal/provision/ssh"
-	"yeast/internal/state"
 )
 
 func TestProvisionRerunsForReachableInstance(t *testing.T) {

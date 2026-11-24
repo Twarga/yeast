@@ -2,10 +2,10 @@ package qemu
 
 import (
 	"context"
+	"github.com/Twarga/yeast/internal/runtime"
 	"os"
 	"path/filepath"
 	"testing"
-	"yeast/internal/runtime"
 )
 
 func TestCreateSnapshotCopyCopiesDisk(t *testing.T) {

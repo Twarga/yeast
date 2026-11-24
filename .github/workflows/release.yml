@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write # cosign keyless signing (OIDC)
 
 jobs:
   build-and-release:
@@ -17,7 +18,10 @@ jobs:
         include:
           - os: linux
             arch: amd64
-            artifact: yeast_linux_amd64
+            artifact: yeast-linux-amd64
+          - os: linux
+            arch: arm64
+            artifact: yeast-linux-arm64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,98 +33,84 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq qemu-system-x86 qemu-kvm libvirt-daemon-system
-
-      - name: Prepare dist directory
-        run: mkdir -p dist
-
-      - name: Build binary
+      - name: Build static binary via build-release.sh
         env:
-          CGO_ENABLED: 1
-          GOOS: ${{ matrix.os }}
-          GOARCH: ${{ matrix.arch }}
+          TARGET_OS: ${{ matrix.os }}
+          TARGET_ARCH: ${{ matrix.arch }}
         run: |
-          VERSION="${GITHUB_REF_NAME}"
-          go build -trimpath -ldflags \
-            "-s -w -X yeast/internal/app.Version=${VERSION}" \
-            -o dist/yeast ./cmd/yeast
+          # Single source of truth: scripts/build-release.sh (CGO_ENABLED=0).
+          scripts/build-release.sh "${GITHUB_REF_NAME}"
 
       - name: Verify binary
         run: |
-          ./dist/yeast version
+          ./dist/${{ matrix.artifact }} version
+          ldd ./dist/${{ matrix.artifact }} 2>&1 | grep -q "not a dynamic executable" \
+            && echo "static binary confirmed" \
+            || { echo "binary is not static"; exit 1; }
 
-      - name: Package as tar.gz
+      - name: Package tarball
         run: |
           cd dist
-          tar -czf ${{ matrix.artifact }}.tar.gz yeast
+          cp ${{ matrix.artifact }} yeast
+          tar -czf yeast_${{ matrix.os }}_${{ matrix.arch }}.tar.gz yeast
+          rm yeast
+          sha256sum yeast_${{ matrix.os }}_${{ matrix.arch }}.tar.gz > yeast_${{ matrix.os }}_${{ matrix.arch }}.tar.gz.sha256
 
-      - name: Create checksums
-        run: |
-          cd dist
-          sha256sum ${{ matrix.artifact }}.tar.gz > SHA256SUMS.txt
-
-      - name: Upload artifacts
+      - name: Collect artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: dist/${{ matrix.artifact }}.tar.gz
+          path: |
+            dist/${{ matrix.artifact }}
+            dist/${{ matrix.artifact }}.sha256
+            dist/yeast_${{ matrix.os }}_${{ matrix.arch }}.tar.gz
+            dist/yeast_${{ matrix.os }}_${{ matrix.arch }}.tar.gz.sha256
+          retention-days: 5
 
-      - name: Upload checksums
-        uses: actions/upload-artifact@v4
-        with:
-          name: SHA256SUMS
-          path: dist/SHA256SUMS.txt
-
-  create-release:
-    name: Create GitHub Release
-    needs: build-and-release
+  release:
+    name: Publish Release
     runs-on: ubuntu-latest
+    needs: build-and-release
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          path: dist
+          path: artifacts
 
-      - name: Organize release files
+      - name: Assemble dist + SHA256SUMS.txt
         run: |
-          mkdir -p release
-          cp dist/yeast_linux_amd64/yeast_linux_amd64.tar.gz release/
-          cp dist/SHA256SUMS/SHA256SUMS.txt release/
-          ls -la release/
+          mkdir -p dist
+          find artifacts -type f \( -name 'yeast-*' -o -name 'yeast_*' \) -exec cp {} dist/ \;
+          cd dist
+          cat *.sha256 | sort -u > SHA256SUMS.txt
+          rm -f yeast_*.tar.gz.sha256
+          ls -la
 
-      - name: Extract release notes from CHANGELOG
-        id: changelog
+      - name: Generate SBOM
         run: |
-          VERSION="${GITHUB_REF_NAME}"
-          # Extract the section for this version from CHANGELOG.md
-          # Using sed: print lines between "## [vX.Y.Z]" and next "## ["
-          sed -n "/^## \[${VERSION}\]/,/^## \[/p" CHANGELOG.md | head -n -1 > release-notes.md
-          
-          # If not found or empty, use fallback
-          if [ ! -s release-notes.md ]; then
-            echo "## yeast ${VERSION}" > release-notes.md
-            echo "" >> release-notes.md
-            echo "See [CHANGELOG.md](https://github.com/Twarga/yeast/blob/main/CHANGELOG.md) for details." >> release-notes.md
-          fi
-          
-          cat release-notes.md
+          go version -m dist/yeast-linux-amd64 > dist/SBOM.txt || true
+          go list -m all >> dist/SBOM.txt 2>/dev/null || echo "sbom: build deps only" >> dist/SBOM.txt
 
-      - name: Create Release
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign artifacts (keyless)
+        env:
+          COSIGN_YES: "true"
+        run: |
+          cd dist
+          for f in SHA256SUMS.txt *.tar.gz; do
+            cosign sign-blob --yes \
+              --output-signature "${f}.sig" \
+              --output-certificate "${f}.pem" \
+              "${f}"
+          done
+
+      - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: yeast ${{ github.ref_name }}
-          body_path: release-notes.md
-          files: |
-            release/yeast_linux_amd64.tar.gz
-            release/SHA256SUMS.txt
-          draft: false
-          prerelease: false
+          files: dist/*
+          generate_release_notes: true

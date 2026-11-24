@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Twarga/yeast/internal/project"
+	rtm "github.com/Twarga/yeast/internal/runtime"
+	"github.com/Twarga/yeast/internal/state"
 	"path/filepath"
 	"sort"
 	"time"
-	"yeast/internal/project"
-	rtm "yeast/internal/runtime"
-	"yeast/internal/state"
 )
 
 type DestroyOptions struct {
@@ -30,7 +30,8 @@ type DestroyResult struct {
 	FilesDeleted bool                    `json:"files_deleted"`
 }
 
-func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (DestroyResult, error) {
+func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (out DestroyResult, err error) {
+	started := time.Now()
 	root := options.ProjectRoot
 	if root == "" {
 		root = "."
@@ -39,6 +40,7 @@ func (s *Service) Destroy(ctx context.Context, options DestroyOptions) (DestroyR
 	if err != nil {
 		return DestroyResult{}, WrapError(ErrorCodeInternal, fmt.Sprintf("resolve project root: %v", err), err)
 	}
+	defer func() { s.auditCall(ctx, absoluteRoot, "destroy", map[string]any{}, started, err) }()
 
 	metadata, err := project.LoadMetadata(absoluteRoot)
 	if err != nil {

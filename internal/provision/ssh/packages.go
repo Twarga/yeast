@@ -3,9 +3,9 @@ package ssh
 import (
 	"context"
 	"fmt"
+	"github.com/Twarga/yeast/internal/provision"
 	"strings"
 	"time"
-	"yeast/internal/provision"
 )
 
 const DefaultPackageTimeout = 15 * time.Minute
