@@ -84,6 +84,7 @@ func spawnMountSidecars(ctx context.Context, plan rtm.MachinePlan) error {
 		}
 		// No CommandContext: the sidecar must outlive this CLI invocation,
 		// same as the QEMU process itself.
+		// #nosec G204 -- m.DaemonPath is the host-discovered virtiofsd binary with structured flags
 		cmd := exec.Command(m.DaemonPath, args...)
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 		if err := cmd.Start(); err != nil {

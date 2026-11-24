@@ -425,6 +425,7 @@ func (t *LocalTransport) Stream(ctx context.Context, request StreamRequest) erro
 	args = append(args, fmt.Sprintf("%s@%s", request.User, request.Host))
 	args = append(args, request.Command)
 
+	// #nosec G204 -- executes system ssh with structured argv for guest transport
 	cmd := exec.CommandContext(ctx, "ssh", args...)
 	cmd.Stdout = request.Stdout
 	if request.Stdin != nil {

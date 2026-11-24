@@ -67,6 +67,7 @@ func spawnEgressSidecar(plan rtm.MachinePlan) error {
 		"--allowlist-file", allowlistPath,
 		"--log", filepath.Join(plan.RuntimeDir, EgressNetworkLogName),
 	}
+	// #nosec G204 -- self is os.Executable() launching yeast's built-in egress proxy sidecar
 	cmd := exec.Command(self, args...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	if err := cmd.Start(); err != nil {

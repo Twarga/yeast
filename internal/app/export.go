@@ -372,6 +372,7 @@ func streamZstd(ctx context.Context, streamer provssh.Streamer, req provssh.Stre
 	if err != nil {
 		return fail(fmt.Errorf("zstd not found on host (install zstd for .tar.zst export)"))
 	}
+	// #nosec G204 -- zstdPath is resolved via exec.LookPath("zstd") with fixed compression flags
 	zstdCmd := exec.CommandContext(ctx, zstdPath, "-19", "-T0")
 	zstdCmd.Stdout = out
 	pr, pw := io.Pipe()
