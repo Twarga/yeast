@@ -43,10 +43,13 @@ jobs:
 
       - name: Verify binary
         run: |
-          ./dist/${{ matrix.artifact }} version
-          ldd ./dist/${{ matrix.artifact }} 2>&1 | grep -q "not a dynamic executable" \
+          file ./dist/${{ matrix.artifact }}
+          file ./dist/${{ matrix.artifact }} | grep -q "statically linked" \
             && echo "static binary confirmed" \
             || { echo "binary is not static"; exit 1; }
+          if [ "${{ matrix.arch }}" = "amd64" ]; then
+            ./dist/${{ matrix.artifact }} version
+          fi
 
       - name: Package tarball
         run: |
